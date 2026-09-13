@@ -1,0 +1,22 @@
+{
+  "name": "@loncra/client",
+  "version": "0.0.1",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./commons": "./src/commons/index.ts",
+    "./auth": "./src/auth/index.ts",
+    "./resource": "./src/resource/index.ts",
+    "./message": "./src/message/index.ts",
+    "./ai": "./src/ai/index.ts",
+    "./adapters/axios": "./src/adapters/axios.ts"
+  },
+  "peerDependencies": {
+    "axios": "^1.0.0"
+  },
+  "peerDependenciesMeta": {
+    "axios": {
+      "optional": true
+    }
+  }
+}

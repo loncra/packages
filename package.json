@@ -1,0 +1,8 @@
+{
+  "name": "loncra-packages",
+  "private": true,
+  "workspaces": [
+    "client",
+    "antdv"
+  ]
+}

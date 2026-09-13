@@ -1,0 +1,67 @@
+export const CHAT_CALL_TYPE = {
+  VIDEO: 10,
+  VOICE: 20,
+} as const
+
+export const CHAT_CALL_SCENE = {
+  PRIVATE: 10,
+  GROUP: 20,
+  MEETING: 30,
+} as const
+
+export const USER_CHAT_CONVERSATION_STATUS = {
+  ENABLED: 10,
+  EXIST: 20,
+  REMOVE: 25,
+  DISBAND: 30,
+} as const
+
+export const USER_CHAT_ROOM_TYPE = {
+  GROUP_CHAT: 10,
+  PRIVATE_CHAT: 20,
+} as const
+
+export const USER_CHAT_PARTICIPANT_TYPE = {
+  OWNER: 10,
+  CO_OWNER: 20,
+  MEMBER: 30,
+  CALLER: 31,
+  CALLEE: 32,
+} as const
+
+export const USER_CHAT_MESSAGE_TYPE = {
+  USER: 10,
+  SYSTEM: 20,
+  CALL: 30,
+} as const
+
+export const USER_CHAT_CALL_STATUS = {
+  CONNECTING: 10,
+  ACTIVE: 20,
+  COMPLETED: 30,
+} as const
+
+export const USER_CHAT_CALL_PARTICIPANT_STATUS = {
+  INITIATING: 10,
+  RINGING: 20,
+  CONNECTING: 30,
+  ACTIVE: 40,
+  COMPLETED: 50,
+  COMPLETED_BY_CALLER: 51,
+  COMPLETED_BY_CALLEE: 52,
+  COMPLETED_BY_GROUP_LEAVE: 53,
+  REJECTED: 60,
+  CANCELED: 61,
+  NO_ANSWER: 62,
+  DIS_CONNECTION: 63,
+} as const
+
+export const MESSAGE_TYPE_VALUE = {
+  NOTICE: 10,
+  WARNING: 20,
+  SYSTEM: 30,
+  CAPTCHA: 40,
+  PROMOTION: 50,
+  IM: 60,
+  UNKNOWN: 99,
+} as const

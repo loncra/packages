@@ -1,0 +1,33 @@
+/**
+ * {@link ResourceServerService.getServiceEnumerates} 的枚举类名（id）。
+ */
+export const SYSTEM_ENUM_TYPE = {
+  BATCH_MESSAGE_TYPE_ENUM: 'BatchMessageTypeEnum',
+  CLOUD_CHANNEL_ENUM: 'CloudChannelEnum',
+  CAROUSEL_TYPE_ENUM: 'CarouselTypeEnum',
+  DATA_STATUS_ENUM: 'DataStatusEnum',
+  EXECUTE_STATUS_ENUM: 'ExecuteStatus',
+  GENDER_ENUM: 'GenderEnum',
+  MCP_PACKAGE_AUTH_MODE_ENUM: 'McpPackageAuthModeEnum',
+  MCP_PACKAGE_TYPE_ENUM: 'PackageTypeEnum',
+  MCP_CLIENT_TYPE_ENUM: 'McpClientTypeEnum',
+  MESSAGE_TYPE_ENUM: 'MessageTypeEnum',
+  PACKAGE_ORIGIN_ENUM: 'PackageOriginEnum',
+  PLUGIN_TARGET_TYPE_ENUM: 'PluginTargetTypeEnum',
+  SKILL_SOURCE_TYPE_ENUM: 'SkillSourceTypeEnum',
+  UPDATE_POLICY_ENUM: 'UpdatePolicyEnum',
+  MODEL_TYPE_ENUM: 'ModelTypeEnum',
+  OPERATION_DATA_TYPE_ENUM: 'OperationDataType',
+  RESOURCE_CATEGORY_ENUM: 'ResourceCategoryEnum',
+  RESOURCE_SOURCE_ENUM: 'ResourceSourceEnum',
+  RESOURCE_TYPE_ENUM: 'ResourceTypeEnum',
+  SITE_MESSAGE_PUSHABLE_CHANNEL_ENUM: 'SiteMessagePushableChannelEnum',
+  TIME_UNIT_ENUM: 'TimeUnitEnum',
+  USER_STATUS_ENUM: 'UserStatus',
+  ENTERPRISE_MEMBER_ROLE_ENUM: 'EnterpriseMemberRoleEnum',
+  ENTERPRISE_INVITATION_STATUS_ENUM: 'EnterpriseInvitationStatusEnum',
+  AUDIT_TYPE_ENUM: 'AuditTypeEnum',
+  AUDIT_STATUS_ENUM: 'AuditStatusEnum',
+  VALUE_TYPE_ENUM: 'ValueTypeEnum',
+  YES_OR_NO: 'YesOrNo',
+} as const

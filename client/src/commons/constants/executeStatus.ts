@@ -1,0 +1,7 @@
+import {EXECUTE_STATUS_TYPE} from '../enumerate.ts'
+
+export const EXECUTE_TYPE_RETRY_STATUS: ReadonlyArray<number> = [
+  EXECUTE_STATUS_TYPE.PENDING,
+  EXECUTE_STATUS_TYPE.FAILURE,
+  EXECUTE_STATUS_TYPE.UNKNOWN,
+]
