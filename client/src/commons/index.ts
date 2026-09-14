@@ -14,6 +14,29 @@ export * from './domain/resource.ts'
 export * from './domain/auth.ts'
 export {formUrlEncoded} from './utils/formUrlEncoded.ts'
 export {getEnumValue, isNameValueEnumMetadata} from './utils/enum.ts'
+export {
+  buildFlatPlacementMap,
+  buildTreePlacementMap,
+  buildTreeSortMetadata,
+  cloneTree,
+  diffTreePlacementIds,
+  filterTreeDeep,
+  findAllTreeNodes,
+  findFirstTreeNode,
+  findTreeNodeContext,
+  hasTreeChildren,
+  isTree,
+  isTreeDescendant,
+  moveTreeNode,
+  unmergeTree,
+} from './utils/tree.ts'
+export type {
+  DropPosition,
+  Predicate,
+  TreeLike,
+  TreeNodeContext,
+  TreePlacement,
+} from './utils/tree.ts'
 export {DetailSearchRestfulService} from './service/detailSearchRestfulService.ts'
 export {BasicRestfulCrudService} from './service/basicRestfulCrudService.ts'
 export {FindRestfulCrudService} from './service/findRestfulCrudService.ts'
