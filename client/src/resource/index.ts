@@ -1,6 +1,5 @@
 export * from './constants/authority.ts'
-export * from './enumerate/captcha.ts'
-export * from './enumerate/carousel.ts'
+export * from './enumerate.ts'
 export * from './domain/dictionary.ts'
 export * from './domain/attachment.ts'
 export * from './domain/enumerate.ts'

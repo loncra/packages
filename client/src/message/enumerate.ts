@@ -1,27 +1,27 @@
-export const CHAT_CALL_TYPE = {
+export const MESSAGE_SERVER_CHAT_CALL_TYPE = {
   VIDEO: 10,
   VOICE: 20,
 } as const
 
-export const CHAT_CALL_SCENE = {
+export const MESSAGE_SERVER_CHAT_CALL_SCENE = {
   PRIVATE: 10,
   GROUP: 20,
   MEETING: 30,
 } as const
 
-export const USER_CHAT_CONVERSATION_STATUS = {
+export const MESSAGE_SERVER_USER_CHAT_CONVERSATION_STATUS = {
   ENABLED: 10,
   EXIST: 20,
   REMOVE: 25,
   DISBAND: 30,
 } as const
 
-export const USER_CHAT_ROOM_TYPE = {
+export const MESSAGE_SERVER_USER_CHAT_ROOM_TYPE = {
   GROUP_CHAT: 10,
   PRIVATE_CHAT: 20,
 } as const
 
-export const USER_CHAT_PARTICIPANT_TYPE = {
+export const MESSAGE_SERVER_USER_CHAT_PARTICIPANT_TYPE = {
   OWNER: 10,
   CO_OWNER: 20,
   MEMBER: 30,
@@ -29,19 +29,19 @@ export const USER_CHAT_PARTICIPANT_TYPE = {
   CALLEE: 32,
 } as const
 
-export const USER_CHAT_MESSAGE_TYPE = {
+export const MESSAGE_SERVER_USER_CHAT_MESSAGE_TYPE = {
   USER: 10,
   SYSTEM: 20,
   CALL: 30,
 } as const
 
-export const USER_CHAT_CALL_STATUS = {
+export const MESSAGE_SERVER_USER_CHAT_CALL_STATUS = {
   CONNECTING: 10,
   ACTIVE: 20,
   COMPLETED: 30,
 } as const
 
-export const USER_CHAT_CALL_PARTICIPANT_STATUS = {
+export const MESSAGE_SERVER_USER_CHAT_CALL_PARTICIPANT_STATUS = {
   INITIATING: 10,
   RINGING: 20,
   CONNECTING: 30,
@@ -56,7 +56,7 @@ export const USER_CHAT_CALL_PARTICIPANT_STATUS = {
   DIS_CONNECTION: 63,
 } as const
 
-export const MESSAGE_TYPE_VALUE = {
+export const MESSAGE_SERVER_MESSAGE_TYPE_VALUE = {
   NOTICE: 10,
   WARNING: 20,
   SYSTEM: 30,
@@ -64,4 +64,11 @@ export const MESSAGE_TYPE_VALUE = {
   PROMOTION: 50,
   IM: 60,
   UNKNOWN: 99,
+} as const
+
+export const MESSAGE_SERVER_MESSAGE_GROUP = {
+  DEFAULT: 'default',
+  SITE: 'site',
+  USER_CHAT: 'userChat',
+  USER_CHAT_CALL: 'userChatCall',
 } as const

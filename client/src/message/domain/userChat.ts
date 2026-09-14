@@ -5,7 +5,7 @@ import type {
   PlatformUser,
   VersionEntityMetadata,
 } from '../../commons'
-import type {CHAT_CALL_TYPE} from '../enumerate/chat.ts'
+import type {MESSAGE_SERVER_CHAT_CALL_TYPE} from '../enumerate.ts'
 
 export interface UserChatRoomEntity extends VersionEntityMetadata {
   businessId?: string
@@ -91,7 +91,7 @@ export interface UserChatMessageReadResponseBody extends UserChatMessageReadEnti
   participant: UserChatParticipantMetadata
 }
 
-export type ChatCallType = typeof CHAT_CALL_TYPE.VIDEO | typeof CHAT_CALL_TYPE.VOICE
+export type ChatCallType = typeof MESSAGE_SERVER_CHAT_CALL_TYPE.VIDEO | typeof MESSAGE_SERVER_CHAT_CALL_TYPE.VOICE
 
 export interface UserChatCallEntity extends VersionEntityMetadata {
   userChatRoomId: number

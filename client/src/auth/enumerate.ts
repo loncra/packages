@@ -1,0 +1,63 @@
+export const AUTH_SERVER_AUTHENTICATION_TYPE = {
+  CONSOLE: 'CONSOLE',
+  PERSONAL: 'PERSONAL',
+  ENTERPRISE: 'ENTERPRISE',
+} as const
+
+export const AUTH_SERVER_LOGIN_TYPE = {
+  USERNAME_PASSWORD: 'USERNAME_PASSWORD',
+  USERNAME_PASSWORD_REGISTER: 'USERNAME_PASSWORD_REGISTER',
+  PHONE_CAPTCHA: 'PHONE_CAPTCHA',
+  QR_CODE: 'QR_CODE',
+} as const
+
+export const AUTH_SERVER_RESOURCE_TYPE = {
+  ROOT: 'root',
+  DIRECTORY: 'directory',
+  MENU: 'menu',
+  SECURITY: 'security',
+  TOOL: 'tool',
+  PROFILE: 'profile',
+  NAVIGATION_DATA: 'navigationData',
+} as const
+
+export const AUTH_SERVER_RESOURCE_CATEGORY = {
+  PLUGIN: 10,
+  CUSTOMIZE: 20,
+} as const
+
+export const AUTH_SERVER_ENTERPRISE_MEMBER_ROLE = {
+  OWNER: 10,
+  MEMBER: 30,
+} as const
+
+export const AUTH_SERVER_ENTERPRISE_INVITATION_STATUS = {
+  EXECUTION: 10,
+  EXPIRED: 30,
+  CANCELLED: 40,
+} as const
+
+export const AUTH_SERVER_GENDER = {
+  MALE: 10,
+  FEMALE: 20,
+  UNKNOWN: 30,
+} as const
+
+export const AUTH_SERVER_USER_STATUS_TYPE = {
+  ENABLED: 1,
+  DISABLED: 0,
+  LOCK: 99,
+} as const
+
+export const AUTH_SERVER_AUDIT_TYPE_VALUE = {
+  MANUAL: 10,
+  AUTOMATIC: 20,
+} as const
+
+export const AUTH_SERVER_AUDIT_STATUS_VALUE = {
+  AUDITABLE: 10,
+  AGREED: 20,
+  DISAGREE: 30,
+  REJECTED: 40,
+  UNKNOWN: 99,
+} as const

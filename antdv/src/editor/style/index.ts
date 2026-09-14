@@ -3,9 +3,14 @@ import type {LoneraStyleToken} from '../../_util/genStyle'
 import {genStyleHooks} from '../../_util/genStyle'
 
 function genEditorStyle(token: LoneraStyleToken): CSSInterpolation {
-  const { componentCls } = token
+  const { componentCls, antCls } = token
   return {
     [componentCls]: {
+      // AEditor 根上又包了一层 App；官方 .ant-app 默认 min-height:100vh，嵌套时会撑出整屏空白。
+      [`${antCls}-app`]: {
+        minHeight: 0,
+        background: 'transparent',
+      },
       [`&-status-error`]: {
         outline: `1px solid ${String(token.colorError ?? '#ff4d4f')}`,
         outlineOffset: 0,

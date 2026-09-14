@@ -1,7 +1,7 @@
 import {getEnumValue, type RestResult, SYSTEM_MODULE_NAME} from '../../commons'
 import {http, modulePrefix} from '../../http'
 import type {UserPluginInstallRequestBody, UserPluginInstallResult} from '../domain/userPluginInstall.ts'
-import {PLUGIN_TARGET_TYPE} from '../enumerate/plugin.ts'
+import {AI_SERVER_PLUGIN_TARGET_TYPE} from '../enumerate.ts'
 
 export class AiUserPluginInstallService {
   static get BASE_URL(): string {
@@ -60,7 +60,7 @@ export class AiUserPluginInstallService {
     }
     const install = installs.find(
       (item) =>
-        getEnumValue(item.targetType) === PLUGIN_TARGET_TYPE.SKILL && item.packageId === record.id,
+        getEnumValue(item.targetType) === AI_SERVER_PLUGIN_TARGET_TYPE.SKILL && item.packageId === record.id,
     )
     const locked = install?.metadata?.releaseVersion
     return Boolean(locked) && locked !== record.latestVersion

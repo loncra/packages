@@ -1,5 +1,5 @@
 import type {NameValueEnumMetadata, TimeProperties} from './common.ts'
-import type {CAPTCHA_TOKEN_TYPE} from '../enumerate.ts'
+import type {RESOURCE_SERVER_CAPTCHA_TOKEN_TYPE} from '../../resource/enumerate.ts'
 
 export type EnumBucketsResponseBody = Record<
   string,
@@ -36,6 +36,6 @@ export interface CaptchaGenerationResult {
 }
 
 export type CaptchaTokenType =
-  | typeof CAPTCHA_TOKEN_TYPE.SMS
-  | typeof CAPTCHA_TOKEN_TYPE.EMAIL
-  | typeof CAPTCHA_TOKEN_TYPE.TIANAI
+  | typeof RESOURCE_SERVER_CAPTCHA_TOKEN_TYPE.SMS
+  | typeof RESOURCE_SERVER_CAPTCHA_TOKEN_TYPE.EMAIL
+  | typeof RESOURCE_SERVER_CAPTCHA_TOKEN_TYPE.TIANAI

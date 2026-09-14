@@ -1,11 +1,11 @@
 import type {BasicIdMetadata, NameValueEnumMetadata, TimeProperties, VersionEntityMetadata,} from './common.ts'
 import type {ObjectWriteResult} from './attachment.ts'
 import type {PersonalEnterprise} from './enterprise.ts'
-import type {AUTHENTICATION_TYPE, LOGIN_TYPE} from '../enumerate.ts'
+import type {AUTH_SERVER_AUTHENTICATION_TYPE, AUTH_SERVER_LOGIN_TYPE} from '../../auth/enumerate.ts'
 
-export type AuthenticationType = (typeof AUTHENTICATION_TYPE)[keyof typeof AUTHENTICATION_TYPE]
+export type AuthenticationType = (typeof AUTH_SERVER_AUTHENTICATION_TYPE)[keyof typeof AUTH_SERVER_AUTHENTICATION_TYPE]
 
-export type LoginType = (typeof LOGIN_TYPE)[keyof typeof LOGIN_TYPE]
+export type LoginType = (typeof AUTH_SERVER_LOGIN_TYPE)[keyof typeof AUTH_SERVER_LOGIN_TYPE]
 
 export interface AuthCredentials {
   username: string

@@ -1,21 +1,21 @@
 import type {NameValueEnumMetadata, TimeProperties} from '../../commons'
-import type {SKILL_SOURCE_TYPE} from '../enumerate/skill.ts'
+import type {AI_SERVER_SKILL_SOURCE_TYPE} from '../enumerate.ts'
 import type {PluginPackageMetadata} from './plugin.ts'
 
 export type SkillSourceMetadataType =
-  | typeof SKILL_SOURCE_TYPE.GIT
-  | typeof SKILL_SOURCE_TYPE.MANUAL
+  | typeof AI_SERVER_SKILL_SOURCE_TYPE.GIT
+  | typeof AI_SERVER_SKILL_SOURCE_TYPE.MANUAL
 
 export interface SkillSourceMetadata {
   type: SkillSourceMetadataType
 }
 
 export interface ManualSkillSourceMetadata extends SkillSourceMetadata {
-  type: typeof SKILL_SOURCE_TYPE.MANUAL
+  type: typeof AI_SERVER_SKILL_SOURCE_TYPE.MANUAL
 }
 
 export interface GitSkillSourceMetadata extends SkillSourceMetadata {
-  type: typeof SKILL_SOURCE_TYPE.GIT
+  type: typeof AI_SERVER_SKILL_SOURCE_TYPE.GIT
   url: string
   ref?: string
   sha?: string

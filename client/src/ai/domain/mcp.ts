@@ -1,11 +1,11 @@
 import type {NameValueEnumMetadata, TimeProperties} from '../../commons'
-import type {MCP_CLIENT_TYPE} from '../enumerate/mcp.ts'
+import type {AI_SERVER_MCP_CLIENT_TYPE} from '../enumerate.ts'
 import type {PluginPackageMetadata} from './plugin.ts'
 
 export type McpClientType =
-  | typeof MCP_CLIENT_TYPE.SSE
-  | typeof MCP_CLIENT_TYPE.STDIO
-  | typeof MCP_CLIENT_TYPE.STREAMABLE_HTTP
+  | typeof AI_SERVER_MCP_CLIENT_TYPE.SSE
+  | typeof AI_SERVER_MCP_CLIENT_TYPE.STDIO
+  | typeof AI_SERVER_MCP_CLIENT_TYPE.STREAMABLE_HTTP
 
 export interface McpToolMetadata {
   name: string
@@ -36,14 +36,14 @@ export interface McpClientTransportMetadata {
 }
 
 export interface StdioMcpClientTransportMetadata extends McpClientTransportMetadata {
-  type: typeof MCP_CLIENT_TYPE.STDIO
+  type: typeof AI_SERVER_MCP_CLIENT_TYPE.STDIO
   command?: string
   args?: string[]
   env?: Record<string, string>
 }
 
 export interface SseMcpClientTransportMetadata extends McpClientTransportMetadata {
-  type: typeof MCP_CLIENT_TYPE.SSE | typeof MCP_CLIENT_TYPE.STREAMABLE_HTTP
+  type: typeof AI_SERVER_MCP_CLIENT_TYPE.SSE | typeof AI_SERVER_MCP_CLIENT_TYPE.STREAMABLE_HTTP
   baseUrl?: string
   endpoint: string
   timeout: TimeProperties
@@ -52,7 +52,7 @@ export interface SseMcpClientTransportMetadata extends McpClientTransportMetadat
 }
 
 export interface StreamableHttpMcpClientTransportMetadata extends SseMcpClientTransportMetadata {
-  type: typeof MCP_CLIENT_TYPE.STREAMABLE_HTTP
+  type: typeof AI_SERVER_MCP_CLIENT_TYPE.STREAMABLE_HTTP
   openConnectionOnStartup?: boolean | number
   resumableStreams?: boolean | number
 }

@@ -1,5 +1,5 @@
-import {computed, defineComponent} from 'vue'
-import {AEditor, type OutputFormat, type PluginName} from 'antdv-next-tiptap'
+import {computed, defineAsyncComponent, defineComponent} from 'vue'
+import type {OutputFormat, PluginName} from 'antdv-next-tiptap'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {useFormItemInputContext} from 'antdv-next/dist/form/context'
 import {classNames} from '../_util/classNames'
@@ -7,7 +7,11 @@ import {normalizeRichTextValue} from '../_util/isEmptyRichText'
 import {useFormItemTrigger} from '../_util/useFormItemTrigger'
 import useStyle from './style'
 
-import 'antdv-next-tiptap/index.css'
+const AEditor = defineAsyncComponent(async () => {
+  await import('antdv-next-tiptap/index.css')
+  const {AEditor: Comp} = await import('antdv-next-tiptap')
+  return Comp
+})
 
 export type { OutputFormat, PluginName }
 
@@ -64,7 +68,7 @@ const Editor = defineComponent({
     },
     height: {
       type: Number,
-      default: 300,
+      default: undefined,
     },
     disabled: {
       type: Boolean,
