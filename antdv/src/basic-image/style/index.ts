@@ -1,8 +1,8 @@
 import type {CSSInterpolation} from '@antdv-next/cssinjs'
-import type {LoneraStyleToken} from '../../_util/genStyle'
+import type {LoncraStyleToken} from '../../_util/genStyle'
 import {genStyleHooks} from '../../_util/genStyle'
 
-function genBasicImageStyle(token: LoneraStyleToken): CSSInterpolation {
+function genBasicImageStyle(token: LoncraStyleToken): CSSInterpolation {
   const { componentCls, antCls } = token
   return {
     [componentCls]: {

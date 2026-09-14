@@ -1,8 +1,8 @@
 import type {CSSInterpolation} from '@antdv-next/cssinjs'
-import type {LoneraStyleToken} from '../../_util/genStyle'
+import type {LoncraStyleToken} from '../../_util/genStyle'
 import {genStyleHooks} from '../../_util/genStyle'
 
-function genMarkdownStyle(token: LoneraStyleToken): CSSInterpolation {
+function genMarkdownStyle(token: LoncraStyleToken): CSSInterpolation {
   const { componentCls } = token
   return {
     [componentCls]: {

@@ -53,6 +53,26 @@ export type {
 } from './editor'
 export { isEmptyRichText, normalizeRichTextValue } from './editor'
 
+export { default as InstructionSender } from './instruction-sender'
+export type {
+  InstructionItem,
+  InstructionMeasure,
+  InstructionPopoverState,
+  InstructionSenderApi,
+  InstructionSenderEmits,
+  InstructionSenderExpose,
+  InstructionSenderHandle,
+  InstructionSenderProps,
+  InstructionSenderSlots,
+  InstructionSlotProps,
+  UseInstructionSenderParams,
+} from './instruction-sender'
+export {
+  createInstructionTagSlot,
+  isInstructionSlot,
+  useInstructionSender,
+} from './instruction-sender'
+
 export { default as zhCN } from './locale/zh_CN'
 export { default as enUS } from './locale/en_US'
 export type { Locale } from './locale'

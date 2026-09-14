@@ -1,12 +1,9 @@
 import type {CSSInterpolation} from '@antdv-next/cssinjs'
-import type {LoneraStyleToken} from '../../_util/genStyle'
+import type {LoncraStyleToken} from '../../_util/genStyle'
 import {genStyleHooks} from '../../_util/genStyle'
 
-function genIconSelectStyle(token: LoneraStyleToken): CSSInterpolation {
-  const { componentCls } = token
-  const controlHeightLG = Number(token.controlHeightLG ?? 40)
-  const fontSizeXL = Number(token.fontSizeXL ?? 20)
-  const marginXS = Number(token.marginXS ?? 8)
+function genIconSelectStyle(token: LoncraStyleToken): CSSInterpolation {
+  const {componentCls, controlHeightLG, fontSizeXL, marginXS, calc} = token
 
   return {
     [componentCls]: {
@@ -16,12 +13,12 @@ function genIconSelectStyle(token: LoneraStyleToken): CSSInterpolation {
       },
       [`${componentCls}-tabs-body`]: {
         overflow: 'auto',
-        maxHeight: controlHeightLG * 8,
+        maxHeight: calc(controlHeightLG).mul(8).equal(),
       },
       [`${componentCls}-popover-body`]: {
         overflow: 'auto',
-        maxHeight: controlHeightLG * 4,
-        maxWidth: controlHeightLG * 10,
+        maxHeight: calc(controlHeightLG).mul(4).equal(),
+        maxWidth: calc(controlHeightLG).mul(10).equal(),
       },
       [`${componentCls}-glyph`]: {
         fontSize: fontSizeXL,
@@ -36,7 +33,7 @@ function genIconSelectStyle(token: LoneraStyleToken): CSSInterpolation {
         width: 'auto',
       },
       [`${componentCls}-search`]: {
-        width: controlHeightLG * 3,
+        width: calc(controlHeightLG).mul(3).equal(),
       },
       [`${componentCls}-payload`]: {
         width: '100%',
@@ -46,7 +43,7 @@ function genIconSelectStyle(token: LoneraStyleToken): CSSInterpolation {
       width: '100%',
       gap: marginXS,
     },
-  } as CSSInterpolation
+  }
 }
 
 export default genStyleHooks('IconSelect', genIconSelectStyle)
