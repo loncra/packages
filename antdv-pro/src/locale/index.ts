@@ -30,9 +30,27 @@ export interface FileEditorLocale {
   nameTooLong: string
 }
 
+export interface CrudLocale {
+  search: string
+  reset: string
+  clear: string
+  add: string
+  edit: string
+  detail: string
+  action: string
+  exportAll: string
+  exportSelected: string
+  deleteText: string
+  deleteSelected: string
+  deleteConfirmTitle: string
+  deleteConfirmSingle: string
+  deleteConfirmBatch: string
+}
+
 export interface Locale {
   locale: string
   UserSelect?: UserSelectLocale
   AttachmentUpload?: AttachmentUploadLocale
   FileEditor?: FileEditorLocale
+  Crud?: CrudLocale
 }

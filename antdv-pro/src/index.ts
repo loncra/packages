@@ -31,6 +31,14 @@ export { ATTACHMENT_UPLOAD_MODE, ATTACHMENT_PREVIEW_MODE } from './attachment-up
 export { default as FileEditor } from './file-editor'
 export type { FileEditorProps, FileEditorSlots } from './file-editor'
 
+export {default as CrudConfigProvider, useActionAuth, useCrudConfig} from './crud-config-provider'
+export type {
+  ActionAuth,
+  CrudConfig,
+  CrudConfigProviderProps,
+  CrudConfigProviderSlots,
+} from './crud-config-provider'
+
 export { uploadFile } from './_util/uploadFile'
 export {
   applyAttachmentDirectoryProgress,

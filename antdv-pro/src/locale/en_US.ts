@@ -32,6 +32,22 @@ const locale: Locale = {
     nameIllegal: 'Name cannot contain / \\ < > " | ? * or control characters',
     nameTooLong: 'Name cannot exceed 255 characters',
   },
+  Crud: {
+    search: 'Search',
+    reset: 'Reset',
+    clear: 'Clear',
+    add: 'Add',
+    edit: 'Edit',
+    detail: 'Detail',
+    action: 'Action',
+    exportAll: 'Export all',
+    exportSelected: 'Export {count} selected',
+    deleteText: 'Delete',
+    deleteSelected: 'Delete {count} selected',
+    deleteConfirmTitle: 'Delete confirmation',
+    deleteConfirmSingle: 'Are you sure to delete this record?',
+    deleteConfirmBatch: 'Are you sure to delete the {count} selected records?',
+  },
 }
 
 export default locale

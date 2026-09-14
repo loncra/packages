@@ -31,6 +31,22 @@ const locale: Locale = {
     nameIllegal: '名称不能包含 / \\ < > " | ? * 及控制字符',
     nameTooLong: '名称不能超过 255 个字符',
   },
+  Crud: {
+    search: '搜索',
+    reset: '重置',
+    clear: '清空',
+    add: '新增',
+    edit: '编辑',
+    detail: '详情',
+    action: '操作',
+    exportAll: '导出全部',
+    exportSelected: '导出选中 {count} 项',
+    deleteText: '删除',
+    deleteSelected: '删除选中 {count} 项',
+    deleteConfirmTitle: '删除确认',
+    deleteConfirmSingle: '确定要删除该记录吗？',
+    deleteConfirmBatch: '确定要删除选中的 {count} 条记录吗？',
+  },
 }
 
 export default locale
