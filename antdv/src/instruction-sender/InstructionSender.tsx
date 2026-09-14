@@ -1,14 +1,14 @@
 import {
-    computed,
-    defineComponent,
-    getCurrentInstance,
-    h,
-    type PropType,
-    type Ref,
-    ref,
-    Teleport,
-    toRef,
-    unref
+  computed,
+  defineComponent,
+  getCurrentInstance,
+  h,
+  type PropType,
+  type Ref,
+  ref,
+  Teleport,
+  toRef,
+  unref
 } from 'vue'
 import {Flex, Popover, Space} from 'antdv-next'
 import {Sender} from '@antdv-next/x'
@@ -239,9 +239,16 @@ const InstructionSender = defineComponent({
             style={attrStyle as never}
             classNames={{
               ...props.classNames,
-              input: classNames(props.inputClass, props.classNames?.input),
+              input: classNames(
+                hashId.value,
+                cssVarCls.value,
+                `${prefixCls.value}-input`,
+                props.inputClass,
+                props.classNames?.input,
+              ),
               footer: classNames(
                 hashId.value,
+                cssVarCls.value,
                 `${prefixCls.value}-footer`,
                 props.classNames?.footer,
               ),

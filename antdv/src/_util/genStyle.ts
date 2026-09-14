@@ -12,9 +12,17 @@ type UseStyle = (
   prefixCls: Ref<string>,
 ) => readonly [Ref<string>, ComputedRef<string | undefined>]
 
-export function genStyleHooks(component: string, styleFn: GenerateStyle): UseStyle {
-  return (antGenStyleHooks as unknown as (name: string, fn: GenerateStyle) => UseStyle)(
-    component,
-    styleFn,
-  )
+export function genStyleHooks(
+  component: string,
+  styleFn: GenerateStyle,
+  options?: {order?: number; resetStyle?: boolean},
+): UseStyle {
+  return (
+    antGenStyleHooks as unknown as (
+      name: string,
+      fn: GenerateStyle,
+      getDefaultToken?: undefined,
+      options?: {order?: number; resetStyle?: boolean},
+    ) => UseStyle
+  )(component, styleFn, undefined, options)
 }

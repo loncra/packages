@@ -3,7 +3,7 @@ import type {LoncraStyleToken} from '../../_util/genStyle'
 import {genStyleHooks} from '../../_util/genStyle'
 
 function genEmojiButtonStyle(token: LoncraStyleToken): CSSInterpolation {
-  const {componentCls, controlHeightLG, fontSizeXL, paddingXXS, calc} = token
+  const {componentCls, controlHeightLG, fontSizeXL, paddingXS, calc} = token
 
   return {
     [componentCls]: {
@@ -16,7 +16,7 @@ function genEmojiButtonStyle(token: LoncraStyleToken): CSSInterpolation {
       },
       [`${componentCls}-cell`]: {
         cursor: 'pointer',
-        paddingBlock: paddingXXS,
+        paddingBlock: paddingXS,
         paddingInline: 0,
         width: `${100 / 11}%`,
         textAlign: 'center',

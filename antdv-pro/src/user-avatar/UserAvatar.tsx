@@ -2,8 +2,8 @@ import {computed, defineComponent, type PropType} from 'vue'
 import {Avatar} from 'antdv-next'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {classNames} from '@loncra/antdv'
-import {AuthServerService} from '@loncra/client/auth'
 import type {PlatformUser, UserMetadata} from '@loncra/client/auth'
+import {AuthServerService} from '@loncra/client/auth'
 import {AttachmentService} from '@loncra/client/resource'
 
 export interface UserAvatarProps {

@@ -2,18 +2,18 @@ import {computed, defineComponent, onMounted, type PropType, ref} from 'vue'
 import {Select} from 'antdv-next'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {classNames} from '@loncra/antdv'
-import {AuthServerService} from '@loncra/client/auth'
 import type {PlatformUser} from '@loncra/client/auth'
+import {AuthServerService} from '@loncra/client/auth'
 import {
-  SYSTEM_ENUM_TYPE,
-  SYSTEM_MODULE_NAME,
   type IdNameValueMetadata,
   type NameValueEnumMetadata,
   type PageRequest,
   type RestResult,
+  SYSTEM_ENUM_TYPE,
+  SYSTEM_MODULE_NAME,
 } from '@loncra/client/commons'
-import {ResourceServerService} from '@loncra/client/resource'
 import type {EnumBucketsResponseBody} from '@loncra/client/resource'
+import {ResourceServerService} from '@loncra/client/resource'
 import {useLocale} from '../_util/useLocale'
 
 interface UserSelectOption {

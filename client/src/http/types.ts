@@ -27,4 +27,6 @@ export interface ClientConfig {
   authenticationTypeHeaderName?: string
   /** 表单编码值转换（Dayjs、枚举对象等由 App 注入） */
   formValueConvert?: FormValueConvert
+  /** 超过该字节走分片；未设或非有限数字则始终单文件 */
+  uploadBlockSize?: number
 }

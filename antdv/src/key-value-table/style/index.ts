@@ -12,6 +12,12 @@ function genKeyValueTableStyle(token: LoncraStyleToken): CSSInterpolation {
       [`${antCls}-select`]: {
         width: '100%',
       },
+      ['.icon']: {
+        verticalAlign: 'middle',
+      },
+      ['.icon.align']: {
+        marginBottom: 3,
+      },
     },
   } as CSSInterpolation
 }

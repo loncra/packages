@@ -226,6 +226,10 @@ const IconSelect = defineComponent({
       }
     }
 
+    function hashed(...names: (string | undefined)[]) {
+      return classNames(hashId.value, cssVarCls.value, ...names)
+    }
+
     function renderGlyphButtons(packName: string, current: string, onPick: (value: string) => void) {
       return (
         <Space wrap>
@@ -234,7 +238,7 @@ const IconSelect = defineComponent({
               key={glyph.key}
               size="large"
               type={current === glyph.value ? 'primary' : 'default'}
-              class={`${prefixCls.value}-glyph`}
+              class={hashed(`${prefixCls.value}-glyph`)}
               onClick={() => onPick(glyph.value)}
             >
               {renderIcon(glyph.value)}
@@ -276,7 +280,7 @@ const IconSelect = defineComponent({
             style={attrStyle as never}
             centered
             items={tabItems.value}
-            classes={{ body: `${prefixCls.value}-tabs-body` }}
+            classes={{body: hashed(`${prefixCls.value}-tabs-body`)}}
             v-slots={{
               labelRender: ({ item }: { item: { label: string; packName: string } }) =>
                 `${item.label} (${glyphsOf(item.packName).length})`,
@@ -350,12 +354,15 @@ const IconSelect = defineComponent({
             />
             {state.value.avatarType === ICON_SELECT_AVATAR_MODE_VALUE.ICON ? (
               <Popover
+                class={rootClass}
+                rootClass={rootClass}
+                classes={{root: rootClass, content: rootClass}}
                 v-slots={{
                   title: () => (
-                    <Flex justify="space-between" align="center">
+                    <Flex justify="space-between" align="center" class={rootClass}>
                       <span>{locale.value.icon}</span>
                       <InputSearch
-                        class={`${prefixCls.value}-search`}
+                        class={hashed(`${prefixCls.value}-search`)}
                         size="small"
                         onSearch={onSearch}
                         onKeydown={preventEnter}
@@ -363,17 +370,19 @@ const IconSelect = defineComponent({
                     </Flex>
                   ),
                   content: () => (
-                    <Tabs
-                      centered
-                      items={tabItems.value}
-                      classes={{ body: `${prefixCls.value}-popover-body` }}
-                      v-slots={{
-                        contentRender: ({ item }: { item: { packName: string } }) =>
-                          renderGlyphButtons(item.packName, avatarPayload.value, (value) => {
-                            avatarPayload.value = value
-                          }),
-                      }}
-                    />
+                    <div class={rootClass}>
+                      <Tabs
+                        centered
+                        items={tabItems.value}
+                        classes={{body: hashed(`${prefixCls.value}-popover-body`)}}
+                        v-slots={{
+                          contentRender: ({item}: {item: {packName: string}}) =>
+                            renderGlyphButtons(item.packName, avatarPayload.value, (value) => {
+                              avatarPayload.value = value
+                            }),
+                        }}
+                      />
+                    </div>
                   ),
                 }}
               >

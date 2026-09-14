@@ -6,9 +6,9 @@
 |---|---|
 | [`client`](./client)（`@loncra/client`） | 后端 TypeScript HTTP 契约与 Service，不依赖 Vue / axios / `import.meta.env` |
 | [`antdv`](./antdv)（`@loncra/antdv`） | 扩展 antdv-next：TSX 控件 + ConfigProvider locale，不调后端 |
-| [`pro`](./pro)（`@loncra/pro`） | 调 `@loncra/client` 的通用 UI 控件，依赖 client + antdv |
+| [`antdv-pro`](./antdv-pro)（`@loncra/antdv-pro`） | 调 `@loncra/client` 的通用 antdv 控件，依赖 client + antdv |
 
-管理端：`"@loncra/client": "file:../packages/client"`、`"@loncra/antdv": "file:../packages/antdv"`、`"@loncra/pro": "file:../packages/pro"`。
+管理端：`"@loncra/client": "file:../packages/client"`、`"@loncra/antdv": "file:../packages/antdv"`、`"@loncra/antdv-pro": "file:../packages/antdv-pro"`。
 
 ## `@loncra/antdv`
 
@@ -20,19 +20,19 @@
 | `@loncra/antdv/locale/zh_CN` | 简体中文，与 `antdv-next/locale` 合并后交给 `ConfigProvider` |
 | `@loncra/antdv/locale/en_US` | 英文 |
 
-当前控件：`TooltipValidationFormItem`、`QrCodeModal`、`BasicImage`、`IconSelect`、`EmojiButton`、`Markdown` / `MarkdownCodeRenderer`、`KeyValueTable`、`Editor`（`antdv-next-tiptap`）、`InstructionSender`。要对 API 的上传 / IM / Agent 进以后的业务包，不进本包。调 client 的通用控件进 `@loncra/pro`。
+当前控件：`TooltipValidationFormItem`、`QrCodeModal`、`BasicImage`、`IconSelect`、`EmojiButton`、`Markdown` / `MarkdownCodeRenderer`、`KeyValueTable`、`Editor`（`antdv-next-tiptap`）、`InstructionSender`。要对 API 的上传 / IM / Agent 进以后的业务包，不进本包。调 client 的通用控件进 `@loncra/antdv-pro`。
 
-## `@loncra/pro`
+## `@loncra/antdv-pro`
 
-对标 `@loncra/antdv` 的 TSX 写法，直接调 `@loncra/client` Service。宿主（管理端）负责 `createClient()`。peer：`vue`、`antdv-next`、`@loncra/antdv`、`@loncra/client`；相对时间再 peer `dayjs`。禁止 axios、`createClient`、Pinia、vue-i18n、路由、管理端 `@/apis`。CRUD 第二批。IM / Agent 以后另包。
+对标 `@loncra/antdv` 的 TSX 写法，直接调 `@loncra/client` Service。宿主（管理端）负责 `createClient()`。peer：`vue`、`antdv-next`、`@loncra/antdv`、`@loncra/client`；相对时间再 peer `dayjs`；上传分片再 peer `p-limit`；FileEditor 文本 pane 再 peer `@codemirror/*`。禁止 axios、`createClient`、Pinia、vue-i18n、路由、管理端 `@/apis`。CRUD 第二批。IM / Agent 以后另包。
 
 | 路径 | 内容 |
 |---|---|
-| `@loncra/pro` | 控件 + `useLocale` |
-| `@loncra/pro/locale/zh_CN` | 简体中文，与 antdv-next / `@loncra/antdv` locale 合并后交给 `ConfigProvider` |
-| `@loncra/pro/locale/en_US` | 英文 |
+| `@loncra/antdv-pro` | 控件 + `useLocale` |
+| `@loncra/antdv-pro/locale/zh_CN` | 简体中文，与 antdv-next / `@loncra/antdv` locale 合并后交给 `ConfigProvider` |
+| `@loncra/antdv-pro/locale/en_US` | 英文 |
 
-当前控件：`UserAvatar`、`UserSelect`、`AttachmentMasonry`。
+当前控件：`UserAvatar`、`UserSelect`、`AttachmentMasonry`、`AttachmentUpload`、`FileEditor`。
 
 ## `@loncra/client`
 

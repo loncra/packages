@@ -20,10 +20,25 @@ function genInstructionSenderStyle(token: LoncraStyleToken): CSSInterpolation {
 
   return {
     [componentCls]: {
-      [`&-footer`]: {
+      [`${componentCls}-footer`]: {
         padding: `${unit(paddingXS)} !important`,
         borderTop: `${unit(lineWidth)} ${lineType} ${colorBorderSecondary}`,
       },
+      [`.antd-sender-input.antd-sender-input-slot`]: {
+        [`> .antd-sender-slot:not(.antd-sender-slot-content)`]: {
+          height: 'auto !important',
+          verticalAlign: 'bottom',
+          marginBlock: '0 !important',
+        },
+        [`&[contenteditable="false"]`]: {
+          opacity: 0.5,
+          cursor: 'not-allowed !important',
+        },
+      },
+    },
+    [`${componentCls}-footer`]: {
+      padding: `${unit(paddingXS)} !important`,
+      borderTop: `${unit(lineWidth)} ${lineType} ${colorBorderSecondary}`,
     },
     [`${componentCls}-panel`]: {
       maxHeight: panelSize,
@@ -50,4 +65,4 @@ function genInstructionSenderStyle(token: LoncraStyleToken): CSSInterpolation {
   }
 }
 
-export default genStyleHooks('InstructionSender', genInstructionSenderStyle)
+export default genStyleHooks('InstructionSender', genInstructionSenderStyle, {order: 0})
