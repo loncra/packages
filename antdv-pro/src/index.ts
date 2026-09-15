@@ -39,6 +39,9 @@ export type {
   CrudConfigProviderSlots,
 } from './crud-config-provider'
 
+export {default as ClientProvider, useClient, CLIENT_CONFIG_KEY} from './client-provider'
+export type {ClientProviderProps, ClientProviderSlots} from './client-provider'
+
 export { uploadFile } from './_util/uploadFile'
 export {
   applyAttachmentDirectoryProgress,
