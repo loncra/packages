@@ -1,10 +1,10 @@
 import {type ComputedRef, type InjectionKey, ref, type VNode} from 'vue'
-import type {FilterRequest, PageRequest} from '@loncra/client/commons'
+import {type BasicIdMetadata, type FilterRequest, type PageRequest, SYSTEM_CONSTANT,} from '@loncra/client/commons'
 import type {ActionAuth} from '../../crud-config-provider/types'
 
 export type ActionScope = 'toolbar' | 'item'
 
-export interface ActionContext<TItem = unknown> {
+export interface ActionContext<TItem extends BasicIdMetadata<unknown> = BasicIdMetadata<unknown>> {
   scope: ActionScope
   record?: TItem
   items: TItem[]
@@ -13,7 +13,7 @@ export interface ActionContext<TItem = unknown> {
   extras: Record<string, unknown>
 }
 
-export interface ActionDefinition<TItem = unknown> {
+export interface ActionDefinition<TItem extends BasicIdMetadata<unknown> = BasicIdMetadata<unknown>> {
   id: string
   permission?: string | boolean
   danger?: boolean
@@ -34,7 +34,7 @@ export interface ResolvedAction {
   run?: () => void | Promise<void>
 }
 
-export interface ActionPayload<TItem = unknown> {
+export interface ActionPayload<TItem extends BasicIdMetadata<unknown> = BasicIdMetadata<unknown>> {
   id: string
   context: ActionContext<TItem>
 }
@@ -42,10 +42,21 @@ export interface ActionPayload<TItem = unknown> {
 export const ACTION_CONTEXT_KEY: InjectionKey<ComputedRef<ActionContext>> =
   Symbol('loncraActionContext')
 
-export const BUILTIN_ITEM_ACTION_IDS = ['edit', 'detail', 'delete'] as const
-export const BUILTIN_BULK_ACTION_IDS = ['deleteSelected'] as const
+export const BUILTIN_ACTION_ID = {
+  EDIT: 'edit',
+  DETAIL: 'detail',
+  DELETE: 'delete',
+  DELETE_SELECTED: 'deleteSelected',
+} as const
 
-export function mergeDefinitions<TItem>(
+export const BUILTIN_ITEM_ACTION_IDS = [
+  BUILTIN_ACTION_ID.EDIT,
+  BUILTIN_ACTION_ID.DETAIL,
+  BUILTIN_ACTION_ID.DELETE,
+] as const
+export const BUILTIN_BULK_ACTION_IDS = [BUILTIN_ACTION_ID.DELETE_SELECTED] as const
+
+export function mergeDefinitions<TItem extends BasicIdMetadata<unknown>>(
   ...lists: Array<ActionDefinition<TItem>[] | undefined>
 ): ActionDefinition<TItem>[] {
   const map = new Map<string, ActionDefinition<TItem>>()
@@ -56,7 +67,7 @@ export function mergeDefinitions<TItem>(
   return [...map.values()]
 }
 
-export function overrideAction<TItem>(
+export function overrideAction<TItem extends BasicIdMetadata<unknown>>(
   definitions: ActionDefinition<TItem>[],
   id: string,
   patch: Partial<ActionDefinition<TItem>>,
@@ -65,11 +76,26 @@ export function overrideAction<TItem>(
 }
 
 export interface ActionResolver {
-  resolveActions: <TItem>(
+  resolveActions: <TItem extends BasicIdMetadata<unknown>>(
     definitions: ActionDefinition<TItem>[],
     context: ActionContext<TItem>,
     auth: ActionAuth,
   ) => ResolvedAction[]
+}
+
+/**
+ * 运行态的键。同一个组件实例里，工具栏动作与每一行的行内动作共用一个解析器，
+ * 因此只按 action id 记运行态会让第 1 行的异步动作把所有行的同名按钮一起置灰。
+ * 行级动作按记录 id 分桶，工具栏/批量动作共用一个桶。
+ */
+function runKey<TItem extends BasicIdMetadata<unknown>>(
+  def: ActionDefinition<TItem>,
+  context: ActionContext<TItem>,
+): string {
+  if (context.scope !== 'item' || context.record == null) {
+    return `toolbar:${def.id}`
+  }
+  return `item:${String(context.record[SYSTEM_CONSTANT.ID_NAME])}:${def.id}`
 }
 
 /**
@@ -80,9 +106,28 @@ export interface ActionResolver {
  * 每个组件在 setup 里调一次，把返回的 resolveActions 用于该实例的全部动作。
  */
 export function useActionResolver(): ActionResolver {
-  const runningIds = ref(new Set<string>())
+  // 用计数而非 Set：按钮变 disabled 要等下一次渲染，快速双击可能命中同一份
+  // 已解析的 run 闭包，两次运行共用一个键，先完成的那次不能把运行态清掉。
+  const running = ref(new Map<string, number>())
 
-  function resolveActions<TItem>(
+  function retain(key: string) {
+    const next = new Map(running.value)
+    next.set(key, (next.get(key) ?? 0) + 1)
+    running.value = next
+  }
+
+  function release(key: string) {
+    const next = new Map(running.value)
+    const count = (next.get(key) ?? 1) - 1
+    if (count > 0) {
+      next.set(key, count)
+    } else {
+      next.delete(key)
+    }
+    running.value = next
+  }
+
+  function resolveActions<TItem extends BasicIdMetadata<unknown>>(
     definitions: ActionDefinition<TItem>[],
     context: ActionContext<TItem>,
     auth: ActionAuth,
@@ -91,7 +136,8 @@ export function useActionResolver(): ActionResolver {
       .filter((def) => auth.can(def.permission))
       .filter((def) => def.visible?.(context) ?? true)
       .map((def) => {
-        const loading = runningIds.value.has(def.id)
+        const key = runKey(def, context)
+        const loading = running.value.has(key)
         const disabled = loading || !(def.enabled?.(context) ?? true)
         return {
           id: def.id,
@@ -107,13 +153,11 @@ export function useActionResolver(): ActionResolver {
                 if (!(result instanceof Promise)) {
                   return
                 }
-                runningIds.value = new Set(runningIds.value).add(def.id)
+                retain(key)
                 try {
                   await result
                 } finally {
-                  const next = new Set(runningIds.value)
-                  next.delete(def.id)
-                  runningIds.value = next
+                  release(key)
                 }
               },
         }
@@ -123,7 +167,7 @@ export function useActionResolver(): ActionResolver {
   return {resolveActions}
 }
 
-export function buildItemActionContext<TItem>(options: {
+export function buildItemActionContext<TItem extends BasicIdMetadata<unknown>>(options: {
   record: TItem
   toolbarContext?: ActionContext<TItem>
   actionContextExtras?: Record<string, unknown>

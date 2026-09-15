@@ -134,7 +134,7 @@ const FileEditor = defineComponent({
                   class={hashed(`${prefixCls.value}-toolbar`)}
                 >
                   <Flex flex="1" gap="small" align="center">
-                    {renderIconFont('loncra-sparkles', 'icon')}
+                    {renderIconFont('loncra-sparkles')}
                     <TypographyText ellipsis>
                       {props.name || locale.value.untitled}
                     </TypographyText>
@@ -179,9 +179,9 @@ const FileEditor = defineComponent({
                           item.loading
                             ? renderIconFont(
                                 'loncra-loader-pinwheel',
-                                classNames('icon', hashed(`${prefixCls.value}-icon-spin`)),
+                                hashed(`${prefixCls.value}-icon-spin`),
                               )
-                            : renderIconFont(resolveIcon(item), 'icon'),
+                            : renderIconFont(resolveIcon(item)),
                         labelRender: (item: EditObjectItemInfo) =>
                           state.value.currentEditItem?.id === item.id &&
                           state.value.currentEditItem.editing ? (

@@ -20,7 +20,7 @@ function isBusinessSuccess<T>(result: RestResult<T>): boolean {
 }
 
 function menuIcon(type: string) {
-  return () => renderIconFont(type, 'icon')
+  return () => renderIconFont(type)
 }
 
 export function useFileEditor(props: FileEditorProps) {

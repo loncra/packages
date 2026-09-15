@@ -1,3 +1,4 @@
+/// <reference path="./css.d.ts" />
 import {computed, defineComponent, nextTick, ref, watch} from 'vue'
 import {type StreamingOption, XMarkdown, type XMarkdownProps} from '@antdv-next/x-markdown'
 import {useConfig} from 'antdv-next/dist/config-provider/context'

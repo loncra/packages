@@ -1,7 +1,9 @@
 import {renderIconFont} from '@loncra/antdv'
-import type {BasicCrudService, BasicIdMetadata} from '@loncra/client/commons'
+import type {BasicIdMetadata} from '@loncra/client/commons'
 import type {CrudLocale} from '../../locale'
-import type {ActionContext, ActionDefinition} from './actions'
+import {withCount} from '../format'
+import {type ActionContext, type ActionDefinition, BUILTIN_ACTION_ID} from './actions'
+import {isDeletableService} from './useCrudDelete'
 
 export interface CollectionAuthorityProps {
   add?: string | boolean
@@ -11,11 +13,7 @@ export interface CollectionAuthorityProps {
   export?: string | boolean
 }
 
-function withCount(template: string, count: number) {
-  return template.replace('{count}', String(count))
-}
-
-export interface DefaultToolbarActionsOptions<TEntity> {
+export interface DefaultToolbarActionsOptions<TEntity extends BasicIdMetadata<unknown>> {
   authority?: CollectionAuthorityProps
   locale: CrudLocale
   /** 传给 renderIconFont 的额外 class，如表格标题区用 `align` */
@@ -24,7 +22,7 @@ export interface DefaultToolbarActionsOptions<TEntity> {
   onExport: (ctx: ActionContext<TEntity>) => void | Promise<void>
 }
 
-export function createDefaultToolbarActions<TEntity>(
+export function createDefaultToolbarActions<TEntity extends BasicIdMetadata<unknown>>(
   options: DefaultToolbarActionsOptions<TEntity>,
 ): ActionDefinition<TEntity>[] {
   const iconClass = options.iconClass
@@ -51,7 +49,7 @@ export function createDefaultToolbarActions<TEntity>(
   ]
 }
 
-export interface DefaultBulkActionsOptions<TEntity> {
+export interface DefaultBulkActionsOptions<TEntity extends BasicIdMetadata<unknown>> {
   authority?: CollectionAuthorityProps
   service: unknown
   locale: CrudLocale
@@ -65,13 +63,12 @@ export function createDefaultBulkActions<
 >(options: DefaultBulkActionsOptions<TEntity>): ActionDefinition<TEntity>[] {
   return [
     {
-      id: 'deleteSelected',
+      id: BUILTIN_ACTION_ID.DELETE_SELECTED,
       permission: options.authority?.delete,
       danger: true,
       visible: (ctx) => ctx.extras.titleActionsEnabled !== false,
       enabled: (ctx) =>
-        ctx.selectedItems.length > 0 &&
-        typeof (options.service as BasicCrudService<TBody, TEntity, TId>).delete === 'function',
+        ctx.selectedItems.length > 0 && isDeletableService<TBody, TEntity, TId>(options.service),
       label: (ctx) => withCount(options.locale.deleteSelected, ctx.selectedItems.length),
       icon: () => renderIconFont('loncra-archive-x'),
       run: (ctx) => options.remove(ctx.selectedItems),
@@ -79,7 +76,7 @@ export function createDefaultBulkActions<
   ]
 }
 
-export interface DefaultItemActionsOptions<TEntity> {
+export interface DefaultItemActionsOptions<TEntity extends BasicIdMetadata<unknown>> {
   authority?: CollectionAuthorityProps
   service: unknown
   locale: CrudLocale
@@ -95,7 +92,7 @@ export function createDefaultItemActions<
 >(options: DefaultItemActionsOptions<TEntity>): ActionDefinition<TEntity>[] {
   return [
     {
-      id: 'edit',
+      id: BUILTIN_ACTION_ID.EDIT,
       permission: options.authority?.edit,
       label: () => options.locale.edit,
       icon: () => renderIconFont('loncra-file-pen-line'),
@@ -106,7 +103,7 @@ export function createDefaultItemActions<
       },
     },
     {
-      id: 'detail',
+      id: BUILTIN_ACTION_ID.DETAIL,
       permission: options.authority?.detail,
       label: () => options.locale.detail,
       icon: () => renderIconFont('loncra-file-search'),
@@ -117,11 +114,10 @@ export function createDefaultItemActions<
       },
     },
     {
-      id: 'delete',
+      id: BUILTIN_ACTION_ID.DELETE,
       permission: options.authority?.delete,
       danger: true,
-      enabled: () =>
-        typeof (options.service as BasicCrudService<TBody, TEntity, TId>).delete === 'function',
+      enabled: () => isDeletableService<TBody, TEntity, TId>(options.service),
       label: () => options.locale.deleteText,
       icon: () => renderIconFont('loncra-archive-x'),
       run: (ctx) => {

@@ -1,4 +1,14 @@
 /**
+ * 用实际数量替换文案里的 `{count}` 占位符
+ *
+ * @param template - 含 `{count}` 占位符的文案
+ * @param count - 实际数量
+ */
+export function withCount(template: string, count: number): string {
+  return template.replace('{count}', String(count))
+}
+
+/**
  * 格式化字节大小为可读的字符串
  * 将字节数转换为合适的单位（bytes、KB、MB、GB 等）
  * 使用 1024 为进制进行计算

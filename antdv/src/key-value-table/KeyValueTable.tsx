@@ -267,7 +267,7 @@ const KeyValueTable = defineComponent({
                 ? () => (
                     <Flex justify="space-between" align="center">
                       <Space>
-                        {props.icon ? renderIcon(props.icon, 'icon align') : null}
+                        {props.icon ? renderIcon(props.icon, 'align') : null}
                         {props.title}
                       </Space>
                       {props.edit ? (

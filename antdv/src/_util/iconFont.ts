@@ -1,6 +1,11 @@
 import {h, resolveComponent, type VNode} from 'vue'
 
-export function renderIconFont(type?: string, className?: string): VNode | null {
+export function renderIconFont(
+  type?: string,
+  classes: string = '',
+  spin = false,
+  rotate = 0,
+): VNode | null {
   if (!type) {
     return null
   }
@@ -8,5 +13,5 @@ export function renderIconFont(type?: string, className?: string): VNode | null 
   if (typeof IconFont === 'string') {
     return null
   }
-  return h(IconFont, { type, class: className })
+  return h(IconFont, {type, class: 'icon ' + (classes ?? ''), spin, rotate})
 }
