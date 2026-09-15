@@ -1,13 +1,13 @@
 import type {RestResult} from '../domain/common.ts'
 import type {
-  CompleteMultipartUploadBody,
-  CopyFileObject,
-  FileObject,
-  MoveFileObject,
-  MultipartUploadInitData,
-  MultipartUploadPartData,
-  ObjectItemInfo,
-  ObjectWriteResult,
+    CompleteMultipartUploadBody,
+    CopyFileObject,
+    FileObject,
+    MoveFileObject,
+    MultipartUploadInitData,
+    MultipartUploadPartData,
+    ObjectItemInfo,
+    ObjectWriteResult,
 } from '../domain/attachment.ts'
 import {getClient, http} from '../../http'
 
@@ -77,7 +77,7 @@ export class AttachmentService {
   }
 
   static download(bucket: string, object: string): void {
-    getClient().openUrl?.(this.query(bucket, object, true))
+    getClient().openAttachmentUrl?.(this.query(bucket, object, true))
   }
 
   static downloads(fileObjects: FileObject[]): void {
@@ -88,7 +88,7 @@ export class AttachmentService {
       encodeURIComponent(JSON.stringify(fileObjects)) +
       '&accessToken=' +
       token
-    getClient().openUrl?.(url)
+    getClient().openAttachmentUrl?.(url)
   }
 
   static singleUpload(

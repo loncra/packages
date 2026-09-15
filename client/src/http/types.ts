@@ -22,9 +22,7 @@ export interface ClientConfig {
   runtimeMode: RuntimeMode
   getAccessToken?: () => string | null | undefined
   resourcePath?: string
-  openUrl?: (url: string) => void
-  /** 登录请求头名，对应管理端 VITE_APP_HEADER_AUTHENTICATION_TYPE_NAME */
-  authenticationTypeHeaderName?: string
+  openAttachmentUrl?: (url: string) => void
   /** 表单编码值转换（Dayjs、枚举对象等由 App 注入） */
   formValueConvert?: FormValueConvert
   /** 超过该字节走分片；未设或非有限数字则始终单文件 */

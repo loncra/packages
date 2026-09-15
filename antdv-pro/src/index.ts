@@ -106,13 +106,14 @@ export type {
   SearchableColumnType,
 } from './query-table'
 export {default as CrudTable} from './crud-table'
-export type {CrudTableConstructor, CrudTableEmits, CrudTableExpose, CrudTableProps} from './crud-table'
+export type {CrudTableConstructor, CrudTableEmits, CrudTableExpose, CrudTableProps, CrudTableSlots} from './crud-table'
 export {default as QueryCardGrid} from './query-card-grid'
 export type {
   CardGridPagination,
   CrudCardGridConstructor,
   CrudCardGridEmits,
   CrudCardGridExpose,
+  CrudCardGridItemActionsSlot,
   CrudCardGridItemSlot,
   QueryCardGridConstructor,
   QueryCardGridEmits,

@@ -38,6 +38,8 @@ export interface CrudTableExpose<TEntity extends BasicIdMetadata<unknown>> {
   remove: (records: TEntity[]) => void
 }
 
+export interface CrudTableSlots<TEntity extends object> extends QueryTableSlots<TEntity> {}
+
 export type CrudTableRuntimeProps = CrudTableProps<
   DefaultCrudEntity,
   DefaultCrudEntity,
@@ -58,7 +60,7 @@ export type CrudTableConstructor = new <
   $props: CrudTableProps<TBody, TEntity, TPage, TId> &
     EmitsToProps<CrudTableEmits<TEntity, TId>> &
     PublicProps
-  $slots: QueryTableSlots<TEntity>
+  $slots: CrudTableSlots<TEntity>
 } & CrudTableExpose<TEntity>
 
 export type {ActionPayload, DropPosition, FilterRequest, PageRequest, RestResult, TableProps, TreeSortMetadata}

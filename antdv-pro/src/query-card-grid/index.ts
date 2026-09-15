@@ -4,6 +4,7 @@ export type {
   CrudCardGridConstructor,
   CrudCardGridEmits,
   CrudCardGridExpose,
+  CrudCardGridItemActionsSlot,
   CrudCardGridItemSlot,
   CrudCardGridProps,
   QueryCardGridConstructor,

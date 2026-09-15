@@ -50,14 +50,14 @@ export interface QueryCardGridItemSlot<TEntity> {
   onDragEnd: () => void
 }
 
+export type QueryCardGridItemActionsSlot<TEntity> = Omit<QueryCardGridItemSlot<TEntity>, 'selected'>
+
 export interface QueryCardGridSlots<TEntity> {
   title?: () => unknown
   extra?: () => unknown
   empty?: () => unknown
   item?: (slot: QueryCardGridItemSlot<TEntity>) => unknown
-  itemActions?: (
-    slot: Omit<QueryCardGridItemSlot<TEntity>, 'selected'> & {actions?: ResolvedAction[]},
-  ) => unknown
+  itemActions?: (slot: QueryCardGridItemActionsSlot<TEntity>) => unknown
 }
 
 export interface QueryCardGridExpose<
@@ -93,8 +93,14 @@ export interface CrudCardGridItemSlot<TEntity> extends QueryCardGridItemSlot<TEn
   itemActions: ResolvedAction[]
 }
 
-export interface CrudCardGridSlots<TEntity> extends Omit<QueryCardGridSlots<TEntity>, 'item'> {
+export interface CrudCardGridItemActionsSlot<TEntity> extends QueryCardGridItemActionsSlot<TEntity> {
+  actions: ResolvedAction[]
+}
+
+export interface CrudCardGridSlots<TEntity>
+  extends Omit<QueryCardGridSlots<TEntity>, 'item' | 'itemActions'> {
   item?: (slot: CrudCardGridItemSlot<TEntity>) => unknown
+  itemActions?: (slot: CrudCardGridItemActionsSlot<TEntity>) => unknown
 }
 
 export interface CrudCardGridExpose<TEntity extends BasicIdMetadata<unknown>> {

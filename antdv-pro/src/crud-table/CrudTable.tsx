@@ -17,19 +17,14 @@ import {createDefaultBulkActions, createDefaultItemActions} from '../_util/crud/
 import {useCrudDelete} from '../_util/crud/useCrudDelete'
 import QueryTable from '../query-table/QueryTable'
 import ActionButton from '../action-button'
-import type {
-  AuthorityProps,
-  DefaultCrudEntity,
-  QueryTableExpose,
-  QueryTableSlots,
-  SearchableColumnType,
-} from '../query-table/types'
+import type {AuthorityProps, DefaultCrudEntity, QueryTableExpose, SearchableColumnType,} from '../query-table/types'
 import type {
   CrudTableConstructor,
   CrudTableEmits,
   CrudTableExpose,
   CrudTableProps,
-  CrudTableRuntimeProps
+  CrudTableRuntimeProps,
+  CrudTableSlots,
 } from './types'
 
 const CRUD_TABLE_EMITS = [
@@ -83,7 +78,7 @@ const CrudTable = defineComponent({
     selectedRows: {type: Array as PropType<DefaultCrudEntity[]>, default: () => []},
   },
   emits: [...CRUD_TABLE_EMITS],
-  slots: Object as SlotsType<QueryTableSlots<DefaultCrudEntity>>,
+  slots: Object as SlotsType<CrudTableSlots<DefaultCrudEntity>>,
   setup(props, {attrs, emit, expose, slots}) {
     type TEntity = DefaultCrudEntity
     type TBody = DefaultCrudEntity

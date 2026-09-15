@@ -1,16 +1,16 @@
 import {SYSTEM_MODULE_NAME} from '../constants/system.ts'
 import type {IdNameValueMetadata, PageRequest, RestResult} from '../domain/common.ts'
 import type {
-    AuthCredentials,
-    AuthenticationInfo,
-    AuthenticationType,
-    PlatformUser,
-    PrepareData,
-    UserMetadata,
+  AuthCredentials,
+  AuthenticationInfo,
+  AuthenticationType,
+  PlatformUser,
+  PrepareData,
+  UserMetadata,
 } from '../domain/auth.ts'
 import type {ResourceEntity} from '../domain/resource.ts'
 import {formUrlEncoded} from '../utils/formUrlEncoded.ts'
-import {getClient, http, modulePrefix} from '../../http'
+import {http, modulePrefix} from '../../http'
 
 export class AuthServerService {
   static get BASE_URL(): string {
@@ -91,16 +91,12 @@ export class AuthServerService {
     credentials: AuthCredentials,
     authenticationType: AuthenticationType,
   ): Promise<RestResult<AuthenticationInfo>> {
-    const headerName = getClient().authenticationTypeHeaderName
-    if (!headerName) {
-      throw new Error('@loncra/client: createClient 需配置 authenticationTypeHeaderName')
-    }
     return http().request({
       url: AuthServerService.LOGIN_URL,
       method: 'POST',
       data: formUrlEncoded(credentials),
       bodyType: 'form',
-      headers: {[headerName]: authenticationType},
+      headers: {'X-AUTHENTICATION-TYPE': authenticationType},
     })
   }
 

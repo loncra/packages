@@ -27,8 +27,8 @@ import type {
   CrudCardGridRuntimeProps,
   CrudCardGridSlots,
   QueryCardGridExpose,
+  QueryCardGridItemActionsSlot,
   QueryCardGridItemSlot,
-  QueryCardGridSlots,
 } from '../query-card-grid/types'
 
 const CRUD_CARD_GRID_EMITS = [
@@ -291,16 +291,6 @@ const CrudCardGrid = defineComponent({
             if (!props.recordActions) {
               return null
             }
-            if (slots.itemActions) {
-              return slots.itemActions({
-                record: itemSlot.record,
-                index: itemSlot.index,
-                dragEnabled: itemSlot.dragEnabled,
-                onDragStart: itemSlot.onDragStart,
-                onDragEnd: itemSlot.onDragEnd,
-                actions: resolveItemActions(itemSlot.record),
-              })
-            }
             return (
               <Card
                 size="small"
@@ -337,8 +327,11 @@ const CrudCardGrid = defineComponent({
             )
           },
           itemActions: slots.itemActions
-            ? (itemActionsSlot: Parameters<NonNullable<QueryCardGridSlots<TEntity>['itemActions']>>[0]) =>
-                slots.itemActions?.(itemActionsSlot)
+            ? (itemActionsSlot: QueryCardGridItemActionsSlot<TEntity>) =>
+                slots.itemActions?.({
+                  ...itemActionsSlot,
+                  actions: props.recordActions ? resolveItemActions(itemActionsSlot.record) : [],
+                })
             : undefined,
         }}
       />
