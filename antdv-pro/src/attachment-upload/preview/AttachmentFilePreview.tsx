@@ -1,5 +1,15 @@
-import {defineComponent, type PropType} from 'vue'
-import {BasicImage, classNames, renderIconFont} from '@loncra/antdv'
+import {defineComponent, h, type PropType} from 'vue'
+import {
+  DeleteOutlined,
+  DownloadOutlined,
+  EyeOutlined,
+  FileImageOutlined,
+  FileUnknownOutlined,
+  FolderOutlined,
+  LoadingOutlined,
+  PlayCircleOutlined,
+} from '@antdv-next/icons'
+import {BasicImage, classNames} from '@loncra/antdv'
 import type {RestResult} from '@loncra/client/commons'
 import type {ObjectWriteResult} from '@loncra/client/resource'
 import {AttachmentService} from '@loncra/client/resource'
@@ -64,15 +74,15 @@ const AttachmentFilePreview = defineComponent({
 
     function getFileIcon() {
       if (props.file?.type?.includes('image/')) {
-        return 'loncra-file-image'
+        return FileImageOutlined
       }
       if (props.file?.type?.includes('video/')) {
-        return 'loncra-file-play'
+        return PlayCircleOutlined
       }
       if (props.file?.type === 'directory') {
-        return 'loncra-folder'
+        return FolderOutlined
       }
-      return 'loncra-file-up'
+      return FileUnknownOutlined
     }
 
     function thumbBorderClass() {
@@ -164,7 +174,9 @@ const AttachmentFilePreview = defineComponent({
           ) : (
             <span class={classNames(props.hashId, `${props.prefixCls}-thumb-fallback`)}>
               {slots.itemIcon?.({file}) ??
-                renderIconFont(getFileIcon(), classNames(props.hashId, `${props.prefixCls}-file-icon`))}
+                h(getFileIcon(), {
+                  class: classNames(props.hashId, `${props.prefixCls}-file-icon`),
+                })}
             </span>
           )}
           {!props.disabled ? (
@@ -185,7 +197,7 @@ const AttachmentFilePreview = defineComponent({
                     onClickPreview()
                   }}
                 >
-                  {renderIconFont('loncra-view')}
+                  {h(EyeOutlined)}
                 </span>
               ) : null}
               {props.canDelete?.(file) && !uploading ? (
@@ -198,7 +210,7 @@ const AttachmentFilePreview = defineComponent({
                     onRemove()
                   }}
                 >
-                  {renderIconFont('loncra-archive-x')}
+                  {h(DeleteOutlined)}
                 </span>
               ) : null}
               {file.response && props.canDownload?.(file) && !uploading ? (
@@ -211,14 +223,13 @@ const AttachmentFilePreview = defineComponent({
                     onDownload(file.response as ObjectWriteResult)
                   }}
                 >
-                  {renderIconFont('loncra-download')}
+                  {h(DownloadOutlined)}
                 </span>
               ) : !file.response && uploading ? (
                 <span class={classNames(props.hashId, `${props.prefixCls}-overlay-progress`)}>
-                  {renderIconFont(
-                    'loncra-loader-pinwheel',
-                    classNames(props.hashId, `${props.prefixCls}-overlay-spin`),
-                  )}
+                  {h(LoadingOutlined, {
+                    class: classNames(props.hashId, `${props.prefixCls}-overlay-spin`),
+                  })}
                   <span>{`${file.percent}%`}</span>
                 </span>
               ) : null}

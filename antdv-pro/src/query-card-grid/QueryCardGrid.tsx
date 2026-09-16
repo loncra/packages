@@ -164,10 +164,10 @@ const QueryCardGrid = defineComponent({
 
     const resolvedTitle = computed(() => {
       if (props.title !== undefined || props.titleIcon !== undefined) {
-        return {title: props.title ?? '', icon: props.titleIcon ?? 'loncra-file'}
+        return {title: props.title ?? '', icon: props.titleIcon}
       }
       const fromConfig = crudConfig.value.resolveDefaultTitle?.()
-      return {title: fromConfig?.title ?? '', icon: fromConfig?.icon ?? 'loncra-file'}
+      return {title: fromConfig?.title ?? '', icon: fromConfig?.icon}
     })
 
     const paginationBindProps = computed(() => {

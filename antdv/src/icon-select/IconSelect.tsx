@@ -13,6 +13,7 @@ import {
   Tabs,
 } from 'antdv-next'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
+import {SelectOutlined} from '@antdv-next/icons'
 import {classNames} from '../_util/classNames'
 import {useFormItemTrigger} from '../_util/useFormItemTrigger'
 import {useLocale} from '../_util/useLocale'
@@ -375,7 +376,10 @@ const IconSelect = defineComponent({
                   ),
                 }}
               >
-                <Button>{renderIcon(avatarPayload.value || 'loncra-lasso-select')}</Button>
+                {/* 已选图标仍按原方式渲染（数据源来自 options）；未选中时用 SelectOutlined 占位 */}
+                <Button>
+                  {avatarPayload.value ? renderIcon(avatarPayload.value) : <SelectOutlined />}
+                </Button>
               </Popover>
             ) : null}
           </SpaceCompact>

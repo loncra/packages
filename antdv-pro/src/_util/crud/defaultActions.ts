@@ -1,4 +1,5 @@
-import {renderIconFont} from '@loncra/antdv'
+import {h} from 'vue'
+import {DeleteOutlined, EditOutlined, ExportOutlined, FileAddOutlined, FileSearchOutlined,} from '@antdv-next/icons'
 import type {BasicIdMetadata} from '@loncra/client/commons'
 import type {CrudLocale} from '../../locale'
 import {withCount} from '../format'
@@ -16,7 +17,7 @@ export interface CollectionAuthorityProps {
 export interface DefaultToolbarActionsOptions<TEntity extends BasicIdMetadata<unknown>> {
   authority?: CollectionAuthorityProps
   locale: CrudLocale
-  /** 传给 renderIconFont 的额外 class，如表格标题区用 `align` */
+  /** 附加到操作图标上的 class，如表格标题区用 `align` */
   iconClass?: string
   onAdd: (ctx: ActionContext<TEntity>) => void
   onExport: (ctx: ActionContext<TEntity>) => void | Promise<void>
@@ -32,7 +33,7 @@ export function createDefaultToolbarActions<TEntity extends BasicIdMetadata<unkn
       permission: options.authority?.add,
       visible: (ctx) => ctx.extras.titleActionsEnabled !== false,
       label: () => options.locale.add,
-      icon: () => renderIconFont('loncra-file-plus-corner', iconClass),
+      icon: () => h(FileAddOutlined, {class: iconClass}),
       run: (ctx) => options.onAdd(ctx),
     },
     {
@@ -43,7 +44,7 @@ export function createDefaultToolbarActions<TEntity extends BasicIdMetadata<unkn
         ctx.selectedItems.length > 0
           ? withCount(options.locale.exportSelected, ctx.selectedItems.length)
           : options.locale.exportAll,
-      icon: () => renderIconFont('loncra-panel-right-close', iconClass),
+      icon: () => h(ExportOutlined, {class: iconClass}),
       run: (ctx) => options.onExport(ctx),
     },
   ]
@@ -70,7 +71,7 @@ export function createDefaultBulkActions<
       enabled: (ctx) =>
         ctx.selectedItems.length > 0 && isDeletableService<TBody, TEntity, TId>(options.service),
       label: (ctx) => withCount(options.locale.deleteSelected, ctx.selectedItems.length),
-      icon: () => renderIconFont('loncra-archive-x'),
+      icon: () => h(DeleteOutlined),
       run: (ctx) => options.remove(ctx.selectedItems),
     },
   ]
@@ -95,7 +96,7 @@ export function createDefaultItemActions<
       id: BUILTIN_ACTION_ID.EDIT,
       permission: options.authority?.edit,
       label: () => options.locale.edit,
-      icon: () => renderIconFont('loncra-file-pen-line'),
+      icon: () => h(EditOutlined),
       run: (ctx) => {
         if (ctx.record) {
           options.onEdit(ctx.record)
@@ -106,7 +107,7 @@ export function createDefaultItemActions<
       id: BUILTIN_ACTION_ID.DETAIL,
       permission: options.authority?.detail,
       label: () => options.locale.detail,
-      icon: () => renderIconFont('loncra-file-search'),
+      icon: () => h(FileSearchOutlined),
       run: (ctx) => {
         if (ctx.record) {
           options.onDetail(ctx.record)
@@ -119,7 +120,7 @@ export function createDefaultItemActions<
       danger: true,
       enabled: () => isDeletableService<TBody, TEntity, TId>(options.service),
       label: () => options.locale.deleteText,
-      icon: () => renderIconFont('loncra-archive-x'),
+      icon: () => h(DeleteOutlined),
       run: (ctx) => {
         if (ctx.record) {
           options.remove([ctx.record])

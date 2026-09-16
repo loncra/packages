@@ -1,5 +1,6 @@
-import {computed, defineComponent, h, ref, resolveComponent} from 'vue'
+import {computed, defineComponent, h, ref} from 'vue'
 import {Button, Card, CardGrid, Popover, Tabs} from 'antdv-next'
+import {SmileOutlined} from '@antdv-next/icons'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import emojiGroups from 'unicode-emoji-json/data-by-group.json'
 import type {EmojiButtonLocale} from '../locale'
@@ -68,11 +69,7 @@ const EmojiButton = defineComponent({
       if (custom) {
         return custom
       }
-      const IconFont = resolveComponent('IconFont')
-      if (typeof IconFont === 'string') {
-        return null
-      }
-      return h(IconFont, { type: 'loncra-smile' })
+      return h(SmileOutlined)
     }
 
     return () => {

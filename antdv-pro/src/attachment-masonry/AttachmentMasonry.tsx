@@ -1,7 +1,8 @@
-import {computed, defineComponent, type PropType} from 'vue'
+import {computed, defineComponent, h, type PropType} from 'vue'
 import {Card, CardMeta, Checkbox, Empty, Flex, Masonry, theme, Tooltip} from 'antdv-next'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
-import {BasicImage, classNames, renderIconFont} from '@loncra/antdv'
+import {FileTextOutlined} from '@antdv-next/icons'
+import {BasicImage, classNames} from '@loncra/antdv'
 import type {ObjectItemInfo} from '@loncra/client/resource'
 import {AttachmentService} from '@loncra/client/resource'
 import dayjs from 'dayjs'
@@ -135,10 +136,9 @@ const AttachmentMasonry = defineComponent({
                               `${prefixCls.value}-placeholder`,
                             )}
                           >
-                            {renderIconFont(
-                              'loncra-file-text',
-                              classNames(hashId.value, `${prefixCls.value}-file-icon`),
-                            )}
+                            {h(FileTextOutlined, {
+                              class: classNames(hashId.value, `${prefixCls.value}-file-icon`),
+                            })}
                           </div>
                         ),
                     }}

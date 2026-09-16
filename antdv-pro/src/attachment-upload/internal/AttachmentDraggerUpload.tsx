@@ -1,8 +1,9 @@
-import {computed, defineComponent, type PropType, type Ref, useModel} from 'vue'
+import {computed, defineComponent, h, type PropType, type Ref, useModel} from 'vue'
 import type {UploadChangeParam} from 'antdv-next'
 import {Space, TypographyText, TypographyTitle, UploadDragger} from 'antdv-next'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
-import {classNames, renderIconFont} from '@loncra/antdv'
+import {UploadOutlined} from '@antdv-next/icons'
+import {classNames} from '@loncra/antdv'
 import type {ObjectWriteResult} from '@loncra/client/resource'
 import type {UploadFile} from 'antdv-next/dist/upload/interface'
 import {useLocale} from '../../_util/useLocale'
@@ -127,7 +128,7 @@ const AttachmentDraggerUpload = defineComponent({
                     >
                       <Space orientation="vertical">
                         <TypographyTitle level={2} class={hashed()} style={{margin: 0}}>
-                          {renderIconFont('loncra-upload')}
+                          {h(UploadOutlined)}
                         </TypographyTitle>
                         <TypographyTitle level={5} class={hashed()} style={{margin: 0}}>
                           {locale.value.draggerTitle}

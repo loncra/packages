@@ -1,7 +1,7 @@
-import {computed, onMounted, reactive, ref, watch} from 'vue'
+import {computed, h, onMounted, reactive, ref, watch} from 'vue'
 import type {MenuItemType, UploadChangeParam} from 'antdv-next'
 import useApp from 'antdv-next/dist/app/useApp'
-import {renderIconFont} from '@loncra/antdv'
+import {DeleteOutlined, FileAddOutlined, FolderAddOutlined, FormOutlined, ReloadOutlined} from '@antdv-next/icons'
 import {HTTP_SUCCESS_EXECUTE_CODES, type RestResult} from '@loncra/client/commons'
 import type {ObjectItemInfo, ObjectWriteResult} from '@loncra/client/resource'
 import {AttachmentService} from '@loncra/client/resource'
@@ -17,10 +17,6 @@ function isBusinessSuccess<T>(result: RestResult<T>): boolean {
     result.status === 200 &&
     (HTTP_SUCCESS_EXECUTE_CODES as readonly string[]).includes(result.executeCode)
   )
-}
-
-function menuIcon(type: string) {
-  return () => renderIconFont(type)
 }
 
 export function useFileEditor(props: FileEditorProps) {
@@ -194,17 +190,17 @@ export function useFileEditor(props: FileEditorProps) {
         {
           label: locale.value.refresh,
           key: 'refresh',
-          icon: menuIcon('loncra-refresh-cw'),
+          icon: () => h(ReloadOutlined),
         },
         {
           label: locale.value.uploadFile,
           key: 'uploadFile',
-          icon: menuIcon('loncra-upload'),
+          icon: () => h(FileAddOutlined),
         },
         {
           label: locale.value.uploadDirectory,
           key: 'uploadDirectory',
-          icon: menuIcon('loncra-hard-drive-upload'),
+          icon: () => h(FolderAddOutlined),
         },
       )
     }
@@ -212,7 +208,7 @@ export function useFileEditor(props: FileEditorProps) {
       {
         label: locale.value.rename,
         key: 'rename',
-        icon: menuIcon('loncra-pencil'),
+        icon: () => h(FormOutlined),
       },
       {
         type: 'divider' as const,
@@ -221,7 +217,7 @@ export function useFileEditor(props: FileEditorProps) {
         label: locale.value.delete,
         key: 'delete',
         danger: true,
-        icon: menuIcon('loncra-archive-x'),
+        icon: () => h(DeleteOutlined),
       },
     )
     return menu

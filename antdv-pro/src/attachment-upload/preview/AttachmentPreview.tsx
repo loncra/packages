@@ -1,7 +1,8 @@
-import {computed, defineComponent, type PropType, type Ref, ref, Teleport, useModel, watch} from 'vue'
+import {computed, defineComponent, h, type PropType, type Ref, ref, Teleport, useModel, watch} from 'vue'
 import {Alert, Button, Flex, ImagePreviewGroup, Modal, Progress, theme, TypographyText,} from 'antdv-next'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
-import {BasicImage, classNames, renderIconFont} from '@loncra/antdv'
+import {DeleteOutlined, DownloadOutlined} from '@antdv-next/icons'
+import {BasicImage, classNames} from '@loncra/antdv'
 import type {RestResult} from '@loncra/client/commons'
 import type {ObjectWriteResult} from '@loncra/client/resource'
 import {AttachmentService} from '@loncra/client/resource'
@@ -322,7 +323,7 @@ const AttachmentPreview = defineComponent({
                                     disabled={file.status === 'uploading'}
                                     onClick={() => onRemove(file)}
                                   >
-                                    {renderIconFont('loncra-archive-x')}
+                                    {h(DeleteOutlined)}
                                   </Button>
                                 ) : null}
                                 {file.response ? (
@@ -330,7 +331,7 @@ const AttachmentPreview = defineComponent({
                                     type="text"
                                     onClick={() => onDownload(file.response as ObjectWriteResult)}
                                   >
-                                    {renderIconFont('loncra-download')}
+                                    {h(DownloadOutlined)}
                                   </Button>
                                 ) : null}
                               </Flex>

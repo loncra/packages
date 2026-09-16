@@ -1,7 +1,7 @@
-import {computed, defineComponent, type PropType} from 'vue'
+import {computed, defineComponent, h, type PropType} from 'vue'
 import type {ButtonProps} from 'antdv-next'
 import {Button, Dropdown} from 'antdv-next'
-import {renderIconFont} from '@loncra/antdv'
+import {EllipsisOutlined} from '@antdv-next/icons'
 import type {ResolvedAction} from '../_util/crud/actions'
 
 export type ActionButtonSize = 'small' | 'middle' | 'large'
@@ -77,7 +77,7 @@ const ActionButton = defineComponent({
               {...attrs}
               type={props.type}
               size={props.size}
-              v-slots={{icon: () => renderIconFont('loncra-ellipsis')}}
+              v-slots={{icon: () => h(EllipsisOutlined)}}
             />
           </Dropdown>
         )

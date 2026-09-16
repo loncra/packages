@@ -1,8 +1,9 @@
-import {computed, defineComponent, type PropType, type Ref, useModel} from 'vue'
+import {computed, defineComponent, h, type PropType, type Ref, useModel} from 'vue'
 import type {UploadChangeParam} from 'antdv-next'
 import {TypographyText, Upload} from 'antdv-next'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
-import {classNames, renderIconFont} from '@loncra/antdv'
+import {PlusOutlined} from '@antdv-next/icons'
+import {classNames} from '@loncra/antdv'
 import type {ObjectWriteResult} from '@loncra/client/resource'
 import type {UploadFile} from 'antdv-next/dist/upload/interface'
 import {ATTACHMENT_PREVIEW_MODE} from '../constants'
@@ -137,10 +138,9 @@ const AttachmentPictureCardUpload = defineComponent({
                           )}
                         >
                           <TypographyText type="secondary">
-                            {renderIconFont(
-                              'loncra-file-plus',
-                              hashed(`${prefixCls.value}-plus-icon`),
-                            )}
+                            {h(PlusOutlined, {
+                              class: hashed(`${prefixCls.value}-plus-icon`),
+                            })}
                           </TypographyText>
                           {slots.uploadDescription?.()}
                         </span>

@@ -17,6 +17,7 @@ import type {TableProps} from 'antdv-next'
 import {App, Button, Flex, Space, SpaceCompact, Table, Typography} from 'antdv-next'
 import type {TablePaginationConfig} from 'antdv-next/dist/table/interface'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
+import {DeleteOutlined, FilterOutlined, SearchOutlined, UndoOutlined} from '@antdv-next/icons'
 import {classNames, renderIconFont} from '@loncra/antdv'
 import {type FilterRequest, type PageRequest, SYSTEM_CONSTANT} from '@loncra/client/commons'
 import {useLocale} from '../_util/useLocale'
@@ -221,10 +222,10 @@ const QueryTable = defineComponent({
 
     const resolvedTitle = computed(() => {
       if (props.title !== undefined || props.titleIcon !== undefined) {
-        return {title: props.title ?? '', icon: props.titleIcon ?? 'loncra-file'}
+        return {title: props.title ?? '', icon: props.titleIcon}
       }
       const fromConfig = crudConfig.value.resolveDefaultTitle?.()
-      return {title: fromConfig?.title ?? '', icon: fromConfig?.icon ?? 'loncra-file'}
+      return {title: fromConfig?.title ?? '', icon: fromConfig?.icon}
     })
 
     const tablePassthroughAttrs = computed(() => {
@@ -495,21 +496,21 @@ const QueryTable = defineComponent({
                   block
                   type="primary"
                   onClick={() => doSearch(column, setSelectedKeys, confirm)}
-                  v-slots={{icon: () => renderIconFont('loncra-search-check')}}
+                  v-slots={{icon: () => h(SearchOutlined)}}
                 >
                   <span>{locale.value.search}</span>
                 </Button>
                 <Button
                   block
                   onClick={() => resetField(column, setSelectedKeys, confirm)}
-                  v-slots={{icon: () => renderIconFont('loncra-timer-reset')}}
+                  v-slots={{icon: () => h(UndoOutlined)}}
                 >
                   <span>{locale.value.reset}</span>
                 </Button>
                 <Button
                   block
                   onClick={() => clear(confirm, setSelectedKeys)}
-                  v-slots={{icon: () => renderIconFont('loncra-archive-x')}}
+                  v-slots={{icon: () => h(DeleteOutlined)}}
                 >
                   <span>{locale.value.clear}</span>
                 </Button>
@@ -567,10 +568,9 @@ const QueryTable = defineComponent({
               })
             },
             filterIcon: ({filtered}: {filtered: boolean}) =>
-              renderIconFont(
-                'loncra-search',
-                classNames(filtered && `${prefixCls.value}-filter-icon-active`),
-              ),
+              h(FilterOutlined, {
+                class: classNames(filtered && `${prefixCls.value}-filter-icon-active`),
+              }),
             filterDropdown: renderFilterDropdown,
             expandedRowRender: slots.expandedRowRender
               ? (args: {record: TEntity; index: number; indent: number; expanded: boolean}) =>

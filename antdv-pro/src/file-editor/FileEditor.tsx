@@ -18,6 +18,19 @@ import {
   Upload,
 } from 'antdv-next'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
+import {
+  AimOutlined,
+  CheckOutlined,
+  CloseOutlined,
+  DownloadOutlined,
+  EllipsisOutlined,
+  FileAddOutlined,
+  FolderAddOutlined,
+  LoadingOutlined,
+  ProfileOutlined,
+  ReloadOutlined,
+  SaveOutlined,
+} from '@antdv-next/icons'
 import {classNames, renderIconFont} from '@loncra/antdv'
 import type {ObjectItemInfo} from '@loncra/client/resource'
 import FilePaneHost from './FilePaneHost'
@@ -134,7 +147,7 @@ const FileEditor = defineComponent({
                   class={hashed(`${prefixCls.value}-toolbar`)}
                 >
                   <Flex flex="1" gap="small" align="center">
-                    {renderIconFont('loncra-sparkles')}
+                    {h(ProfileOutlined)}
                     <TypographyText ellipsis>
                       {props.name || locale.value.untitled}
                     </TypographyText>
@@ -142,19 +155,19 @@ const FileEditor = defineComponent({
                   <SpaceCompact size="small">
                     <Tooltip title={locale.value.refresh}>
                       <Button onClick={onRefresh}>
-                        {{icon: () => renderIconFont('loncra-refresh-cw')}}
+                        {{icon: () => h(ReloadOutlined)}}
                       </Button>
                     </Tooltip>
                     {!props.readonly ? (
                       <>
                         <Tooltip title={locale.value.uploadFile}>
                           <Button onClick={() => onRootUpload(false)}>
-                            {{icon: () => renderIconFont('loncra-upload')}}
+                            {{icon: () => h(FileAddOutlined)}}
                           </Button>
                         </Tooltip>
                         <Tooltip title={locale.value.uploadDirectory}>
                           <Button onClick={() => onRootUpload(true)}>
-                            {{icon: () => renderIconFont('loncra-hard-drive-upload')}}
+                            {{icon: () => h(FolderAddOutlined)}}
                           </Button>
                         </Tooltip>
                       </>
@@ -177,10 +190,7 @@ const FileEditor = defineComponent({
                       v-slots={{
                         iconRender: (item: EditObjectItemInfo) =>
                           item.loading
-                            ? renderIconFont(
-                                'loncra-loader-pinwheel',
-                                hashed(`${prefixCls.value}-icon-spin`),
-                              )
+                            ? h(LoadingOutlined, {class: hashed(`${prefixCls.value}-icon-spin`)})
                             : renderIconFont(resolveIcon(item)),
                         labelRender: (item: EditObjectItemInfo) =>
                           state.value.currentEditItem?.id === item.id &&
@@ -212,7 +222,7 @@ const FileEditor = defineComponent({
                                   confirmEdit(state.value.currentEditItem)
                                 }
                               >
-                                {{icon: () => renderIconFont('loncra-check')}}
+                                {{icon: () => h(CheckOutlined)}}
                               </Button>
                               <Button
                                 type="primary"
@@ -222,7 +232,7 @@ const FileEditor = defineComponent({
                                   cancelEdit(state.value.currentEditItem)
                                 }
                               >
-                                {{icon: () => renderIconFont('loncra-x')}}
+                                {{icon: () => h(CloseOutlined)}}
                               </Button>
                             </SpaceCompact>
                           ) : (
@@ -254,7 +264,7 @@ const FileEditor = defineComponent({
                                         onMousedown: (e: Event) => e.stopPropagation(),
                                       } as Record<string, unknown>)}
                                     >
-                                      {{icon: () => renderIconFont('loncra-ellipsis')}}
+                                      {{icon: () => h(EllipsisOutlined)}}
                                     </Button>
                                   </Dropdown>
                                 </span>
@@ -317,7 +327,7 @@ const FileEditor = defineComponent({
                               onMousedown: (e: Event) => e.stopPropagation(),
                             } as Record<string, unknown>)}
                           >
-                            {{icon: () => renderIconFont('loncra-x')}}
+                            {{icon: () => h(CloseOutlined)}}
                           </Button>
                         </Flex>
                       ),
@@ -347,7 +357,7 @@ const FileEditor = defineComponent({
                             {activeCanSave.value ? (
                               <Tooltip title={locale.value.save}>
                                 <Button onClick={saveActive}>
-                                  {{icon: () => renderIconFont('loncra-save')}}
+                                  {{icon: () => h(SaveOutlined)}}
                                 </Button>
                               </Tooltip>
                             ) : null}
@@ -358,7 +368,7 @@ const FileEditor = defineComponent({
                                   onSelectOpenFile(state.value.selectedItem)
                                 }
                               >
-                                {{icon: () => renderIconFont('loncra-locate-fixed')}}
+                                {{icon: () => h(AimOutlined)}}
                               </Button>
                             </Tooltip>
                             <Tooltip title={locale.value.download}>
@@ -368,7 +378,7 @@ const FileEditor = defineComponent({
                                   onDownloadFile(state.value.selectedItem)
                                 }
                               >
-                                {{icon: () => renderIconFont('loncra-download')}}
+                                {{icon: () => h(DownloadOutlined)}}
                               </Button>
                             </Tooltip>
                           </SpaceCompact>

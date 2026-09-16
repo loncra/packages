@@ -1,5 +1,6 @@
-import {computed, defineComponent, type Ref, useModel} from 'vue'
+import {computed, defineComponent, h, type Ref, useModel} from 'vue'
 import {Button, Flex, FormItem, Input, Select, Space, SpaceCompact, Table, type TableColumnType,} from 'antdv-next'
+import {CheckOutlined, CloseOutlined, DeleteOutlined, EditOutlined, PlusOutlined} from '@antdv-next/icons'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import TooltipValidationFormItem from '../tooltip-validation-form-item'
 import {classNames} from '../_util/classNames'
@@ -218,22 +219,22 @@ const KeyValueTable = defineComponent({
       if (record.editing) {
         return (
           <SpaceCompact>
-            <Button type="primary" onClick={() => confirmKeyValueRow(record)}>
-              {renderIcon('loncra-check')}
+            <Button size="small" type="primary" onClick={() => confirmKeyValueRow(record)}>
+              {h(CheckOutlined)}
             </Button>
-            <Button type="primary" danger onClick={() => cancelKeyValueRow(record)}>
-              {renderIcon('loncra-x')}
+            <Button size="small" type="primary" danger onClick={() => cancelKeyValueRow(record)}>
+              {h(CloseOutlined)}
             </Button>
           </SpaceCompact>
         )
       }
       return (
         <SpaceCompact>
-          <Button type="primary" onClick={() => editKeyValueRow(record)}>
-            {renderIcon('loncra-file-pen-line')}
+          <Button size="small" type="primary" onClick={() => editKeyValueRow(record)}>
+            {h(EditOutlined)}
           </Button>
-          <Button type="primary" danger onClick={() => removeKeyValueRow(record)}>
-            {renderIcon('loncra-archive-x')}
+          <Button size="small" type="primary" danger onClick={() => removeKeyValueRow(record)}>
+            {h(DeleteOutlined)}
           </Button>
         </SpaceCompact>
       )
@@ -269,7 +270,7 @@ const KeyValueTable = defineComponent({
                         {props.title}
                       </Space>
                       {props.edit ? (
-                        <Button onClick={addKeyValueRow}>{renderIcon('loncra-plus')}</Button>
+                        <Button size="small" onClick={addKeyValueRow}>{h(PlusOutlined)}</Button>
                       ) : null}
                     </Flex>
                   )
