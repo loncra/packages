@@ -105,7 +105,9 @@ const AttachmentUpload = defineComponent({
     const [hashId, cssVarCls] = useStyle(prefixCls)
     const formItemContext = useFormItemContext()
     const fileList = ref<AttachmentFileItem[]>([])
-    const syncing = ref(false)
+    // 记录最后一次 emit 出去的值，用来识别「自己的回声」。
+    // 替代原来的 syncing + nextTick 时序保护：那种写法依赖下一轮 tick，父级同步回写/异步回写表现不一致。
+    let lastEmitted: AttachmentValue | undefined
 
     const [mergedClasses, mergedStyles] = (
       useMergeSemantic as (
@@ -125,25 +127,21 @@ const AttachmentUpload = defineComponent({
     watch(
       () => props.value,
       (v) => {
-        if (syncing.value) {
+        // 自己刚 emit 出去又被回传回来的值，不需要再反向同步一次
+        if (v != null && v === lastEmitted) {
           return
         }
         fileList.value = normalizeAttachmentToList(v ?? undefined)
       },
-      {immediate: true},
+      // deep：父级原地修改数组元素时也要同步进来
+      {immediate: true, deep: true},
     )
 
     watch(
       fileList,
       (list) => {
-        syncing.value = true
-        emit(
-          'update:value',
-          denormalizeAttachmentFromList(list, props.value ?? undefined, props.maxCount),
-        )
-        nextTick(() => {
-          syncing.value = false
-        })
+        lastEmitted = denormalizeAttachmentFromList(list, props.value ?? undefined, props.maxCount)
+        emit('update:value', lastEmitted)
       },
       {deep: true},
     )
@@ -230,14 +228,9 @@ const AttachmentUpload = defineComponent({
           })
           .filter((item): item is ObjectWriteResult => item !== null)
 
-        syncing.value = true
+        // 交给 fileList 的 watch 统一 emit，避免与显式 emit 重复
         fileList.value = results
-        emit(
-          'update:value',
-          denormalizeAttachmentFromList(results, props.value ?? undefined, props.maxCount),
-        )
         await nextTick()
-        syncing.value = false
         return resolveUploadResult(results)
       }
 

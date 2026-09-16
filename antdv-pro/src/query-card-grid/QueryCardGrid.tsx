@@ -5,10 +5,11 @@ import {
   onMounted,
   type PropType,
   provide,
+  type Ref,
   ref,
   type SlotsType,
   toRef,
-  watch,
+  useModel,
 } from 'vue'
 import {App, Card, CardGrid, Empty, Flex, Pagination, Space, Typography} from 'antdv-next'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
@@ -28,7 +29,7 @@ import {exportCollectionData, fetchCollectionData} from '../_util/crud/useCollec
 import {useFlatDragDrop} from '../_util/crud/useFlatDragDrop'
 import ActionButton from '../action-button'
 import useStyle from './style'
-import type {AuthorityProps, DefaultCrudEntity} from '../query-table/types'
+import type {AuthorityProps, DefaultCrudEntity, RefreshOnActivate} from '../query-table/types'
 import type {
   CardGridPagination,
   QueryCardGridConstructor,
@@ -57,6 +58,10 @@ const QueryCardGrid = defineComponent({
   props: {
     service: {type: Object as PropType<QueryCardGridRuntimeProps['service']>, required: true},
     immediate: {type: Boolean, default: true},
+    refreshOnActivate: {
+      type: [Boolean, Function] as PropType<RefreshOnActivate>,
+      default: true,
+    },
     hideTitle: {type: Boolean, default: false},
     title: String,
     titleIcon: String,
@@ -99,83 +104,16 @@ const QueryCardGrid = defineComponent({
     )
     const [hashId, cssVarCls] = useStyle(prefixCls)
 
-    const dataSourceInner = ref<TEntity[]>([...(props.dataSource ?? [])])
-    const loadingInner = ref(props.loading ?? false)
-    const queryInner = ref<FilterRequest | PageRequest>({...(props.query ?? {})})
-    const selectedItemsInner = ref<TEntity[]>([...(props.selectedItems ?? [])])
-    const paginationInner = ref<CardGridPagination>(
-      props.pagination ?? {hideOnSinglePage: true, align: 'center'},
-    )
+    // 双向绑定：父级 v-model 时纯受控（写操作 emit 回流），未绑时写本地值并 emit。
+    // localValue 与 props 保持同一引用，父级「改对象属性」也能立即生效（不再需要 watch 拷贝）。
+    const dataSource = useModel(props, 'dataSource') as unknown as Ref<TEntity[]>
+    const loading = useModel(props, 'loading') as unknown as Ref<boolean>
+    const query = useModel(props, 'query') as unknown as Ref<FilterRequest | PageRequest>
+    const selectedItems = useModel(props, 'selectedItems') as unknown as Ref<TEntity[]>
+    const pagination = useModel(props, 'pagination') as unknown as Ref<CardGridPagination>
 
-    watch(
-      () => props.dataSource,
-      (value) => {
-        dataSourceInner.value = value ?? []
-      },
-    )
-    watch(
-      () => props.loading,
-      (value) => {
-        loadingInner.value = value ?? false
-      },
-    )
-    watch(
-      () => props.query,
-      (value) => {
-        queryInner.value = value ?? {}
-      },
-    )
-    watch(
-      () => props.selectedItems,
-      (value) => {
-        selectedItemsInner.value = value ?? []
-      },
-    )
-    watch(
-      () => props.pagination,
-      (value) => {
-        paginationInner.value = value ?? {hideOnSinglePage: true, align: 'center'}
-      },
-    )
-
-    const dataSource = computed({
-      get: () => dataSourceInner.value,
-      set: (value: TEntity[]) => {
-        dataSourceInner.value = value
-        emit('update:dataSource', value)
-      },
-    })
-    const loading = computed({
-      get: () => loadingInner.value,
-      set: (value: boolean) => {
-        loadingInner.value = value
-        emit('update:loading', value)
-      },
-    })
-    const query = computed({
-      get: () => queryInner.value,
-      set: (value: FilterRequest | PageRequest) => {
-        queryInner.value = value
-        emit('update:query', value)
-      },
-    })
-    const selectedItems = computed({
-      get: () => selectedItemsInner.value,
-      set: (value: TEntity[]) => {
-        selectedItemsInner.value = value
-        emit('update:selectedItems', value)
-      },
-    })
-    const pagination = computed({
-      get: () => paginationInner.value,
-      set: (value: CardGridPagination) => {
-        paginationInner.value = value
-        emit('update:pagination', value)
-      },
-    })
-
-    const hasFetched = ref(false)
-    const dragEnabled = computed(() => !!props.drag)
+    const mountedFetched = ref(false)
+    const dragEnabled = computed(() => props.drag)
     const ghostClass = computed(() =>
       classNames(hashId.value, cssVarCls.value, `${prefixCls.value}-drag-ghost`),
     )
@@ -259,6 +197,9 @@ const QueryCardGrid = defineComponent({
     }
 
     async function fetchDataSource() {
+      if (loading.value) {
+        return
+      }
       try {
         loading.value = true
         dataSource.value = await fetchCollectionData({
@@ -288,14 +229,24 @@ const QueryCardGrid = defineComponent({
     }
 
     onMounted(async () => {
-      if (props.immediate !== false) {
-        await fetchDataSource()
+      if (!props.immediate) {
+        return
       }
-      hasFetched.value = true
+      await fetchDataSource()
     })
 
     onActivated(() => {
-      if (!hasFetched.value) {
+      // onActivated 在首次挂载时也会触发，那一次交给 onMounted / immediate 决定
+      if (!mountedFetched.value) {
+        mountedFetched.value = true
+        return
+      }
+      const refresh = props.refreshOnActivate
+      if (refresh === false) {
+        return
+      }
+      if (typeof refresh === 'function') {
+        void refresh()
         return
       }
       void fetchDataSource()

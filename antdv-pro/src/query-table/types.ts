@@ -38,6 +38,14 @@ export interface AuthorityProps {
   export?: string | boolean
 }
 
+/**
+ * 被 KeepAlive 缓存的实例从缓存切回（onActivated）时如何刷新数据。
+ * - `true`（默认）：自动重新取数
+ * - `false`：切回不刷新
+ * - 函数：完全交给调用方决定（组件不再自动取数），需要的数据请自行通过 v-model 绑定获取
+ */
+export type RefreshOnActivate = boolean | (() => void | Promise<void>)
+
 export interface QueryCollectionProps<
   TBody extends BasicIdMetadata<TId>,
   TEntity extends TBody,
@@ -46,6 +54,7 @@ export interface QueryCollectionProps<
 > {
   service: CollectionService<TBody, TEntity, TPage, TId>
   immediate?: boolean
+  refreshOnActivate?: RefreshOnActivate
   hideTitle?: boolean
   title?: string
   titleIcon?: string

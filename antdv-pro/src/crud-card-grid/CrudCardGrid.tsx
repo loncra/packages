@@ -1,4 +1,4 @@
-import {computed, defineComponent, type PropType, ref, type SlotsType, toRef, unref, watch,} from 'vue'
+import {computed, defineComponent, type PropType, type Ref, ref, type SlotsType, toRef, unref, useModel, watch,} from 'vue'
 import {App, Card, Typography} from 'antdv-next'
 import {classNames} from '@loncra/antdv'
 import {type FilterRequest, type PageRequest, SYSTEM_CONSTANT} from '@loncra/client/commons'
@@ -17,7 +17,7 @@ import {createDefaultBulkActions, createDefaultItemActions} from '../_util/crud/
 import {useCrudDelete} from '../_util/crud/useCrudDelete'
 import QueryCardGrid from '../query-card-grid/QueryCardGrid'
 import ActionButton from '../action-button'
-import type {AuthorityProps, DefaultCrudEntity} from '../query-table/types'
+import type {AuthorityProps, DefaultCrudEntity, RefreshOnActivate} from '../query-table/types'
 import type {
   CardGridPagination,
   CrudCardGridConstructor,
@@ -52,6 +52,10 @@ const CrudCardGrid = defineComponent({
   props: {
     service: {type: Object as PropType<CrudCardGridRuntimeProps['service']>, required: true},
     immediate: {type: Boolean, default: true},
+    refreshOnActivate: {
+      type: [Boolean, Function] as PropType<RefreshOnActivate>,
+      default: true,
+    },
     hideTitle: {type: Boolean, default: false},
     title: String,
     titleIcon: String,
@@ -92,78 +96,12 @@ const CrudCardGrid = defineComponent({
     const {resolveActions} = useActionResolver()
     const queryCardGrid = ref<QueryCardGridExpose<TEntity, TId>>()
 
-    const loadingInner = ref(props.loading ?? false)
-    const selectedItemsInner = ref<TEntity[]>([...(props.selectedItems ?? [])])
-    const dataSourceInner = ref<TEntity[]>([...(props.dataSource ?? [])])
-    const queryInner = ref<FilterRequest | PageRequest>({...(props.query ?? {})})
-    const paginationInner = ref<CardGridPagination>(props.pagination ?? {hideOnSinglePage: true})
-
-    watch(
-      () => props.loading,
-      (value) => {
-        loadingInner.value = value ?? false
-      },
-    )
-    watch(
-      () => props.selectedItems,
-      (value) => {
-        selectedItemsInner.value = value ?? []
-      },
-    )
-    watch(
-      () => props.dataSource,
-      (value) => {
-        dataSourceInner.value = value ?? []
-      },
-    )
-    watch(
-      () => props.query,
-      (value) => {
-        queryInner.value = value ?? {}
-      },
-    )
-    watch(
-      () => props.pagination,
-      (value) => {
-        paginationInner.value = value ?? {hideOnSinglePage: true}
-      },
-    )
-
-    const loading = computed({
-      get: () => loadingInner.value,
-      set: (value: boolean) => {
-        loadingInner.value = value
-        emit('update:loading', value)
-      },
-    })
-    const selectedItems = computed({
-      get: () => selectedItemsInner.value,
-      set: (value: TEntity[]) => {
-        selectedItemsInner.value = value
-        emit('update:selectedItems', value)
-      },
-    })
-    const dataSource = computed({
-      get: () => dataSourceInner.value,
-      set: (value: TEntity[]) => {
-        dataSourceInner.value = value
-        emit('update:dataSource', value)
-      },
-    })
-    const query = computed({
-      get: () => queryInner.value,
-      set: (value: FilterRequest | PageRequest) => {
-        queryInner.value = value
-        emit('update:query', value)
-      },
-    })
-    const pagination = computed({
-      get: () => paginationInner.value,
-      set: (value: CardGridPagination) => {
-        paginationInner.value = value
-        emit('update:pagination', value)
-      },
-    })
+    // 双向绑定：透传给 QueryCardGrid 时同时传值与 onUpdate，由最远端统一持有状态
+    const loading = useModel(props, 'loading') as unknown as Ref<boolean>
+    const selectedItems = useModel(props, 'selectedItems') as unknown as Ref<TEntity[]>
+    const dataSource = useModel(props, 'dataSource') as unknown as Ref<TEntity[]>
+    const query = useModel(props, 'query') as unknown as Ref<FilterRequest | PageRequest>
+    const pagination = useModel(props, 'pagination') as unknown as Ref<CardGridPagination>
 
     const {remove} = useCrudDelete<TBody, TEntity, TId>({
       service: props.service,
@@ -251,6 +189,7 @@ const CrudCardGrid = defineComponent({
         selectable={props.selectable}
         authority={props.authority}
         immediate={props.immediate}
+        refreshOnActivate={props.refreshOnActivate}
         prefixCls={props.prefixCls}
         rootClass={props.rootClass}
         dataSource={dataSource.value}

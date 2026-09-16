@@ -6,9 +6,11 @@ import {
   onMounted,
   type PropType,
   provide,
+  type Ref,
   ref,
   type SlotsType,
   toRef,
+  useModel,
   watch,
 } from 'vue'
 import type {TableProps} from 'antdv-next'
@@ -43,6 +45,7 @@ import type {
   QueryTableProps,
   QueryTableRuntimeProps,
   QueryTableSlots,
+  RefreshOnActivate,
   SearchableColumnType,
 } from './types'
 
@@ -65,6 +68,10 @@ const QueryTable = defineComponent({
     service: {type: Object as PropType<QueryTableRuntimeProps['service']>, required: true},
     columns: {type: Array as PropType<SearchableColumnType<DefaultCrudEntity>[]>, default: () => []},
     immediate: {type: Boolean, default: true},
+    refreshOnActivate: {
+      type: [Boolean, Function] as PropType<RefreshOnActivate>,
+      default: true,
+    },
     hideTitle: {type: Boolean, default: false},
     bordered: {type: Boolean, default: true},
     title: String,
@@ -118,73 +125,14 @@ const QueryTable = defineComponent({
     )
     const [hashId, cssVarCls] = useStyle(prefixCls)
 
-    const dataSourceInner = ref<TEntity[]>([...(props.dataSource ?? [])])
-    const loadingInner = ref(props.loading ?? false)
-    const queryInner = ref<FilterRequest | PageRequest>({...(props.query ?? {})})
-    const selectedRowsInner = ref<TEntity[]>([...(props.selectedRows ?? [])])
-
-    watch(
-      () => props.dataSource,
-      (value) => {
-        dataSourceInner.value = value ?? []
-      },
-    )
-    watch(
-      () => props.loading,
-      (value) => {
-        loadingInner.value = value ?? false
-      },
-    )
-    watch(
-      () => props.query,
-      (value) => {
-        queryInner.value = value ?? {}
-      },
-    )
-    watch(
-      () => props.selectedRows,
-      (value) => {
-        selectedRowsInner.value = value ?? []
-      },
-    )
-
-    const dataSource = computed({
-      get: () => dataSourceInner.value,
-      set: (value: TEntity[]) => {
-        dataSourceInner.value = value
-        emit('update:dataSource', value)
-      },
-    })
-    const loading = computed({
-      get: () => loadingInner.value,
-      set: (value: boolean) => {
-        loadingInner.value = value
-        emit('update:loading', value)
-      },
-    })
-    const query = computed({
-      get: () => queryInner.value,
-      set: (value: FilterRequest | PageRequest) => {
-        queryInner.value = value
-        emit('update:query', value)
-      },
-    })
-    const selectedRows = computed({
-      get: () => selectedRowsInner.value,
-      set: (value: TEntity[]) => {
-        selectedRowsInner.value = value
-        emit('update:selectedRows', value)
-      },
-    })
-
-    const tablePagination = ref<TableProps['pagination']>(props.pagination)
-    watch(
-      () => props.pagination,
-      (value) => {
-        tablePagination.value = value
-      },
-    )
-    const hasFetched = ref(false)
+    // 双向绑定：父级 v-model 时纯受控（写操作 emit 回流），未绑时写本地值并 emit。
+    // localValue 与 props 保持同一引用，父级「改对象属性」也能立即生效（不再需要 watch 拷贝）。
+    const dataSource = useModel(props, 'dataSource') as unknown as Ref<TEntity[]>
+    const loading = useModel(props, 'loading') as unknown as Ref<boolean>
+    const query = useModel(props, 'query') as unknown as Ref<FilterRequest | PageRequest>
+    const selectedRows = useModel(props, 'selectedRows') as unknown as Ref<TEntity[]>
+    const tablePagination = useModel(props, 'pagination') as unknown as Ref<TableProps['pagination']>
+    const mountedFetched = ref(false)
     const tableColumns = ref<TableColumn[]>([])
     const appliedDefaultValueKeys = new Set<string>()
 
@@ -192,7 +140,7 @@ const QueryTable = defineComponent({
       classNames(hashId.value, cssVarCls.value, `${prefixCls.value}-drag-ghost`),
     )
     const dropClassPrefix = computed(() => classNames(hashId.value, prefixCls.value))
-    const dragEnabled = computed(() => !!props.drag)
+    const dragEnabled = computed(() => props.drag)
 
     const {
       tableOnRow,
@@ -407,6 +355,9 @@ const QueryTable = defineComponent({
     })
 
     async function fetchDataSource() {
+      if (loading.value) {
+        return
+      }
       try {
         loading.value = true
         dataSource.value = await fetchCollectionData({
@@ -450,15 +401,24 @@ const QueryTable = defineComponent({
     )
 
     onMounted(async () => {
-      tablePagination.value = props.pagination
-    if (props.immediate !== false) {
-        await fetchDataSource()
+      if (!props.immediate) {
+        return
       }
-      hasFetched.value = true
+      await fetchDataSource()
     })
 
     onActivated(() => {
-      if (!hasFetched.value) {
+      // onActivated 在首次挂载时也会触发，那一次交给 onMounted / immediate 决定
+      if (!mountedFetched.value) {
+        mountedFetched.value = true
+        return
+      }
+      const refresh = props.refreshOnActivate
+      if (refresh === false) {
+        return
+      }
+      if (typeof refresh === 'function') {
+        void refresh()
         return
       }
       void fetchDataSource()

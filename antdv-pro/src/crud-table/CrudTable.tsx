@@ -1,4 +1,4 @@
-import {computed, defineComponent, type PropType, ref, type SlotsType, toRef, unref, watch,} from 'vue'
+import {computed, defineComponent, type PropType, type Ref, ref, type SlotsType, toRef, unref, useModel, watch,} from 'vue'
 import type {TableProps} from 'antdv-next'
 import {App} from 'antdv-next'
 import {type FilterRequest, type PageRequest} from '@loncra/client/commons'
@@ -17,7 +17,7 @@ import {createDefaultBulkActions, createDefaultItemActions} from '../_util/crud/
 import {useCrudDelete} from '../_util/crud/useCrudDelete'
 import QueryTable from '../query-table/QueryTable'
 import ActionButton from '../action-button'
-import type {AuthorityProps, DefaultCrudEntity, QueryTableExpose, SearchableColumnType,} from '../query-table/types'
+import type {AuthorityProps, DefaultCrudEntity, QueryTableExpose, RefreshOnActivate, SearchableColumnType,} from '../query-table/types'
 import type {
   CrudTableConstructor,
   CrudTableEmits,
@@ -49,6 +49,10 @@ const CrudTable = defineComponent({
     service: {type: Object as PropType<CrudTableRuntimeProps['service']>, required: true},
     columns: {type: Array as PropType<SearchableColumnType<DefaultCrudEntity>[]>, default: () => []},
     immediate: {type: Boolean, default: true},
+    refreshOnActivate: {
+      type: [Boolean, Function] as PropType<RefreshOnActivate>,
+      default: true,
+    },
     hideTitle: {type: Boolean, default: false},
     bordered: {type: Boolean, default: true},
     title: String,
@@ -89,64 +93,12 @@ const CrudTable = defineComponent({
     const {resolveActions} = useActionResolver()
     const queryTable = ref<QueryTableExpose<TEntity, TId>>()
 
-    const loadingInner = ref(props.loading ?? false)
-    const selectedRowsInner = ref<TEntity[]>([...(props.selectedRows ?? [])])
-    const dataSourceInner = ref<TEntity[]>([...(props.dataSource ?? [])])
-    const queryInner = ref<FilterRequest | PageRequest>({...(props.query ?? {})})
-
-    const loading = computed({
-      get: () => loadingInner.value,
-      set: (value: boolean) => {
-        loadingInner.value = value
-        emit('update:loading', value)
-      },
-    })
-    const selectedRows = computed({
-      get: () => selectedRowsInner.value,
-      set: (value: TEntity[]) => {
-        selectedRowsInner.value = value
-        emit('update:selectedRows', value)
-      },
-    })
-    const dataSource = computed({
-      get: () => dataSourceInner.value,
-      set: (value: TEntity[]) => {
-        dataSourceInner.value = value
-        emit('update:dataSource', value)
-      },
-    })
-    const query = computed({
-      get: () => queryInner.value,
-      set: (value: FilterRequest | PageRequest) => {
-        queryInner.value = value
-        emit('update:query', value)
-      },
-    })
-
-    watch(
-      () => props.loading,
-      (value) => {
-        loadingInner.value = value ?? false
-      },
-    )
-    watch(
-      () => props.selectedRows,
-      (value) => {
-        selectedRowsInner.value = value ?? []
-      },
-    )
-    watch(
-      () => props.dataSource,
-      (value) => {
-        dataSourceInner.value = value ?? []
-      },
-    )
-    watch(
-      () => props.query,
-      (value) => {
-        queryInner.value = value ?? {}
-      },
-    )
+    // 双向绑定：透传给 QueryTable 时同时传值与 onUpdate，由最远端统一持有状态
+    const loading = useModel(props, 'loading') as unknown as Ref<boolean>
+    const selectedRows = useModel(props, 'selectedRows') as unknown as Ref<TEntity[]>
+    const dataSource = useModel(props, 'dataSource') as unknown as Ref<TEntity[]>
+    const query = useModel(props, 'query') as unknown as Ref<FilterRequest | PageRequest>
+    const pagination = useModel(props, 'pagination') as unknown as Ref<TableProps['pagination']>
 
     const {remove} = useCrudDelete<TBody, TEntity, TId>({
       service: props.service,
@@ -247,8 +199,9 @@ const CrudTable = defineComponent({
         formatDragPreview={props.formatDragPreview}
         onRow={props.onRow}
         authority={props.authority}
-        pagination={props.pagination}
+        pagination={pagination.value}
         immediate={props.immediate}
+        refreshOnActivate={props.refreshOnActivate}
         rowSelection={props.rowSelection}
         prefixCls={props.prefixCls}
         rootClass={props.rootClass}
@@ -268,7 +221,9 @@ const CrudTable = defineComponent({
         onUpdate:selectedRows={(value) => {
           selectedRows.value = value
         }}
-        onUpdate:pagination={(value) => emit('update:pagination', value)}
+        onUpdate:pagination={(value) => {
+          pagination.value = value
+        }}
         onAction={onTableAction}
         onExported={(result) => emit('exported', result)}
         onDrop={(sorts, target, fromIndex, toIndex) => emit('drop', sorts, target, fromIndex, toIndex)}

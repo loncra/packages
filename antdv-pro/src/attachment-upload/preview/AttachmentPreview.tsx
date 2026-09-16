@@ -1,4 +1,4 @@
-import {computed, defineComponent, type PropType, ref, Teleport, watch} from 'vue'
+import {computed, defineComponent, type PropType, type Ref, ref, Teleport, useModel, watch} from 'vue'
 import {Alert, Button, Flex, ImagePreviewGroup, Modal, Progress, theme, TypographyText,} from 'antdv-next'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {BasicImage, classNames, renderIconFont} from '@loncra/antdv'
@@ -128,7 +128,11 @@ const AttachmentPreview = defineComponent({
       open: false,
     })
 
-    const imageFiles = computed(() => (props.fileList ?? []).filter(isImageFile))
+    // 双向绑定：父级未监听 update:fileList 时写本地值，否则纯受控由父级回流。
+    // 原来只 emit 不写本地，父级没接 v-model 时删除、生成缩略图等操作全部丢失。
+    const fileList = useModel(props, 'fileList') as unknown as Ref<UploadFile<ObjectWriteResult>[]>
+
+    const imageFiles = computed(() => (fileList.value ?? []).filter(isImageFile))
 
     const itemClass = computed(() =>
       classNames(
@@ -140,11 +144,11 @@ const AttachmentPreview = defineComponent({
     )
 
     function setFileList(list: UploadFile<ObjectWriteResult>[]) {
-      emit('update:fileList', list)
+      fileList.value = list
     }
 
     function postRemove(file: UploadFile<ObjectWriteResult>) {
-      setFileList((props.fileList ?? []).filter((f) => f.uid !== file.uid))
+      setFileList((fileList.value ?? []).filter((f) => f.uid !== file.uid))
       emit('remove', file)
     }
 
@@ -196,7 +200,7 @@ const AttachmentPreview = defineComponent({
       }
       if (file.url && file.type?.includes('image/')) {
         setFileList(
-          (props.fileList ?? []).map((f) => (f.uid === file.uid ? {...f, thumbUrl: file.url} : f)),
+          (fileList.value ?? []).map((f) => (f.uid === file.uid ? {...f, thumbUrl: file.url} : f)),
         )
         return
       }
@@ -205,11 +209,11 @@ const AttachmentPreview = defineComponent({
       }
       if (file.type?.includes('image/')) {
         const thumbUrl = await getImageBase64(file.originFileObj)
-        setFileList((props.fileList ?? []).map((f) => (f.uid === file.uid ? {...f, thumbUrl} : f)))
+        setFileList((fileList.value ?? []).map((f) => (f.uid === file.uid ? {...f, thumbUrl} : f)))
       } else if (file.type?.includes('video/') && file.originFileObj) {
         const result = await getVideoThumbnail(file.originFileObj)
         setFileList(
-          (props.fileList ?? []).map((f) =>
+          (fileList.value ?? []).map((f) =>
             f.uid === file.uid ? {...f, thumbUrl: result.base64, url: result.videoUrl} : f,
           ),
         )
@@ -220,13 +224,14 @@ const AttachmentPreview = defineComponent({
       if (!props.changeThumbUrl) {
         return
       }
-      ;(props.fileList ?? []).forEach((f) => {
+      ;(fileList.value ?? []).forEach((f) => {
         void ensureThumbUrl(f)
       })
     }
 
+    // 副作用：列表变化后补齐缩略图（ensureThumbUrl 内部有 thumbUrl 早退，不会无限循环）
     watch(
-      () => props.fileList,
+      fileList,
       () => valueChange(),
       {immediate: true, deep: true},
     )
@@ -270,7 +275,7 @@ const AttachmentPreview = defineComponent({
 
     return () => {
       const hashed = (name?: string) => classNames(hashId.value, cssVarCls.value, name)
-      const files = props.fileList ?? []
+      const files = fileList.value ?? []
       const showMeta = !!(slots.itemTitle || slots.itemDescription || props.showFilename)
 
       const listMode =

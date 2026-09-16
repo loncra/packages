@@ -1,4 +1,4 @@
-import {computed, defineComponent, h, ref, resolveComponent, watch} from 'vue'
+import {computed, defineComponent, h, type Ref, ref, resolveComponent, useModel, watch} from 'vue'
 import {
   Avatar,
   Button,
@@ -107,17 +107,14 @@ const IconSelect = defineComponent({
     const [hashId, cssVarCls] = useStyle(prefixCls)
 
     const state = ref({
-      avatarType: ICON_SELECT_AVATAR_MODE_VALUE.AVATAR as IconSelectAvatarModeValueType,
       search: {
         dataSource: [] as IconfontJson[],
         text: '',
       },
     })
 
-    const modelValue = computed({
-      get: () => props.value ?? '',
-      set: (value: string) => emit('update:value', value),
-    })
+    // 双向绑定：父级 v-model 时纯受控，未绑时写本地值并 emit
+    const modelValue = useModel(props, 'value') as unknown as Ref<string>
 
     const avatarOptions = computed(() => {
       const result: { label: string; value: IconSelectAvatarModeValueType }[] = [
@@ -168,31 +165,24 @@ const IconSelect = defineComponent({
       })),
     )
 
-    const avatarPayload = computed({
-      get() {
-        return parseAvatarModel(modelValue.value).payload
-      },
-      set(payload: string) {
-        modelValue.value = toAvatarModel(state.value.avatarType, payload)
+    // avatarType 是 modelValue 的派生值：单一真相源，不再用内部 ref + watch 同步
+    const avatarType = computed<IconSelectAvatarModeValueType>({
+      get: () => parseAvatarModel(modelValue.value ?? '').type,
+      set: (type: IconSelectAvatarModeValueType) => {
+        modelValue.value = toAvatarModel(type, parseAvatarModel(modelValue.value ?? '').payload)
       },
     })
 
-    watch(
-      () => props.value,
-      (raw) => {
-        if (props.mode !== ICON_SELECT_MODE.AVATAR) {
-          return
-        }
-        state.value.avatarType = parseAvatarModel(raw ?? '').type
+    const avatarPayload = computed({
+      get() {
+        return parseAvatarModel(modelValue.value ?? '').payload
       },
-      { immediate: true },
-    )
+      set(payload: string) {
+        modelValue.value = toAvatarModel(avatarType.value, payload)
+      },
+    })
 
     watch(() => props.options, () => search(), { immediate: true })
-
-    function onAvatarTypeChange(type: IconSelectAvatarModeValueType) {
-      modelValue.value = toAvatarModel(type, parseAvatarModel(modelValue.value).payload)
-    }
 
     function renderIcon(type: string, className?: string) {
       const custom = slots.icon?.({ type, class: className })
@@ -328,9 +318,9 @@ const IconSelect = defineComponent({
           class={classNames(rootClass, `${prefixCls.value}-avatar`)}
           style={attrStyle as never}
         >
-          {state.value.avatarType === ICON_SELECT_AVATAR_MODE_VALUE.AVATAR ? (
+          {avatarType.value === ICON_SELECT_AVATAR_MODE_VALUE.AVATAR ? (
             <Avatar src={avatarPayload.value} />
-          ) : state.value.avatarType === ICON_SELECT_AVATAR_MODE_VALUE.ICON ? (
+          ) : avatarType.value === ICON_SELECT_AVATAR_MODE_VALUE.ICON ? (
             <Avatar>{renderIcon(avatarPayload.value)}</Avatar>
           ) : (
             <Avatar>{avatarPayload.value.substring(0, 1)}</Avatar>
@@ -339,11 +329,10 @@ const IconSelect = defineComponent({
             <Select
               options={avatarOptions.value}
               class={`${prefixCls.value}-select`}
-              value={state.value.avatarType}
+              value={avatarType.value}
               onUpdate:value={(type) => {
-                state.value.avatarType = type as IconSelectAvatarModeValueType
+                avatarType.value = type as IconSelectAvatarModeValueType
               }}
-              onChange={(type) => onAvatarTypeChange(type as IconSelectAvatarModeValueType)}
             />
             <Input
               class={`${prefixCls.value}-payload`}
@@ -352,7 +341,7 @@ const IconSelect = defineComponent({
                 avatarPayload.value = value
               }}
             />
-            {state.value.avatarType === ICON_SELECT_AVATAR_MODE_VALUE.ICON ? (
+            {avatarType.value === ICON_SELECT_AVATAR_MODE_VALUE.ICON ? (
               <Popover
                 class={rootClass}
                 rootClass={rootClass}

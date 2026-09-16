@@ -21,3 +21,7 @@ export const RESOURCE_SERVER_CAROUSEL_AUTHORITY = {
   RELEASE: 'perms[resource_server_carousel:release]',
   REVOKE: 'perms[resource_server_carousel:revoke]',
 } as const
+
+export const RESOURCE_SERVER_ATTACHMENT_AUTHORITY = {
+  DELETE:'perms[resource_server_attachment:delete]'
+} as const

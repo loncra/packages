@@ -1,4 +1,4 @@
-import {computed, defineComponent, type PropType} from 'vue'
+import {computed, defineComponent, type PropType, type Ref, useModel} from 'vue'
 import type {UploadChangeParam} from 'antdv-next'
 import {TypographyText, Upload} from 'antdv-next'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
@@ -67,10 +67,8 @@ const AttachmentPictureCardUpload = defineComponent({
     )
     const [hashId, cssVarCls] = useStyle(prefixCls)
 
-    const fileList = computed({
-      get: () => props.fileList,
-      set: (value) => emit('update:fileList', value ?? []),
-    })
+    // 双向绑定：父级未监听 update:fileList 时写本地值，否则由父级回流
+    const fileList = useModel(props, 'fileList') as unknown as Ref<AttachmentFileItem[]>
     const {uploadFiles, antdFileList, onAntdFileListChange} = useAttachmentUploadFiles(fileList)
 
     function onChange(info: UploadChangeParam) {

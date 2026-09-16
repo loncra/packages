@@ -1,4 +1,4 @@
-import {computed, defineComponent} from 'vue'
+import {computed, defineComponent, type Ref, useModel} from 'vue'
 import {Button, Flex, FormItem, Input, Select, Space, SpaceCompact, Table, type TableColumnType,} from 'antdv-next'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import TooltipValidationFormItem from '../tooltip-validation-form-item'
@@ -73,10 +73,8 @@ const KeyValueTable = defineComponent({
     )
     const [hashId, cssVarCls] = useStyle(prefixCls)
 
-    const model = computed({
-      get: () => props.value ?? [],
-      set: (value: KeyValueRow[]) => emit('update:value', value),
-    })
+    // 双向绑定：父级 v-model 时纯受控，未绑时写本地值并 emit
+    const model = useModel(props, 'value') as unknown as Ref<KeyValueRow[]>
 
     const columns = computed<TableColumnType<KeyValueRow>[]>(() => {
       const result: TableColumnType<KeyValueRow>[] = [
