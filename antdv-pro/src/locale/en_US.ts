@@ -32,6 +32,11 @@ const locale: Locale = {
     nameIllegal: 'Name cannot contain / \\ < > " | ? * or control characters',
     nameTooLong: 'Name cannot exceed 255 characters',
   },
+  SystemUserPanel: {
+    selectedMember: 'Selected members',
+    phoneNumber: 'Phone number',
+    email: 'Email',
+  },
   Crud: {
     search: 'Search',
     reset: 'Reset',

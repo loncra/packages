@@ -31,6 +31,11 @@ const locale: Locale = {
     nameIllegal: '名称不能包含 / \\ < > " | ? * 及控制字符',
     nameTooLong: '名称不能超过 255 个字符',
   },
+  SystemUserPanel: {
+    selectedMember: '已选择的成员',
+    phoneNumber: '手机号码',
+    email: '电子邮箱',
+  },
   Crud: {
     search: '搜索',
     reset: '重置',

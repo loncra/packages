@@ -10,6 +10,14 @@ export type { UserAvatarProps, UserAvatarSlots } from './user-avatar'
 export { default as UserSelect } from './user-select'
 export type { UserSelectEmits, UserSelectProps, UserSelectSlots } from './user-select'
 
+export {default as SystemUserPanel} from './system-user-panel'
+export type {
+  SystemUserContactItem,
+  SystemUserPanelEmits,
+  SystemUserPanelProps,
+  SystemUserPanelSlots,
+} from './system-user-panel'
+
 export { default as AttachmentMasonry } from './attachment-masonry'
 export type {
   AttachmentMasonryEmits,

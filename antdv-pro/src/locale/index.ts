@@ -30,6 +30,12 @@ export interface FileEditorLocale {
   nameTooLong: string
 }
 
+export interface SystemUserPanelLocale {
+  selectedMember: string
+  phoneNumber: string
+  email: string
+}
+
 export interface CrudLocale {
   search: string
   reset: string
@@ -52,5 +58,6 @@ export interface Locale {
   UserSelect?: UserSelectLocale
   AttachmentUpload?: AttachmentUploadLocale
   FileEditor?: FileEditorLocale
+  SystemUserPanel?: SystemUserPanelLocale
   Crud?: CrudLocale
 }
