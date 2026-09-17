@@ -33,6 +33,7 @@ import {
 import {createDefaultToolbarActions} from '../_util/crud/defaultActions'
 import {type CollectionPagination, exportCollectionData, fetchCollectionData,} from '../_util/crud/useCollectionData'
 import {useMergeRowSelection} from '../_util/crud/useMergeRowSelection'
+import type {DragPreviewContent} from '../_util/crud/useDrag'
 import {useTableRowDrag} from '../_util/crud/useTableRowDrag'
 import ActionButton from '../action-button'
 import useStyle from './style'
@@ -82,7 +83,7 @@ const QueryTable = defineComponent({
     actions: Array as PropType<ActionDefinition<DefaultCrudEntity>[]>,
     actionContextExtras: Object as PropType<Record<string, unknown>>,
     drag: Boolean,
-    formatDragPreview: Function as PropType<(record: DefaultCrudEntity) => string>,
+    formatDragPreview: Function as PropType<(record: DefaultCrudEntity) => DragPreviewContent>,
     onRow: Function as PropType<TableProps['onRow']>,
     rowKey: {
       type: [String, Function] as PropType<TableProps['rowKey']>,

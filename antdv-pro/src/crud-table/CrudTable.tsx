@@ -15,6 +15,7 @@ import {
 } from '../_util/crud/actions'
 import {createDefaultBulkActions, createDefaultItemActions} from '../_util/crud/defaultActions'
 import {useCrudDelete} from '../_util/crud/useCrudDelete'
+import type {DragPreviewContent} from '../_util/crud/useDrag'
 import QueryTable from '../query-table/QueryTable'
 import ActionButton from '../action-button'
 import type {AuthorityProps, DefaultCrudEntity, QueryTableExpose, RefreshOnActivate, SearchableColumnType,} from '../query-table/types'
@@ -64,7 +65,7 @@ const CrudTable = defineComponent({
     recordActions: {type: Boolean, default: true},
     actionContextExtras: Object as PropType<Record<string, unknown>>,
     drag: Boolean,
-    formatDragPreview: Function as PropType<(record: DefaultCrudEntity) => string>,
+    formatDragPreview: Function as PropType<(record: DefaultCrudEntity) => DragPreviewContent>,
     onRow: Function as PropType<TableProps['onRow']>,
     rowKey: [String, Function] as PropType<TableProps['rowKey']>,
     rowSelection: [Object, Boolean] as PropType<TableProps['rowSelection'] | false>,

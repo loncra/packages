@@ -97,7 +97,7 @@ export {
 } from './_util/crud/useCollectionData'
 export type {CollectionPagination, CollectionService} from './_util/crud/useCollectionData'
 export {useDrag} from './_util/crud/useDrag'
-export type {UseDragOptions, UseDragReturn} from './_util/crud/useDrag'
+export type {DragPreviewContent, UseDragOptions, UseDragReturn} from './_util/crud/useDrag'
 export {reorderFlatList, useFlatDragDrop} from './_util/crud/useFlatDragDrop'
 export type {UseFlatDragDropOptions} from './_util/crud/useFlatDragDrop'
 export {useTableRowDrag} from './_util/crud/useTableRowDrag'

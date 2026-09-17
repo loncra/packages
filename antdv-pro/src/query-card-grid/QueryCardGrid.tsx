@@ -27,6 +27,7 @@ import {
 import {createDefaultToolbarActions} from '../_util/crud/defaultActions'
 import {resolveRowKey} from '../_util/crud/rowKey'
 import {exportCollectionData, fetchCollectionData} from '../_util/crud/useCollectionData'
+import type {DragPreviewContent} from '../_util/crud/useDrag'
 import {useFlatDragDrop} from '../_util/crud/useFlatDragDrop'
 import ActionButton from '../action-button'
 import useStyle from './style'
@@ -72,7 +73,7 @@ const QueryCardGrid = defineComponent({
     actionContextExtras: Object as PropType<Record<string, unknown>>,
     drag: Boolean,
     dragDirection: {type: String as PropType<'horizontal' | 'vertical'>, default: 'horizontal'},
-    formatDragPreview: Function as PropType<(record: DefaultCrudEntity) => string>,
+    formatDragPreview: Function as PropType<(record: DefaultCrudEntity) => DragPreviewContent>,
     gridColumns: {type: Number, default: 5},
     selectable: {type: Boolean, default: true},
     rowKey: [String, Function] as PropType<QueryCardGridRuntimeProps['rowKey']>,

@@ -13,6 +13,7 @@ import {
 } from '@loncra/client/commons'
 import type {ActionContext, ActionDefinition, ActionPayload} from '../_util/crud/actions'
 import type {CollectionPagination, CollectionService} from '../_util/crud/useCollectionData'
+import type {DragPreviewContent} from '../_util/crud/useDrag'
 
 /** 未指定业务实体时的回退：只保证有 id，对标 commons BasicIdMetadata */
 export type DefaultCrudEntity = BasicIdMetadata<string | number>
@@ -63,7 +64,7 @@ export interface QueryCollectionProps<
   actions?: ActionDefinition<TEntity>[]
   actionContextExtras?: Record<string, unknown>
   drag?: boolean
-  formatDragPreview?: (record: TEntity) => string
+  formatDragPreview?: (record: TEntity) => DragPreviewContent
   prefixCls?: string
   rootClass?: string
   dataSource?: TEntity[]
