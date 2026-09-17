@@ -25,6 +25,7 @@ import {
   useActionResolver,
 } from '../_util/crud/actions'
 import {createDefaultToolbarActions} from '../_util/crud/defaultActions'
+import {resolveRowKey} from '../_util/crud/rowKey'
 import {exportCollectionData, fetchCollectionData} from '../_util/crud/useCollectionData'
 import {useFlatDragDrop} from '../_util/crud/useFlatDragDrop'
 import ActionButton from '../action-button'
@@ -74,6 +75,7 @@ const QueryCardGrid = defineComponent({
     formatDragPreview: Function as PropType<(record: DefaultCrudEntity) => string>,
     gridColumns: {type: Number, default: 5},
     selectable: {type: Boolean, default: true},
+    rowKey: [String, Function] as PropType<QueryCardGridRuntimeProps['rowKey']>,
     pagination: {
       type: [Object, Boolean] as PropType<CardGridPagination>,
       default: () => ({hideOnSinglePage: true, align: 'center'}),
@@ -124,6 +126,8 @@ const QueryCardGrid = defineComponent({
       TId
     >({
       drag: dragEnabled,
+      // 拖拽的同一性判断也要跟 rowKey 对齐（rowKey 是函数时拿不到字段名，回退 id）
+      idKey: (typeof props.rowKey === 'string' ? props.rowKey : undefined) as keyof TEntity & string | undefined,
       dataSource,
       direction: props.dragDirection,
       formatDragPreview: (record) =>
@@ -178,8 +182,8 @@ const QueryCardGrid = defineComponent({
     })
 
     function isSelected(record: TEntity) {
-      const id = record[SYSTEM_CONSTANT.ID_NAME]
-      return selectedItems.value.some((item) => item[SYSTEM_CONSTANT.ID_NAME] === id)
+      const id = resolveRowKey(props.rowKey, record)
+      return selectedItems.value.some((item) => resolveRowKey(props.rowKey, item) === id)
     }
 
     function onSelect(record: TEntity) {
@@ -187,9 +191,9 @@ const QueryCardGrid = defineComponent({
         return
       }
       if (isSelected(record)) {
-        const id = record[SYSTEM_CONSTANT.ID_NAME]
+        const id = resolveRowKey(props.rowKey, record)
         selectedItems.value = selectedItems.value.filter(
-          (item) => item[SYSTEM_CONSTANT.ID_NAME] !== id,
+          (item) => resolveRowKey(props.rowKey, item) !== id,
         )
       } else {
         selectedItems.value = [...selectedItems.value, record]
@@ -319,7 +323,7 @@ const QueryCardGrid = defineComponent({
               }
               return (
                 <CardGrid
-                  key={String(record[SYSTEM_CONSTANT.ID_NAME] ?? index)}
+                  key={String(resolveRowKey(props.rowKey, record) ?? index)}
                   class={classNames(
                     hashId.value,
                     `${prefixCls.value}-item`,

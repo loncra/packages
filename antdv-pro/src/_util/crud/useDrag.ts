@@ -3,7 +3,8 @@ import {type BasicIdMetadata, SYSTEM_CONSTANT} from '@loncra/client/commons'
 
 export interface UseDragOptions<TEntity extends BasicIdMetadata<unknown>> {
   drag: Ref<boolean>
-  idKey?: typeof SYSTEM_CONSTANT.ID_NAME
+  /** 主键字段名，跟随列表 / 卡片网格的 rowKey；缺省 id */
+  idKey?: keyof TEntity & string
   formatDragPreview?: (record: TEntity) => string
   ghostClass: Ref<string>
 }

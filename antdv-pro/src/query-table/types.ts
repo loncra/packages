@@ -69,6 +69,8 @@ export interface QueryCollectionProps<
   dataSource?: TEntity[]
   loading?: boolean
   query?: FilterRequest | PageRequest
+  /** 主键字段名（或 antd 的取键函数）；缺省用 SYSTEM_CONSTANT.ID_NAME。表与卡片网格共用 */
+  rowKey?: TableProps['rowKey']
 }
 
 export interface QueryTableProps<

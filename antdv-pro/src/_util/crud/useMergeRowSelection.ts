@@ -12,7 +12,8 @@ export function useMergeRowSelection<
 >(
   external: MaybeRef<RowSelection | false | null | undefined>,
   selectedRows: Ref<TEntity[]>,
-  idKey: typeof SYSTEM_CONSTANT.ID_NAME = SYSTEM_CONSTANT.ID_NAME,
+  /** 主键字段名，跟随列表的 rowKey；缺省 id */
+  idKey: keyof TEntity & string = SYSTEM_CONSTANT.ID_NAME,
 ) {
   const onChange: NonNullable<RowSelection>['onChange'] = (_keys, rows, info) => {
     selectedRows.value = rows as TEntity[]
@@ -29,7 +30,8 @@ export function useMergeRowSelection<
     }
     const {onChange: _ignored, selectedRowKeys, ...rest} = ext
     const keys = selectedRows.value
-      .map((row) => row[idKey])
+      // idKey 是调用方指定的主键字段（默认 id），这里按契约当 TId 用
+      .map((row) => row[idKey] as TId | undefined)
       .filter((id): id is NonNullable<TId> => id != null)
     return {
       ...rest,

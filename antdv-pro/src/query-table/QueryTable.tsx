@@ -84,6 +84,10 @@ const QueryTable = defineComponent({
     drag: Boolean,
     formatDragPreview: Function as PropType<(record: DefaultCrudEntity) => string>,
     onRow: Function as PropType<TableProps['onRow']>,
+    rowKey: {
+      type: [String, Function] as PropType<TableProps['rowKey']>,
+      default: SYSTEM_CONSTANT.ID_NAME,
+    },
     rowSelection: [Object, Boolean] as PropType<TableProps['rowSelection'] | false>,
     pagination: {
       type: [Object, Boolean] as PropType<TableProps['pagination']>,
@@ -152,6 +156,8 @@ const QueryTable = defineComponent({
       syncPlacementBaseline,
     } = useTableRowDrag<TEntity, TId>({
       drag: dragEnabled,
+      // 拖拽的同一性判断也要跟 rowKey 对齐（rowKey 是函数时拿不到字段名，回退 id）
+      idKey: (typeof props.rowKey === 'string' ? props.rowKey : undefined) as keyof TEntity & string | undefined,
       dataSource,
       formatDragPreview: (record) =>
         props.formatDragPreview?.(record) ?? String(record[SYSTEM_CONSTANT.ID_NAME] ?? ''),
@@ -215,9 +221,14 @@ const QueryTable = defineComponent({
       return raw ?? {fixed: true, type: 'checkbox' as const}
     })
 
+    // 选择态合并要跟 rowKey 对齐；rowKey 是函数时拿不到字段名，回退成 id
+    const mergeIdKey = (
+      typeof props.rowKey === 'string' ? props.rowKey : SYSTEM_CONSTANT.ID_NAME
+    ) as keyof TEntity & string
     const {rowSelection: mergedRowSelection} = useMergeRowSelection<TEntity, TId>(
       externalRowSelection,
       selectedRows,
+      mergeIdKey,
     )
 
     const resolvedTitle = computed(() => {
@@ -528,7 +539,7 @@ const QueryTable = defineComponent({
           style={attrs.style}
           columns={tableColumns.value}
           pagination={tablePagination.value}
-          rowKey={SYSTEM_CONSTANT.ID_NAME}
+          rowKey={props.rowKey}
           dataSource={dataSource.value}
           rowSelection={mergedRowSelection.value}
           loading={loading.value}

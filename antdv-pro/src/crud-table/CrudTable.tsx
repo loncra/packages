@@ -66,6 +66,7 @@ const CrudTable = defineComponent({
     drag: Boolean,
     formatDragPreview: Function as PropType<(record: DefaultCrudEntity) => string>,
     onRow: Function as PropType<TableProps['onRow']>,
+    rowKey: [String, Function] as PropType<TableProps['rowKey']>,
     rowSelection: [Object, Boolean] as PropType<TableProps['rowSelection'] | false>,
     pagination: {
       type: [Object, Boolean] as PropType<TableProps['pagination']>,
@@ -198,6 +199,7 @@ const CrudTable = defineComponent({
         drag={props.drag}
         formatDragPreview={props.formatDragPreview}
         onRow={props.onRow}
+        rowKey={props.rowKey}
         authority={props.authority}
         pagination={pagination.value}
         immediate={props.immediate}

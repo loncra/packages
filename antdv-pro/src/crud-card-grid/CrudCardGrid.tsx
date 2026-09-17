@@ -1,7 +1,7 @@
 import {computed, defineComponent, type PropType, type Ref, ref, type SlotsType, toRef, unref, useModel, watch,} from 'vue'
 import {App, Card, Typography} from 'antdv-next'
 import {classNames} from '@loncra/antdv'
-import {type FilterRequest, type PageRequest, SYSTEM_CONSTANT} from '@loncra/client/commons'
+import type {FilterRequest, PageRequest} from '@loncra/client/commons'
 import {useLocale} from '../_util/useLocale'
 import {useActionAuth} from '../crud-config-provider'
 import {
@@ -14,6 +14,7 @@ import {
   useActionResolver,
 } from '../_util/crud/actions'
 import {createDefaultBulkActions, createDefaultItemActions} from '../_util/crud/defaultActions'
+import {resolveRowKey} from '../_util/crud/rowKey'
 import {useCrudDelete} from '../_util/crud/useCrudDelete'
 import QueryCardGrid from '../query-card-grid/QueryCardGrid'
 import ActionButton from '../action-button'
@@ -70,6 +71,7 @@ const CrudCardGrid = defineComponent({
     formatDragPreview: Function as PropType<(record: DefaultCrudEntity) => string>,
     gridColumns: {type: Number, default: 5},
     selectable: {type: Boolean, default: true},
+    rowKey: [String, Function] as PropType<CrudCardGridRuntimeProps['rowKey']>,
     pagination: {
       type: [Object, Boolean] as PropType<CardGridPagination>,
       default: () => ({hideOnSinglePage: true}),
@@ -176,6 +178,7 @@ const CrudCardGrid = defineComponent({
         ref={queryCardGrid}
         {...attrs}
         service={props.service}
+        rowKey={props.rowKey}
         hideTitle={props.hideTitle}
         title={props.title}
         titleIcon={props.titleIcon}
@@ -233,7 +236,7 @@ const CrudCardGrid = defineComponent({
             return (
               <Card
                 size="small"
-                title={String(itemSlot.record[SYSTEM_CONSTANT.ID_NAME] ?? '')}
+                title={String(resolveRowKey(props.rowKey, itemSlot.record) ?? '')}
                 v-slots={{
                   actions: () => (
                     <>

@@ -31,7 +31,8 @@ export function reorderFlatList<
   list: TEntity[],
   dragId: TId,
   targetId: TId,
-  idKey: typeof SYSTEM_CONSTANT.ID_NAME = SYSTEM_CONSTANT.ID_NAME,
+  /** 主键字段名，跟随 rowKey；缺省 id */
+  idKey: keyof TEntity & string = SYSTEM_CONSTANT.ID_NAME,
 ): {newList: TEntity[]; fromIndex: number; toIndex: number; sorts: TreeSortMetadata<TId>[]} | null {
   const getId = (record: TEntity) => record[idKey] as TId
 
