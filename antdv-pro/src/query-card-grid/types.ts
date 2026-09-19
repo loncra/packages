@@ -3,7 +3,6 @@ import type {
   BasicIdMetadata,
   FilterRequest,
   PageRequest,
-  RestResult,
   ScrollPageResult,
   SYSTEM_CONSTANT,
   TreeSortMetadata,
@@ -37,7 +36,6 @@ export type QueryCardGridEmits<
   'update:selectedItems': [value: TEntity[]]
   'update:pagination': [value: CardGridPagination]
   action: [payload: ActionPayload<TEntity>]
-  exported: [result: RestResult<void>]
   drop: [sorts: TreeSortMetadata<TId>[], target: TEntity, fromIndex: number, toIndex: number]
 }
 
@@ -65,7 +63,6 @@ export interface QueryCardGridExpose<
   TId = TEntity[typeof SYSTEM_CONSTANT.ID_NAME],
 > {
   fetchDataSource: () => Promise<void>
-  exportData: (records: TEntity[]) => Promise<void>
   actionContext: ComputedRef<ActionContext<TEntity>>
 }
 
@@ -105,7 +102,6 @@ export interface CrudCardGridSlots<TEntity>
 
 export interface CrudCardGridExpose<TEntity extends BasicIdMetadata<unknown>> {
   fetchDataSource: () => Promise<void | undefined>
-  exportData: () => Promise<void | undefined>
   remove: (records: TEntity[]) => void
 }
 

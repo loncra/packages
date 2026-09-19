@@ -32,7 +32,17 @@
 | `@loncra/antdv-pro/locale/zh_CN` | 简体中文，与 antdv-next / `@loncra/antdv` locale 合并后交给 `ConfigProvider` |
 | `@loncra/antdv-pro/locale/en_US` | 英文 |
 
-当前控件：`UserAvatar`、`UserSelect`、`AttachmentMasonry`、`AttachmentUpload`、`FileEditor`、`SystemUserPanel`。
+当前控件：`UserAvatar`、`UserSelect`、`AttachmentMasonry`、`AttachmentUpload`、`FileEditor`、`SystemUserPanel`；
+
+**CRUD 页面套件（列表形态已进包）**：`crud-page/` 目录 + `CrudConfigProvider` 的跳转兜底。
+目录：核心在 `crud-page/`（`types.ts` / `registry.ts` / `usePageEnums.ts` / `define.ts`），列表形态在 `crud-page/home/`（`CrudHomePage.tsx` / `columns.ts`）；表单、详情以后按同样的 `<形态>/` 目录进来。
+`define.ts` 是三种形态**共用**的声明入口（恒等合并 `{...core, <形态>}`）：已有 `defineHomePage`，`defineFormPage` / `defineDetailPage` 随形态一起并排加在这里。
+
+- `CrudHomePage`：把页面声明（`CrudListPage`）翻成 `CrudTable` 的 props；不认路由 / i18n / 弹层。
+- 声明（宿主业务目录里的 `xxx.page.ts` / `xxx.home.page.ts`）：`CrudPageCore`（service / i18nPrefix / routes / fields / `i18nResolver` / `onNavigate`）+ `PageListDefinition`（columns / enums / authority / rowActions / drag…）。
+- 跳转：页面声明给 `onNavigate` 就用它（`record` 是精确实体），否则落到 `CrudConfigProvider` 的 `onNavigate` 兜底，都没有则 no-op（内嵌选择器安全）。
+- 文案：宿主给 `i18nResolver`，pro 只拿 key；枚举：`format: 'enum' | 'enumList'` 用 `enumId` + `list.enums` 预载的桶自算（不走宿主的全局枚举表）。
+- 表单 / 详情形态（`defineFormPage` / `defineDetailPage`、壳层）尚未迁移。
 
 ## `@loncra/client`
 

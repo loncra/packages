@@ -38,7 +38,6 @@ const CRUD_TABLE_EMITS = [
   'add',
   'edit',
   'detail',
-  'exported',
   'drop',
   'treeDrop',
 ] as const
@@ -157,6 +156,7 @@ const CrudTable = defineComponent({
         record,
         toolbarContext: unref(queryTable.value?.actionContext),
         actionContextExtras: props.actionContextExtras,
+        app: {message, modal},
       })
     }
 
@@ -180,7 +180,6 @@ const CrudTable = defineComponent({
 
     expose<CrudTableExpose<TEntity>>({
       fetchDataSource: () => queryTable.value?.fetchDataSource() ?? Promise.resolve(),
-      exportData: () => queryTable.value?.exportData(selectedRows.value) ?? Promise.resolve(),
       remove,
     })
 
@@ -228,7 +227,6 @@ const CrudTable = defineComponent({
           pagination.value = value
         }}
         onAction={onTableAction}
-        onExported={(result) => emit('exported', result)}
         onDrop={(sorts, target, fromIndex, toIndex) => emit('drop', sorts, target, fromIndex, toIndex)}
         onTreeDrop={(sorts, drag, target, payload) => emit('treeDrop', sorts, drag, target, payload)}
         v-slots={{

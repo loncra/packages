@@ -44,7 +44,6 @@ const CRUD_CARD_GRID_EMITS = [
   'edit',
   'detail',
   'deleted',
-  'exported',
   'drop',
 ] as const
 
@@ -147,6 +146,7 @@ const CrudCardGrid = defineComponent({
         record,
         toolbarContext: unref(queryCardGrid.value?.actionContext),
         actionContextExtras: props.actionContextExtras,
+        app: {message, modal},
       })
     }
 
@@ -170,7 +170,6 @@ const CrudCardGrid = defineComponent({
 
     expose({
       fetchDataSource: () => queryCardGrid.value?.fetchDataSource(),
-      exportData: () => queryCardGrid.value?.exportData(selectedItems.value),
       remove,
     })
 
@@ -217,7 +216,6 @@ const CrudCardGrid = defineComponent({
           pagination.value = value
         }}
         onAction={onGridAction}
-        onExported={(result) => emit('exported', result)}
         onDrop={(sorts, target, fromIndex, toIndex) => emit('drop', sorts, target, fromIndex, toIndex)}
         v-slots={{
           title: slots.title ? () => slots.title?.() : undefined,

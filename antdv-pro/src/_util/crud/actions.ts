@@ -1,8 +1,19 @@
 import {type ComputedRef, type InjectionKey, ref, type VNode} from 'vue'
+import type {useAppProps} from 'antdv-next/dist/app/context'
 import {type BasicIdMetadata, type FilterRequest, type PageRequest, SYSTEM_CONSTANT,} from '@loncra/client/commons'
 import type {ActionAuth} from '../../crud-config-provider/types'
 
 export type ActionScope = 'toolbar' | 'item'
+
+/**
+ * 应用内实例（提示 / 确认框）。**由壳在 setup 里 `App.useApp()` 拿到后注入**，
+ * 不这么走就只能 `import {message, Modal} from 'antdv-next'` 用静态实例 —— 静态实例吃不到
+ * `<a-app>` / ConfigProvider 的主题与语言配置。声明文件不在 setup 里，所以只能由壳传。
+ */
+export interface ActionAppApis {
+  message: useAppProps['message']
+  modal: useAppProps['modal']
+}
 
 export interface ActionContext<TItem extends BasicIdMetadata<unknown> = BasicIdMetadata<unknown>> {
   scope: ActionScope
@@ -11,6 +22,10 @@ export interface ActionContext<TItem extends BasicIdMetadata<unknown> = BasicIdM
   selectedItems: TItem[]
   query?: FilterRequest | PageRequest
   extras: Record<string, unknown>
+  /** 提示：来自壳的 `App.useApp()`（别用静态 message） */
+  message: ActionAppApis['message']
+  /** 确认框：同上（别用静态 Modal） */
+  modal: ActionAppApis['modal']
 }
 
 export interface ActionDefinition<TItem extends BasicIdMetadata<unknown> = BasicIdMetadata<unknown>> {
@@ -171,8 +186,10 @@ export function buildItemActionContext<TItem extends BasicIdMetadata<unknown>>(o
   record: TItem
   toolbarContext?: ActionContext<TItem>
   actionContextExtras?: Record<string, unknown>
+  /** 壳自己的 `App.useApp()`（工具条上下文还没就绪时也得有提示/确认框） */
+  app: ActionAppApis
 }): ActionContext<TItem> {
-  const {record, toolbarContext, actionContextExtras} = options
+  const {record, toolbarContext, actionContextExtras, app} = options
   return {
     scope: 'item',
     record,
@@ -180,5 +197,7 @@ export function buildItemActionContext<TItem extends BasicIdMetadata<unknown>>(o
     selectedItems: toolbarContext?.selectedItems ?? [],
     query: toolbarContext?.query,
     extras: {...toolbarContext?.extras, ...actionContextExtras},
+    message: app.message,
+    modal: app.modal,
   }
 }

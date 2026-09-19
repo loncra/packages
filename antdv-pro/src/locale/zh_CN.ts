@@ -44,8 +44,6 @@ const locale: Locale = {
     edit: '编辑',
     detail: '详情',
     action: '操作',
-    exportAll: '导出全部',
-    exportSelected: '导出选中 {count} 项',
     deleteText: '删除',
     deleteSelected: '删除选中 {count} 项',
     deleteConfirmTitle: '删除确认',

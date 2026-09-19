@@ -18,3 +18,10 @@ export function getEnumValue<TValue>(value: NameValueEnumMetadata<TValue> | TVal
   }
   return value as TValue
 }
+
+export function getEnumName<TValue>(value: NameValueEnumMetadata<TValue> | TValue): string {
+  if (isNameValueEnumMetadata(value)) {
+    return value.name
+  }
+  return String(value)
+}

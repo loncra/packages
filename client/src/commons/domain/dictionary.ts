@@ -1,10 +1,8 @@
 import type {NameValueEnumMetadata} from './common.ts'
 
-export interface DataDictionaryMetadata {
+export interface DataDictionaryMetadata extends NameValueEnumMetadata<string | number | boolean | null>{
   code: string
-  name: string
   parentId?: number
-  value?: string | number | boolean | null
   valueType: NameValueEnumMetadata<number> | number
   level?: string
   children?: DataDictionaryMetadata[]

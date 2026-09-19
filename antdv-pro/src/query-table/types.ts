@@ -6,7 +6,6 @@ import {
   type DropPosition,
   type FilterRequest,
   type PageRequest,
-  type RestResult,
   type ScrollPageResult,
   SYSTEM_CONSTANT,
   type TreeSortMetadata,
@@ -36,7 +35,6 @@ export interface AuthorityProps {
   edit?: string | boolean
   detail?: string | boolean
   delete?: string | boolean
-  export?: string | boolean
 }
 
 /**
@@ -98,7 +96,6 @@ export type QueryTableEmits<
   'update:selectedRows': [value: TEntity[]]
   'update:pagination': [value: TableProps['pagination']]
   action: [payload: ActionPayload<TEntity>]
-  exported: [result: RestResult<void>]
   drop: [sorts: TreeSortMetadata<TId>[], target: TEntity, fromIndex: number, toIndex: number]
   treeDrop: [
     sorts: TreeSortMetadata<TId>[],
@@ -129,7 +126,6 @@ export interface QueryTableExpose<
   TId = TEntity[typeof SYSTEM_CONSTANT.ID_NAME],
 > {
   fetchDataSource: () => Promise<void>
-  exportData: (records: TEntity[]) => Promise<void>
   actionContext: ComputedRef<ActionContext<TEntity>>
 }
 
@@ -163,7 +159,6 @@ export type QueryTableConstructor = new <
 
 export interface GridExposed<TEntity extends BasicIdMetadata<unknown>> {
   fetchDataSource: () => Promise<void | undefined>
-  exportData: () => Promise<void | undefined>
   remove: (records: TEntity[]) => void
 }
 

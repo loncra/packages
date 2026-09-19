@@ -44,8 +44,6 @@ export interface CrudLocale {
   edit: string
   detail: string
   action: string
-  exportAll: string
-  exportSelected: string
   deleteText: string
   deleteSelected: string
   deleteConfirmTitle: string

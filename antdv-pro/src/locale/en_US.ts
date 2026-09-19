@@ -45,8 +45,6 @@ const locale: Locale = {
     edit: 'Edit',
     detail: 'Detail',
     action: 'Action',
-    exportAll: 'Export all',
-    exportSelected: 'Export {count} selected',
     deleteText: 'Delete',
     deleteSelected: 'Delete {count} selected',
     deleteConfirmTitle: 'Delete confirmation',

@@ -31,7 +31,7 @@ import {
   useActionResolver,
 } from '../_util/crud/actions'
 import {createDefaultToolbarActions} from '../_util/crud/defaultActions'
-import {type CollectionPagination, exportCollectionData, fetchCollectionData,} from '../_util/crud/useCollectionData'
+import {type CollectionPagination, fetchCollectionData} from '../_util/crud/useCollectionData'
 import {useMergeRowSelection} from '../_util/crud/useMergeRowSelection'
 import type {DragPreviewContent} from '../_util/crud/useDrag'
 import {useTableRowDrag} from '../_util/crud/useTableRowDrag'
@@ -58,7 +58,6 @@ const QUERY_TABLE_EMITS = [
   'update:selectedRows',
   'update:pagination',
   'action',
-  'exported',
   'drop',
   'treeDrop',
 ] as const
@@ -120,7 +119,7 @@ const QueryTable = defineComponent({
       filteredValue?: unknown
       filterDropdown?: unknown
     }
-    const {message} = App.useApp()
+    const {message, modal} = App.useApp()
     const locale = useLocale('Crud')
     const config = useConfig()
     const crudConfig = useCrudConfig()
@@ -177,6 +176,8 @@ const QueryTable = defineComponent({
       selectedItems: selectedRows.value,
       query: query.value,
       extras: props.actionContextExtras ?? {},
+      message,
+      modal,
     }))
 
     provide(ACTION_CONTEXT_KEY, actionContext)
@@ -187,7 +188,6 @@ const QueryTable = defineComponent({
         locale: locale.value,
         iconClass: 'align',
         onAdd: (ctx) => emit('action', {id: 'add', context: ctx}),
-        onExport: (ctx) => exportData(ctx.selectedItems),
       }),
     )
 
@@ -200,7 +200,7 @@ const QueryTable = defineComponent({
     )
 
     const needsBulkRowSelection = computed(() => {
-      if (auth.can(props.authority?.export) || auth.can(props.authority?.delete)) {
+      if (auth.can(props.authority?.delete)) {
         return true
       }
       return (props.actions ?? []).some((action) =>
@@ -385,17 +385,6 @@ const QueryTable = defineComponent({
       }
     }
 
-    async function exportData(records: TEntity[]) {
-      const result = await exportCollectionData({
-        service: props.service,
-        query: query.value,
-        records,
-      })
-      message.success(result.message)
-      emit('exported', result)
-      crudConfig.value.onExported?.(result)
-    }
-
     watch(
       () => [props.columns, props.drag] as const,
       () => rebuildColumns(),
@@ -439,7 +428,6 @@ const QueryTable = defineComponent({
 
     expose<QueryTableExpose<TEntity, TId>>({
       fetchDataSource,
-      exportData,
       actionContext,
     })
 

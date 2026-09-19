@@ -26,7 +26,7 @@ import {
 } from '../_util/crud/actions'
 import {createDefaultToolbarActions} from '../_util/crud/defaultActions'
 import {resolveRowKey} from '../_util/crud/rowKey'
-import {exportCollectionData, fetchCollectionData} from '../_util/crud/useCollectionData'
+import {fetchCollectionData} from '../_util/crud/useCollectionData'
 import type {DragPreviewContent} from '../_util/crud/useDrag'
 import {useFlatDragDrop} from '../_util/crud/useFlatDragDrop'
 import ActionButton from '../action-button'
@@ -50,7 +50,6 @@ const QUERY_CARD_GRID_EMITS = [
   'update:selectedItems',
   'update:pagination',
   'action',
-  'exported',
   'drop',
 ] as const
 
@@ -96,7 +95,7 @@ const QueryCardGrid = defineComponent({
   setup(props, {attrs, emit, expose, slots}) {
     type TEntity = DefaultCrudEntity
     type TId = string | number
-    const {message} = App.useApp()
+    const {message, modal} = App.useApp()
     const locale = useLocale('Crud')
     const config = useConfig()
     const crudConfig = useCrudConfig()
@@ -145,6 +144,8 @@ const QueryCardGrid = defineComponent({
       selectedItems: selectedItems.value,
       query: query.value,
       extras: props.actionContextExtras ?? {},
+      message,
+      modal,
     }))
 
     provide(ACTION_CONTEXT_KEY, actionContext)
@@ -155,7 +156,6 @@ const QueryCardGrid = defineComponent({
         locale: locale.value,
         iconClass: 'align',
         onAdd: (ctx) => emit('action', {id: 'add', context: ctx}),
-        onExport: (ctx) => exportData(ctx.selectedItems),
       }),
     )
 
@@ -217,17 +217,6 @@ const QueryCardGrid = defineComponent({
       }
     }
 
-    async function exportData(records: TEntity[]) {
-      const result = await exportCollectionData({
-        service: props.service,
-        query: query.value,
-        records,
-      })
-      message.success(result.message)
-      emit('exported', result)
-      crudConfig.value.onExported?.(result)
-    }
-
     function onChangePage(page: number, pageSize: number) {
       query.value = {...query.value, number: page, size: pageSize}
       void fetchDataSource()
@@ -259,7 +248,6 @@ const QueryCardGrid = defineComponent({
 
     expose<QueryCardGridExpose<TEntity, TId>>({
       fetchDataSource,
-      exportData,
       actionContext,
     })
 

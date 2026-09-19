@@ -34,7 +34,6 @@ export type CrudTableEmits<
 
 export interface CrudTableExpose<TEntity extends BasicIdMetadata<unknown>> {
   fetchDataSource: () => Promise<void | undefined>
-  exportData: () => Promise<void | undefined>
   remove: (records: TEntity[]) => void
 }
 
