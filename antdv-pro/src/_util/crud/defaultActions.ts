@@ -3,7 +3,12 @@ import {DeleteOutlined, EditOutlined, FileAddOutlined, FileSearchOutlined,} from
 import type {BasicIdMetadata} from '@loncra/client/commons'
 import type {CrudLocale} from '../../locale'
 import {withCount} from '../format'
-import {type ActionContext, type ActionDefinition, BUILTIN_ACTION_ID} from './actions'
+import {
+  BUILTIN_ACTION_ID,
+  type RecordActionDefinition,
+  type ToolbarActionContext,
+  type ToolbarActionDefinition,
+} from './actions'
 import {isDeletableService} from './useCrudDelete'
 
 export interface CollectionAuthorityProps {
@@ -18,18 +23,17 @@ export interface DefaultToolbarActionsOptions<TEntity extends BasicIdMetadata<un
   locale: CrudLocale
   /** 附加到操作图标上的 class，如表格标题区用 `align` */
   iconClass?: string
-  onAdd: (ctx: ActionContext<TEntity>) => void
+  onAdd: (ctx: ToolbarActionContext<TEntity>) => void
 }
 
 export function createDefaultToolbarActions<TEntity extends BasicIdMetadata<unknown>>(
   options: DefaultToolbarActionsOptions<TEntity>,
-): ActionDefinition<TEntity>[] {
+): ToolbarActionDefinition<TEntity>[] {
   const iconClass = options.iconClass
   return [
     {
       id: 'add',
       permission: options.authority?.add,
-      visible: (ctx) => ctx.extras.titleActionsEnabled !== false,
       label: () => options.locale.add,
       icon: () => h(FileAddOutlined, {class: iconClass}),
       run: (ctx) => options.onAdd(ctx),
@@ -48,13 +52,12 @@ export function createDefaultBulkActions<
   TBody extends BasicIdMetadata<TId>,
   TEntity extends TBody,
   TId,
->(options: DefaultBulkActionsOptions<TEntity>): ActionDefinition<TEntity>[] {
+>(options: DefaultBulkActionsOptions<TEntity>): ToolbarActionDefinition<TEntity>[] {
   return [
     {
       id: BUILTIN_ACTION_ID.DELETE_SELECTED,
       permission: options.authority?.delete,
       danger: true,
-      visible: (ctx) => ctx.extras.titleActionsEnabled !== false,
       enabled: (ctx) =>
         ctx.selectedItems.length > 0 && isDeletableService<TBody, TEntity, TId>(options.service),
       label: (ctx) => withCount(options.locale.deleteSelected, ctx.selectedItems.length),
@@ -77,7 +80,7 @@ export function createDefaultItemActions<
   TBody extends BasicIdMetadata<TId>,
   TEntity extends TBody,
   TId,
->(options: DefaultItemActionsOptions<TEntity>): ActionDefinition<TEntity>[] {
+>(options: DefaultItemActionsOptions<TEntity>): RecordActionDefinition<TEntity>[] {
   return [
     {
       id: BUILTIN_ACTION_ID.EDIT,

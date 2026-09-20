@@ -7,8 +7,8 @@ import type {
   NameValueEnumMetadata,
   SYSTEM_CONSTANT,
 } from '@loncra/client/commons'
-import type {ActionDefinition} from '../_util/crud/actions'
-import type {DragPreviewContent} from '../_util/crud/useDrag'
+import type {RecordActionDefinition, ToolbarActionDefinition} from '../_util/crud/actions'
+import type {DragProp} from '../_util/crud/useDrag'
 import type {CrudNavigateTarget} from '../crud-config-provider/types'
 import type {AuthorityProps, ColumnSearchConfig, SearchableColumnType} from '../query-table/types'
 
@@ -156,18 +156,21 @@ export interface PageListDefinition<TEntity extends BasicIdMetadata<unknown>> {
   dicts?: string[]
   /** 列顺序 = 数组顺序；按形态显隐用列自己的 `visible` */
   columns: PageListEntry<TEntity>[]
-  /** 行拖拽排序 */
-  drag?: boolean
-  /** 拖拽时跟着光标的幽灵内容（缺省是主键值，实际都该写） */
-  formatDragPreview?: (record: TEntity) => DragPreviewContent
+  /**
+   * 行拖拽排序 + 幽灵内容（一个口两件事）：
+   * `true` = 可拖（幽灵缺省是主键）；`(record) => 内容` = 可拖且它就是幽灵（推荐 `(record) => record.name`）。
+   */
+  drag?: DragProp<TEntity>
   rowSelection?: TableProps['rowSelection'] | false
   /** 行内动作；函数形态用于按 `variant` 裁剪动作集合 */
-  rowActions?: ActionDefinition<TEntity>[] | ((ctx: ListPageContext) => ActionDefinition<TEntity>[])
+  rowActions?:
+    | RecordActionDefinition<TEntity>[]
+    | ((ctx: ListPageContext) => RecordActionDefinition<TEntity>[])
   /**
    * 标题栏动作：与 pro 内置的新增按钮**合并**（同 id 后者覆盖）。
    * 业务自己的导出、批量动作都写这里 —— pro 不预置任何业务动作。
    */
-  titleActions?: ActionDefinition<TEntity>[]
+  titleActions?: ToolbarActionDefinition<TEntity>[]
 }
 
 /** `Home.vue` 的声明 = 核心 + 列表（`defineHomePage` 产出） */

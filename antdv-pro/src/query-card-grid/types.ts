@@ -7,20 +7,40 @@ import type {
   SYSTEM_CONSTANT,
   TreeSortMetadata,
 } from '@loncra/client/commons'
-import type {ActionContext, ActionDefinition, ActionPayload, ResolvedAction} from '../_util/crud/actions'
+import type {
+  RecordActionDefinition,
+  RecordActionPayload,
+  ResolvedAction,
+  ToolbarActionContext,
+  ToolbarActionDefinition,
+  ToolbarActionPayload,
+} from '../_util/crud/actions'
 import type {CollectionPageState} from '../_util/crud/useCollectionData'
+import type {DragProp} from '../_util/crud/useDrag'
 import type {DefaultCrudEntity, QueryCollectionProps} from '../query-table/types'
 
 export type CardGridPagination = false | (CollectionPageState & Record<string, unknown>)
+
+/** 卡片拖拽方向；不写就是横向 */
+export type CardGridDragDirection = 'horizontal' | 'vertical'
+
+/**
+ * 卡片形态的 `drag`：直接写 `DragProp` 就行（同表格，方向按横向）；
+ * 只有需要纵向（一排一张之类的排布）时才给对象形态 —— 这时 `direction` 才生效。
+ */
+export type CardGridDragProp<TEntity> =
+  | DragProp<TEntity>
+  | {dragPreview: DragProp<TEntity>; direction: CardGridDragDirection}
 
 export interface QueryCardGridProps<
   TBody extends BasicIdMetadata<TId>,
   TEntity extends TBody,
   TPage extends ScrollPageResult<TEntity>,
   TId = TEntity[typeof SYSTEM_CONSTANT.ID_NAME],
-> extends QueryCollectionProps<TBody, TEntity, TPage, TId> {
+> extends Omit<QueryCollectionProps<TBody, TEntity, TPage, TId>, 'drag'> {
   pagination?: CardGridPagination
-  dragDirection?: 'horizontal' | 'vertical'
+  /** 拖拽开关 + 幽灵内容（同表格）；要给方向就写对象形态，`direction` 才生效 */
+  drag?: CardGridDragProp<TEntity>
   gridColumns?: number
   selectable?: boolean
   selectedItems?: TEntity[]
@@ -35,7 +55,7 @@ export type QueryCardGridEmits<
   'update:query': [value: FilterRequest | PageRequest]
   'update:selectedItems': [value: TEntity[]]
   'update:pagination': [value: CardGridPagination]
-  action: [payload: ActionPayload<TEntity>]
+  action: [payload: ToolbarActionPayload<TEntity> | RecordActionPayload<TEntity>]
   drop: [sorts: TreeSortMetadata<TId>[], target: TEntity, fromIndex: number, toIndex: number]
 }
 
@@ -63,7 +83,7 @@ export interface QueryCardGridExpose<
   TId = TEntity[typeof SYSTEM_CONSTANT.ID_NAME],
 > {
   fetchDataSource: () => Promise<void>
-  actionContext: ComputedRef<ActionContext<TEntity>>
+  actionContext: ComputedRef<ToolbarActionContext<TEntity>>
 }
 
 export interface CrudCardGridProps<
@@ -73,7 +93,7 @@ export interface CrudCardGridProps<
   TId = TEntity[typeof SYSTEM_CONSTANT.ID_NAME],
 > extends QueryCardGridProps<TBody, TEntity, TPage, TId> {
   recordActions?: boolean
-  itemActions?: ActionDefinition<TEntity>[]
+  itemActions?: RecordActionDefinition<TEntity>[]
 }
 
 export type CrudCardGridEmits<

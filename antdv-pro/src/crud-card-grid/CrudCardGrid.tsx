@@ -1,22 +1,25 @@
-import {computed, defineComponent, type PropType, type Ref, ref, type SlotsType, toRef, unref, useModel, watch,} from 'vue'
+import {computed, defineComponent, type PropType, type Ref, ref, type SlotsType, toRef, unref, useModel, type VNode, watch,} from 'vue'
 import {App, Card, Typography} from 'antdv-next'
 import {classNames} from '@loncra/antdv'
 import type {FilterRequest, PageRequest} from '@loncra/client/commons'
 import {useLocale} from '../_util/useLocale'
 import {useActionAuth} from '../crud-config-provider'
 import {
-  type ActionContext,
-  type ActionDefinition,
-  type ActionPayload,
-  buildItemActionContext,
-  BUILTIN_ITEM_ACTION_IDS,
+  type RecordActionContext,
+  type RecordActionDefinition,
+  type RecordActionPayload,
+  type ToolbarActionDefinition,
+  type ToolbarActionPayload,
+  buildRecordActionContext,
+  BUILTIN_RECORD_ACTION_IDS,
   mergeDefinitions,
   useActionResolver,
 } from '../_util/crud/actions'
 import {createDefaultBulkActions, createDefaultItemActions} from '../_util/crud/defaultActions'
 import {resolveRowKey} from '../_util/crud/rowKey'
+import type {CardGridDragProp} from '../query-card-grid/types'
 import {useCrudDelete} from '../_util/crud/useCrudDelete'
-import type {DragPreviewContent} from '../_util/crud/useDrag'
+
 import QueryCardGrid from '../query-card-grid/QueryCardGrid'
 import ActionButton from '../action-button'
 import type {AuthorityProps, DefaultCrudEntity, RefreshOnActivate} from '../query-table/types'
@@ -57,18 +60,15 @@ const CrudCardGrid = defineComponent({
       type: [Boolean, Function] as PropType<RefreshOnActivate>,
       default: true,
     },
-    hideTitle: {type: Boolean, default: false},
-    title: String,
-    titleIcon: String,
+    /** 卡片头：`VNode` 直接用、`false` 不要卡片头、不给走 `CrudConfig.resolveDefaultTitle` */
+    title: [Object, Boolean] as PropType<VNode | boolean>,
     hasPermission: Function as PropType<(permission: string) => boolean>,
     authority: Object as PropType<AuthorityProps>,
-    actions: Array as PropType<ActionDefinition<DefaultCrudEntity>[]>,
-    itemActions: Array as PropType<ActionDefinition<DefaultCrudEntity>[]>,
+    actions: Array as PropType<ToolbarActionDefinition<DefaultCrudEntity>[]>,
+    itemActions: Array as PropType<RecordActionDefinition<DefaultCrudEntity>[]>,
     recordActions: {type: Boolean, default: true},
-    actionContextExtras: Object as PropType<Record<string, unknown>>,
-    drag: Boolean,
-    dragDirection: {type: String as PropType<'horizontal' | 'vertical'>, default: 'horizontal'},
-    formatDragPreview: Function as PropType<(record: DefaultCrudEntity) => DragPreviewContent>,
+    /** 拖拽开关 + 幽灵内容：`true` = 可拖（幽灵缺省主键）；`(record) => 内容` = 可拖且它就是幽灵 */
+    drag: [Boolean, Function, Object] as PropType<CardGridDragProp<DefaultCrudEntity>>,
     gridColumns: {type: Number, default: 5},
     selectable: {type: Boolean, default: true},
     rowKey: [String, Function] as PropType<CrudCardGridRuntimeProps['rowKey']>,
@@ -95,7 +95,7 @@ const CrudCardGrid = defineComponent({
     const {message, modal} = App.useApp()
     const locale = useLocale('Crud')
     const auth = useActionAuth(toRef(props, 'hasPermission'))
-    const {resolveActions} = useActionResolver()
+    const resolver = useActionResolver()
     const queryCardGrid = ref<QueryCardGridExpose<TEntity, TId>>()
 
     // 双向绑定：透传给 QueryCardGrid 时同时传值与 onUpdate，由最远端统一持有状态
@@ -141,27 +141,22 @@ const CrudCardGrid = defineComponent({
       ),
     )
 
-    function buildItemContext(record: TEntity): ActionContext<TEntity> {
-      return buildItemActionContext({
-        record,
-        toolbarContext: unref(queryCardGrid.value?.actionContext),
-        actionContextExtras: props.actionContextExtras,
-        app: {message, modal},
-      })
+    function buildRecordContext(record: TEntity): RecordActionContext<TEntity> {
+      return buildRecordActionContext({record, app: {message, modal}})
     }
 
-    function resolveItemActions(record: TEntity) {
-      return resolveActions(itemActionDefinitions.value, buildItemContext(record), auth)
+    function resolveRecordActions(record: TEntity) {
+      return resolver.resolveRecordActions(itemActionDefinitions.value, buildRecordContext(record), auth)
     }
 
-    function onItemAction(id: string, record: TEntity) {
-      if (BUILTIN_ITEM_ACTION_IDS.includes(id as (typeof BUILTIN_ITEM_ACTION_IDS)[number])) {
+    function onRecordAction(id: string, record: TEntity) {
+      if (BUILTIN_RECORD_ACTION_IDS.includes(id as (typeof BUILTIN_RECORD_ACTION_IDS)[number])) {
         return
       }
-      emit('action', {id, context: buildItemContext(record)})
+      emit('action', {id, context: buildRecordContext(record)})
     }
 
-    function onGridAction(payload: ActionPayload<TEntity>) {
+    function onGridAction(payload: ToolbarActionPayload<TEntity> | RecordActionPayload<TEntity>) {
       if (payload.id === 'add') {
         emit('add')
       }
@@ -179,15 +174,10 @@ const CrudCardGrid = defineComponent({
         {...attrs}
         service={props.service}
         rowKey={props.rowKey}
-        hideTitle={props.hideTitle}
         title={props.title}
-        titleIcon={props.titleIcon}
         hasPermission={props.hasPermission}
         actions={gridActions.value}
-        actionContextExtras={props.actionContextExtras}
         drag={props.drag}
-        formatDragPreview={props.formatDragPreview}
-        dragDirection={props.dragDirection}
         gridColumns={props.gridColumns}
         selectable={props.selectable}
         authority={props.authority}
@@ -225,7 +215,7 @@ const CrudCardGrid = defineComponent({
             if (slots.item) {
               const crudItemSlot: CrudCardGridItemSlot<TEntity> = {
                 ...itemSlot,
-                itemActions: props.recordActions ? resolveItemActions(itemSlot.record) : [],
+                itemActions: props.recordActions ? resolveRecordActions(itemSlot.record) : [],
               }
               return slots.item(crudItemSlot)
             }
@@ -244,8 +234,8 @@ const CrudCardGrid = defineComponent({
                           size="small"
                           type="text"
                           alwaysDropdown
-                          actions={resolveItemActions(itemSlot.record)}
-                          onAction={(id: string) => onItemAction(id, itemSlot.record)}
+                          actions={resolveRecordActions(itemSlot.record)}
+                          onAction={(id: string) => onRecordAction(id, itemSlot.record)}
                         />
                       </div>
                       {itemSlot.dragEnabled ? (
@@ -271,7 +261,7 @@ const CrudCardGrid = defineComponent({
             ? (itemActionsSlot: QueryCardGridItemActionsSlot<TEntity>) =>
                 slots.itemActions?.({
                   ...itemActionsSlot,
-                  actions: props.recordActions ? resolveItemActions(itemActionsSlot.record) : [],
+                  actions: props.recordActions ? resolveRecordActions(itemActionsSlot.record) : [],
                 })
             : undefined,
         }}

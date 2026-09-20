@@ -66,10 +66,10 @@ export {
 } from './_util/attachmentList'
 
 export {
-  ACTION_CONTEXT_KEY,
   BUILTIN_BULK_ACTION_IDS,
-  BUILTIN_ITEM_ACTION_IDS,
-  buildItemActionContext,
+  BUILTIN_RECORD_ACTION_IDS,
+  buildRecordActionContext,
+  buildToolbarActionContext,
   mergeDefinitions,
   overrideAction,
   useActionResolver,
@@ -77,11 +77,15 @@ export {
 export type {
   ActionAppApis,
   ActionContext,
-  ActionDefinition,
-  ActionPayload,
+  ActionDefinitionBase,
   ActionResolver,
-  ActionScope,
+  RecordActionContext,
+  RecordActionDefinition,
+  RecordActionPayload,
   ResolvedAction,
+  ToolbarActionContext,
+  ToolbarActionDefinition,
+  ToolbarActionPayload,
 } from './_util/crud/actions'
 export {
   createDefaultBulkActions,
@@ -99,12 +103,28 @@ export {
   syncPaginationFromPageResult,
 } from './_util/crud/useCollectionData'
 export type {CollectionPagination, CollectionService} from './_util/crud/useCollectionData'
-export {useDrag} from './_util/crud/useDrag'
-export type {DragPreviewContent, UseDragOptions, UseDragReturn} from './_util/crud/useDrag'
+export {isDragEnabled, useDrag} from './_util/crud/useDrag'
+export type {DragPreviewContent, DragProp, UseDragOptions, UseDragReturn} from './_util/crud/useDrag'
 export {reorderFlatList, useFlatDragDrop} from './_util/crud/useFlatDragDrop'
 export type {UseFlatDragDropOptions} from './_util/crud/useFlatDragDrop'
 export {useTableRowDrag} from './_util/crud/useTableRowDrag'
 export {useMergeRowSelection} from './_util/crud/useMergeRowSelection'
+export {default as DataLoadingCardPlan} from './data-loading-card-plan'
+export type {
+  DataLoadingCardPlanEmits,
+  DataLoadingCardPlanProps,
+  DataLoadingCardPlanSlots,
+  DataLoadingTask,
+} from './data-loading-card-plan'
+export {default as BasicCrudQuery} from './basic-crud-query'
+export type {
+  BasicCrudQueryConstructor,
+  BasicCrudQueryEmits,
+  BasicCrudQueryExpose,
+  BasicCrudQueryProps,
+  BasicCrudQuerySelectedKey,
+  BasicCrudQuerySlots,
+} from './basic-crud-query'
 export {default as QueryTable} from './query-table'
 export type {
   AuthorityProps,
@@ -123,6 +143,8 @@ export {default as CrudTable} from './crud-table'
 export type {CrudTableConstructor, CrudTableEmits, CrudTableExpose, CrudTableProps, CrudTableSlots} from './crud-table'
 export {default as QueryCardGrid} from './query-card-grid'
 export type {
+  CardGridDragDirection,
+  CardGridDragProp,
   CardGridPagination,
   CrudCardGridConstructor,
   CrudCardGridEmits,

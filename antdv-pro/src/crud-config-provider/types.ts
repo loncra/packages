@@ -29,7 +29,7 @@ export interface CrudConfig {
    * 两处都没有才回退渲染 key 本身（可见、可调试，不静默变空）。pro 本身不认 i18n。
    */
   i18nResolver?: (key: string, named?: Record<string, unknown>) => string
-  /** 列表页默认标题；组件 title / titleIcon props 与 #title 插槽优先 */
+  /** 列表页默认标题；组件的 `title` prop（`VNode` / `false`）与 `#title` 插槽优先 */
   resolveDefaultTitle?: () => {title?: string; icon?: string}
   /**
    * 跳转的**兜底**实现：页面声明没给 `CrudPageCore.onNavigate` 时才用它。

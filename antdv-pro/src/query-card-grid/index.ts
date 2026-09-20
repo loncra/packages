@@ -1,5 +1,7 @@
 export {default} from './QueryCardGrid'
 export type {
+  CardGridDragDirection,
+  CardGridDragProp,
   CardGridPagination,
   CrudCardGridConstructor,
   CrudCardGridEmits,

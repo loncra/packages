@@ -2,10 +2,7 @@ import {
   computed,
   defineComponent,
   h,
-  onActivated,
-  onMounted,
   type PropType,
-  provide,
   type Ref,
   ref,
   type SlotsType,
@@ -14,32 +11,21 @@ import {
   watch,
 } from 'vue'
 import type {TableProps} from 'antdv-next'
-import {App, Button, Flex, Space, SpaceCompact, Table, Typography} from 'antdv-next'
-import type {TablePaginationConfig} from 'antdv-next/dist/table/interface'
+import {Button, Space, SpaceCompact, Table, Typography} from 'antdv-next'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {DeleteOutlined, FilterOutlined, SearchOutlined, UndoOutlined} from '@antdv-next/icons'
-import {classNames, renderIconFont} from '@loncra/antdv'
+import {classNames} from '@loncra/antdv'
 import {type FilterRequest, type PageRequest, SYSTEM_CONSTANT} from '@loncra/client/commons'
 import {useLocale} from '../_util/useLocale'
-import {useActionAuth, useCrudConfig} from '../crud-config-provider'
-import {
-  ACTION_CONTEXT_KEY,
-  type ActionContext,
-  type ActionDefinition,
-  BUILTIN_BULK_ACTION_IDS,
-  mergeDefinitions,
-  useActionResolver,
-} from '../_util/crud/actions'
-import {createDefaultToolbarActions} from '../_util/crud/defaultActions'
-import {type CollectionPagination, fetchCollectionData} from '../_util/crud/useCollectionData'
+import BasicCrudQuery from '../basic-crud-query'
+import type {BasicCrudQueryExpose} from '../basic-crud-query'
 import {useMergeRowSelection} from '../_util/crud/useMergeRowSelection'
-import type {DragPreviewContent} from '../_util/crud/useDrag'
+import {isDragEnabled} from '../_util/crud/useDrag'
 import {useTableRowDrag} from '../_util/crud/useTableRowDrag'
 import ActionButton from '../action-button'
 import useStyle from './style'
 import type {
   AuthorityProps,
-  ColumnSearchConfig,
   DefaultCrudEntity,
   QueryTableConstructor,
   QueryTableEmits,
@@ -58,43 +44,54 @@ const QUERY_TABLE_EMITS = [
   'update:selectedRows',
   'update:pagination',
   'action',
+  'add',
+  'edit',
+  'detail',
+  'deleted',
   'drop',
   'treeDrop',
 ] as const
 
+/**
+ * 表格：**只画表格**（列、筛选、拖拽列、空壳筛选下拉、槽）。
+ *
+ * 取数 / 分页 / 字典 / 标题 / 动作全部由 `BasicCrudQuery` 基类做（本组件把数据 model
+ * `v-model` 交给它，并把它 expose 的能力转发出去）。所以要"贴边"之类的卡片外观，
+ * 在门面那层给 `classes`（基类会把 `$attrs` 交给 `DataLoadingCardPlan` 的 `Card`）。
+ */
 const QueryTable = defineComponent({
   name: 'LQueryTable',
   inheritAttrs: false,
   props: {
+    // ── 交给基类的（外壳层） ──
     service: {type: Object as PropType<QueryTableRuntimeProps['service']>, required: true},
-    columns: {type: Array as PropType<SearchableColumnType<DefaultCrudEntity>[]>, default: () => []},
     immediate: {type: Boolean, default: true},
     refreshOnActivate: {
       type: [Boolean, Function] as PropType<RefreshOnActivate>,
       default: true,
     },
-    hideTitle: {type: Boolean, default: false},
-    bordered: {type: Boolean, default: true},
-    title: String,
-    titleIcon: String,
+    /** 卡片头，与 `DataLoadingCardPlan` 同形：`VNode` 直接用、`false` 不要卡片头、不给走默认标题 */
+    title: [Object, Boolean] as PropType<QueryTableRuntimeProps['title']>,
     hasPermission: Function as PropType<(permission: string) => boolean>,
     authority: Object as PropType<AuthorityProps>,
-    actions: Array as PropType<ActionDefinition<DefaultCrudEntity>[]>,
-    actionContextExtras: Object as PropType<Record<string, unknown>>,
-    drag: Boolean,
-    formatDragPreview: Function as PropType<(record: DefaultCrudEntity) => DragPreviewContent>,
+    /** 标题右侧的工具栏动作：数组 = 与默认 `add`/`deleteSelected` 合并；`false` = 整排不出 */
+    toolbarActions: [Array, Boolean] as PropType<QueryTableRuntimeProps['toolbarActions']>,
+    /** 行内动作：数组 = 与默认 `edit`/`detail`/`delete` 合并；`false` = 不要（`操作`列也不补） */
+    recordActions: [Array, Boolean] as PropType<QueryTableRuntimeProps['recordActions']>,
+    prefixCls: String,
+    rootClass: String,
+    // ── 表格自己的 ──
+    columns: {type: Array as PropType<SearchableColumnType<DefaultCrudEntity>[]>, default: () => []},
+    bordered: {type: Boolean, default: true},
+    /** 拖拽开关 + 幽灵内容：`true` = 可拖（幽灵缺省主键）；`(record) => 内容` = 可拖且它就是幽灵 */
+    drag: [Boolean, Function] as PropType<QueryTableRuntimeProps['drag']>,
     onRow: Function as PropType<TableProps['onRow']>,
     rowKey: {
       type: [String, Function] as PropType<TableProps['rowKey']>,
       default: SYSTEM_CONSTANT.ID_NAME,
     },
     rowSelection: [Object, Boolean] as PropType<TableProps['rowSelection'] | false>,
-    pagination: {
-      type: [Object, Boolean] as PropType<TableProps['pagination']>,
-      default: () => ({hideOnSinglePage: true, placement: ['bottomCenter']}),
-    },
-    prefixCls: String,
-    rootClass: String,
+    // ── 数据 model（本组件持有，`v-model` 传给基类） ──
     dataSource: {type: Array as PropType<DefaultCrudEntity[]>, default: () => []},
     loading: {type: Boolean, default: false},
     query: {
@@ -102,33 +99,25 @@ const QueryTable = defineComponent({
       default: () => ({}),
     },
     selectedRows: {type: Array as PropType<DefaultCrudEntity[]>, default: () => []},
+    pagination: {
+      type: [Object, Boolean] as PropType<TableProps['pagination']>,
+      default: () => ({hideOnSinglePage: true, align: 'center'}),
+    },
   },
   emits: [...QUERY_TABLE_EMITS],
   slots: Object as SlotsType<QueryTableSlots<DefaultCrudEntity>>,
   setup(props, {attrs, emit, expose, slots}) {
     type TEntity = DefaultCrudEntity
     type TId = string | number
-    type TableColumn = {
-      title?: unknown
-      dataIndex?: unknown
-      key?: string | number
-      width?: number | string
-      align?: unknown
-      fixed?: unknown
-      search?: ColumnSearchConfig
-      filteredValue?: unknown
-      filterDropdown?: unknown
-    }
-    const {message, modal} = App.useApp()
+
     const locale = useLocale('Crud')
     const config = useConfig()
-    const crudConfig = useCrudConfig()
-    const auth = useActionAuth(toRef(props, 'hasPermission'))
-    const {resolveActions} = useActionResolver()
     const prefixCls = computed(() =>
       config.value.getPrefixCls('query-table', props.prefixCls ?? 'loncra-query-table'),
     )
     const [hashId, cssVarCls] = useStyle(prefixCls)
+    /** 基类实例：取数 / 分页 / 标题 / 动作都在它那儿 */
+    const basic = ref<BasicCrudQueryExpose<TEntity, TId>>()
 
     // 双向绑定：父级 v-model 时纯受控（写操作 emit 回流），未绑时写本地值并 emit。
     // localValue 与 props 保持同一引用，父级「改对象属性」也能立即生效（不再需要 watch 拷贝）。
@@ -137,15 +126,14 @@ const QueryTable = defineComponent({
     const query = useModel(props, 'query') as unknown as Ref<FilterRequest | PageRequest>
     const selectedRows = useModel(props, 'selectedRows') as unknown as Ref<TEntity[]>
     const tablePagination = useModel(props, 'pagination') as unknown as Ref<TableProps['pagination']>
-    const mountedFetched = ref(false)
-    const tableColumns = ref<TableColumn[]>([])
+    const tableColumns = ref<SearchableColumnType<TEntity>[]>([])
     const appliedDefaultValueKeys = new Set<string>()
 
     const ghostClass = computed(() =>
       classNames(hashId.value, cssVarCls.value, `${prefixCls.value}-drag-ghost`),
     )
     const dropClassPrefix = computed(() => classNames(hashId.value, prefixCls.value))
-    const dragEnabled = computed(() => props.drag)
+    const dragEnabled = computed(() => isDragEnabled(props.drag))
 
     const {
       tableOnRow,
@@ -155,12 +143,10 @@ const QueryTable = defineComponent({
       onDragHandleEnd,
       syncPlacementBaseline,
     } = useTableRowDrag<TEntity, TId>({
-      drag: dragEnabled,
+      drag: toRef(props, 'drag'),
       // 拖拽的同一性判断也要跟 rowKey 对齐（rowKey 是函数时拿不到字段名，回退 id）
       idKey: (typeof props.rowKey === 'string' ? props.rowKey : undefined) as keyof TEntity & string | undefined,
       dataSource,
-      formatDragPreview: (record) =>
-        props.formatDragPreview?.(record) ?? String(record[SYSTEM_CONSTANT.ID_NAME] ?? ''),
       onRow: toRef(props, 'onRow'),
       ghostClass,
       dropClassPrefix,
@@ -170,43 +156,8 @@ const QueryTable = defineComponent({
         emit('treeDrop', sorts, drag, target, {dropPosition, tree}),
     })
 
-    const actionContext = computed<ActionContext<TEntity>>(() => ({
-      scope: 'toolbar',
-      items: dataSource.value,
-      selectedItems: selectedRows.value,
-      query: query.value,
-      extras: props.actionContextExtras ?? {},
-      message,
-      modal,
-    }))
-
-    provide(ACTION_CONTEXT_KEY, actionContext)
-
-    const defaultTableActions = computed(() =>
-      createDefaultToolbarActions<TEntity>({
-        authority: props.authority,
-        locale: locale.value,
-        iconClass: 'align',
-        onAdd: (ctx) => emit('action', {id: 'add', context: ctx}),
-      }),
-    )
-
-    const titleActions = computed(() =>
-      resolveActions(
-        mergeDefinitions(defaultTableActions.value, props.actions ?? []),
-        actionContext.value,
-        auth,
-      ),
-    )
-
-    const needsBulkRowSelection = computed(() => {
-      if (auth.can(props.authority?.delete)) {
-        return true
-      }
-      return (props.actions ?? []).some((action) =>
-        BUILTIN_BULK_ACTION_IDS.includes(action.id as (typeof BUILTIN_BULK_ACTION_IDS)[number]),
-      )
-    })
+    /** "操作"列要不要补：基类已经算过 `recordActions === false` 与权限，表格只负责画 */
+    const hasActionsColumn = computed(() => basic.value?.hasRecordActions.value ?? false)
 
     const externalRowSelection = computed((): TableProps['rowSelection'] | false | null => {
       const raw = (props.rowSelection ?? attrs.rowSelection) as
@@ -216,7 +167,8 @@ const QueryTable = defineComponent({
       if (raw === false) {
         return null
       }
-      if (raw === undefined && !needsBulkRowSelection.value) {
+      // 没有批量动作（基类看的）就不自动开多选
+      if (raw === undefined && !(basic.value?.needsBulkSelection.value ?? false)) {
         return null
       }
       return raw ?? {fixed: true, type: 'checkbox' as const}
@@ -232,16 +184,9 @@ const QueryTable = defineComponent({
       mergeIdKey,
     )
 
-    const resolvedTitle = computed(() => {
-      if (props.title !== undefined || props.titleIcon !== undefined) {
-        return {title: props.title ?? '', icon: props.titleIcon}
-      }
-      const fromConfig = crudConfig.value.resolveDefaultTitle?.()
-      return {title: fromConfig?.title ?? '', icon: fromConfig?.icon}
-    })
-
     const tablePassthroughAttrs = computed(() => {
-      const {class: _class, style: _style, rowSelection: _rowSelection, ...rest} = attrs
+      // `classes` 是卡片（plan 的 `Card`）的外观，交给基类；其余未知 attrs 照旧落表格
+      const {class: _class, style: _style, rowSelection: _rowSelection, classes: _classes, ...rest} = attrs
       if (rest.scroll === undefined) {
         const cols = tableColumns.value
         const allSized = cols.length > 0 && cols.every((column) => column.width != null)
@@ -256,8 +201,12 @@ const QueryTable = defineComponent({
       query.value = {...query.value, ...patch}
     }
 
+    function fetch() {
+      void basic.value?.fetchDataSource()
+    }
+
     function doSearch(
-      column: TableColumn,
+      column: SearchableColumnType<TEntity>,
       setSelectedKeys: (keys: string[]) => void,
       confirm: () => void,
     ) {
@@ -267,7 +216,7 @@ const QueryTable = defineComponent({
         setSelectedKeys(keys)
       }
       confirm()
-      void fetchDataSource()
+      fetch()
     }
 
     function clear(confirm: () => void, setSelectedKeys: (keys: string[]) => void) {
@@ -282,11 +231,11 @@ const QueryTable = defineComponent({
       query.value = next
       setSelectedKeys([])
       confirm()
-      void fetchDataSource()
+      fetch()
     }
 
     function resetField(
-      column: TableColumn,
+      column: SearchableColumnType<TEntity>,
       setSelectedKeys: (keys: string[]) => void,
       confirm: () => void,
     ) {
@@ -295,20 +244,12 @@ const QueryTable = defineComponent({
       }
       setSelectedKeys([])
       confirm()
-      void fetchDataSource()
-    }
-
-    function onChange(pagination: TablePaginationConfig) {
-      patchQuery({
-        number: pagination.current,
-        size: pagination.pageSize || 10,
-      })
-      void fetchDataSource()
+      fetch()
     }
 
     function onFilterEnterKey(
       e: KeyboardEvent,
-      column: TableColumn,
+      column: SearchableColumnType<TEntity>,
       setSelectedKeys: (keys: string[]) => void,
       confirm: () => void,
     ) {
@@ -334,9 +275,9 @@ const QueryTable = defineComponent({
     }
 
     function rebuildColumns() {
-      const cols: TableColumn[] = []
+      const cols: SearchableColumnType<TEntity>[] = []
       for (const col of props.columns ?? []) {
-        const optionsCol: TableColumn = {
+        const optionsCol: SearchableColumnType<TEntity> = {
           ...col,
           ...(col.search ? {search: {...col.search}} : {}),
         }
@@ -357,36 +298,21 @@ const QueryTable = defineComponent({
           patchQuery({[queryName]: optionsCol.search.defaultValue})
         }
       }
+      if (hasActionsColumn.value) {
+        cols.push({
+          title: locale.value.action,
+          dataIndex: 'action',
+          key: 'action',
+          align: 'center',
+          width: 80,
+          fixed: 'right',
+        })
+      }
       tableColumns.value = applyDragColumn(cols)
     }
 
-    const collectionPagination = computed({
-      get: () => tablePagination.value as CollectionPagination | undefined,
-      set: (value: CollectionPagination | undefined) => {
-        tablePagination.value = value
-      },
-    })
-
-    async function fetchDataSource() {
-      if (loading.value) {
-        return
-      }
-      try {
-        loading.value = true
-        dataSource.value = await fetchCollectionData({
-          service: props.service,
-          query: query.value,
-          pagination: collectionPagination as never,
-        })
-        syncPlacementBaseline(dataSource.value)
-        emit('update:pagination', tablePagination.value)
-      } finally {
-        loading.value = false
-      }
-    }
-
     watch(
-      () => [props.columns, props.drag] as const,
+      () => [props.columns, props.drag, hasActionsColumn.value] as const,
       () => rebuildColumns(),
       {immediate: true, deep: true},
     )
@@ -394,7 +320,7 @@ const QueryTable = defineComponent({
     watch(
       dataSource,
       (tree) => {
-        if (!props.drag) {
+        if (!dragEnabled.value) {
           return
         }
         syncPlacementBaseline(tree)
@@ -402,33 +328,9 @@ const QueryTable = defineComponent({
       {deep: true},
     )
 
-    onMounted(async () => {
-      if (!props.immediate) {
-        return
-      }
-      await fetchDataSource()
-    })
-
-    onActivated(() => {
-      // onActivated 在首次挂载时也会触发，那一次交给 onMounted / immediate 决定
-      if (!mountedFetched.value) {
-        mountedFetched.value = true
-        return
-      }
-      const refresh = props.refreshOnActivate
-      if (refresh === false) {
-        return
-      }
-      if (typeof refresh === 'function') {
-        void refresh()
-        return
-      }
-      void fetchDataSource()
-    })
-
     expose<QueryTableExpose<TEntity, TId>>({
-      fetchDataSource,
-      actionContext,
+      fetchDataSource: async () => basic.value?.fetchDataSource(),
+      remove: (records) => basic.value?.remove(records),
     })
 
     return () => {
@@ -440,26 +342,8 @@ const QueryTable = defineComponent({
         attrs.class,
       )
 
-      const renderTitle = () => (
-        <Flex
-          justify="space-between"
-          align="center"
-          class={classNames(hashId.value, `${prefixCls.value}-title`)}
-        >
-          {slots.title ? (
-            slots.title()
-          ) : (
-            <Space>
-              {renderIconFont(resolvedTitle.value.icon, 'align')}
-              <Typography.Title level={5}>{resolvedTitle.value.title}</Typography.Title>
-            </Space>
-          )}
-          <ActionButton actions={titleActions.value} />
-        </Flex>
-      )
-
       type FilterDropdownArgs = {
-        column: TableColumn
+        column: SearchableColumnType<TEntity>
         setSelectedKeys: (keys: string[]) => void
         confirm: () => void
       }
@@ -522,60 +406,112 @@ const QueryTable = defineComponent({
 
       const DataTable = Table as any
       return (
-        <DataTable
-          {...(tablePassthroughAttrs.value as Record<string, unknown>)}
-          class={hashedClass}
-          style={attrs.style}
-          columns={tableColumns.value}
-          pagination={tablePagination.value}
-          rowKey={props.rowKey}
+        <BasicCrudQuery
+          ref={basic}
+          service={props.service}
+          immediate={props.immediate}
+          refreshOnActivate={props.refreshOnActivate}
+          title={props.title}
+          hasPermission={props.hasPermission}
+          authority={props.authority}
+          toolbarActions={props.toolbarActions}
+          recordActions={props.recordActions}
+          selectedKey="selectedRows"
+          prefixCls={props.prefixCls}
+          rootClass={props.rootClass}
+          {...({classes: attrs.classes} as Record<string, unknown>)}
           dataSource={dataSource.value}
-          rowSelection={mergedRowSelection.value}
           loading={loading.value}
-          bordered={props.bordered}
-          onRow={tableOnRow.value}
-          onChange={onChange}
+          query={query.value}
+          selectedRows={selectedRows.value}
+          pagination={tablePagination.value}
+          onUpdate:dataSource={(value: TEntity[]) => (dataSource.value = value)}
+          onUpdate:loading={(value: boolean) => (loading.value = value)}
+          onUpdate:query={(value: FilterRequest | PageRequest) => (query.value = value)}
+          onUpdate:selectedRows={(value: TEntity[]) => (selectedRows.value = value)}
+          onUpdate:pagination={(value: unknown) => (tablePagination.value = value as TableProps['pagination'])}
+          onAction={(payload) => emit('action', payload)}
+          onAdd={() => emit('add')}
+          onEdit={(record: TEntity) => emit('edit', record)}
+          onDetail={(record: TEntity) => emit('detail', record)}
+          onDeleted={(records: TEntity[]) => emit('deleted', records)}
+          onDrop={(sorts, target, fromIndex, toIndex) => emit('drop', sorts, target, fromIndex, toIndex)}
+          onTreeDrop={(sorts, drag, target, payload) => emit('treeDrop', sorts, drag, target, payload)}
           v-slots={{
-            title: props.hideTitle ? undefined : renderTitle,
-            bodyCell: ({
-              text,
-              record,
-              index,
-              column,
-            }: {
-              text: unknown
-              record: TEntity
-              index: number
-              column: TableColumn
-            }) => {
-              if (isDragCell(column)) {
-                return (
-                  <div
-                    class={classNames(hashId.value, `${prefixCls.value}-drag-handle`)}
-                    draggable
-                    onDragstart={(e: DragEvent) => onDragHandleStart(record, e)}
-                    onDragend={onDragHandleEnd}
-                  >
-                    <Typography.Text type="secondary">::</Typography.Text>
-                  </div>
-                )
-              }
-              return slots.bodyCell?.({
-                text,
-                record,
-                index,
-                column: column as SearchableColumnType<TEntity>,
-              })
-            },
-            filterIcon: ({filtered}: {filtered: boolean}) =>
-              h(FilterOutlined, {
-                class: classNames(filtered && `${prefixCls.value}-filter-icon-active`),
-              }),
-            filterDropdown: renderFilterDropdown,
-            expandedRowRender: slots.expandedRowRender
-              ? (args: {record: TEntity; index: number; indent: number; expanded: boolean}) =>
-                  slots.expandedRowRender?.(args)
-              : undefined,
+            title: slots.title ? () => slots.title?.() : undefined,
+            default: () => (
+              <DataTable
+                {...(tablePassthroughAttrs.value as Record<string, unknown>)}
+                class={hashedClass}
+                style={attrs.style}
+                columns={tableColumns.value}
+                pagination={false}
+                rowKey={props.rowKey}
+                dataSource={dataSource.value}
+                rowSelection={mergedRowSelection.value}
+                loading={loading.value}
+                bordered={props.bordered}
+                onRow={tableOnRow.value}
+                v-slots={{
+                  bodyCell: ({
+                    text,
+                    record,
+                    index,
+                    column,
+                  }: {
+                    text: unknown
+                    record: TEntity
+                    index: number
+                    column: SearchableColumnType<TEntity>
+                  }) => {
+                    if (isDragCell(column)) {
+                      return (
+                        <div
+                          class={classNames(hashId.value, `${prefixCls.value}-drag-handle`)}
+                          draggable
+                          onDragstart={(e: DragEvent) => onDragHandleStart(record, e)}
+                          onDragend={onDragHandleEnd}
+                        >
+                          <Typography.Text type="secondary">::</Typography.Text>
+                        </div>
+                      )
+                    }
+                    if (column.dataIndex === 'action') {
+                      return (
+                        <>
+                          {slots.bodyCell?.({
+                            text,
+                            record,
+                            index,
+                            column: column as SearchableColumnType<TEntity>,
+                          })}
+                          <ActionButton
+                            size="small"
+                            actions={basic.value?.resolveRecordActions(record) ?? []}
+                            onAction={(id: string) => basic.value?.onRecordAction(id, record)}
+                          />
+                        </>
+                      )
+                    }
+                    return slots.bodyCell?.({
+                      text,
+                      record,
+                      index,
+                      column: column as SearchableColumnType<TEntity>,
+                    })
+                  },
+                  filterIcon: ({filtered}: {filtered: boolean}) =>
+                    h(FilterOutlined, {
+                      class: classNames(filtered && `${prefixCls.value}-filter-icon-active`),
+                    }),
+                  filterDropdown: renderFilterDropdown,
+                  expandedRowRender: slots.expandedRowRender
+                    ? (args: {record: TEntity; index: number; indent: number; expanded: boolean}) =>
+                        slots.expandedRowRender?.(args)
+                    : undefined,
+                }}
+              />
+            ),
           }}
         />
       )

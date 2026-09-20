@@ -1,24 +1,23 @@
-import {computed, defineComponent, type PropType, type Ref, ref, type SlotsType, toRef, unref, useModel, watch,} from 'vue'
-import type {TableProps} from 'antdv-next'
-import {App} from 'antdv-next'
-import {type FilterRequest, type PageRequest} from '@loncra/client/commons'
-import {useLocale} from '../_util/useLocale'
-import {useActionAuth} from '../crud-config-provider'
 import {
-  type ActionContext,
-  type ActionDefinition,
-  type ActionPayload,
-  buildItemActionContext,
-  BUILTIN_ITEM_ACTION_IDS,
-  mergeDefinitions,
-  useActionResolver,
-} from '../_util/crud/actions'
-import {createDefaultBulkActions, createDefaultItemActions} from '../_util/crud/defaultActions'
-import {useCrudDelete} from '../_util/crud/useCrudDelete'
-import type {DragPreviewContent} from '../_util/crud/useDrag'
+  computed,
+  defineComponent,
+  type PropType,
+  type Ref,
+  ref,
+  type SlotsType,
+  useModel,
+} from 'vue'
+import type {TableProps} from 'antdv-next'
+import {type FilterRequest, type PageRequest} from '@loncra/client/commons'
+import type {RecordActionDefinition, ToolbarActionDefinition} from '../_util/crud/actions'
 import QueryTable from '../query-table/QueryTable'
-import ActionButton from '../action-button'
-import type {AuthorityProps, DefaultCrudEntity, QueryTableExpose, RefreshOnActivate, SearchableColumnType,} from '../query-table/types'
+import type {
+  AuthorityProps,
+  DefaultCrudEntity,
+  QueryTableExpose,
+  RefreshOnActivate,
+  SearchableColumnType,
+} from '../query-table/types'
 import type {
   CrudTableConstructor,
   CrudTableEmits,
@@ -38,10 +37,17 @@ const CRUD_TABLE_EMITS = [
   'add',
   'edit',
   'detail',
+  'deleted',
   'drop',
   'treeDrop',
 ] as const
 
+/**
+ * CRUD 表格门面：对外契约与以前完全一样，内部只做三处映射 ——
+ * 旧标题三件套 → 基类 `title`（`hide-title` ⇔ `title={false}`）、
+ * `actions` → `toolbarActions`、`recordActions`(boolean)+`rowActions` → 基类 `recordActions`。
+ * 其余原样转发给 `QueryTable`（它再交给 `BasicCrudQuery` 基类）。
+ */
 const CrudTable = defineComponent({
   name: 'LCrudTable',
   inheritAttrs: false,
@@ -53,24 +59,22 @@ const CrudTable = defineComponent({
       type: [Boolean, Function] as PropType<RefreshOnActivate>,
       default: true,
     },
-    hideTitle: {type: Boolean, default: false},
     bordered: {type: Boolean, default: true},
-    title: String,
-    titleIcon: String,
+    /** 卡片头，与 `DataLoadingCardPlan` 同形：`VNode` 直接用、`false` 不要卡片头、不给走默认标题 */
+    title: [Object, Boolean] as PropType<CrudTableRuntimeProps['title']>,
     hasPermission: Function as PropType<(permission: string) => boolean>,
     authority: Object as PropType<AuthorityProps>,
-    actions: Array as PropType<ActionDefinition<DefaultCrudEntity>[]>,
-    rowActions: Array as PropType<ActionDefinition<DefaultCrudEntity>[]>,
+    actions: Array as PropType<ToolbarActionDefinition<DefaultCrudEntity>[]>,
+    rowActions: Array as PropType<RecordActionDefinition<DefaultCrudEntity>[]>,
     recordActions: {type: Boolean, default: true},
-    actionContextExtras: Object as PropType<Record<string, unknown>>,
-    drag: Boolean,
-    formatDragPreview: Function as PropType<(record: DefaultCrudEntity) => DragPreviewContent>,
+    /** 拖拽开关 + 幽灵内容：`true` = 可拖（幽灵缺省主键）；`(record) => 内容` = 可拖且它就是幽灵 */
+    drag: [Boolean, Function] as PropType<CrudTableRuntimeProps['drag']>,
     onRow: Function as PropType<TableProps['onRow']>,
     rowKey: [String, Function] as PropType<TableProps['rowKey']>,
     rowSelection: [Object, Boolean] as PropType<TableProps['rowSelection'] | false>,
     pagination: {
       type: [Object, Boolean] as PropType<TableProps['pagination']>,
-      default: () => ({hideOnSinglePage: true, placement: ['bottomCenter']}),
+      default: () => ({hideOnSinglePage: true, align: 'center'}),
     },
     prefixCls: String,
     rootClass: String,
@@ -86,12 +90,7 @@ const CrudTable = defineComponent({
   slots: Object as SlotsType<CrudTableSlots<DefaultCrudEntity>>,
   setup(props, {attrs, emit, expose, slots}) {
     type TEntity = DefaultCrudEntity
-    type TBody = DefaultCrudEntity
     type TId = string | number
-    const {message, modal} = App.useApp()
-    const locale = useLocale('Crud')
-    const auth = useActionAuth(toRef(props, 'hasPermission'))
-    const {resolveActions} = useActionResolver()
     const queryTable = ref<QueryTableExpose<TEntity, TId>>()
 
     // 双向绑定：透传给 QueryTable 时同时传值与 onUpdate，由最远端统一持有状态
@@ -101,86 +100,14 @@ const CrudTable = defineComponent({
     const query = useModel(props, 'query') as unknown as Ref<FilterRequest | PageRequest>
     const pagination = useModel(props, 'pagination') as unknown as Ref<TableProps['pagination']>
 
-    const {remove} = useCrudDelete<TBody, TEntity, TId>({
-      service: props.service,
-      locale: () => locale.value,
-      modal,
-      message,
-      loading,
-      refresh: () => queryTable.value?.fetchDataSource(),
-    })
-
-    const tableActions = computed(() =>
-      mergeDefinitions(
-        createDefaultBulkActions<TBody, TEntity, TId>({
-          authority: props.authority,
-          service: props.service,
-          locale: locale.value,
-          remove,
-        }),
-        props.actions ?? [],
-      ),
+    /** 行内动作：旧的"布尔开关 + 数组定义"合成基类的一个 `recordActions` */
+    const recordActions = computed<RecordActionDefinition<TEntity>[] | false>(() =>
+      props.recordActions === false ? false : (props.rowActions ?? []),
     )
-
-    const rowActionDefinitions = computed(() =>
-      mergeDefinitions(
-        createDefaultItemActions<TBody, TEntity, TId>({
-          authority: props.authority,
-          service: props.service,
-          locale: locale.value,
-          remove,
-          onEdit: (record) => emit('edit', record),
-          onDetail: (record) => emit('detail', record),
-        }),
-        props.rowActions ?? [],
-      ),
-    )
-
-    const displayColumns = computed<SearchableColumnType<TEntity>[]>(() => {
-      const cols = [...(props.columns ?? [])]
-      if (props.recordActions && rowActionDefinitions.value.some((def) => auth.can(def.permission))) {
-        cols.push({
-          title: locale.value.action,
-          dataIndex: 'action',
-          key: 'action',
-          align: 'center',
-          width: 80,
-          fixed: 'right',
-        })
-      }
-      return cols
-    })
-
-    function buildRowContext(record: TEntity): ActionContext<TEntity> {
-      return buildItemActionContext({
-        record,
-        toolbarContext: unref(queryTable.value?.actionContext),
-        actionContextExtras: props.actionContextExtras,
-        app: {message, modal},
-      })
-    }
-
-    function resolveRowActions(record: TEntity) {
-      return resolveActions(rowActionDefinitions.value, buildRowContext(record), auth)
-    }
-
-    function onRowAction(id: string, record: TEntity) {
-      if (BUILTIN_ITEM_ACTION_IDS.includes(id as (typeof BUILTIN_ITEM_ACTION_IDS)[number])) {
-        return
-      }
-      emit('action', {id, context: buildRowContext(record)})
-    }
-
-    function onTableAction(payload: ActionPayload<TEntity>) {
-      if (payload.id === 'add') {
-        emit('add')
-      }
-      emit('action', payload)
-    }
 
     expose<CrudTableExpose<TEntity>>({
       fetchDataSource: () => queryTable.value?.fetchDataSource() ?? Promise.resolve(),
-      remove,
+      remove: (records) => queryTable.value?.remove(records),
     })
 
     return () => (
@@ -188,22 +115,18 @@ const CrudTable = defineComponent({
         ref={queryTable}
         {...attrs}
         service={props.service}
-        columns={displayColumns.value}
-        actions={tableActions.value}
-        actionContextExtras={props.actionContextExtras}
-        hideTitle={props.hideTitle}
-        bordered={props.bordered}
-        title={props.title}
-        titleIcon={props.titleIcon}
-        hasPermission={props.hasPermission}
-        drag={props.drag}
-        formatDragPreview={props.formatDragPreview}
-        onRow={props.onRow}
-        rowKey={props.rowKey}
-        authority={props.authority}
-        pagination={pagination.value}
+        columns={props.columns}
         immediate={props.immediate}
         refreshOnActivate={props.refreshOnActivate}
+        title={props.title}
+        hasPermission={props.hasPermission}
+        authority={props.authority}
+        toolbarActions={props.actions}
+        recordActions={recordActions.value}
+        bordered={props.bordered}
+        drag={props.drag}
+        onRow={props.onRow}
+        rowKey={props.rowKey}
         rowSelection={props.rowSelection}
         prefixCls={props.prefixCls}
         rootClass={props.rootClass}
@@ -211,22 +134,17 @@ const CrudTable = defineComponent({
         loading={loading.value}
         query={query.value}
         selectedRows={selectedRows.value}
-        onUpdate:dataSource={(value) => {
-          dataSource.value = value
-        }}
-        onUpdate:loading={(value) => {
-          loading.value = value
-        }}
-        onUpdate:query={(value) => {
-          query.value = value
-        }}
-        onUpdate:selectedRows={(value) => {
-          selectedRows.value = value
-        }}
-        onUpdate:pagination={(value) => {
-          pagination.value = value
-        }}
-        onAction={onTableAction}
+        pagination={pagination.value}
+        onUpdate:dataSource={(value: TEntity[]) => (dataSource.value = value)}
+        onUpdate:loading={(value: boolean) => (loading.value = value)}
+        onUpdate:query={(value: FilterRequest | PageRequest) => (query.value = value)}
+        onUpdate:selectedRows={(value: TEntity[]) => (selectedRows.value = value)}
+        onUpdate:pagination={(value: unknown) => (pagination.value = value as TableProps['pagination'])}
+        onAction={(payload) => emit('action', payload)}
+        onAdd={() => emit('add')}
+        onEdit={(record: TEntity) => emit('edit', record)}
+        onDetail={(record: TEntity) => emit('detail', record)}
+        onDeleted={(records: TEntity[]) => emit('deleted', records)}
         onDrop={(sorts, target, fromIndex, toIndex) => emit('drop', sorts, target, fromIndex, toIndex)}
         onTreeDrop={(sorts, drag, target, payload) => emit('treeDrop', sorts, drag, target, payload)}
         v-slots={{
@@ -235,31 +153,19 @@ const CrudTable = defineComponent({
             ? (args: {record: TEntity; index: number; indent: number; expanded: boolean}) =>
                 slots.expandedRowRender?.(args)
             : undefined,
-          bodyCell: ({
-            text,
-            record,
-            index,
-            column,
-          }: {
-            text: unknown
-            record: TEntity
-            index: number
-            column: SearchableColumnType<TEntity>
-          }) => {
-            if (column.dataIndex === 'action') {
-              return (
-                <>
-                  {slots.bodyCell?.({text, record, index, column})}
-                  <ActionButton
-                    size="small"
-                    actions={resolveRowActions(record)}
-                    onAction={(id: string) => onRowAction(id, record)}
-                  />
-                </>
-              )
-            }
-            return slots.bodyCell?.({text, record, index, column})
-          },
+          bodyCell: slots.bodyCell
+            ? ({
+                text,
+                record,
+                index,
+                column,
+              }: {
+                text: unknown
+                record: TEntity
+                index: number
+                column: SearchableColumnType<TEntity>
+              }) => slots.bodyCell?.({text, record, index, column})
+            : undefined,
         }}
       />
     )

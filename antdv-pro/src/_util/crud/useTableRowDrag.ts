@@ -15,7 +15,7 @@ import {
     type TreePlacement,
     type TreeSortMetadata,
 } from '@loncra/client/commons'
-import {useDrag, type UseDragOptions} from './useDrag'
+import {isDragEnabled, useDrag, type UseDragOptions} from './useDrag'
 import {reorderFlatList} from './useFlatDragDrop'
 
 export interface UseTableRowDragOptions<
@@ -47,6 +47,7 @@ export function useTableRowDrag<
   TId = TEntity[typeof SYSTEM_CONSTANT.ID_NAME],
 >(options: UseTableRowDragOptions<TEntity, TId>) {
   const idKey = options.idKey ?? SYSTEM_CONSTANT.ID_NAME
+  const dragEnabled = computed(() => isDragEnabled(options.drag.value))
 
   const {dragKey, entityId, onDragHandleStart, removeDragGhost, clearDragKey} = useDrag<
     TEntity,
@@ -66,7 +67,7 @@ export function useTableRowDrag<
   }
 
   function syncPlacementBaseline(tree: TEntity[] = options.dataSource.value) {
-    if (!options.drag.value) {
+    if (!dragEnabled.value) {
       return
     }
     if (tree.length === 0) {
@@ -206,7 +207,7 @@ export function useTableRowDrag<
   function buildDragRowProps(record: TEntity) {
     return {
       onDragover: (event: DragEvent) => {
-        if (!options.drag.value) {
+        if (!dragEnabled.value) {
           return
         }
         event.preventDefault()
@@ -220,7 +221,7 @@ export function useTableRowDrag<
         }
       },
       onDrop: () => {
-        if (!options.drag.value) {
+        if (!dragEnabled.value) {
           return
         }
         const currentDragKey = dragKey.value
@@ -248,7 +249,7 @@ export function useTableRowDrag<
     const parentOnRow = options.onRow?.value
     const parentProps = typeof parentOnRow === 'function' ? parentOnRow(record, index) ?? {} : {}
 
-    if (!options.drag.value) {
+    if (!dragEnabled.value) {
       return parentProps
     }
 
@@ -261,7 +262,7 @@ export function useTableRowDrag<
   }
 
   const tableOnRow = computed((): TableProps['onRow'] | undefined => {
-    if (!options.drag.value && !options.onRow?.value) {
+    if (!dragEnabled.value && !options.onRow?.value) {
       return undefined
     }
     return resolveOnRow
@@ -273,14 +274,14 @@ export function useTableRowDrag<
   }
 
   function applyDragColumn<T extends object>(columns: T[]) {
-    if (!options.drag.value) {
+    if (!dragEnabled.value) {
       return columns
     }
     return [{title: '', key: 'drag', width: 40} as T, ...columns]
   }
 
   const isDragCell = (column: {key?: string | number}) =>
-    Boolean(options.drag.value && column.key === 'drag')
+    Boolean(dragEnabled.value && column.key === 'drag')
 
   return {
     tableOnRow,

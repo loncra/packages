@@ -10,27 +10,46 @@ import type {
   SYSTEM_CONSTANT,
   TreeSortMetadata,
 } from '@loncra/client/commons'
-import type {ActionDefinition, ActionPayload} from '../_util/crud/actions'
-import type {DefaultCrudEntity, QueryTableEmits, QueryTableProps, QueryTableSlots,} from '../query-table/types'
+import type {
+  RecordActionDefinition,
+  RecordActionPayload,
+  ToolbarActionPayload,
+} from '../_util/crud/actions'
+import type {
+  DefaultCrudEntity,
+  QueryCollectionProps,
+  QueryTableEmits,
+  QueryTableSlots,
+  SearchableColumnType,
+} from '../query-table/types'
 
+/**
+ * 门面 props：对外契约与以前一样（宿主 22 处在用），内部只做两处映射 ——
+ * `actions` → `toolbarActions`、`recordActions`(boolean)+`rowActions` → `recordActions`；
+ * 标题直接用基类统一的 `title`（`VNode | false`，`hide-title` 等价于 `:title="false"`）。
+ */
 export interface CrudTableProps<
   TBody extends BasicIdMetadata<TId>,
   TEntity extends TBody,
   TPage extends ScrollPageResult<TEntity>,
   TId = TEntity[typeof SYSTEM_CONSTANT.ID_NAME],
-> extends QueryTableProps<TBody, TEntity, TPage, TId> {
+> extends QueryCollectionProps<TBody, TEntity, TPage, TId> {
+  columns?: SearchableColumnType<TEntity>[]
+  bordered?: boolean
+  onRow?: TableProps['onRow']
+  rowSelection?: TableProps['rowSelection'] | false
+  pagination?: TableProps['pagination']
+  selectedRows?: TEntity[]
+  /** 旧的布尔开关：`false` = 不要行内动作（连"操作"列都不补） */
   recordActions?: boolean
-  rowActions?: ActionDefinition<TEntity>[]
+  /** 行内动作（与默认 `edit`/`detail`/`delete` 合并） */
+  rowActions?: RecordActionDefinition<TEntity>[]
 }
 
 export type CrudTableEmits<
   TEntity extends BasicIdMetadata<TId>,
   TId = TEntity[typeof SYSTEM_CONSTANT.ID_NAME],
-> = QueryTableEmits<TEntity, TId> & {
-  add: []
-  edit: [record: TEntity]
-  detail: [record: TEntity]
-}
+> = QueryTableEmits<TEntity, TId>
 
 export interface CrudTableExpose<TEntity extends BasicIdMetadata<unknown>> {
   fetchDataSource: () => Promise<void | undefined>
@@ -62,4 +81,13 @@ export type CrudTableConstructor = new <
   $slots: CrudTableSlots<TEntity>
 } & CrudTableExpose<TEntity>
 
-export type {ActionPayload, DropPosition, FilterRequest, PageRequest, RestResult, TableProps, TreeSortMetadata}
+export type {
+  DropPosition,
+  FilterRequest,
+  PageRequest,
+  RecordActionPayload,
+  RestResult,
+  TableProps,
+  ToolbarActionPayload,
+  TreeSortMetadata,
+}

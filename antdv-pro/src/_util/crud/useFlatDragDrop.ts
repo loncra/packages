@@ -1,4 +1,4 @@
-import {ref, type Ref} from 'vue'
+import {computed, ref, type Ref} from 'vue'
 import {
     type BasicIdMetadata,
     buildFlatPlacementMap,
@@ -7,7 +7,7 @@ import {
     SYSTEM_CONSTANT,
     type TreeSortMetadata,
 } from '@loncra/client/commons'
-import {useDrag, type UseDragOptions, type UseDragReturn} from './useDrag'
+import {isDragEnabled, useDrag, type UseDragOptions, type UseDragReturn} from './useDrag'
 
 export interface UseFlatDragDropOptions<
   TEntity extends BasicIdMetadata<TId>,
@@ -70,6 +70,7 @@ export function useFlatDragDrop<
     TEntity,
     TId
   >(options)
+  const dragEnabled = computed(() => isDragEnabled(options.drag.value))
 
   const hoverTargetKey = ref<TId | undefined>() as Ref<TId | undefined>
   const dropPosition = ref<-1 | 1 | undefined>()
@@ -127,7 +128,7 @@ export function useFlatDragDrop<
   function buildDropZoneProps(record: TEntity) {
     return {
       onDragover: (event: DragEvent) => {
-        if (!options.drag.value) {
+        if (!dragEnabled.value) {
           return
         }
         event.preventDefault()
@@ -138,7 +139,7 @@ export function useFlatDragDrop<
         }
       },
       onDrop: () => {
-        if (!options.drag.value) {
+        if (!dragEnabled.value) {
           return
         }
         handleFlatDrop(record)

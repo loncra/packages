@@ -6,11 +6,23 @@ import {type BasicIdMetadata, SYSTEM_CONSTANT} from '@loncra/client/commons'
  */
 export type DragPreviewContent = string | VNode
 
+/**
+ * 拖拽开关 + 幽灵内容（一个口两个用途）：
+ * - `true`：可拖，幽灵缺省是主键值
+ * - 函数：可拖，返回值就是幽灵内容（按行算）
+ * - `false` / 不给：不可拖
+ */
+export type DragProp<TEntity> = boolean | ((record: TEntity) => DragPreviewContent)
+
+/** `drag` 的取用口径：只有 `true` 或函数才算"开" */
+export function isDragEnabled<TEntity>(drag: DragProp<TEntity> | undefined): boolean {
+  return drag === true || typeof drag === 'function'
+}
+
 export interface UseDragOptions<TEntity extends BasicIdMetadata<unknown>> {
-  drag: Ref<boolean>
+  drag: Ref<DragProp<TEntity> | undefined>
   /** 主键字段名，跟随列表 / 卡片网格的 rowKey；缺省 id */
   idKey?: keyof TEntity & string
-  formatDragPreview?: (record: TEntity) => DragPreviewContent
   ghostClass: Ref<string>
 }
 
@@ -53,7 +65,8 @@ export function useDrag<
   }
 
   function onDragHandleStart(record: TEntity, event: DragEvent) {
-    if (!options.drag.value) {
+    const drag = options.drag.value
+    if (!isDragEnabled(drag)) {
       return
     }
     const id = entityId(record)
@@ -61,7 +74,7 @@ export function useDrag<
     event.dataTransfer?.setData('text/plain', String(id ?? ''))
 
     removeDragGhost()
-    const preview = options.formatDragPreview?.(record) ?? String(id ?? '')
+    const preview = typeof drag === 'function' ? drag(record) : String(id ?? '')
     const ghost = document.createElement('div')
     ghost.className = options.ghostClass.value
     // 统一走 Vue 渲染：字符串当文本节点，VNode 原样挂载；非法返回值由 Vue 直接报错，不静默吞掉

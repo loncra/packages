@@ -4,7 +4,6 @@ import {
   onActivated,
   onMounted,
   type PropType,
-  provide,
   type Ref,
   ref,
   type SlotsType,
@@ -18,21 +17,21 @@ import {type FilterRequest, type PageRequest, SYSTEM_CONSTANT} from '@loncra/cli
 import {useLocale} from '../_util/useLocale'
 import {useActionAuth, useCrudConfig} from '../crud-config-provider'
 import {
-  ACTION_CONTEXT_KEY,
-  type ActionContext,
-  type ActionDefinition,
+  type ToolbarActionContext,
+  type ToolbarActionDefinition,
   mergeDefinitions,
   useActionResolver,
 } from '../_util/crud/actions'
 import {createDefaultToolbarActions} from '../_util/crud/defaultActions'
 import {resolveRowKey} from '../_util/crud/rowKey'
 import {fetchCollectionData} from '../_util/crud/useCollectionData'
-import type {DragPreviewContent} from '../_util/crud/useDrag'
+import {isDragEnabled, type DragProp} from '../_util/crud/useDrag'
 import {useFlatDragDrop} from '../_util/crud/useFlatDragDrop'
 import ActionButton from '../action-button'
 import useStyle from './style'
 import type {AuthorityProps, DefaultCrudEntity, RefreshOnActivate} from '../query-table/types'
 import type {
+  CardGridDragDirection,
   CardGridPagination,
   QueryCardGridConstructor,
   QueryCardGridEmits,
@@ -63,16 +62,15 @@ const QueryCardGrid = defineComponent({
       type: [Boolean, Function] as PropType<RefreshOnActivate>,
       default: true,
     },
-    hideTitle: {type: Boolean, default: false},
-    title: String,
-    titleIcon: String,
+    /** 卡片头：`VNode` 直接用、`false` 不要卡片头、不给走 `CrudConfig.resolveDefaultTitle` */
+    title: [Object, Boolean] as PropType<QueryCardGridRuntimeProps['title']>,
     hasPermission: Function as PropType<(permission: string) => boolean>,
     authority: Object as PropType<AuthorityProps>,
-    actions: Array as PropType<ActionDefinition<DefaultCrudEntity>[]>,
-    actionContextExtras: Object as PropType<Record<string, unknown>>,
-    drag: Boolean,
-    dragDirection: {type: String as PropType<'horizontal' | 'vertical'>, default: 'horizontal'},
-    formatDragPreview: Function as PropType<(record: DefaultCrudEntity) => DragPreviewContent>,
+    actions: Array as PropType<ToolbarActionDefinition<DefaultCrudEntity>[]>,
+    /**
+     * 拖拽开关 + 幽灵内容（同表格）；要给方向就写对象形态 `{dragPreview, direction}`，那时 `direction` 才生效
+     */
+    drag: [Boolean, Function, Object] as PropType<QueryCardGridRuntimeProps['drag']>,
     gridColumns: {type: Number, default: 5},
     selectable: {type: Boolean, default: true},
     rowKey: [String, Function] as PropType<QueryCardGridRuntimeProps['rowKey']>,
@@ -100,7 +98,7 @@ const QueryCardGrid = defineComponent({
     const config = useConfig()
     const crudConfig = useCrudConfig()
     const auth = useActionAuth(toRef(props, 'hasPermission'))
-    const {resolveActions} = useActionResolver()
+    const {resolveToolbarActions} = useActionResolver()
     const prefixCls = computed(() =>
       config.value.getPrefixCls('query-card-grid', props.prefixCls ?? 'loncra-query-card-grid'),
     )
@@ -115,7 +113,14 @@ const QueryCardGrid = defineComponent({
     const pagination = useModel(props, 'pagination') as unknown as Ref<CardGridPagination>
 
     const mountedFetched = ref(false)
-    const dragEnabled = computed(() => props.drag)
+    /** `drag` 两种形态归一：对象形态才关心方向，否则按横向 */
+    const dragPreview = computed((): DragProp<TEntity> | undefined =>
+      typeof props.drag === 'object' ? props.drag.dragPreview : props.drag,
+    )
+    const dragDirection = computed((): CardGridDragDirection =>
+      typeof props.drag === 'object' ? props.drag.direction : 'horizontal',
+    )
+    const dragEnabled = computed(() => isDragEnabled(dragPreview.value))
     const ghostClass = computed(() =>
       classNames(hashId.value, cssVarCls.value, `${prefixCls.value}-drag-ghost`),
     )
@@ -125,30 +130,24 @@ const QueryCardGrid = defineComponent({
       TEntity,
       TId
     >({
-      drag: dragEnabled,
+      drag: dragPreview,
       // 拖拽的同一性判断也要跟 rowKey 对齐（rowKey 是函数时拿不到字段名，回退 id）
       idKey: (typeof props.rowKey === 'string' ? props.rowKey : undefined) as keyof TEntity & string | undefined,
       dataSource,
-      direction: props.dragDirection,
-      formatDragPreview: (record) =>
-        props.formatDragPreview?.(record) ?? String(record[SYSTEM_CONSTANT.ID_NAME] ?? ''),
+      direction: dragDirection.value,
       ghostClass,
       dropClassPrefix,
       onFlatDrop: ({sorts, target, fromIndex, toIndex}) =>
         emit('drop', sorts, target, fromIndex, toIndex),
     })
 
-    const actionContext = computed<ActionContext<TEntity>>(() => ({
-      scope: 'toolbar',
+    const actionContext = computed<ToolbarActionContext<TEntity>>(() => ({
       items: dataSource.value,
       selectedItems: selectedItems.value,
       query: query.value,
-      extras: props.actionContextExtras ?? {},
       message,
       modal,
     }))
-
-    provide(ACTION_CONTEXT_KEY, actionContext)
 
     const defaultToolbarActions = computed(() =>
       createDefaultToolbarActions<TEntity>({
@@ -160,17 +159,15 @@ const QueryCardGrid = defineComponent({
     )
 
     const titleActions = computed(() =>
-      resolveActions(
+      resolveToolbarActions(
         mergeDefinitions(defaultToolbarActions.value, props.actions ?? []),
         actionContext.value,
         auth,
       ),
     )
 
+    /** 没给 `title`（或给了 `true`）时的卡片头内容：走宿主配的默认标题 */
     const resolvedTitle = computed(() => {
-      if (props.title !== undefined || props.titleIcon !== undefined) {
-        return {title: props.title ?? '', icon: props.titleIcon}
-      }
       const fromConfig = crudConfig.value.resolveDefaultTitle?.()
       return {title: fromConfig?.title ?? '', icon: fromConfig?.icon}
     })
@@ -202,11 +199,8 @@ const QueryCardGrid = defineComponent({
     }
 
     async function fetchDataSource() {
-      if (loading.value) {
-        return
-      }
+      loading.value = true
       try {
-        loading.value = true
         dataSource.value = await fetchCollectionData({
           service: props.service,
           query: query.value,
@@ -273,6 +267,8 @@ const QueryCardGrid = defineComponent({
         >
           {slots.title ? (
             slots.title()
+          ) : typeof props.title === 'object' && props.title !== null ? (
+            props.title
           ) : (
             <Space>
               {renderIconFont(resolvedTitle.value.icon, 'align')}
@@ -291,7 +287,7 @@ const QueryCardGrid = defineComponent({
           style={rootStyle}
           loading={loading.value}
           v-slots={{
-            title: props.hideTitle ? undefined : renderTitle,
+            title: props.title === false ? undefined : renderTitle,
           }}
         >
           {(dataSource.value || []).length <= 0 ? (

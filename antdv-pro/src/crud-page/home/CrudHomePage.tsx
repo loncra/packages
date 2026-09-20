@@ -125,20 +125,12 @@ const CrudHomePage = defineComponent({
     })
 
     return () => {
-      // add / edit / detail 的语义是"跳转"，由本组件消费；不透传给 CrudTable，
-      // 否则宿主的同名监听会和 onNavigate 一起触发，同一次点击两条路径。
-      const rest = {...attrs}
-      delete rest.onAdd
-      delete rest.onEdit
-      delete rest.onDetail
-
       return (
         <CrudTable
           ref={tableRef}
           service={props.page.service}
           columns={columns.value}
           drag={props.page.list?.drag}
-          formatDragPreview={props.page.list?.formatDragPreview}
           authority={props.page.list?.authority}
           actions={props.page.list?.titleActions}
           rowActions={rowActions.value}
@@ -164,7 +156,9 @@ const CrudHomePage = defineComponent({
                   slots.expandedRowRender?.(args)
               : undefined,
           }}
-          {...rest}
+          // `$attrs` 直通（宿主的 `:record-actions` / `:drag` / `:scroll` … 从这里转给 CrudTable）。
+          // add / edit / detail 的默认语义是"跳转"（见上面的 `go()`）；宿主真在组件上绑同名事件，就是接管跳转。
+          {...attrs}
         />
       )
     }
