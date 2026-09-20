@@ -11,6 +11,7 @@ import type {TableProps} from 'antdv-next'
 import {type FilterRequest, type PageRequest} from '@loncra/client/commons'
 import type {RecordActionDefinition, ToolbarActionDefinition} from '../_util/crud/actions'
 import QueryTable from '../query-table/QueryTable'
+import type {PageDicts, PageEnums} from '../basic-crud-query'
 import type {
   AuthorityProps,
   DefaultCrudEntity,
@@ -33,6 +34,8 @@ const CRUD_TABLE_EMITS = [
   'update:query',
   'update:selectedRows',
   'update:pagination',
+  'update:buckets',
+  'update:dicts',
   'action',
   'add',
   'edit',
@@ -67,6 +70,12 @@ const CrudTable = defineComponent({
     actions: Array as PropType<ToolbarActionDefinition<DefaultCrudEntity>[]>,
     rowActions: Array as PropType<RecordActionDefinition<DefaultCrudEntity>[]>,
     recordActions: {type: Boolean, default: true},
+    /** 系统字典：要加载什么（声明侧 `list.enums` / `list.dicts`）—— 原样交给基类 */
+    enumIds: Array as PropType<CrudTableRuntimeProps['enumIds']>,
+    dictCodes: Array as PropType<CrudTableRuntimeProps['dictCodes']>,
+    /** 字典加载结果（基类 `v-model` 回来） */
+    buckets: {type: Object as PropType<CrudTableRuntimeProps['buckets']>, default: () => ({})},
+    dicts: {type: Object as PropType<CrudTableRuntimeProps['dicts']>, default: () => ({})},
     /** 拖拽开关 + 幽灵内容：`true` = 可拖（幽灵缺省主键）；`(record) => 内容` = 可拖且它就是幽灵 */
     drag: [Boolean, Function] as PropType<CrudTableRuntimeProps['drag']>,
     onRow: Function as PropType<TableProps['onRow']>,
@@ -99,6 +108,8 @@ const CrudTable = defineComponent({
     const dataSource = useModel(props, 'dataSource') as unknown as Ref<TEntity[]>
     const query = useModel(props, 'query') as unknown as Ref<FilterRequest | PageRequest>
     const pagination = useModel(props, 'pagination') as unknown as Ref<TableProps['pagination']>
+    const buckets = useModel(props, 'buckets') as unknown as Ref<PageEnums>
+    const dicts = useModel(props, 'dicts') as unknown as Ref<PageDicts>
 
     /** 行内动作：旧的"布尔开关 + 数组定义"合成基类的一个 `recordActions` */
     const recordActions = computed<RecordActionDefinition<TEntity>[] | false>(() =>
@@ -123,6 +134,8 @@ const CrudTable = defineComponent({
         authority={props.authority}
         toolbarActions={props.actions}
         recordActions={recordActions.value}
+        enumIds={props.enumIds}
+        dictCodes={props.dictCodes}
         bordered={props.bordered}
         drag={props.drag}
         onRow={props.onRow}
@@ -135,11 +148,15 @@ const CrudTable = defineComponent({
         query={query.value}
         selectedRows={selectedRows.value}
         pagination={pagination.value}
+        buckets={buckets.value}
+        dicts={dicts.value}
         onUpdate:dataSource={(value: TEntity[]) => (dataSource.value = value)}
         onUpdate:loading={(value: boolean) => (loading.value = value)}
         onUpdate:query={(value: FilterRequest | PageRequest) => (query.value = value)}
         onUpdate:selectedRows={(value: TEntity[]) => (selectedRows.value = value)}
         onUpdate:pagination={(value: unknown) => (pagination.value = value as TableProps['pagination'])}
+        onUpdate:buckets={(value: PageEnums) => (buckets.value = value)}
+        onUpdate:dicts={(value: PageDicts) => (dicts.value = value)}
         onAction={(payload) => emit('action', payload)}
         onAdd={() => emit('add')}
         onEdit={(record: TEntity) => emit('edit', record)}

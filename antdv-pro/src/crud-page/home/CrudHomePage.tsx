@@ -5,7 +5,6 @@ import CrudTable from '../../crud-table/CrudTable'
 import type {CrudTableExpose} from '../../crud-table/types'
 import type {DefaultCrudEntity, SearchableColumnType} from '../../query-table/types'
 import {usePageRegistry} from '../registry'
-import {usePageEnums} from '../usePageEnums'
 import {buildListColumns, renderCell, toCellVNode} from './columns'
 import type {
   CrudHomePageConstructor,
@@ -13,6 +12,8 @@ import type {
   CrudHomePageProps,
   CrudHomePageSlots,
   ListPageContext,
+  PageDicts,
+  PageEnums,
   PageListEntry,
 } from '../types'
 
@@ -47,7 +48,12 @@ const CrudHomePage = defineComponent({
      */
     const dataSource = ref([]) as Ref<TEntity[]>
 
-    const {buckets, dicts} = usePageEnums(props.page.list?.enums, props.page.list?.dicts)
+    /**
+     * 系统字典（枚举桶 + 数据字典）由 `CrudTable` → 基类在挂载时统一拉：
+     * 这里只把声明里的 id/code 交下去，结果 `v-model` 回来喂给建列 / 单元格。
+     */
+    const buckets = ref<PageEnums>({})
+    const dicts = ref<PageDicts>({})
     /** 字段组件表 + 值格式表（内置 + 宿主 CrudConfig 覆盖） */
     const registry = usePageRegistry()
 
@@ -136,9 +142,19 @@ const CrudHomePage = defineComponent({
           rowActions={rowActions.value}
           rowKey={props.page.rowKey}
           rowSelection={props.page.list?.rowSelection}
+          enumIds={props.page.list?.enums}
+          dictCodes={props.page.list?.dicts}
           dataSource={dataSource.value}
+          buckets={buckets.value}
+          dicts={dicts.value}
           onUpdate:dataSource={(value: TEntity[]) => {
             dataSource.value = value
+          }}
+          onUpdate:buckets={(value: PageEnums) => {
+            buckets.value = value
+          }}
+          onUpdate:dicts={(value: PageDicts) => {
+            dicts.value = value
           }}
           onAdd={() => go('add')}
           onEdit={(record: TEntity) => go('edit', record)}

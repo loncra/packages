@@ -1,4 +1,4 @@
-import type {ComputedRef, EmitsToProps, PublicProps} from 'vue'
+import type {EmitsToProps, PublicProps} from 'vue'
 import type {
   BasicIdMetadata,
   FilterRequest,
@@ -11,7 +11,6 @@ import type {
   RecordActionDefinition,
   RecordActionPayload,
   ResolvedAction,
-  ToolbarActionContext,
   ToolbarActionDefinition,
   ToolbarActionPayload,
 } from '../_util/crud/actions'
@@ -32,12 +31,22 @@ export type CardGridDragProp<TEntity> =
   | DragProp<TEntity>
   | {dragPreview: DragProp<TEntity>; direction: CardGridDragDirection}
 
+/**
+ * **内容层** props：卡片网格自己画什么。
+ *
+ * 数据 / 分页 / 字典 / 标题 / 动作在 `BasicCrudQuery` 基类里，这里只是把"交给基类"的那几个
+ * 原样转发（名字与基类一致），数据用 `v-model` 双向绑定。
+ */
 export interface QueryCardGridProps<
   TBody extends BasicIdMetadata<TId>,
   TEntity extends TBody,
   TPage extends ScrollPageResult<TEntity>,
   TId = TEntity[typeof SYSTEM_CONSTANT.ID_NAME],
-> extends Omit<QueryCollectionProps<TBody, TEntity, TPage, TId>, 'drag'> {
+> extends Omit<QueryCollectionProps<TBody, TEntity, TPage, TId>, 'drag' | 'actions'> {
+  /** 标题右侧的工具栏动作（转给基类）：数组 = 与默认合并；`false` = 整排不出 */
+  toolbarActions?: ToolbarActionDefinition<TEntity>[] | false
+  /** 项内动作（转给基类）：数组 = 与默认 `edit` / `detail` / `delete` 合并；`false` = 不要 */
+  recordActions?: RecordActionDefinition<TEntity>[] | false
   pagination?: CardGridPagination
   /** 拖拽开关 + 幽灵内容（同表格）；要给方向就写对象形态，`direction` 才生效 */
   drag?: CardGridDragProp<TEntity>
@@ -56,6 +65,10 @@ export type QueryCardGridEmits<
   'update:selectedItems': [value: TEntity[]]
   'update:pagination': [value: CardGridPagination]
   action: [payload: ToolbarActionPayload<TEntity> | RecordActionPayload<TEntity>]
+  add: []
+  edit: [record: TEntity]
+  detail: [record: TEntity]
+  deleted: [records: TEntity[]]
   drop: [sorts: TreeSortMetadata<TId>[], target: TEntity, fromIndex: number, toIndex: number]
 }
 
@@ -66,6 +79,8 @@ export interface QueryCardGridItemSlot<TEntity> {
   dragEnabled: boolean
   onDragStart: (event: DragEvent) => void
   onDragEnd: () => void
+  /** 项内动作，已按权限 / `visible` / 运行态解析好；`recordActions: false` 时是空数组 */
+  itemActions: ResolvedAction[]
 }
 
 export type QueryCardGridItemActionsSlot<TEntity> = Omit<QueryCardGridItemSlot<TEntity>, 'selected'>
@@ -82,43 +97,31 @@ export interface QueryCardGridExpose<
   TEntity extends BasicIdMetadata<TId>,
   TId = TEntity[typeof SYSTEM_CONSTANT.ID_NAME],
 > {
-  fetchDataSource: () => Promise<void>
-  actionContext: ComputedRef<ToolbarActionContext<TEntity>>
+  fetchDataSource: () => Promise<void | undefined>
+  remove: (records: TEntity[]) => void
 }
 
+/** 门面（旧入口）props：对外名不变，内部映射成内容层的名字 */
 export interface CrudCardGridProps<
   TBody extends BasicIdMetadata<TId>,
   TEntity extends TBody,
   TPage extends ScrollPageResult<TEntity>,
   TId = TEntity[typeof SYSTEM_CONSTANT.ID_NAME],
-> extends QueryCardGridProps<TBody, TEntity, TPage, TId> {
-  recordActions?: boolean
+> extends Omit<QueryCardGridProps<TBody, TEntity, TPage, TId>, 'toolbarActions' | 'recordActions'> {
+  /** 标题右侧的工具栏动作（旧名 → 内容层 `toolbarActions`；`false` = 整排不出） */
+  actions?: ToolbarActionDefinition<TEntity>[] | false
+  /** 项内动作定义（旧名 → 内容层 `recordActions`） */
   itemActions?: RecordActionDefinition<TEntity>[]
+  /** 是否要项内动作（旧的是开关：`false` = 不要） */
+  recordActions?: boolean
 }
 
 export type CrudCardGridEmits<
   TEntity extends BasicIdMetadata<TId>,
   TId = TEntity[typeof SYSTEM_CONSTANT.ID_NAME],
-> = QueryCardGridEmits<TEntity, TId> & {
-  add: []
-  edit: [record: TEntity]
-  detail: [record: TEntity]
-  deleted: [records: TEntity[]]
-}
+> = QueryCardGridEmits<TEntity, TId>
 
-export interface CrudCardGridItemSlot<TEntity> extends QueryCardGridItemSlot<TEntity> {
-  itemActions: ResolvedAction[]
-}
-
-export interface CrudCardGridItemActionsSlot<TEntity> extends QueryCardGridItemActionsSlot<TEntity> {
-  actions: ResolvedAction[]
-}
-
-export interface CrudCardGridSlots<TEntity>
-  extends Omit<QueryCardGridSlots<TEntity>, 'item' | 'itemActions'> {
-  item?: (slot: CrudCardGridItemSlot<TEntity>) => unknown
-  itemActions?: (slot: CrudCardGridItemActionsSlot<TEntity>) => unknown
-}
+export type CrudCardGridSlots<TEntity> = QueryCardGridSlots<TEntity>
 
 export interface CrudCardGridExpose<TEntity extends BasicIdMetadata<unknown>> {
   fetchDataSource: () => Promise<void | undefined>

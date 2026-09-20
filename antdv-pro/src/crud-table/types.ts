@@ -15,6 +15,7 @@ import type {
   RecordActionPayload,
   ToolbarActionPayload,
 } from '../_util/crud/actions'
+import type {PageDicts, PageEnums} from '../basic-crud-query/dictionaries'
 import type {
   DefaultCrudEntity,
   QueryCollectionProps,
@@ -44,6 +45,12 @@ export interface CrudTableProps<
   recordActions?: boolean
   /** 行内动作（与默认 `edit`/`detail`/`delete` 合并） */
   rowActions?: RecordActionDefinition<TEntity>[]
+  /** 系统字典：要加载什么（声明侧 `list.enums` / `list.dicts`）—— 原样交给基类加载 */
+  enumIds?: (string | undefined)[]
+  dictCodes?: (string | undefined)[]
+  /** 字典加载结果（基类 `v-model` 回给建列的地方） */
+  buckets?: PageEnums
+  dicts?: PageDicts
 }
 
 export type CrudTableEmits<

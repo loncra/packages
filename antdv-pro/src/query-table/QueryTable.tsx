@@ -18,7 +18,7 @@ import {classNames} from '@loncra/antdv'
 import {type FilterRequest, type PageRequest, SYSTEM_CONSTANT} from '@loncra/client/commons'
 import {useLocale} from '../_util/useLocale'
 import BasicCrudQuery from '../basic-crud-query'
-import type {BasicCrudQueryExpose} from '../basic-crud-query'
+import type {BasicCrudQueryExpose, PageDicts, PageEnums} from '../basic-crud-query'
 import {useMergeRowSelection} from '../_util/crud/useMergeRowSelection'
 import {isDragEnabled} from '../_util/crud/useDrag'
 import {useTableRowDrag} from '../_util/crud/useTableRowDrag'
@@ -43,6 +43,8 @@ const QUERY_TABLE_EMITS = [
   'update:query',
   'update:selectedRows',
   'update:pagination',
+  'update:buckets',
+  'update:dicts',
   'action',
   'add',
   'edit',
@@ -78,6 +80,9 @@ const QueryTable = defineComponent({
     toolbarActions: [Array, Boolean] as PropType<QueryTableRuntimeProps['toolbarActions']>,
     /** 行内动作：数组 = 与默认 `edit`/`detail`/`delete` 合并；`false` = 不要（`操作`列也不补） */
     recordActions: [Array, Boolean] as PropType<QueryTableRuntimeProps['recordActions']>,
+    /** 系统字典：要加载什么（声明侧 `list.enums` / `list.dicts`）—— 原样交给基类 */
+    enumIds: Array as PropType<QueryTableRuntimeProps['enumIds']>,
+    dictCodes: Array as PropType<QueryTableRuntimeProps['dictCodes']>,
     prefixCls: String,
     rootClass: String,
     // ── 表格自己的 ──
@@ -103,6 +108,9 @@ const QueryTable = defineComponent({
       type: [Object, Boolean] as PropType<TableProps['pagination']>,
       default: () => ({hideOnSinglePage: true, align: 'center'}),
     },
+    /** 字典加载结果（基类拉完 `v-model` 回来） */
+    buckets: {type: Object as PropType<QueryTableRuntimeProps['buckets']>, default: () => ({})},
+    dicts: {type: Object as PropType<QueryTableRuntimeProps['dicts']>, default: () => ({})},
   },
   emits: [...QUERY_TABLE_EMITS],
   slots: Object as SlotsType<QueryTableSlots<DefaultCrudEntity>>,
@@ -126,6 +134,8 @@ const QueryTable = defineComponent({
     const query = useModel(props, 'query') as unknown as Ref<FilterRequest | PageRequest>
     const selectedRows = useModel(props, 'selectedRows') as unknown as Ref<TEntity[]>
     const tablePagination = useModel(props, 'pagination') as unknown as Ref<TableProps['pagination']>
+    const buckets = useModel(props, 'buckets') as unknown as Ref<PageEnums>
+    const dicts = useModel(props, 'dicts') as unknown as Ref<PageDicts>
     const tableColumns = ref<SearchableColumnType<TEntity>[]>([])
     const appliedDefaultValueKeys = new Set<string>()
 
@@ -416,6 +426,8 @@ const QueryTable = defineComponent({
           authority={props.authority}
           toolbarActions={props.toolbarActions}
           recordActions={props.recordActions}
+          enumIds={props.enumIds}
+          dictCodes={props.dictCodes}
           selectedKey="selectedRows"
           prefixCls={props.prefixCls}
           rootClass={props.rootClass}
@@ -425,18 +437,20 @@ const QueryTable = defineComponent({
           query={query.value}
           selectedRows={selectedRows.value}
           pagination={tablePagination.value}
+          buckets={buckets.value}
+          dicts={dicts.value}
           onUpdate:dataSource={(value: TEntity[]) => (dataSource.value = value)}
           onUpdate:loading={(value: boolean) => (loading.value = value)}
           onUpdate:query={(value: FilterRequest | PageRequest) => (query.value = value)}
           onUpdate:selectedRows={(value: TEntity[]) => (selectedRows.value = value)}
           onUpdate:pagination={(value: unknown) => (tablePagination.value = value as TableProps['pagination'])}
+          onUpdate:buckets={(value: PageEnums) => (buckets.value = value)}
+          onUpdate:dicts={(value: PageDicts) => (dicts.value = value)}
           onAction={(payload) => emit('action', payload)}
           onAdd={() => emit('add')}
           onEdit={(record: TEntity) => emit('edit', record)}
           onDetail={(record: TEntity) => emit('detail', record)}
           onDeleted={(records: TEntity[]) => emit('deleted', records)}
-          onDrop={(sorts, target, fromIndex, toIndex) => emit('drop', sorts, target, fromIndex, toIndex)}
-          onTreeDrop={(sorts, drag, target, payload) => emit('treeDrop', sorts, drag, target, payload)}
           v-slots={{
             title: slots.title ? () => slots.title?.() : undefined,
             default: () => (

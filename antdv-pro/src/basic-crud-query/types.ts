@@ -3,11 +3,9 @@ import type {TableProps} from 'antdv-next'
 import {SYSTEM_CONSTANT} from '@loncra/client/commons'
 import type {
   BasicIdMetadata,
-  DropPosition,
   FilterRequest,
   PageRequest,
   ScrollPageResult,
-  TreeSortMetadata,
 } from '@loncra/client/commons'
 import type {
   RecordActionDefinition,
@@ -77,13 +75,6 @@ export type BasicCrudQueryEmits<
   edit: [record: TEntity]
   detail: [record: TEntity]
   deleted: [records: TEntity[]]
-  drop: [sorts: TreeSortMetadata<TId>[], target: TEntity, fromIndex: number, toIndex: number]
-  treeDrop: [
-    sorts: TreeSortMetadata<TId>[],
-    drag: TEntity,
-    target: TEntity,
-    payload: {dropPosition: DropPosition; tree: TEntity[]},
-  ]
 }
 
 export interface BasicCrudQuerySlots {

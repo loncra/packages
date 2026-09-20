@@ -36,6 +36,7 @@ import type {CardGridPagination} from '../query-card-grid/types'
 import type {DefaultCrudEntity} from '../query-table/types'
 import ActionButton from '../action-button'
 import {fetchDataDicts, fetchEnumBuckets, type PageDicts, type PageEnums} from './dictionaries'
+import useStyle from './style'
 import type {
   BasicCrudQueryConstructor,
   BasicCrudQueryExpose,
@@ -106,11 +107,9 @@ const BasicCrudQuery = defineComponent({
     'edit',
     'detail',
     'deleted',
-    'drop',
-    'treeDrop',
   ],
   slots: Object as SlotsType<BasicCrudQuerySlots>,
-  setup(props, {emit, expose, slots}) {
+  setup(props, {attrs, emit, expose, slots}) {
     type TEntity = DefaultCrudEntity
     type TBody = DefaultCrudEntity
     type TId = string | number
@@ -122,6 +121,7 @@ const BasicCrudQuery = defineComponent({
     const prefixCls = computed(() =>
       config.value.getPrefixCls('basic-crud-query', props.prefixCls ?? 'loncra-basic-crud-query'),
     )
+    const [hashId, cssVarCls] = useStyle(prefixCls)
 
     // 双向绑定：父级 v-model 时纯受控（写操作 emit 回流），未绑时写本地值并 emit
     const dataSource = useModel(props, 'dataSource') as unknown as Ref<TEntity[]>
@@ -134,18 +134,10 @@ const BasicCrudQuery = defineComponent({
     const buckets = useModel(props, 'buckets') as unknown as Ref<PageEnums>
     const dicts = useModel(props, 'dicts') as unknown as Ref<PageDicts>
 
-    /**
-     * 取数。守卫用一个私有标志：`loading` 也会被 plan 在触发加载期间点亮，
-     * 拿它当守卫会在首屏（plan 已经点亮 loading）时直接 return，永远取不到数。
-     */
-    let fetching = false
+    /** 取数：`loading` 由这里开关（挂载 / 切回那两个口由 plan 触发，它自己也会点 loading） */
     async function fetchDataSource() {
-      if (fetching) {
-        return
-      }
+      loading.value = true
       try {
-        fetching = true
-        loading.value = true
         dataSource.value = await fetchCollectionData({
           service: props.service as never,
           query: query.value,
@@ -153,7 +145,6 @@ const BasicCrudQuery = defineComponent({
         })
         emit('update:pagination', pagination.value)
       } finally {
-        fetching = false
         loading.value = false
       }
     }
@@ -298,6 +289,7 @@ const BasicCrudQuery = defineComponent({
 
     return () => (
       <DataLoadingCardPlan
+        {...attrs}
         loading={loading.value}
         onUpdate:loading={(value: boolean) => (loading.value = value)}
         onMounted={onPlanMounted}
@@ -317,7 +309,12 @@ const BasicCrudQuery = defineComponent({
               {slots.default?.()}
               {pagination.value === false ? null : (
                 <Pagination
-                  class={classNames(prefixCls.value, `${prefixCls.value}-pagination`)}
+                  class={classNames(
+                    prefixCls.value,
+                    hashId.value,
+                    cssVarCls.value,
+                    `${prefixCls.value}-pagination`,
+                  )}
                   {...(pagination.value as Record<string, unknown>)}
                   onChange={onPageChange}
                 />

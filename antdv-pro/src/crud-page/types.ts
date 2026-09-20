@@ -3,7 +3,6 @@ import type {TableProps} from 'antdv-next'
 import type {
   BasicCrudService,
   BasicIdMetadata,
-  DataDictionaryMetadata,
   NameValueEnumMetadata,
   SYSTEM_CONSTANT,
 } from '@loncra/client/commons'
@@ -11,6 +10,7 @@ import type {RecordActionDefinition, ToolbarActionDefinition} from '../_util/cru
 import type {DragProp} from '../_util/crud/useDrag'
 import type {CrudNavigateTarget} from '../crud-config-provider/types'
 import type {AuthorityProps, ColumnSearchConfig, SearchableColumnType} from '../query-table/types'
+import type {PageDicts, PageEnums} from '../basic-crud-query/dictionaries'
 
 // #region 声明：核心（三种形态共用）
 
@@ -73,11 +73,11 @@ export type PageFieldComponent = BuiltinKey<
   'input' | 'password' | 'textarea' | 'number' | 'select' | 'date' | 'dateRange'
 >
 
-/** 枚举桶：id → `{name, value}[]` */
-export type PageEnums = Record<string, NameValueEnumMetadata<number | string>[]>
-
-/** 数据字典：字典 code → 字典项（client 的原样类型，含 code/name/valueType/metadata/children） */
-export type PageDicts = Record<string, DataDictionaryMetadata[]>
+/**
+ * 枚举桶 / 数据字典的类型。**实现与加载都在 `basic-crud-query/dictionaries.ts`**（基类挂载时拉），
+ * 这里只 re-export，保住声明层一直在用的公开名。
+ */
+export type {PageDicts, PageEnums} from '../basic-crud-query/dictionaries'
 
 /**
  * 声明里的函数拿到的上下文。故意很小：**没有 router / i18n / 弹层**——

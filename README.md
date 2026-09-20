@@ -35,8 +35,11 @@
 当前控件：`UserAvatar`、`UserSelect`、`AttachmentMasonry`、`AttachmentUpload`、`FileEditor`、`SystemUserPanel`；
 
 **CRUD 页面套件（列表形态已进包）**：`crud-page/` 目录 + `CrudConfigProvider` 的跳转兜底。
-目录：核心在 `crud-page/`（`types.ts` / `registry.ts` / `usePageEnums.ts` / `define.ts`），列表形态在 `crud-page/home/`（`CrudHomePage.tsx` / `columns.ts`）；表单、详情以后按同样的 `<形态>/` 目录进来。
+目录：核心在 `crud-page/`（`types.ts` / `registry.ts` / `define.ts`），列表形态在 `crud-page/home/`（`CrudHomePage.tsx` / `columns.ts`）；表单、详情以后按同样的 `<形态>/` 目录进来。
 `define.ts` 是三种形态**共用**的声明入口（恒等合并 `{...core, <形态>}`）：已有 `defineHomePage`，`defineFormPage` / `defineDetailPage` 随形态一起并排加在这里。
+
+分层（列表）：`DataLoadingCardPlan`（Card 壳 + 生命周期 + loading）→ `BasicCrudQuery`（数据 / 系统字典 / 标题 / 统一分页 / 动作解析）→ `QueryTable` · `QueryCardGrid`（内容层，受控：只画自己那套）→ `CrudTable` · `CrudCardGrid`（门面：只把旧 prop 名映射成新名，宿主零改动）。
+系统字典（声明里的 `list.enums` / `list.dicts`）由 `BasicCrudQuery` 挂载时加载（`basic-crud-query/dictionaries.ts`），用 `v-model:buckets` / `v-model:dicts` 回传给建列的地方。
 
 - `CrudHomePage`：把页面声明（`CrudListPage`）翻成 `CrudTable` 的 props；不认路由 / i18n / 弹层。
 - 声明（宿主业务目录里的 `xxx.page.ts` / `xxx.home.page.ts`）：`CrudPageCore`（service / i18nPrefix / routes / fields / `i18nResolver` / `onNavigate`）+ `PageListDefinition`（columns / enums / authority / rowActions / drag…）。

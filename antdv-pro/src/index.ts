@@ -149,11 +149,10 @@ export type {
   CrudCardGridConstructor,
   CrudCardGridEmits,
   CrudCardGridExpose,
-  CrudCardGridItemActionsSlot,
-  CrudCardGridItemSlot,
   QueryCardGridConstructor,
   QueryCardGridEmits,
   QueryCardGridExpose,
+  QueryCardGridItemActionsSlot,
   QueryCardGridItemSlot,
   QueryCardGridProps,
   QueryCardGridSlots,
@@ -167,7 +166,6 @@ export {
   defineHomePage,
   DEFAULT_FIELD_COMPONENTS,
   DEFAULT_FORMATTERS,
-  usePageEnums,
 } from './crud-page'
 export type {
   CrudHomePageConstructor,

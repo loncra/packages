@@ -1,30 +1,19 @@
 import {
   computed,
   defineComponent,
-  onActivated,
-  onMounted,
   type PropType,
   type Ref,
   ref,
   type SlotsType,
-  toRef,
   useModel,
 } from 'vue'
-import {App, Card, CardGrid, Empty, Flex, Pagination, Space, Typography} from 'antdv-next'
+import {Card, CardGrid, Empty, Typography} from 'antdv-next'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
-import {classNames, renderIconFont} from '@loncra/antdv'
-import {type FilterRequest, type PageRequest, SYSTEM_CONSTANT} from '@loncra/client/commons'
-import {useLocale} from '../_util/useLocale'
-import {useActionAuth, useCrudConfig} from '../crud-config-provider'
-import {
-  type ToolbarActionContext,
-  type ToolbarActionDefinition,
-  mergeDefinitions,
-  useActionResolver,
-} from '../_util/crud/actions'
-import {createDefaultToolbarActions} from '../_util/crud/defaultActions'
+import {classNames} from '@loncra/antdv'
+import {type FilterRequest, type PageRequest} from '@loncra/client/commons'
+import BasicCrudQuery from '../basic-crud-query'
+import type {BasicCrudQueryExpose} from '../basic-crud-query/types'
 import {resolveRowKey} from '../_util/crud/rowKey'
-import {fetchCollectionData} from '../_util/crud/useCollectionData'
 import {isDragEnabled, type DragProp} from '../_util/crud/useDrag'
 import {useFlatDragDrop} from '../_util/crud/useFlatDragDrop'
 import ActionButton from '../action-button'
@@ -36,6 +25,7 @@ import type {
   QueryCardGridConstructor,
   QueryCardGridEmits,
   QueryCardGridExpose,
+  QueryCardGridItemActionsSlot,
   QueryCardGridItemSlot,
   QueryCardGridProps,
   QueryCardGridRuntimeProps,
@@ -49,9 +39,20 @@ const QUERY_CARD_GRID_EMITS = [
   'update:selectedItems',
   'update:pagination',
   'action',
+  'add',
+  'edit',
+  'detail',
+  'deleted',
   'drop',
 ] as const
 
+/**
+ * **内容层**：只负责"卡片网格怎么画" —— 网格排布、选中、拖拽落点、`item` / `itemActions` 槽。
+ *
+ * 数据 / 标题 / 统一分页 / 工具条·批量·项内动作的解析都在 `BasicCrudQuery` 基类里：
+ * 本组件把"交给基类"的那几个 props 原样转发，并用 `v-model` 与基类共用同一份数据；
+ * 需要基类的能力（行内动作解析、删除）走它 expose 的口。
+ */
 const QueryCardGrid = defineComponent({
   name: 'LQueryCardGrid',
   inheritAttrs: false,
@@ -62,11 +63,14 @@ const QueryCardGrid = defineComponent({
       type: [Boolean, Function] as PropType<RefreshOnActivate>,
       default: true,
     },
-    /** 卡片头：`VNode` 直接用、`false` 不要卡片头、不给走 `CrudConfig.resolveDefaultTitle` */
+    /** 卡片头（转发给基类）：`VNode` 直接用、`false` 不要卡片头、不给走 `CrudConfig.resolveDefaultTitle` */
     title: [Object, Boolean] as PropType<QueryCardGridRuntimeProps['title']>,
     hasPermission: Function as PropType<(permission: string) => boolean>,
     authority: Object as PropType<AuthorityProps>,
-    actions: Array as PropType<ToolbarActionDefinition<DefaultCrudEntity>[]>,
+    /** 标题右侧的工具栏动作（转发给基类）：数组 = 与默认合并；`false` = 整排不出 */
+    toolbarActions: [Array, Boolean] as PropType<QueryCardGridRuntimeProps['toolbarActions']>,
+    /** 项内动作（转发给基类）：数组 = 与默认合并；`false` = 不要 */
+    recordActions: [Array, Boolean] as PropType<QueryCardGridRuntimeProps['recordActions']>,
     /**
      * 拖拽开关 + 幽灵内容（同表格）；要给方向就写对象形态 `{dragPreview, direction}`，那时 `direction` 才生效
      */
@@ -93,26 +97,21 @@ const QueryCardGrid = defineComponent({
   setup(props, {attrs, emit, expose, slots}) {
     type TEntity = DefaultCrudEntity
     type TId = string | number
-    const {message, modal} = App.useApp()
-    const locale = useLocale('Crud')
     const config = useConfig()
-    const crudConfig = useCrudConfig()
-    const auth = useActionAuth(toRef(props, 'hasPermission'))
-    const {resolveToolbarActions} = useActionResolver()
     const prefixCls = computed(() =>
       config.value.getPrefixCls('query-card-grid', props.prefixCls ?? 'loncra-query-card-grid'),
     )
     const [hashId, cssVarCls] = useStyle(prefixCls)
+    /** 内核（数据 / 标题 / 分页 / 动作解析）在基类，这里只读它的 expose */
+    const base = ref<BasicCrudQueryExpose<TEntity, TId>>()
 
-    // 双向绑定：父级 v-model 时纯受控（写操作 emit 回流），未绑时写本地值并 emit。
-    // localValue 与 props 保持同一引用，父级「改对象属性」也能立即生效（不再需要 watch 拷贝）。
+    // 与基类共用同一份值：父级 v-model 时纯受控（写操作 emit 回流），未绑时写本地值并 emit
     const dataSource = useModel(props, 'dataSource') as unknown as Ref<TEntity[]>
     const loading = useModel(props, 'loading') as unknown as Ref<boolean>
     const query = useModel(props, 'query') as unknown as Ref<FilterRequest | PageRequest>
     const selectedItems = useModel(props, 'selectedItems') as unknown as Ref<TEntity[]>
     const pagination = useModel(props, 'pagination') as unknown as Ref<CardGridPagination>
 
-    const mountedFetched = ref(false)
     /** `drag` 两种形态归一：对象形态才关心方向，否则按横向 */
     const dragPreview = computed((): DragProp<TEntity> | undefined =>
       typeof props.drag === 'object' ? props.drag.dragPreview : props.drag,
@@ -141,44 +140,6 @@ const QueryCardGrid = defineComponent({
         emit('drop', sorts, target, fromIndex, toIndex),
     })
 
-    const actionContext = computed<ToolbarActionContext<TEntity>>(() => ({
-      items: dataSource.value,
-      selectedItems: selectedItems.value,
-      query: query.value,
-      message,
-      modal,
-    }))
-
-    const defaultToolbarActions = computed(() =>
-      createDefaultToolbarActions<TEntity>({
-        authority: props.authority,
-        locale: locale.value,
-        iconClass: 'align',
-        onAdd: (ctx) => emit('action', {id: 'add', context: ctx}),
-      }),
-    )
-
-    const titleActions = computed(() =>
-      resolveToolbarActions(
-        mergeDefinitions(defaultToolbarActions.value, props.actions ?? []),
-        actionContext.value,
-        auth,
-      ),
-    )
-
-    /** 没给 `title`（或给了 `true`）时的卡片头内容：走宿主配的默认标题 */
-    const resolvedTitle = computed(() => {
-      const fromConfig = crudConfig.value.resolveDefaultTitle?.()
-      return {title: fromConfig?.title ?? '', icon: fromConfig?.icon}
-    })
-
-    const paginationBindProps = computed(() => {
-      if (pagination.value === false) {
-        return {}
-      }
-      return pagination.value
-    })
-
     function isSelected(record: TEntity) {
       const id = resolveRowKey(props.rowKey, record)
       return selectedItems.value.some((item) => resolveRowKey(props.rowKey, item) === id)
@@ -198,157 +159,174 @@ const QueryCardGrid = defineComponent({
       }
     }
 
-    async function fetchDataSource() {
-      loading.value = true
-      try {
-        dataSource.value = await fetchCollectionData({
-          service: props.service,
-          query: query.value,
-          pagination: pagination as never,
-        })
-      } finally {
-        loading.value = false
-      }
+    /** 项内动作：解析在基类（它持有 `remove` / 权限 / 运行态），这里只取结果放进槽参数 */
+    function itemActionsOf(record: TEntity) {
+      return base.value?.resolveRecordActions(record) ?? []
     }
 
-    function onChangePage(page: number, pageSize: number) {
-      query.value = {...query.value, number: page, size: pageSize}
-      void fetchDataSource()
+    /** 没给 `#item` 时的兜底卡：主键当标题 + 动作行（含拖拽把手） */
+    function defaultItem(slot: QueryCardGridItemSlot<TEntity>) {
+      if (props.recordActions === false) {
+        return null
+      }
+      return (
+        <Card
+          size="small"
+          title={String(resolveRowKey(props.rowKey, slot.record) ?? '')}
+          v-slots={{
+            actions: () => (
+              <>
+                <div onClick={(e: Event) => e.stopPropagation()}>
+                  <ActionButton
+                    size="small"
+                    type="text"
+                    alwaysDropdown
+                    actions={slot.itemActions}
+                    onAction={(id: string) => base.value?.onRecordAction(id, slot.record)}
+                  />
+                </div>
+                {slot.dragEnabled ? (
+                  <div
+                    class={classNames(`${prefixCls.value}-drag-handle`)}
+                    draggable
+                    onClick={(e: Event) => e.stopPropagation()}
+                    onDragstart={slot.onDragStart}
+                    onDragend={slot.onDragEnd}
+                  >
+                    <Typography.Text type="secondary">::</Typography.Text>
+                  </div>
+                ) : null}
+              </>
+            ),
+          }}
+        />
+      )
     }
-
-    onMounted(async () => {
-      if (!props.immediate) {
-        return
-      }
-      await fetchDataSource()
-    })
-
-    onActivated(() => {
-      // onActivated 在首次挂载时也会触发，那一次交给 onMounted / immediate 决定
-      if (!mountedFetched.value) {
-        mountedFetched.value = true
-        return
-      }
-      const refresh = props.refreshOnActivate
-      if (refresh === false) {
-        return
-      }
-      if (typeof refresh === 'function') {
-        void refresh()
-        return
-      }
-      void fetchDataSource()
-    })
 
     expose<QueryCardGridExpose<TEntity, TId>>({
-      fetchDataSource,
-      actionContext,
+      fetchDataSource: async () => base.value?.fetchDataSource(),
+      remove: (records) => base.value?.remove(records),
     })
 
     return () => {
       const {class: attrClass, style: attrStyle, ...restAttrs} = attrs
-      const hashedClass = classNames(
+      // 壳（Card）在基类那侧：尺寸、类名、CSS 变量都经 attrs 通道挂到 Card 上（宿主自给的以宿主为准）
+      const shellAttrs = {size: 'small', ...restAttrs}
+      const shellClass = classNames(
         prefixCls.value,
         hashId.value,
         cssVarCls.value,
         props.rootClass,
         attrClass,
       )
-      const rootStyle = {
+      const shellStyle = {
         ...(typeof attrStyle === 'object' && attrStyle ? attrStyle : {}),
         '--loncra-card-grid-columns': String(props.gridColumns ?? 5),
       }
 
-      const renderTitle = () => (
-        <Flex
-          justify="space-between"
-          align="center"
-          class={classNames(hashId.value, `${prefixCls.value}-title`)}
-        >
-          {slots.title ? (
-            slots.title()
-          ) : typeof props.title === 'object' && props.title !== null ? (
-            props.title
-          ) : (
-            <Space>
-              {renderIconFont(resolvedTitle.value.icon, 'align')}
-              <Typography.Text strong>{resolvedTitle.value.title}</Typography.Text>
-            </Space>
-          )}
-          {slots.extra ? slots.extra() : <ActionButton size="small" actions={titleActions.value} />}
-        </Flex>
-      )
-
       return (
-        <Card
-          {...restAttrs}
-          size="small"
-          class={hashedClass}
-          style={rootStyle}
+        <BasicCrudQuery
+          ref={base}
+          {...shellAttrs}
+          class={shellClass}
+          style={shellStyle}
+          service={props.service}
+          immediate={props.immediate}
+          refreshOnActivate={props.refreshOnActivate}
+          title={props.title}
+          hasPermission={props.hasPermission}
+          authority={props.authority}
+          toolbarActions={props.toolbarActions}
+          recordActions={props.recordActions}
+          selectedKey="selectedItems"
+          dataSource={dataSource.value}
           loading={loading.value}
-          v-slots={{
-            title: props.title === false ? undefined : renderTitle,
+          query={query.value}
+          selectedItems={selectedItems.value}
+          pagination={pagination.value}
+          onUpdate:dataSource={(value) => {
+            dataSource.value = value
           }}
-        >
-          {(dataSource.value || []).length <= 0 ? (
-            slots.empty ? (
-              slots.empty()
-            ) : (
-              <Empty />
-            )
-          ) : (
-            dataSource.value.map((record, index) => {
-              const itemSlot: QueryCardGridItemSlot<TEntity> = {
-                record,
-                index,
-                selected: isSelected(record),
-                dragEnabled: dragEnabled.value,
-                onDragStart: (event: DragEvent) => onDragHandleStart(record, event),
-                onDragEnd: onDragHandleEnd,
-              }
-              return (
-                <CardGrid
-                  key={String(resolveRowKey(props.rowKey, record) ?? index)}
-                  class={classNames(
-                    hashId.value,
-                    `${prefixCls.value}-item`,
-                    isSelected(record) && `${prefixCls.value}-item-selected`,
-                    dropTargetClass(record),
-                  )}
-                >
-                  <div
-                    {...buildDropZoneProps(record)}
-                    onClick={() => onSelect(record)}
-                  >
-                    {slots.item?.(itemSlot)}
-                    {slots.itemActions ? (
-                      <div
-                        onClick={(e: Event) => {
-                          e.stopPropagation()
-                        }}
+          onUpdate:loading={(value) => {
+            loading.value = value
+          }}
+          onUpdate:query={(value) => {
+            query.value = value
+          }}
+          onUpdate:selectedItems={(value) => {
+            selectedItems.value = value
+          }}
+          onUpdate:pagination={(value) => {
+            pagination.value = value as CardGridPagination
+          }}
+          onAdd={() => emit('add')}
+          onEdit={(record: TEntity) => emit('edit', record)}
+          onDetail={(record: TEntity) => emit('detail', record)}
+          onDeleted={(records: TEntity[]) => emit('deleted', records)}
+          onAction={(payload) => emit('action', payload)}
+          v-slots={{
+            title: slots.title ? () => slots.title?.() : undefined,
+            extra: slots.extra ? () => slots.extra?.() : undefined,
+            default: () => (
+              <div class={classNames(hashId.value, `${prefixCls.value}-grid`)}>
+                {(dataSource.value || []).length <= 0 ? (
+                  slots.empty ? (
+                    slots.empty()
+                  ) : (
+                    <Empty />
+                  )
+                ) : (
+                  dataSource.value.map((record, index) => {
+                    const itemSlot: QueryCardGridItemSlot<TEntity> = {
+                      record,
+                      index,
+                      selected: isSelected(record),
+                      dragEnabled: dragEnabled.value,
+                      onDragStart: (event: DragEvent) => onDragHandleStart(record, event),
+                      onDragEnd: onDragHandleEnd,
+                      itemActions: itemActionsOf(record),
+                    }
+                    const itemActionsSlot: QueryCardGridItemActionsSlot<TEntity> = {
+                      record,
+                      index,
+                      dragEnabled: itemSlot.dragEnabled,
+                      onDragStart: itemSlot.onDragStart,
+                      onDragEnd: onDragHandleEnd,
+                      itemActions: itemSlot.itemActions,
+                    }
+                    return (
+                      <CardGrid
+                        key={String(resolveRowKey(props.rowKey, record) ?? index)}
+                        class={classNames(
+                          hashId.value,
+                          `${prefixCls.value}-item`,
+                          isSelected(record) && `${prefixCls.value}-item-selected`,
+                          dropTargetClass(record),
+                        )}
                       >
-                        {slots.itemActions?.({
-                          record,
-                          index,
-                          dragEnabled: dragEnabled.value,
-                          onDragStart: itemSlot.onDragStart,
-                          onDragEnd: onDragHandleEnd,
-                        })}
-                      </div>
-                    ) : null}
-                  </div>
-                </CardGrid>
-              )
-            })
-          )}
-          {pagination.value !== false ? (
-            <Pagination
-              class={classNames(hashId.value, `${prefixCls.value}-pagination`)}
-              {...(paginationBindProps.value as Record<string, unknown>)}
-              onChange={onChangePage}
-            />
-          ) : null}
-        </Card>
+                        <div
+                          {...buildDropZoneProps(record)}
+                          onClick={() => onSelect(record)}
+                        >
+                          {slots.item ? slots.item(itemSlot) : defaultItem(itemSlot)}
+                          {slots.itemActions ? (
+                            <div
+                              onClick={(e: Event) => {
+                                e.stopPropagation()
+                              }}
+                            >
+                              {slots.itemActions(itemActionsSlot)}
+                            </div>
+                          ) : null}
+                        </div>
+                      </CardGrid>
+                    )
+                  })
+                )}
+              </div>
+            ),
+          }}
+        />
       )
     }
   },
