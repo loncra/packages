@@ -40,12 +40,19 @@ export interface CrudConfig {
    */
   onNavigate?: (target: CrudNavigateTarget) => void
   /**
-   * 字段组件表：在内置表（`DEFAULT_FIELD_COMPONENTS`）之上**逐 key 覆盖**，用于登记业务私有控件。
-   * 只想加一个就 `{myWidget: {component: MyWidget}}`，要整表替换才需要展开内置表。
+   * 字段组件表：按 key 覆盖内置表（`registry.ts` 的 `usePageRegistry()`），用于登记业务私有控件。
+   * 只想加一个就 `{myWidget: {component: MyWidget}}`。
    */
   fieldComponents?: Record<string, FieldComponentSpec>
-  /** 值格式表：同上，覆盖 `DEFAULT_FORMATTERS` */
+  /** 值格式表：同上，按 key 覆盖 `usePageRegistry()` 里的内置格式表 */
   formatters?: Record<string, ValueFormatter>
+  /**
+   * 显示用日期格式（dayjs token）。宿主注入 `import.meta.env.VITE_APP_DATE_VALUE_FORMAT`；
+   * 不注入就用 pro 的默认 `YYYY-MM-DD`。**只影响显示**：后端要的时间格式由宿主自己管。
+   */
+  dateFormat?: string
+  /** 同上，日期 + 时间（宿主注入 `VITE_APP_DATE_TIME_VALUE_FORMAT`） */
+  dateTimeFormat?: string
 }
 
 export interface ActionAuth {

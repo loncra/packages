@@ -63,10 +63,13 @@ export interface CrudPageCore<
 type BuiltinKey<T extends string> = T | (string & {})
 
 /**
- * 值格式名。内置四个：`'enum'` / `'enumList'`（要求条目有 `enumId`）、
- * `'dict'` / `'dictList'`（要求条目有 `dictId`）。
+ * 值格式名。内置六个：`'enum'` / `'enumList'`（要求条目有 `enumId`）、
+ * `'dict'` / `'dictList'`（要求条目有 `dictId`）、
+ * `'date'` / `'dateTime'`（显示用，格式串来自 `CrudConfigProvider.dateFormat` / `dateTimeFormat`）。
  */
-export type PageValueFormat = BuiltinKey<'enum' | 'enumList' | 'dict' | 'dictList'>
+export type PageValueFormat = BuiltinKey<
+  'enum' | 'enumList' | 'dict' | 'dictList' | 'date' | 'dateTime'
+>
 
 /** 字段组件名（内置 input/password/textarea/number/select/date/dateRange，见 registry） */
 export type PageFieldComponent = BuiltinKey<

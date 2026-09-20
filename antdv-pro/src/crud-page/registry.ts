@@ -2,6 +2,7 @@ import {type Component, computed, type ComputedRef, markRaw} from 'vue'
 import {DatePicker, Input, InputNumber, Select} from 'antdv-next'
 import {getEnumName, type DataDictionaryMetadata, type NameValueEnumMetadata} from '@loncra/client/commons'
 import {useCrudConfig} from '../crud-config-provider'
+import {useDateFormat} from '../_util/crud/useDateFormat'
 import type {
   FieldComponentSpec,
   FormatContext,
@@ -18,21 +19,6 @@ const ENUM_OPTIONS = (options: NameValueEnumMetadata<number | string>[]) => ({
   options,
   fieldNames: {label: 'name'},
 })
-
-/**
- * 内置字段组件表。**搜索项的 placeholder / 外观不在这里**：文案是宿主的 i18n key、
- * `w-full` 是宿主的 Tailwind 类，都由宿主在声明的 `search.props` 里给（函数形态，跟随语言切换）。
- * 这里只留组件本体与枚举喂法。
- */
-export const DEFAULT_FIELD_COMPONENTS: Record<string, FieldComponentSpec> = {
-  input: {component: Input},
-  password: {component: Input.Password},
-  textarea: {component: Input.TextArea},
-  number: {component: InputNumber},
-  select: {component: Select, defaults: {allowClear: true}, mapOptions: ENUM_OPTIONS},
-  date: {component: DatePicker},
-  dateRange: {component: DatePicker.RangePicker},
-}
 
 /** 注册表 key 或直接给组件；key 不在表里就抛（声明写错了要当场知道，别静默略过） */
 export function resolveFieldSpec(
@@ -112,18 +98,6 @@ function listFormatter(
   }
 }
 
-/**
- * 内置值格式表。声明 `format` 即断言值的形状，形状不对就抛。
- * 四个：`enum` / `enumList`（吃 `enumId` + `list.enums`）、`dict` / `dictList`（吃 `dictId` + `list.dicts`）；
- * 不够用宿主在 `CrudConfig.formatters` 里加（金额、时间、链接…）。
- */
-export const DEFAULT_FORMATTERS: Record<string, ValueFormatter> = {
-  enum: (value, ctx) => enumName(ctx, value),
-  enumList: listFormatter('enumList', enumName),
-  dict: (value, ctx) => dictName(ctx, value),
-  dictList: listFormatter('dictList', dictName),
-}
-
 /** 没声明 `format` 就原样返回；声明了但表里没有对应 formatter → 抛（别静默略过） */
 export function formatValue(
   format: PageValueFormat | undefined,
@@ -149,13 +123,45 @@ export function formatValue(
 // #endregion
 
 /**
- * 注册表 = 内置表 + 宿主 `CrudConfig.fieldComponents` / `formatters` 的**逐 key 覆盖**。
+ * 注册表 = 两张内置表 + 宿主 `CrudConfig.fieldComponents` / `formatters` 的**逐 key 覆盖**。
  * 没挂 `CrudConfigProvider`、或没给这两个字段，就是内置表本身。
+ *
+ * 两张内置表都整张写在这里（不再拆模块级常量）：`date` / `dateTime` 的格式串来自
+ * `CrudConfigProvider`，要吃 inject，模块级常量给不了 —— 与其拆两半，不如一眼看全。
  */
 export function usePageRegistry(): ComputedRef<PageRegistry> {
   const config = useCrudConfig()
+  const {dateFormat, dateTimeFormat} = useDateFormat()
   return computed<PageRegistry>(() => ({
-    fieldComponents: {...DEFAULT_FIELD_COMPONENTS, ...config.value.fieldComponents},
-    formatters: {...DEFAULT_FORMATTERS, ...config.value.formatters},
+    /**
+     * 内置字段组件表。**搜索项的 placeholder / 外观不在这里**：文案是宿主的 i18n key、
+     * `w-full` 是宿主的 Tailwind 类，都由宿主在声明的 `search.props` 里给（函数形态，跟随语言切换）。
+     * 这里只留组件本体与枚举喂法。
+     */
+    fieldComponents: {
+      input: {component: Input},
+      password: {component: Input.Password},
+      textarea: {component: Input.TextArea},
+      number: {component: InputNumber},
+      select: {component: Select, defaults: {allowClear: true}, mapOptions: ENUM_OPTIONS},
+      date: {component: DatePicker},
+      dateRange: {component: DatePicker.RangePicker},
+      ...config.value.fieldComponents,
+    },
+    /**
+     * 声明 `format` 即断言值的形状，形状不对就抛。
+     * `enum` / `enumList` 吃 `enumId` + `list.enums`；`dict` / `dictList` 吃 `dictId` + `list.dicts`；
+     * `date` / `dateTime` 走显示格式（见 `CrudConfigProvider.dateFormat` / `dateTimeFormat`）。
+     * 不够用宿主在 `CrudConfig.formatters` 里加（金额、链接…），按 key 覆盖这张表。
+     */
+    formatters: {
+      enum: (value, ctx) => enumName(ctx, value),
+      enumList: listFormatter('enumList', enumName),
+      dict: (value, ctx) => dictName(ctx, value),
+      dictList: listFormatter('dictList', dictName),
+      date: (value) => dateFormat(value),
+      dateTime: (value) => dateTimeFormat(value),
+      ...config.value.formatters,
+    },
   }))
 }

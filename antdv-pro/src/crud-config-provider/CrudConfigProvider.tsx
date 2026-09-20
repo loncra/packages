@@ -20,6 +20,8 @@ const CrudConfigProvider = defineComponent({
     onNavigate: Function as PropType<(target: CrudNavigateTarget) => void>,
     fieldComponents: Object as PropType<Record<string, FieldComponentSpec>>,
     formatters: Object as PropType<Record<string, ValueFormatter>>,
+    dateFormat: String,
+    dateTimeFormat: String,
   },
   setup(props, {slots}) {
     provide(
@@ -31,6 +33,8 @@ const CrudConfigProvider = defineComponent({
         onNavigate: props.onNavigate,
         fieldComponents: props.fieldComponents,
         formatters: props.formatters,
+        dateFormat: props.dateFormat,
+        dateTimeFormat: props.dateTimeFormat,
       })),
     )
     return () => slots.default?.()

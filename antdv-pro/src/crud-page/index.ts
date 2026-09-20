@@ -1,6 +1,5 @@
 export {CrudHomePage} from './home'
 export {defineHomePage} from './define'
-export {DEFAULT_FIELD_COMPONENTS, DEFAULT_FORMATTERS} from './registry'
 
 export type {
   CrudHomePageConstructor,
