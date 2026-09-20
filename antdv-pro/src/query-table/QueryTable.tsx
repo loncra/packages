@@ -198,7 +198,8 @@ const QueryTable = defineComponent({
       // `classes` 是卡片（plan 的 `Card`）的外观，交给基类；其余未知 attrs 照旧落表格
       const {class: _class, style: _style, rowSelection: _rowSelection, classes: _classes, ...rest} = attrs
       if (rest.scroll === undefined) {
-        const cols = tableColumns.value
+        // 显式收窄成"只关心 width"：在 antd 那层泛型列类型上做 `.every` 会触发 TS2589（类型递归预算）
+        const cols: {width?: string | number}[] = tableColumns.value
         const allSized = cols.length > 0 && cols.every((column) => column.width != null)
         rest.scroll = {
           x: allSized ? cols.reduce((sum, column) => sum + Number(column.width), 0) : 'max-content',

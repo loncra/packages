@@ -10,6 +10,11 @@
 
 管理端：`"@loncra/client": "file:../packages/client"`、`"@loncra/antdv": "file:../packages/antdv"`、`"@loncra/antdv-pro": "file:../packages/antdv-pro"`。
 
+> **`vue` 版本必须与管理端一致（当前 `3.5.42`，钉死不用 `^`）**。两边是**各自独立的安装**（本目录 `node_modules` + 管理端 `node_modules`），
+> 管理端 `vue-tsc` 会把包源码一起编译 ⇒ 两处 vue 版本不同就会出现"两份 d.ts"：`VNode` / `Component` 判不等，
+> 报一屏 `Type 'VNode<…>' is not assignable to type 'VNode<…>'`（看着一模一样的两行）。
+> 升级 vue 时**两边同时改**，装完各自 `node_modules/vue` 与 `@vue/runtime-core` 的版本号要对得上。
+
 ## `@loncra/antdv`
 
 对标 antdv-next 源码（`Xxx.tsx` + `defineComponent` + JSX），不是管理端 SFC。peer：`vue`、`antdv-next`；用到官方图标时再 peer `@antdv-next/icons`。禁止 `@loncra/client`、vue-i18n、Pinia、路由、Service。

@@ -1,4 +1,4 @@
-import {computed, defineComponent, type PropType, provide} from 'vue'
+import {computed, defineComponent, type PropType, provide, type VNodeChild} from 'vue'
 import type {FieldComponentSpec, ValueFormatter} from '../crud-page/types'
 import {CRUD_CONFIG_KEY, type CrudConfig, type CrudNavigateTarget} from './types'
 
@@ -16,7 +16,7 @@ const CrudConfigProvider = defineComponent({
     i18nResolver: Function as PropType<
       (key: string, named?: Record<string, unknown>) => string
     >,
-    resolveDefaultTitle: Function as PropType<() => {title?: string; icon?: string}>,
+    resolveDefaultTitle: Function as PropType<() => VNodeChild>,
     onNavigate: Function as PropType<(target: CrudNavigateTarget) => void>,
     fieldComponents: Object as PropType<Record<string, FieldComponentSpec>>,
     formatters: Object as PropType<Record<string, ValueFormatter>>,

@@ -1,4 +1,5 @@
 import {
+  computed,
   defineComponent,
   onActivated,
   onMounted,
@@ -9,9 +10,11 @@ import {
   type VNode,
   type VNodeChild,
 } from 'vue'
-import {Card, Space, Spin} from 'antdv-next'
-import {renderIconFont} from '@loncra/antdv'
+import {Card, Spin} from 'antdv-next'
+import {useConfig} from 'antdv-next/dist/config-provider/context'
+import {classNames} from '@loncra/antdv'
 import {useCrudConfig} from '../crud-config-provider'
+import useStyle from './style'
 import type {DataLoadingCardPlanSlots, DataLoadingTask} from './types'
 
 /**
@@ -36,7 +39,15 @@ const DataLoadingCardPlan = defineComponent({
   slots: Object as SlotsType<DataLoadingCardPlanSlots>,
   setup(props, {attrs, slots}) {
     const config = useCrudConfig()
+    const antdConfig = useConfig()
     const loading = useModel(props, 'loading') as unknown as Ref<boolean>
+    const prefixCls = computed(() =>
+      antdConfig.value.getPrefixCls(
+        'data-loading-card-plan',
+        'loncra-data-loading-card-plan',
+      ),
+    )
+    const [hashId, cssVarCls] = useStyle(prefixCls)
 
     let running: Promise<unknown> | undefined
     let activated = false
@@ -68,15 +79,9 @@ const DataLoadingCardPlan = defineComponent({
       run(props.onActivated)
     })
 
-    /** 没给 title 时的默认卡片头：宿主那侧就是面包屑（经 `CrudConfig.resolveDefaultTitle`） */
+    /** 没给 title 时的默认卡片头：**宿主拼好的 VNode 原样用**（面包屑、图标都是宿主的事） */
     function defaultHeader() {
-      const fromConfig = config.value.resolveDefaultTitle?.()
-      return (
-        <Space>
-          {renderIconFont(fromConfig?.icon, 'align')}
-          <span>{fromConfig?.title ?? ''}</span>
-        </Space>
-      )
+      return config.value.resolveDefaultTitle?.() ?? null
     }
 
     return () => {
@@ -94,7 +99,15 @@ const DataLoadingCardPlan = defineComponent({
             title: titleSlot,
             extra: slots.extra ? () => slots.extra?.() : undefined,
             // 加载交互放在 body：卡片头（标题/动作）保持可见，只有内容区转圈
-            default: () => <Spin spinning={loading.value}>{slots.default?.()}</Spin>,
+            // （包裹层撑满由本组件的样式负责，见 `-spin`）
+            default: () => (
+              <Spin
+                class={classNames(hashId.value, cssVarCls.value, `${prefixCls.value}-spin`)}
+                spinning={loading.value}
+              >
+                {slots.default?.()}
+              </Spin>
+            ),
           }}
         />
       )

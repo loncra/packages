@@ -24,6 +24,6 @@
     "@antdv-next/x-markdown": "^0.1.4",
     "antdv-next": "^1.5.4",
     "antdv-next-tiptap": "^1.0.5",
-    "vue": "^3.5.32"
+    "vue": "3.5.43"
   }
 }

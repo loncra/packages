@@ -1,4 +1,4 @@
-import type {ComputedRef, InjectionKey} from 'vue'
+import type {ComputedRef, InjectionKey, VNodeChild} from 'vue'
 import type {BasicIdMetadata} from '@loncra/client/commons'
 import type {FieldComponentSpec, ValueFormatter} from '../crud-page/types'
 
@@ -29,8 +29,11 @@ export interface CrudConfig {
    * 两处都没有才回退渲染 key 本身（可见、可调试，不静默变空）。pro 本身不认 i18n。
    */
   i18nResolver?: (key: string, named?: Record<string, unknown>) => string
-  /** 列表页默认标题；组件的 `title` prop（`VNode` / `false`）与 `#title` 插槽优先 */
-  resolveDefaultTitle?: () => {title?: string; icon?: string}
+  /**
+   * 列表页默认标题：**宿主自己拼成 VNode 给过来**（图标、文案、结构都是宿主的事，pro 不认）。
+   * 组件的 `title` prop（`VNode` / `false`）与 `#title` 插槽优先于它。
+   */
+  resolveDefaultTitle?: () => VNodeChild
   /**
    * 跳转的**兜底**实现：页面声明没给 `CrudPageCore.onNavigate` 时才用它。
    * `BasicIdMetadata.id` 是可选字段，宿主自己判空。
