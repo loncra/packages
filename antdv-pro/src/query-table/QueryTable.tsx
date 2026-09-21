@@ -20,6 +20,7 @@ import {useLocale} from '../_util/useLocale'
 import BasicCrudQuery from '../basic-crud-query'
 import type {EnumBucketsResponseBody} from '@loncra/client/resource'
 import type {BasicCrudQueryExpose, EnumBucketRequest, PageDicts} from '../basic-crud-query'
+import {DEFAULT_COLLECTION_PAGINATION, patchQuery} from '../_util/crud/useCollectionData'
 import {useMergeRowSelection} from '../_util/crud/useMergeRowSelection'
 import {isDragEnabled} from '../_util/crud/useDrag'
 import {useTableRowDrag} from '../_util/crud/useTableRowDrag'
@@ -27,10 +28,10 @@ import ActionButton from '../action-button'
 import useStyle from './style'
 import type {
   AuthorityProps,
+  CollectionExpose,
   DefaultCrudEntity,
   QueryTableConstructor,
   QueryTableEmits,
-  QueryTableExpose,
   QueryTableProps,
   QueryTableSlots,
   RefreshOnActivate,
@@ -106,7 +107,7 @@ const QueryTable = defineComponent({
     selectedRows: {type: Array as PropType<DefaultCrudEntity[]>, default: () => []},
     pagination: {
       type: [Object, Boolean] as PropType<TableProps['pagination']>,
-      default: () => ({hideOnSinglePage: true, align: 'center'}),
+      default: () => ({...DEFAULT_COLLECTION_PAGINATION}),
     },
     /** 字典加载结果（基类拉完 `v-model` 回来） */
     buckets: {type: Object as PropType<QueryTableProps['buckets']>, default: () => ({})},
@@ -184,14 +185,11 @@ const QueryTable = defineComponent({
       return raw ?? {fixed: true, type: 'checkbox' as const}
     })
 
-    // 选择态合并要跟 rowKey 对齐；rowKey 是函数时拿不到字段名，回退成 id
-    const mergeIdKey = (
-      typeof props.rowKey === 'string' ? props.rowKey : SYSTEM_CONSTANT.ID_NAME
-    ) as keyof TEntity & string
+    // 选择态合并与卡片网格共用同一套取主键规则（`resolveRowKey`，字段名 / 函数形态都认）
     const {rowSelection: mergedRowSelection} = useMergeRowSelection<TEntity, TId>(
       externalRowSelection,
       selectedRows,
-      mergeIdKey,
+      props.rowKey,
     )
 
     const tablePassthroughAttrs = computed(() => {
@@ -207,10 +205,6 @@ const QueryTable = defineComponent({
       }
       return rest
     })
-
-    function patchQuery(patch: FilterRequest) {
-      query.value = {...query.value, ...patch}
-    }
 
     function fetch() {
       void basic.value?.fetchDataSource()
@@ -251,7 +245,7 @@ const QueryTable = defineComponent({
       confirm: () => void,
     ) {
       if (column.search?.queryName) {
-        patchQuery({[column.search.queryName]: ''})
+        patchQuery(query, {[column.search.queryName]: ''})
       }
       setSelectedKeys([])
       confirm()
@@ -306,7 +300,7 @@ const QueryTable = defineComponent({
           !appliedDefaultValueKeys.has(queryName)
         ) {
           appliedDefaultValueKeys.add(queryName)
-          patchQuery({[queryName]: optionsCol.search.defaultValue})
+          patchQuery(query, {[queryName]: optionsCol.search.defaultValue})
         }
       }
       if (hasActionsColumn.value) {
@@ -339,7 +333,7 @@ const QueryTable = defineComponent({
       {deep: true},
     )
 
-    expose<QueryTableExpose<TEntity, TId>>({
+    expose<CollectionExpose<TEntity>>({
       fetchDataSource: async () => basic.value?.fetchDataSource(),
       remove: (records) => basic.value?.remove(records),
     })
@@ -383,7 +377,7 @@ const QueryTable = defineComponent({
                 ...(search.props ?? {}),
                 value: query.value[queryName],
                 'onUpdate:value': (value: FilterRequest[string]) => {
-                  patchQuery({[queryName]: value})
+                  patchQuery(query, {[queryName]: value})
                 },
               })}
               <SpaceCompact block>
@@ -536,9 +530,9 @@ const QueryTable = defineComponent({
 
 export default QueryTable
 export type {
+  CollectionExpose,
   QueryTableConstructor,
   QueryTableEmits,
-  QueryTableExpose,
   QueryTableProps,
   QueryTableSlots,
 }

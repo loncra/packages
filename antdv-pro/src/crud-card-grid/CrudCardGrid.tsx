@@ -1,15 +1,18 @@
 import {defineComponent, type PropType, type Ref, ref, type SlotsType, useModel} from 'vue'
 import type {FilterRequest, PageRequest} from '@loncra/client/commons'
 import QueryCardGrid from '../query-card-grid/QueryCardGrid'
-import type {AuthorityProps, DefaultCrudEntity, RefreshOnActivate} from '../query-table/types'
+import type {
+  AuthorityProps,
+  CollectionExpose,
+  DefaultCrudEntity,
+  RefreshOnActivate,
+} from '../query-table/types'
 import type {
   CardGridPagination,
   CrudCardGridConstructor,
   CrudCardGridEmits,
-  CrudCardGridExpose,
   CrudCardGridProps,
   CrudCardGridSlots,
-  QueryCardGridExpose,
   QueryCardGridItemActionsSlot,
   QueryCardGridItemSlot,
 } from '../query-card-grid/types'
@@ -76,7 +79,7 @@ const CrudCardGrid = defineComponent({
   setup(props, {attrs, emit, expose, slots}) {
     type TEntity = DefaultCrudEntity
     type TId = string | number
-    const grid = ref<QueryCardGridExpose<TEntity, TId>>()
+    const grid = ref<CollectionExpose<TEntity>>()
 
     // 双向绑定：本层持有值（宿主不绑 v-model 时也有本地值），往下一层同时传值与 onUpdate
     const loading = useModel(props, 'loading') as unknown as Ref<boolean>
@@ -85,7 +88,7 @@ const CrudCardGrid = defineComponent({
     const query = useModel(props, 'query') as unknown as Ref<FilterRequest | PageRequest>
     const pagination = useModel(props, 'pagination') as unknown as Ref<CardGridPagination>
 
-    expose<CrudCardGridExpose<TEntity>>({
+    expose<CollectionExpose<TEntity>>({
       fetchDataSource: async () => grid.value?.fetchDataSource(),
       remove: (records) => grid.value?.remove(records),
     })

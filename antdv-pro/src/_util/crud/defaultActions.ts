@@ -1,6 +1,7 @@
 import {h} from 'vue'
 import {DeleteOutlined, EditOutlined, FileAddOutlined, FileSearchOutlined,} from '@antdv-next/icons'
 import type {BasicIdMetadata} from '@loncra/client/commons'
+import type {AuthorityProps} from '../../query-table/types'
 import type {CrudLocale} from '../../locale'
 import {withCount} from '../format'
 import {
@@ -11,15 +12,8 @@ import {
 } from './actions'
 import {isDeletableService} from './useCrudDelete'
 
-export interface CollectionAuthorityProps {
-  add?: string | boolean
-  edit?: string | boolean
-  detail?: string | boolean
-  delete?: string | boolean
-}
-
 export interface DefaultToolbarActionsOptions<TEntity extends BasicIdMetadata<unknown>> {
-  authority?: CollectionAuthorityProps
+  authority?: AuthorityProps
   locale: CrudLocale
   /** 附加到操作图标上的 class，如表格标题区用 `align` */
   iconClass?: string
@@ -42,7 +36,7 @@ export function createDefaultToolbarActions<TEntity extends BasicIdMetadata<unkn
 }
 
 export interface DefaultBulkActionsOptions<TEntity extends BasicIdMetadata<unknown>> {
-  authority?: CollectionAuthorityProps
+  authority?: AuthorityProps
   service: unknown
   locale: CrudLocale
   remove: (records: TEntity[]) => void
@@ -68,7 +62,7 @@ export function createDefaultBulkActions<
 }
 
 export interface DefaultItemActionsOptions<TEntity extends BasicIdMetadata<unknown>> {
-  authority?: CollectionAuthorityProps
+  authority?: AuthorityProps
   service: unknown
   locale: CrudLocale
   remove: (records: TEntity[]) => void

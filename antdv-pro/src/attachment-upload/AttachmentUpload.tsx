@@ -2,7 +2,7 @@ import {computed, defineComponent, nextTick, type PropType, ref, toRef, watch} f
 import type {UploadChangeParam} from 'antdv-next'
 import {Upload} from 'antdv-next'
 import {useMergeSemantic, useToArr, useToProps,} from 'antdv-next/dist/_util/hooks/useMergeSemantic'
-import {useFormItemContext} from 'antdv-next/dist/form/context'
+import {useFormItemTrigger} from '@loncra/antdv'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {classNames} from '@loncra/antdv'
 import type {ObjectWriteResult} from '@loncra/client/resource'
@@ -103,7 +103,6 @@ const AttachmentUpload = defineComponent({
       ),
     )
     const [hashId, cssVarCls] = useStyle(prefixCls)
-    const formItemContext = useFormItemContext()
     const fileList = ref<AttachmentFileItem[]>([])
     // 记录最后一次 emit 出去的值，用来识别「自己的回声」。
     // 替代原来的 syncing + nextTick 时序保护：那种写法依赖下一轮 tick，父级同步回写/异步回写表现不一致。
@@ -146,13 +145,8 @@ const AttachmentUpload = defineComponent({
       {deep: true},
     )
 
-    watch(
-      () => props.value,
-      () => {
-        formItemContext?.triggerChange()
-      },
-      {deep: true},
-    )
+    // 值变化通知 FormItem 校验；`deep`：父级原地改数组元素也算变
+    useFormItemTrigger(() => props.value, true)
 
     function buildExecutorOptions(): AttachmentUploadExecutorOptions {
       return {

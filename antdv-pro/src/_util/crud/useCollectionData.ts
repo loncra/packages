@@ -21,6 +21,14 @@ export interface CollectionPageState {
 
 export type CollectionPagination = false | CollectionPageState
 
+/** 统一默认分页：表格 / 卡片 / 基类三处 `pagination` 的默认值（单页隐藏 + 居中） */
+export const DEFAULT_COLLECTION_PAGINATION = {hideOnSinglePage: true, align: 'center'} as const
+
+/** 改查询条件：把 patch 并进持有查询状态的 ref（表格 / 基类共用同一个动作） */
+export function patchQuery(query: Ref<FilterRequest | PageRequest>, patch: FilterRequest): void {
+  query.value = {...query.value, ...patch}
+}
+
 export type CollectionService<
   TBody extends BasicIdMetadata<TId>,
   TEntity extends TBody,

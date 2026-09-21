@@ -29,7 +29,11 @@ import {
   createDefaultItemActions,
   createDefaultToolbarActions,
 } from '../_util/crud/defaultActions'
-import {fetchCollectionData} from '../_util/crud/useCollectionData'
+import {
+  DEFAULT_COLLECTION_PAGINATION,
+  fetchCollectionData,
+  patchQuery,
+} from '../_util/crud/useCollectionData'
 import {useCrudDelete} from '../_util/crud/useCrudDelete'
 import DataLoadingCardPlan from '../data-loading-card-plan'
 import type {CardGridPagination} from '../query-card-grid/types'
@@ -82,7 +86,7 @@ const BasicCrudQuery = defineComponent({
     query: {type: Object as PropType<FilterRequest | PageRequest>, default: () => ({})},
     pagination: {
       type: [Object, Boolean] as PropType<TableProps['pagination'] | CardGridPagination>,
-      default: () => ({hideOnSinglePage: true, align: 'center'}),
+      default: () => ({...DEFAULT_COLLECTION_PAGINATION}),
     },
     selectedRows: {type: Array as PropType<DefaultCrudEntity[]>, default: () => []},
     selectedItems: {type: Array as PropType<DefaultCrudEntity[]>, default: () => []},
@@ -150,13 +154,9 @@ const BasicCrudQuery = defineComponent({
       }
     }
 
-    function patchQuery(patch: FilterRequest) {
-      query.value = {...query.value, ...patch}
-    }
-
     /** 统一分页：页码变化 = 改查询条件 + 重取 */
     function onPageChange(page: number, pageSize: number) {
-      patchQuery({number: page, size: pageSize})
+      patchQuery(query, {number: page, size: pageSize})
       void fetchDataSource()
     }
 

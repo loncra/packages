@@ -5,7 +5,7 @@ import {DeleteOutlined, FileAddOutlined, FolderAddOutlined, FormOutlined, Reload
 import {
   filterTreeDeep,
   findFirstTreeNode,
-  HTTP_SUCCESS_EXECUTE_CODES,
+  isBusinessSuccess,
   type RestResult,
   unmergeTree,
 } from '@loncra/client/commons'
@@ -14,15 +14,9 @@ import {AttachmentService} from '@loncra/client/resource'
 import type {UploadFile} from 'antdv-next/dist/upload/interface'
 import {uploadFile} from '../_util/uploadFile'
 import {useLocale} from '../_util/useLocale'
+import {resolveDisplayName} from '../_util/attachmentList'
 import {validateFileOrFolderName} from './_util/validateName'
 import type {EditObjectItemInfo, FileEditorProps} from './types'
-
-function isBusinessSuccess<T>(result: RestResult<T>): boolean {
-  return (
-    result.status === 200 &&
-    (HTTP_SUCCESS_EXECUTE_CODES as readonly string[]).includes(result.executeCode)
-  )
-}
 
 export function useFileEditor(props: FileEditorProps) {
   const locale = useLocale('FileEditor')
@@ -73,13 +67,8 @@ export function useFileEditor(props: FileEditorProps) {
     return edit
   }
 
-  function getDisplayName(item: ObjectItemInfo) {
-    return (
-      item.userMetadata?.['X-Amz-Meta-Original-Filename'] ||
-      item.objectName.replace(/\/$/, '').split('/').pop() ||
-      item.objectName
-    )
-  }
+  // 展示名的规则与文件面板共用一份（`_util/attachmentList` 的 `resolveDisplayName`）
+  const getDisplayName = resolveDisplayName
 
   async function loadDataSource(bucket: string, path: string) {
     try {

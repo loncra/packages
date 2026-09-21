@@ -3,7 +3,7 @@ import type {EnumBucketsResponseBody} from '@loncra/client/resource'
 import {useCrudConfig} from '../../crud-config-provider'
 import type {CrudNavigateKind} from '../../crud-config-provider/types'
 import CrudTable from '../../crud-table/CrudTable'
-import type {CrudTableExpose} from '../../crud-table/types'
+import type {CollectionExpose} from '../../query-table/types'
 import type {DefaultCrudEntity, SearchableColumnType} from '../../query-table/types'
 import {usePageRegistry} from '../registry'
 import {buildListColumns, renderCell, toCellVNode} from './columns'
@@ -39,7 +39,7 @@ const CrudHomePage = defineComponent({
   setup(props, {attrs, expose, slots}) {
     type TEntity = DefaultCrudEntity
     const config = useCrudConfig()
-    const tableRef = ref<CrudTableExpose<TEntity>>()
+    const tableRef = ref<CollectionExpose<TEntity>>()
     /**
      * 宿主拿它按新的查询条件重刷（如 role 表单里的资源选择器跟着 sources 变）；
      * `clearDataSource` 用于"条件不成立时干脆不查、留空"。

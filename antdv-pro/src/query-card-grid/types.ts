@@ -16,7 +16,7 @@ import type {
 } from '../_util/crud/actions'
 import type {CollectionPageState} from '../_util/crud/useCollectionData'
 import type {DragProp} from '../_util/crud/useDrag'
-import type {QueryCollectionProps} from '../query-table/types'
+import type {CollectionExpose, QueryCollectionProps} from '../query-table/types'
 
 export type CardGridPagination = false | (CollectionPageState & Record<string, unknown>)
 
@@ -93,14 +93,6 @@ export interface QueryCardGridSlots<TEntity> {
   itemActions?: (slot: QueryCardGridItemActionsSlot<TEntity>) => unknown
 }
 
-export interface QueryCardGridExpose<
-  TEntity extends BasicIdMetadata<TId>,
-  TId = TEntity[typeof SYSTEM_CONSTANT.ID_NAME],
-> {
-  fetchDataSource: () => Promise<void | undefined>
-  remove: (records: TEntity[]) => void
-}
-
 /** 门面（旧入口）props：对外名不变，内部映射成内容层的名字 */
 export interface CrudCardGridProps<
   TId = string | number,
@@ -123,11 +115,6 @@ export type CrudCardGridEmits<
 
 export type CrudCardGridSlots<TEntity> = QueryCardGridSlots<TEntity>
 
-export interface CrudCardGridExpose<TEntity extends BasicIdMetadata<unknown>> {
-  fetchDataSource: () => Promise<void | undefined>
-  remove: (records: TEntity[]) => void
-}
-
 export type QueryCardGridConstructor = new <
   TBody extends BasicIdMetadata<TId>,
   TEntity extends TBody,
@@ -142,7 +129,7 @@ export type QueryCardGridConstructor = new <
     EmitsToProps<QueryCardGridEmits<TEntity, TId>> &
     PublicProps
   $slots: QueryCardGridSlots<TEntity>
-} & QueryCardGridExpose<TEntity, TId>
+} & CollectionExpose<TEntity>
 
 export type CrudCardGridConstructor = new <
   TBody extends BasicIdMetadata<TId>,
@@ -158,4 +145,4 @@ export type CrudCardGridConstructor = new <
     EmitsToProps<CrudCardGridEmits<TEntity, TId>> &
     PublicProps
   $slots: CrudCardGridSlots<TEntity>
-} & CrudCardGridExpose<TEntity>
+} & CollectionExpose<TEntity>

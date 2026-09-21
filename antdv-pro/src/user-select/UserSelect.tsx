@@ -12,8 +12,7 @@ import {
   SYSTEM_ENUM_TYPE,
   SYSTEM_MODULE_NAME,
 } from '@loncra/client/commons'
-import type {EnumBucketsResponseBody} from '@loncra/client/resource'
-import {ResourceServerService} from '@loncra/client/resource'
+import {fetchEnumBuckets} from '../basic-crud-query'
 import {useLocale} from '../_util/useLocale'
 
 interface UserSelectOption {
@@ -137,19 +136,20 @@ const UserSelect = defineComponent({
     }
 
     async function mounted() {
-      const enums: RestResult<EnumBucketsResponseBody> =
-        await ResourceServerService.getServiceEnumerates({
-          [SYSTEM_MODULE_NAME.RESOURCE_SERVER]: [{id: SYSTEM_ENUM_TYPE.RESOURCE_SOURCE_ENUM}],
-        })
-      if (enums.data) {
-        const userTypeOptionsData = enums.data[SYSTEM_MODULE_NAME.RESOURCE_SERVER]?.[
-          SYSTEM_ENUM_TYPE.RESOURCE_SOURCE_ENUM
-        ] as NameValueEnumMetadata<string>[] | undefined
-        userTypeOptions.value = (userTypeOptionsData || []).map((v) => ({
-          label: locale.value.all.replace('{name}', ' ' + v.name),
-          value: v.value,
-        }))
-      }
+      // 枚举桶走的是 pro 统一入口（`fetchEnumBuckets`：模块 + id，别自己调 client 的接口）
+      const buckets = await fetchEnumBuckets([
+        {
+          module: SYSTEM_MODULE_NAME.RESOURCE_SERVER,
+          ids: [SYSTEM_ENUM_TYPE.RESOURCE_SOURCE_ENUM],
+        },
+      ])
+      const userTypeOptionsData = buckets[SYSTEM_MODULE_NAME.RESOURCE_SERVER]?.[
+        SYSTEM_ENUM_TYPE.RESOURCE_SOURCE_ENUM
+      ] as NameValueEnumMetadata<string>[] | undefined
+      userTypeOptions.value = (userTypeOptionsData || []).map((v) => ({
+        label: locale.value.all.replace('{name}', ' ' + v.name),
+        value: v.value,
+      }))
       currentIgnoreTypes.value = [...(props.ignoreTypes || [])]
     }
 

@@ -2,12 +2,11 @@ export {default} from './QueryTable'
 export type {
   AuthorityProps,
   ColumnSearchConfig,
+  CollectionExpose,
   DefaultCrudEntity,
-  GridExposed,
   QueryCollectionProps,
   QueryTableConstructor,
   QueryTableEmits,
-  QueryTableExpose,
   QueryTableProps,
   QueryTableSlots,
   SearchableColumnType,

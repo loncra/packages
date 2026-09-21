@@ -10,20 +10,20 @@ import {
 import type {TableProps} from 'antdv-next'
 import {type FilterRequest, type PageRequest} from '@loncra/client/commons'
 import type {RecordActionDefinition, ToolbarActionDefinition} from '../_util/crud/actions'
+import {DEFAULT_COLLECTION_PAGINATION} from '../_util/crud/useCollectionData'
 import QueryTable from '../query-table/QueryTable'
 import type {EnumBucketsResponseBody} from '@loncra/client/resource'
 import type {PageDicts} from '../basic-crud-query'
 import type {
   AuthorityProps,
+  CollectionExpose,
   DefaultCrudEntity,
-  QueryTableExpose,
   RefreshOnActivate,
   SearchableColumnType,
 } from '../query-table/types'
 import type {
   CrudTableConstructor,
   CrudTableEmits,
-  CrudTableExpose,
   CrudTableProps,
   CrudTableSlots,
 } from './types'
@@ -83,7 +83,7 @@ const CrudTable = defineComponent({
     rowSelection: [Object, Boolean] as PropType<TableProps['rowSelection'] | false>,
     pagination: {
       type: [Object, Boolean] as PropType<TableProps['pagination']>,
-      default: () => ({hideOnSinglePage: true, align: 'center'}),
+      default: () => ({...DEFAULT_COLLECTION_PAGINATION}),
     },
     prefixCls: String,
     rootClass: String,
@@ -100,7 +100,7 @@ const CrudTable = defineComponent({
   setup(props, {attrs, emit, expose, slots}) {
     type TEntity = DefaultCrudEntity
     type TId = string | number
-    const queryTable = ref<QueryTableExpose<TEntity, TId>>()
+    const queryTable = ref<CollectionExpose<TEntity>>()
 
     // 双向绑定：透传给 QueryTable 时同时传值与 onUpdate，由最远端统一持有状态
     const loading = useModel(props, 'loading') as unknown as Ref<boolean>
@@ -116,7 +116,7 @@ const CrudTable = defineComponent({
       props.recordActions === false ? false : (props.rowActions ?? []),
     )
 
-    expose<CrudTableExpose<TEntity>>({
+    expose<CollectionExpose<TEntity>>({
       fetchDataSource: () => queryTable.value?.fetchDataSource() ?? Promise.resolve(),
       remove: (records) => queryTable.value?.remove(records),
     })
@@ -190,4 +190,4 @@ const CrudTable = defineComponent({
 }) as unknown as CrudTableConstructor
 
 export default CrudTable
-export type {CrudTableConstructor, CrudTableEmits, CrudTableExpose, CrudTableProps}
+export type {CrudTableConstructor, CrudTableEmits, CrudTableProps}

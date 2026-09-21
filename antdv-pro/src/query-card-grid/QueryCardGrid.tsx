@@ -12,19 +12,24 @@ import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {classNames} from '@loncra/antdv'
 import {type FilterRequest, type PageRequest} from '@loncra/client/commons'
 import BasicCrudQuery from '../basic-crud-query'
+import {DEFAULT_COLLECTION_PAGINATION} from '../_util/crud/useCollectionData'
 import type {BasicCrudQueryExpose} from '../basic-crud-query/types'
 import {resolveRowKey} from '../_util/crud/rowKey'
 import {isDragEnabled, type DragProp} from '../_util/crud/useDrag'
 import {useFlatDragDrop} from '../_util/crud/useFlatDragDrop'
 import ActionButton from '../action-button'
 import useStyle from './style'
-import type {AuthorityProps, DefaultCrudEntity, RefreshOnActivate} from '../query-table/types'
+import type {
+  AuthorityProps,
+  CollectionExpose,
+  DefaultCrudEntity,
+  RefreshOnActivate,
+} from '../query-table/types'
 import type {
   CardGridDragDirection,
   CardGridPagination,
   QueryCardGridConstructor,
   QueryCardGridEmits,
-  QueryCardGridExpose,
   QueryCardGridItemActionsSlot,
   QueryCardGridItemSlot,
   QueryCardGridProps,
@@ -79,7 +84,7 @@ const QueryCardGrid = defineComponent({
     rowKey: [String, Function] as PropType<QueryCardGridProps['rowKey']>,
     pagination: {
       type: [Object, Boolean] as PropType<CardGridPagination>,
-      default: () => ({hideOnSinglePage: true, align: 'center'}),
+      default: () => ({...DEFAULT_COLLECTION_PAGINATION}),
     },
     prefixCls: String,
     rootClass: String,
@@ -202,7 +207,7 @@ const QueryCardGrid = defineComponent({
       )
     }
 
-    expose<QueryCardGridExpose<TEntity, TId>>({
+    expose<CollectionExpose<TEntity>>({
       fetchDataSource: async () => base.value?.fetchDataSource(),
       remove: (records) => base.value?.remove(records),
     })
@@ -335,7 +340,6 @@ export default QueryCardGrid
 export type {
   QueryCardGridConstructor,
   QueryCardGridEmits,
-  QueryCardGridExpose,
   QueryCardGridProps,
   QueryCardGridSlots,
 }

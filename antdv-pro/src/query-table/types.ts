@@ -166,10 +166,11 @@ export interface QueryTableSlots<TEntity extends object> {
   }) => unknown
 }
 
-export interface QueryTableExpose<
-  TEntity extends BasicIdMetadata<TId>,
-  TId = TEntity[typeof SYSTEM_CONSTANT.ID_NAME],
-> {
+/**
+ * 集合类组件的对外能力：**表格 / 卡片网格 / 两道门面共用这一份**（重取数 + 删除）。
+ * 定义只在这里，各层不再各写一份同形接口。
+ */
+export interface CollectionExpose<TEntity extends object> {
   fetchDataSource: () => Promise<void | undefined>
   remove: (records: TEntity[]) => void
 }
@@ -192,11 +193,6 @@ export type QueryTableConstructor = new <
     EmitsToProps<QueryTableEmits<TEntity, TId>> &
     PublicProps
   $slots: QueryTableSlots<TEntity>
-} & QueryTableExpose<TEntity, TId>
-
-export interface GridExposed<TEntity extends BasicIdMetadata<unknown>> {
-  fetchDataSource: () => Promise<void | undefined>
-  remove: (records: TEntity[]) => void
-}
+} & CollectionExpose<TEntity>
 
 export type {CollectionPagination}

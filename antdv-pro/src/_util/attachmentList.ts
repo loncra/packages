@@ -11,8 +11,13 @@ export function isUploadFile(item: unknown): item is UploadFile {
   return !!item && typeof item === 'object' && 'uid' in item
 }
 
-export function isObjectItemInfo(item: unknown): item is ObjectWriteResult {
-  return !!item && typeof item === 'object' && 'bucketName' in item && 'objectName' in item
+/** 展示名：优先上传时写进元数据的原始文件名，其次取 `objectName` 最后一段 */
+export function resolveDisplayName(item: ObjectItemInfo): string {
+  return (
+    item.userMetadata?.['X-Amz-Meta-Original-Filename'] ||
+    item.objectName.replace(/\/$/, '').split('/').pop() ||
+    item.objectName
+  )
 }
 
 export function convertUploadFiles(
@@ -36,24 +41,9 @@ export function convertUploadFiles(
       })
     } else if (isUploadFile(file)) {
       result.push(file)
-    } else if (isObjectItemInfo(file)) {
-      const item = file as ObjectItemInfo
-      const contentType = file?.userMetadata?.['Content-Type'] || ''
-      if (item.dir) {
-      }
-      const url = ''
-      result.push({
-        uid: item.etag,
-        name: item?.userMetadata?.['X-Amz-Meta-Original-Filename'] || item.objectName,
-        url,
-        thumbUrl: ['image/', 'video/'].some((v) => contentType.startsWith(v)) ? url : undefined,
-        type: contentType || undefined,
-        size: file.size || 0,
-        percent: 100,
-        status: 'done',
-        response: file,
-      })
     }
+    // 这里原有个 `isObjectItemInfo` 分支：守卫与 `isObjectWriteResult` 逐字相同 ⇒ 永远进不来（死代码）。
+    // 要处理 `ObjectItemInfo`（`userMetadata` 那套）得先给它一个能与 `ObjectWriteResult` 区分开的判定。
   }
 
   return result

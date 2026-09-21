@@ -76,13 +76,14 @@ export {
 export { default as zhCN } from './locale/zh_CN'
 export { default as enUS } from './locale/en_US'
 export type { Locale } from './locale'
-export { useLocale } from './_util/useLocale'
+export { createUseLocale, useLocale } from './_util/useLocale'
 export type { LocaleComponentName } from './_util/useLocale'
 export { classNames } from './_util/classNames'
 export { genStyleHooks } from './_util/genStyle'
 export type { LoncraStyleToken } from './_util/genStyle'
 export { renderIconFont } from './_util/iconFont'
 export { useIsDark } from './_util/useIsDark'
+export { useFormItemTrigger } from './_util/useFormItemTrigger'
 
 /**
  * 包的 **VNode 类型视野**：宿主给 pro 传 VNode（动作的 `icon`、默认标题…）时用这两个类型，

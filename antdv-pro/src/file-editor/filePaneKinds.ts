@@ -1,5 +1,6 @@
 import type {LanguageSupport} from '@codemirror/language'
 import type {ObjectItemInfo} from '@loncra/client/resource'
+import {resolveDisplayName} from '../_util/attachmentList'
 import {AUDIO_EXT, IMAGE_EXT, TEXT_MAX_BYTES, VIDEO_EXT} from './constants'
 import type {FilePaneContext, ResolvedFilePaneKind} from './types'
 
@@ -10,10 +11,7 @@ function extOf(name: string): string {
 }
 
 export function buildFilePaneContext(item: ObjectItemInfo): FilePaneContext {
-  const name =
-    item.userMetadata?.['X-Amz-Meta-Original-Filename'] ||
-    item.objectName.replace(/\/$/, '').split('/').pop() ||
-    item.objectName
+  const name = resolveDisplayName(item)
   const mime = (item.userMetadata?.['Content-Type'] || '').toLowerCase()
   return {name, mime, ext: extOf(name), size: item.size || 0}
 }

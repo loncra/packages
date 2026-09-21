@@ -1,4 +1,4 @@
-import {computed, defineComponent, h, type Ref, ref, resolveComponent, useModel, watch} from 'vue'
+import {computed, defineComponent, h, type Ref, ref, useModel, watch} from 'vue'
 import {
   Avatar,
   Button,
@@ -15,6 +15,7 @@ import {
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {SelectOutlined} from '@antdv-next/icons'
 import {classNames} from '../_util/classNames'
+import {renderIconFont} from '../_util/iconFont'
 import {useFormItemTrigger} from '../_util/useFormItemTrigger'
 import {useLocale} from '../_util/useLocale'
 import useStyle from './style'
@@ -190,11 +191,7 @@ const IconSelect = defineComponent({
       if (custom) {
         return custom
       }
-      const IconFont = resolveComponent('IconFont')
-      if (typeof IconFont === 'string') {
-        return null
-      }
-      return h(IconFont, { type, class: classNames('icon', className) })
+      return renderIconFont(type, className)
     }
 
     function renderAvatar(payload: string, avatarAttrs: Record<string, unknown> = {}) {

@@ -1,21 +1,10 @@
 import pLimit from 'p-limit'
 import {getClient} from '@loncra/client'
-import {formUrlEncoded, HTTP_SUCCESS_EXECUTE_CODES, type RestResult,} from '@loncra/client/commons'
+import {formUrlEncoded, isResultSuccess, type RestResult,} from '@loncra/client/commons'
 import type {MultipartUploadInitData, MultipartUploadPartData, ObjectWriteResult,} from '@loncra/client/resource'
 import {AttachmentService} from '@loncra/client/resource'
 import type {UploadFile} from 'antdv-next/dist/upload/interface'
 import type {AttachmentUploadExecutorOptions} from '../attachment-upload'
-
-function isUploadResultSuccess<T>(
-  result: RestResult<T> | null | undefined,
-): result is RestResult<T> & {data: T} {
-  return (
-    !!result &&
-    result.status === 200 &&
-    (HTTP_SUCCESS_EXECUTE_CODES as readonly string[]).includes(result.executeCode) &&
-    result.data !== undefined
-  )
-}
 
 function resolveUploadBlockSize(): number | undefined {
   const size = getClient().uploadBlockSize
@@ -28,7 +17,7 @@ function throwUploadError(reason: unknown, file: UploadFile): never {
 }
 
 function extractObjectWriteResult(result: RestResult<ObjectWriteResult>): ObjectWriteResult {
-  if (!isUploadResultSuccess(result)) {
+  if (!isResultSuccess(result)) {
     throw new Error('上传响应无效')
   }
   return result.data
@@ -82,7 +71,7 @@ async function createMultipartUploadSuccess(
   file: UploadFile,
   options: AttachmentUploadExecutorOptions,
 ): Promise<ObjectWriteResult> {
-  if (!isUploadResultSuccess(initResult) || initResult.data.chunk <= 0) {
+  if (!isResultSuccess(initResult) || initResult.data.chunk <= 0) {
     throwUploadError('没有可使用的分片上传路径', file)
   }
 
@@ -126,7 +115,7 @@ async function createMultipartUploadSuccess(
   const limit = pLimit(options.promiseLimit)
   const partResults = await Promise.all(chunks.map(({promise}) => limit(() => promise)))
   const parts = partResults.map((result: RestResult<MultipartUploadPartData>) => {
-    if (!isUploadResultSuccess(result)) {
+    if (!isResultSuccess(result)) {
       throw new Error('分片上传响应无效')
     }
     return {id: result.data.etag, value: result.data.partNumber}

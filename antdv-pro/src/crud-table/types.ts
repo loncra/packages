@@ -16,6 +16,7 @@ import type {
   ToolbarActionPayload,
 } from '../_util/crud/actions'
 import type {EnumBucketRequest, PageDicts} from '../basic-crud-query/dictionaries'
+import type {CollectionExpose} from '../query-table/types'
 import type {EnumBucketsResponseBody} from '@loncra/client/resource'
 import type {
   QueryCollectionProps,
@@ -58,11 +59,6 @@ export type CrudTableEmits<
   TId = TEntity[typeof SYSTEM_CONSTANT.ID_NAME],
 > = QueryTableEmits<TEntity, TId>
 
-export interface CrudTableExpose<TEntity extends BasicIdMetadata<unknown>> {
-  fetchDataSource: () => Promise<void | undefined>
-  remove: (records: TEntity[]) => void
-}
-
 export interface CrudTableSlots<TEntity extends object> extends QueryTableSlots<TEntity> {}
 
 export type CrudTableConstructor = new <
@@ -79,7 +75,7 @@ export type CrudTableConstructor = new <
     EmitsToProps<CrudTableEmits<TEntity, TId>> &
     PublicProps
   $slots: CrudTableSlots<TEntity>
-} & CrudTableExpose<TEntity>
+} & CollectionExpose<TEntity>
 
 export type {
   DropPosition,

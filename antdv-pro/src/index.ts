@@ -92,7 +92,6 @@ export {
   createDefaultItemActions,
   createDefaultToolbarActions,
 } from './_util/crud/defaultActions'
-export type {CollectionAuthorityProps} from './_util/crud/defaultActions'
 export {useCrudDelete} from './_util/crud/useCrudDelete'
 export {default as ActionButton} from './action-button'
 export type {ActionButtonEmits, ActionButtonProps} from './action-button'
@@ -133,18 +132,17 @@ export {default as QueryTable} from './query-table'
 export type {
   AuthorityProps,
   ColumnSearchConfig,
+  CollectionExpose,
   DefaultCrudEntity,
-  GridExposed,
   QueryCollectionProps,
   QueryTableConstructor,
   QueryTableEmits,
-  QueryTableExpose,
   QueryTableProps,
   QueryTableSlots,
   SearchableColumnType,
 } from './query-table'
 export {default as CrudTable} from './crud-table'
-export type {CrudTableConstructor, CrudTableEmits, CrudTableExpose, CrudTableProps, CrudTableSlots} from './crud-table'
+export type {CrudTableConstructor, CrudTableEmits, CrudTableProps, CrudTableSlots} from './crud-table'
 export {default as QueryCardGrid} from './query-card-grid'
 export type {
   CardGridDragDirection,
@@ -152,10 +150,8 @@ export type {
   CardGridPagination,
   CrudCardGridConstructor,
   CrudCardGridEmits,
-  CrudCardGridExpose,
   QueryCardGridConstructor,
   QueryCardGridEmits,
-  QueryCardGridExpose,
   QueryCardGridItemActionsSlot,
   QueryCardGridItemSlot,
   QueryCardGridProps,
