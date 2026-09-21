@@ -15,7 +15,6 @@ export type {
   FormatContext,
   ListPageContext,
   PageDicts,
-  PageEnums,
   PageFieldComponent,
   PageFieldsDictionary,
   PageFieldSpec,

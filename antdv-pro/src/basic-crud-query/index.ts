@@ -1,6 +1,6 @@
 export {default} from './BasicCrudQuery'
 export {fetchDataDicts, fetchEnumBuckets} from './dictionaries'
-export type {EnumBucketRequest, EnumRef, PageDicts, PageEnums} from './dictionaries'
+export type {EnumBucketRequest, EnumRef, PageDicts} from './dictionaries'
 export type {
   BasicCrudQueryConstructor,
   BasicCrudQueryEmits,

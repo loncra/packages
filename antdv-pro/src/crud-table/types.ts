@@ -15,9 +15,9 @@ import type {
   RecordActionPayload,
   ToolbarActionPayload,
 } from '../_util/crud/actions'
-import type {EnumBucketRequest, PageDicts, PageEnums} from '../basic-crud-query/dictionaries'
+import type {EnumBucketRequest, PageDicts} from '../basic-crud-query/dictionaries'
+import type {EnumBucketsResponseBody} from '@loncra/client/resource'
 import type {
-  DefaultCrudEntity,
   QueryCollectionProps,
   QueryTableEmits,
   QueryTableSlots,
@@ -30,10 +30,10 @@ import type {
  * 标题直接用基类统一的 `title`（`VNode | false`，`hide-title` 等价于 `:title="false"`）。
  */
 export interface CrudTableProps<
-  TBody extends BasicIdMetadata<TId>,
-  TEntity extends TBody,
-  TPage extends ScrollPageResult<TEntity>,
-  TId = TEntity[typeof SYSTEM_CONSTANT.ID_NAME],
+  TId = string | number,
+  TBody extends BasicIdMetadata<TId> = BasicIdMetadata<TId>,
+  TEntity extends TBody = TBody,
+  TPage extends ScrollPageResult<TEntity> = ScrollPageResult<TEntity>,
 > extends QueryCollectionProps<TBody, TEntity, TPage, TId> {
   columns?: SearchableColumnType<TEntity>[]
   bordered?: boolean
@@ -49,7 +49,7 @@ export interface CrudTableProps<
   enums?: EnumBucketRequest[]
   dictCodes?: (string | undefined)[]
   /** 字典加载结果（基类 `v-model` 回给建列的地方） */
-  buckets?: PageEnums
+  buckets?: EnumBucketsResponseBody
   dicts?: PageDicts
 }
 
@@ -65,24 +65,17 @@ export interface CrudTableExpose<TEntity extends BasicIdMetadata<unknown>> {
 
 export interface CrudTableSlots<TEntity extends object> extends QueryTableSlots<TEntity> {}
 
-export type CrudTableRuntimeProps = CrudTableProps<
-  DefaultCrudEntity,
-  DefaultCrudEntity,
-  ScrollPageResult<DefaultCrudEntity>,
-  string | number
->
-
 export type CrudTableConstructor = new <
   TBody extends BasicIdMetadata<TId>,
   TEntity extends TBody,
   TPage extends ScrollPageResult<TEntity>,
   TId = TEntity[typeof SYSTEM_CONSTANT.ID_NAME],
 >(
-  props: CrudTableProps<TBody, TEntity, TPage, TId> &
+  props: CrudTableProps<TId, TBody, TEntity, TPage> &
     EmitsToProps<CrudTableEmits<TEntity, TId>> &
     PublicProps,
 ) => {
-  $props: CrudTableProps<TBody, TEntity, TPage, TId> &
+  $props: CrudTableProps<TId, TBody, TEntity, TPage> &
     EmitsToProps<CrudTableEmits<TEntity, TId>> &
     PublicProps
   $slots: CrudTableSlots<TEntity>

@@ -2,13 +2,18 @@ import {computed, h, onMounted, reactive, ref, watch} from 'vue'
 import type {MenuItemType, UploadChangeParam} from 'antdv-next'
 import useApp from 'antdv-next/dist/app/useApp'
 import {DeleteOutlined, FileAddOutlined, FolderAddOutlined, FormOutlined, ReloadOutlined} from '@antdv-next/icons'
-import {HTTP_SUCCESS_EXECUTE_CODES, type RestResult} from '@loncra/client/commons'
+import {
+  filterTreeDeep,
+  findFirstTreeNode,
+  HTTP_SUCCESS_EXECUTE_CODES,
+  type RestResult,
+  unmergeTree,
+} from '@loncra/client/commons'
 import type {ObjectItemInfo, ObjectWriteResult} from '@loncra/client/resource'
 import {AttachmentService} from '@loncra/client/resource'
 import type {UploadFile} from 'antdv-next/dist/upload/interface'
 import {uploadFile} from '../_util/uploadFile'
 import {useLocale} from '../_util/useLocale'
-import {filterTreeDeep, findFirstTreeNode, unmergeTree} from './_util/tree'
 import {validateFileOrFolderName} from './_util/validateName'
 import type {EditObjectItemInfo, FileEditorProps} from './types'
 

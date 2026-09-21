@@ -17,16 +17,17 @@ import type {
 } from '../_util/crud/actions'
 import type {CardGridPagination} from '../query-card-grid/types'
 import type {DefaultCrudEntity, QueryCollectionProps} from '../query-table/types'
-import type {EnumBucketRequest, PageDicts, PageEnums} from './dictionaries'
+import type {EnumBucketRequest, PageDicts} from './dictionaries'
+import type {EnumBucketsResponseBody} from '@loncra/client/resource'
 
 /** 选中集合挂在哪一个 prop 上（表格 `selectedRows` / 卡片 `selectedItems`） */
 export type BasicCrudQuerySelectedKey = 'selectedRows' | 'selectedItems'
 
 export interface BasicCrudQueryProps<
-  TBody extends BasicIdMetadata<TId>,
-  TEntity extends TBody,
-  TPage extends ScrollPageResult<TEntity>,
-  TId = TEntity[typeof SYSTEM_CONSTANT.ID_NAME],
+  TId = string | number,
+  TBody extends BasicIdMetadata<TId> = BasicIdMetadata<TId>,
+  TEntity extends TBody = TBody,
+  TPage extends ScrollPageResult<TEntity> = ScrollPageResult<TEntity>,
 > extends Omit<
   QueryCollectionProps<TBody, TEntity, TPage, TId>,
   // 屏蔽继承来的 `actions`：本层叫 `toolbarActions`，不与行内 / 项内动作混名
@@ -54,7 +55,7 @@ export interface BasicCrudQueryProps<
   enums?: EnumBucketRequest[]
   dictCodes?: (string | undefined)[]
   /** 字典加载结果（`v-model` 回给建列的地方） */
-  buckets?: PageEnums
+  buckets?: EnumBucketsResponseBody
   dicts?: PageDicts
 }
 
@@ -68,7 +69,7 @@ export type BasicCrudQueryEmits<
   'update:selectedRows': [value: TEntity[]]
   'update:selectedItems': [value: TEntity[]]
   'update:pagination': [value: unknown]
-  'update:buckets': [value: PageEnums]
+  'update:buckets': [value: EnumBucketsResponseBody]
   'update:dicts': [value: PageDicts]
   action: [payload: ToolbarActionPayload<TEntity> | RecordActionPayload<TEntity>]
   add: []
@@ -102,24 +103,17 @@ export interface BasicCrudQueryExpose<
   needsBulkSelection: ComputedRef<boolean>
 }
 
-export type BasicCrudQueryRuntimeProps = BasicCrudQueryProps<
-  DefaultCrudEntity,
-  DefaultCrudEntity,
-  ScrollPageResult<DefaultCrudEntity>,
-  string | number
->
-
 export type BasicCrudQueryConstructor = new <
   TBody extends BasicIdMetadata<TId>,
   TEntity extends TBody,
   TPage extends ScrollPageResult<TEntity>,
   TId = TEntity[typeof SYSTEM_CONSTANT.ID_NAME],
 >(
-  props: BasicCrudQueryProps<TBody, TEntity, TPage, TId> &
+  props: BasicCrudQueryProps<TId, TBody, TEntity, TPage> &
     EmitsToProps<BasicCrudQueryEmits<TEntity, TId>> &
     PublicProps,
 ) => {
-  $props: BasicCrudQueryProps<TBody, TEntity, TPage, TId> &
+  $props: BasicCrudQueryProps<TId, TBody, TEntity, TPage> &
     EmitsToProps<BasicCrudQueryEmits<TEntity, TId>> &
     PublicProps
   $slots: BasicCrudQuerySlots

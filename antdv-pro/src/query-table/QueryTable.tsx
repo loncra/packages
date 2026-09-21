@@ -18,7 +18,8 @@ import {classNames} from '@loncra/antdv'
 import {type FilterRequest, type PageRequest, SYSTEM_CONSTANT} from '@loncra/client/commons'
 import {useLocale} from '../_util/useLocale'
 import BasicCrudQuery from '../basic-crud-query'
-import type {BasicCrudQueryExpose, EnumBucketRequest, PageDicts, PageEnums} from '../basic-crud-query'
+import type {EnumBucketsResponseBody} from '@loncra/client/resource'
+import type {BasicCrudQueryExpose, EnumBucketRequest, PageDicts} from '../basic-crud-query'
 import {useMergeRowSelection} from '../_util/crud/useMergeRowSelection'
 import {isDragEnabled} from '../_util/crud/useDrag'
 import {useTableRowDrag} from '../_util/crud/useTableRowDrag'
@@ -31,7 +32,6 @@ import type {
   QueryTableEmits,
   QueryTableExpose,
   QueryTableProps,
-  QueryTableRuntimeProps,
   QueryTableSlots,
   RefreshOnActivate,
   SearchableColumnType,
@@ -66,30 +66,30 @@ const QueryTable = defineComponent({
   inheritAttrs: false,
   props: {
     // ── 交给基类的（外壳层） ──
-    service: {type: Object as PropType<QueryTableRuntimeProps['service']>, required: true},
+    service: {type: Object as PropType<QueryTableProps['service']>, required: true},
     immediate: {type: Boolean, default: true},
     refreshOnActivate: {
       type: [Boolean, Function] as PropType<RefreshOnActivate>,
       default: true,
     },
     /** 卡片头，与 `DataLoadingCardPlan` 同形：`VNode` 直接用、`false` 不要卡片头、不给走默认标题 */
-    title: [Object, Boolean] as PropType<QueryTableRuntimeProps['title']>,
+    title: [Object, Boolean] as PropType<QueryTableProps['title']>,
     hasPermission: Function as PropType<(permission: string) => boolean>,
     authority: Object as PropType<AuthorityProps>,
     /** 标题右侧的工具栏动作：数组 = 与默认 `add`/`deleteSelected` 合并；`false` = 整排不出 */
-    toolbarActions: [Array, Boolean] as PropType<QueryTableRuntimeProps['toolbarActions']>,
+    toolbarActions: [Array, Boolean] as PropType<QueryTableProps['toolbarActions']>,
     /** 行内动作：数组 = 与默认 `edit`/`detail`/`delete` 合并；`false` = 不要（`操作`列也不补） */
-    recordActions: [Array, Boolean] as PropType<QueryTableRuntimeProps['recordActions']>,
+    recordActions: [Array, Boolean] as PropType<QueryTableProps['recordActions']>,
     /** 系统字典：要加载什么（声明侧 `list.enums` / `list.dicts`）—— 原样交给基类 */
-    enums: Array as PropType<QueryTableRuntimeProps['enums']>,
-    dictCodes: Array as PropType<QueryTableRuntimeProps['dictCodes']>,
+    enums: Array as PropType<QueryTableProps['enums']>,
+    dictCodes: Array as PropType<QueryTableProps['dictCodes']>,
     prefixCls: String,
     rootClass: String,
     // ── 表格自己的 ──
     columns: {type: Array as PropType<SearchableColumnType<DefaultCrudEntity>[]>, default: () => []},
     bordered: {type: Boolean, default: true},
     /** 拖拽开关 + 幽灵内容：`true` = 可拖（幽灵缺省主键）；`(record) => 内容` = 可拖且它就是幽灵 */
-    drag: [Boolean, Function] as PropType<QueryTableRuntimeProps['drag']>,
+    drag: [Boolean, Function] as PropType<QueryTableProps['drag']>,
     onRow: Function as PropType<TableProps['onRow']>,
     rowKey: {
       type: [String, Function] as PropType<TableProps['rowKey']>,
@@ -109,8 +109,8 @@ const QueryTable = defineComponent({
       default: () => ({hideOnSinglePage: true, align: 'center'}),
     },
     /** 字典加载结果（基类拉完 `v-model` 回来） */
-    buckets: {type: Object as PropType<QueryTableRuntimeProps['buckets']>, default: () => ({})},
-    dicts: {type: Object as PropType<QueryTableRuntimeProps['dicts']>, default: () => ({})},
+    buckets: {type: Object as PropType<QueryTableProps['buckets']>, default: () => ({})},
+    dicts: {type: Object as PropType<QueryTableProps['dicts']>, default: () => ({})},
   },
   emits: [...QUERY_TABLE_EMITS],
   slots: Object as SlotsType<QueryTableSlots<DefaultCrudEntity>>,
@@ -134,7 +134,7 @@ const QueryTable = defineComponent({
     const query = useModel(props, 'query') as unknown as Ref<FilterRequest | PageRequest>
     const selectedRows = useModel(props, 'selectedRows') as unknown as Ref<TEntity[]>
     const tablePagination = useModel(props, 'pagination') as unknown as Ref<TableProps['pagination']>
-    const buckets = useModel(props, 'buckets') as unknown as Ref<PageEnums>
+    const buckets = useModel(props, 'buckets') as unknown as Ref<EnumBucketsResponseBody>
     const dicts = useModel(props, 'dicts') as unknown as Ref<PageDicts>
     const tableColumns = ref<SearchableColumnType<TEntity>[]>([])
     const appliedDefaultValueKeys = new Set<string>()
@@ -445,7 +445,7 @@ const QueryTable = defineComponent({
           onUpdate:query={(value: FilterRequest | PageRequest) => (query.value = value)}
           onUpdate:selectedRows={(value: TEntity[]) => (selectedRows.value = value)}
           onUpdate:pagination={(value: unknown) => (tablePagination.value = value as TableProps['pagination'])}
-          onUpdate:buckets={(value: PageEnums) => (buckets.value = value)}
+          onUpdate:buckets={(value: EnumBucketsResponseBody) => (buckets.value = value)}
           onUpdate:dicts={(value: PageDicts) => (dicts.value = value)}
           onAction={(payload) => emit('action', payload)}
           onAdd={() => emit('add')}

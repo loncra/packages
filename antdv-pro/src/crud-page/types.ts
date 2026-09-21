@@ -10,7 +10,8 @@ import type {RecordActionDefinition, ToolbarActionDefinition} from '../_util/cru
 import type {DragProp} from '../_util/crud/useDrag'
 import type {CrudNavigateTarget} from '../crud-config-provider/types'
 import type {AuthorityProps, ColumnSearchConfig, SearchableColumnType} from '../query-table/types'
-import type {EnumBucketRequest, EnumRef, PageDicts, PageEnums} from '../basic-crud-query/dictionaries'
+import type {EnumBucketRequest, EnumRef, PageDicts} from '../basic-crud-query/dictionaries'
+import type {EnumBucketsResponseBody} from '@loncra/client/resource'
 
 // #region 声明：核心（三种形态共用）
 
@@ -80,7 +81,7 @@ export type PageFieldComponent = BuiltinKey<
  * 枚举桶 / 数据字典的类型。**实现与加载都在 `basic-crud-query/dictionaries.ts`**（基类挂载时拉），
  * 这里只 re-export，保住声明层一直在用的公开名。
  */
-export type {EnumBucketRequest, EnumRef, PageDicts, PageEnums} from '../basic-crud-query/dictionaries'
+export type {EnumBucketRequest, EnumRef, PageDicts} from '../basic-crud-query/dictionaries'
 
 /**
  * 声明里的函数拿到的上下文。故意很小：**没有 router / i18n / 弹层**——
@@ -211,7 +212,7 @@ export interface FormatContext {
   enumRef?: EnumRef
   /** 该条目生效的数据字典 code（条目 `dictId` ?? 字典 `dictId`） */
   dictId?: string
-  buckets: PageEnums
+  buckets: EnumBucketsResponseBody
   /** 声明里 `dicts` 预载回来的字典 */
   dicts: PageDicts
 }
@@ -233,9 +234,9 @@ export interface PageRegistry {
 // #region 组件契约
 
 export interface CrudHomePageProps<
-  TBody extends BasicIdMetadata<TId>,
+  TId = string | number,
+  TBody extends BasicIdMetadata<TId> = BasicIdMetadata<TId>,
   TEntity extends TBody = TBody,
-  TId = TEntity[typeof SYSTEM_CONSTANT.ID_NAME],
 > {
   page: CrudListPage<TBody, TEntity, TId>
   /** 宿主形态名：宿主自己起名（如 `'picker'`）；不传 = 宿主没给形态名（整页） */
@@ -275,9 +276,9 @@ export type CrudHomePageConstructor = new <
   TEntity extends TBody = TBody,
   TId = TEntity[typeof SYSTEM_CONSTANT.ID_NAME],
 >(
-  props: CrudHomePageProps<TBody, TEntity, TId> & PublicProps,
+  props: CrudHomePageProps<TId, TBody, TEntity> & PublicProps,
 ) => {
-  $props: CrudHomePageProps<TBody, TEntity, TId> & PublicProps
+  $props: CrudHomePageProps<TId, TBody, TEntity> & PublicProps
   $slots: CrudHomePageSlots<TEntity>
 } & CrudHomePageExpose<TEntity>
 

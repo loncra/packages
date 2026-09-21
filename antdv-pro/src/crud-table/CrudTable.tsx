@@ -11,7 +11,8 @@ import type {TableProps} from 'antdv-next'
 import {type FilterRequest, type PageRequest} from '@loncra/client/commons'
 import type {RecordActionDefinition, ToolbarActionDefinition} from '../_util/crud/actions'
 import QueryTable from '../query-table/QueryTable'
-import type {PageDicts, PageEnums} from '../basic-crud-query'
+import type {EnumBucketsResponseBody} from '@loncra/client/resource'
+import type {PageDicts} from '../basic-crud-query'
 import type {
   AuthorityProps,
   DefaultCrudEntity,
@@ -24,7 +25,6 @@ import type {
   CrudTableEmits,
   CrudTableExpose,
   CrudTableProps,
-  CrudTableRuntimeProps,
   CrudTableSlots,
 } from './types'
 
@@ -55,7 +55,7 @@ const CrudTable = defineComponent({
   name: 'LCrudTable',
   inheritAttrs: false,
   props: {
-    service: {type: Object as PropType<CrudTableRuntimeProps['service']>, required: true},
+    service: {type: Object as PropType<CrudTableProps['service']>, required: true},
     columns: {type: Array as PropType<SearchableColumnType<DefaultCrudEntity>[]>, default: () => []},
     immediate: {type: Boolean, default: true},
     refreshOnActivate: {
@@ -64,20 +64,20 @@ const CrudTable = defineComponent({
     },
     bordered: {type: Boolean, default: true},
     /** 卡片头，与 `DataLoadingCardPlan` 同形：`VNode` 直接用、`false` 不要卡片头、不给走默认标题 */
-    title: [Object, Boolean] as PropType<CrudTableRuntimeProps['title']>,
+    title: [Object, Boolean] as PropType<CrudTableProps['title']>,
     hasPermission: Function as PropType<(permission: string) => boolean>,
     authority: Object as PropType<AuthorityProps>,
     actions: Array as PropType<ToolbarActionDefinition<DefaultCrudEntity>[]>,
     rowActions: Array as PropType<RecordActionDefinition<DefaultCrudEntity>[]>,
     recordActions: {type: Boolean, default: true},
     /** 系统字典：要加载什么（声明侧 `list.enums` / `list.dicts`）—— 原样交给基类 */
-    enums: Array as PropType<CrudTableRuntimeProps['enums']>,
-    dictCodes: Array as PropType<CrudTableRuntimeProps['dictCodes']>,
+    enums: Array as PropType<CrudTableProps['enums']>,
+    dictCodes: Array as PropType<CrudTableProps['dictCodes']>,
     /** 字典加载结果（基类 `v-model` 回来） */
-    buckets: {type: Object as PropType<CrudTableRuntimeProps['buckets']>, default: () => ({})},
-    dicts: {type: Object as PropType<CrudTableRuntimeProps['dicts']>, default: () => ({})},
+    buckets: {type: Object as PropType<CrudTableProps['buckets']>, default: () => ({})},
+    dicts: {type: Object as PropType<CrudTableProps['dicts']>, default: () => ({})},
     /** 拖拽开关 + 幽灵内容：`true` = 可拖（幽灵缺省主键）；`(record) => 内容` = 可拖且它就是幽灵 */
-    drag: [Boolean, Function] as PropType<CrudTableRuntimeProps['drag']>,
+    drag: [Boolean, Function] as PropType<CrudTableProps['drag']>,
     onRow: Function as PropType<TableProps['onRow']>,
     rowKey: [String, Function] as PropType<TableProps['rowKey']>,
     rowSelection: [Object, Boolean] as PropType<TableProps['rowSelection'] | false>,
@@ -108,7 +108,7 @@ const CrudTable = defineComponent({
     const dataSource = useModel(props, 'dataSource') as unknown as Ref<TEntity[]>
     const query = useModel(props, 'query') as unknown as Ref<FilterRequest | PageRequest>
     const pagination = useModel(props, 'pagination') as unknown as Ref<TableProps['pagination']>
-    const buckets = useModel(props, 'buckets') as unknown as Ref<PageEnums>
+    const buckets = useModel(props, 'buckets') as unknown as Ref<EnumBucketsResponseBody>
     const dicts = useModel(props, 'dicts') as unknown as Ref<PageDicts>
 
     /** 行内动作：旧的"布尔开关 + 数组定义"合成基类的一个 `recordActions` */
@@ -155,7 +155,7 @@ const CrudTable = defineComponent({
         onUpdate:query={(value: FilterRequest | PageRequest) => (query.value = value)}
         onUpdate:selectedRows={(value: TEntity[]) => (selectedRows.value = value)}
         onUpdate:pagination={(value: unknown) => (pagination.value = value as TableProps['pagination'])}
-        onUpdate:buckets={(value: PageEnums) => (buckets.value = value)}
+        onUpdate:buckets={(value: EnumBucketsResponseBody) => (buckets.value = value)}
         onUpdate:dicts={(value: PageDicts) => (dicts.value = value)}
         onAction={(payload) => emit('action', payload)}
         onAdd={() => emit('add')}

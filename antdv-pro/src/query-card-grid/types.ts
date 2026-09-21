@@ -16,7 +16,7 @@ import type {
 } from '../_util/crud/actions'
 import type {CollectionPageState} from '../_util/crud/useCollectionData'
 import type {DragProp} from '../_util/crud/useDrag'
-import type {DefaultCrudEntity, QueryCollectionProps} from '../query-table/types'
+import type {QueryCollectionProps} from '../query-table/types'
 
 export type CardGridPagination = false | (CollectionPageState & Record<string, unknown>)
 
@@ -38,10 +38,10 @@ export type CardGridDragProp<TEntity> =
  * 原样转发（名字与基类一致），数据用 `v-model` 双向绑定。
  */
 export interface QueryCardGridProps<
-  TBody extends BasicIdMetadata<TId>,
-  TEntity extends TBody,
-  TPage extends ScrollPageResult<TEntity>,
-  TId = TEntity[typeof SYSTEM_CONSTANT.ID_NAME],
+  TId = string | number,
+  TBody extends BasicIdMetadata<TId> = BasicIdMetadata<TId>,
+  TEntity extends TBody = TBody,
+  TPage extends ScrollPageResult<TEntity> = ScrollPageResult<TEntity>,
 > extends Omit<QueryCollectionProps<TBody, TEntity, TPage, TId>, 'drag' | 'actions'> {
   /** 标题右侧的工具栏动作（转给基类）：数组 = 与默认合并；`false` = 整排不出 */
   toolbarActions?: ToolbarActionDefinition<TEntity>[] | false
@@ -103,11 +103,11 @@ export interface QueryCardGridExpose<
 
 /** 门面（旧入口）props：对外名不变，内部映射成内容层的名字 */
 export interface CrudCardGridProps<
-  TBody extends BasicIdMetadata<TId>,
-  TEntity extends TBody,
-  TPage extends ScrollPageResult<TEntity>,
-  TId = TEntity[typeof SYSTEM_CONSTANT.ID_NAME],
-> extends Omit<QueryCardGridProps<TBody, TEntity, TPage, TId>, 'toolbarActions' | 'recordActions'> {
+  TId = string | number,
+  TBody extends BasicIdMetadata<TId> = BasicIdMetadata<TId>,
+  TEntity extends TBody = TBody,
+  TPage extends ScrollPageResult<TEntity> = ScrollPageResult<TEntity>,
+> extends Omit<QueryCardGridProps<TId, TBody, TEntity, TPage>, 'toolbarActions' | 'recordActions'> {
   /** 标题右侧的工具栏动作（旧名 → 内容层 `toolbarActions`；`false` = 整排不出） */
   actions?: ToolbarActionDefinition<TEntity>[] | false
   /** 项内动作定义（旧名 → 内容层 `recordActions`） */
@@ -128,31 +128,17 @@ export interface CrudCardGridExpose<TEntity extends BasicIdMetadata<unknown>> {
   remove: (records: TEntity[]) => void
 }
 
-export type QueryCardGridRuntimeProps = QueryCardGridProps<
-  DefaultCrudEntity,
-  DefaultCrudEntity,
-  ScrollPageResult<DefaultCrudEntity>,
-  string | number
->
-
-export type CrudCardGridRuntimeProps = CrudCardGridProps<
-  DefaultCrudEntity,
-  DefaultCrudEntity,
-  ScrollPageResult<DefaultCrudEntity>,
-  string | number
->
-
 export type QueryCardGridConstructor = new <
   TBody extends BasicIdMetadata<TId>,
   TEntity extends TBody,
   TPage extends ScrollPageResult<TEntity>,
   TId = TEntity[typeof SYSTEM_CONSTANT.ID_NAME],
 >(
-  props: QueryCardGridProps<TBody, TEntity, TPage, TId> &
+  props: QueryCardGridProps<TId, TBody, TEntity, TPage> &
     EmitsToProps<QueryCardGridEmits<TEntity, TId>> &
     PublicProps,
 ) => {
-  $props: QueryCardGridProps<TBody, TEntity, TPage, TId> &
+  $props: QueryCardGridProps<TId, TBody, TEntity, TPage> &
     EmitsToProps<QueryCardGridEmits<TEntity, TId>> &
     PublicProps
   $slots: QueryCardGridSlots<TEntity>
@@ -164,11 +150,11 @@ export type CrudCardGridConstructor = new <
   TPage extends ScrollPageResult<TEntity>,
   TId = TEntity[typeof SYSTEM_CONSTANT.ID_NAME],
 >(
-  props: CrudCardGridProps<TBody, TEntity, TPage, TId> &
+  props: CrudCardGridProps<TId, TBody, TEntity, TPage> &
     EmitsToProps<CrudCardGridEmits<TEntity, TId>> &
     PublicProps,
 ) => {
-  $props: CrudCardGridProps<TBody, TEntity, TPage, TId> &
+  $props: CrudCardGridProps<TId, TBody, TEntity, TPage> &
     EmitsToProps<CrudCardGridEmits<TEntity, TId>> &
     PublicProps
   $slots: CrudCardGridSlots<TEntity>

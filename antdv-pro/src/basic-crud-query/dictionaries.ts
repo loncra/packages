@@ -6,12 +6,6 @@ import {
   type EnumBucketsResponseBody,
 } from '@loncra/client/resource'
 
-/**
- * 枚举桶：**模块 → 枚举 id → `{name, value}[]`**（后端 `EnumBucketsResponseBody` 原样收下）。
- * 桶按「模块 + 枚举 id」两者索引，单给一个 id 是查不到的 —— 所以下面两个类型都带 `module`。
- */
-export type PageEnums = EnumBucketsResponseBody
-
 /** 一个枚举桶的定位：模块 + 枚举 id（声明里的 `enumRef` 用它） */
 export interface EnumRef {
   module: string
@@ -39,7 +33,7 @@ function compact(values?: (string | undefined)[]) {
  * **必须给模块**：桶 = 模块 + 枚举 id 索引（`resource-server` / `auth-server` / `ai-server` /
  * `message-server` 各有一套），只给 id 是查不到的；一组都没给时一个请求都不发。
  */
-export async function fetchEnumBuckets(requests?: EnumBucketRequest[]): Promise<PageEnums> {
+export async function fetchEnumBuckets(requests?: EnumBucketRequest[]): Promise<EnumBucketsResponseBody> {
   const body: EnumBucketsRequestBody = {}
   for (const {module, ids} of requests ?? []) {
     const list = compact(ids)

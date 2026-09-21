@@ -1,4 +1,5 @@
 import {computed, defineComponent, type PropType, type Ref, ref, type SlotsType} from 'vue'
+import type {EnumBucketsResponseBody} from '@loncra/client/resource'
 import {useCrudConfig} from '../../crud-config-provider'
 import type {CrudNavigateKind} from '../../crud-config-provider/types'
 import CrudTable from '../../crud-table/CrudTable'
@@ -13,11 +14,8 @@ import type {
   CrudHomePageSlots,
   ListPageContext,
   PageDicts,
-  PageEnums,
   PageListEntry,
 } from '../types'
-
-type RuntimeProps = CrudHomePageProps<DefaultCrudEntity, DefaultCrudEntity>
 
 /**
  * 列表页渲染器：把 `page.list` 的声明翻成 `CrudTable` 的 props。
@@ -33,7 +31,7 @@ const CrudHomePage = defineComponent({
   name: 'LCrudHomePage',
   inheritAttrs: false,
   props: {
-    page: {type: Object as PropType<RuntimeProps['page']>, required: true},
+    page: {type: Object as PropType<CrudHomePageProps['page']>, required: true},
     variant: String,
     extra: {type: Object as PropType<Record<string, unknown>>, default: () => ({})},
   },
@@ -52,7 +50,7 @@ const CrudHomePage = defineComponent({
      * 系统字典（枚举桶 + 数据字典）由 `CrudTable` → 基类在挂载时统一拉：
      * 这里只把声明里的 id/code 交下去，结果 `v-model` 回来喂给建列 / 单元格。
      */
-    const buckets = ref<PageEnums>({})
+    const buckets = ref<EnumBucketsResponseBody>({})
     const dicts = ref<PageDicts>({})
     /** 字段组件表 + 值格式表（内置 + 宿主 CrudConfig 覆盖） */
     const registry = usePageRegistry()
@@ -150,7 +148,7 @@ const CrudHomePage = defineComponent({
           onUpdate:dataSource={(value: TEntity[]) => {
             dataSource.value = value
           }}
-          onUpdate:buckets={(value: PageEnums) => {
+          onUpdate:buckets={(value: EnumBucketsResponseBody) => {
             buckets.value = value
           }}
           onUpdate:dicts={(value: PageDicts) => {

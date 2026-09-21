@@ -18,7 +18,8 @@ import type {
 } from '../_util/crud/actions'
 import type {CollectionPagination, CollectionService} from '../_util/crud/useCollectionData'
 import type {DragPreviewContent, DragProp} from '../_util/crud/useDrag'
-import type {EnumBucketRequest, PageDicts, PageEnums} from '../basic-crud-query/dictionaries'
+import type {EnumBucketRequest, PageDicts} from '../basic-crud-query/dictionaries'
+import type {EnumBucketsResponseBody} from '@loncra/client/resource'
 
 /** 未指定业务实体时的回退：只保证有 id，对标 commons BasicIdMetadata */
 export type DefaultCrudEntity = BasicIdMetadata<string | number>
@@ -86,10 +87,10 @@ export interface QueryCollectionProps<
  * 原样转发（名字与基类一致），数据用 `v-model` 双向绑定。
  */
 export interface QueryTableProps<
-  TBody extends BasicIdMetadata<TId>,
-  TEntity extends TBody,
-  TPage extends ScrollPageResult<TEntity>,
-  TId = TEntity[typeof SYSTEM_CONSTANT.ID_NAME],
+  TId = string | number,
+  TBody extends BasicIdMetadata<TId> = BasicIdMetadata<TId>,
+  TEntity extends TBody = TBody,
+  TPage extends ScrollPageResult<TEntity> = ScrollPageResult<TEntity>,
 > {
   service: CollectionService<TBody, TEntity, TPage, TId>
   columns?: SearchableColumnType<TEntity>[]
@@ -107,7 +108,7 @@ export interface QueryTableProps<
   enums?: EnumBucketRequest[]
   dictCodes?: (string | undefined)[]
   /** 字典加载结果（基类 `v-model` 回给建列的地方） */
-  buckets?: PageEnums
+  buckets?: EnumBucketsResponseBody
   dicts?: PageDicts
   bordered?: boolean
   /** 拖拽开关 + 幽灵内容（同 `QueryCollectionProps.drag`） */
@@ -133,7 +134,7 @@ export type QueryTableEmits<
   'update:query': [value: FilterRequest | PageRequest]
   'update:selectedRows': [value: TEntity[]]
   'update:pagination': [value: TableProps['pagination']]
-  'update:buckets': [value: PageEnums]
+  'update:buckets': [value: EnumBucketsResponseBody]
   'update:dicts': [value: PageDicts]
   action: [payload: ToolbarActionPayload<TEntity> | RecordActionPayload<TEntity>]
   add: []
@@ -173,14 +174,6 @@ export interface QueryTableExpose<
   remove: (records: TEntity[]) => void
 }
 
-/** 控件实现侧用的具体 props；调用方仍走下面的 constructor 泛型 */
-export type QueryTableRuntimeProps = QueryTableProps<
-  DefaultCrudEntity,
-  DefaultCrudEntity,
-  ScrollPageResult<DefaultCrudEntity>,
-  string | number
->
-
 /**
  * Vue 3.5 的 defineComponent 函数重载接不住泛型 setup。
  * 实现用对象形 defineComponent，导出时断言成这个 constructor，调用方才能带实体泛型使用。
@@ -191,11 +184,11 @@ export type QueryTableConstructor = new <
   TPage extends ScrollPageResult<TEntity>,
   TId = TEntity[typeof SYSTEM_CONSTANT.ID_NAME],
 >(
-  props: QueryTableProps<TBody, TEntity, TPage, TId> &
+  props: QueryTableProps<TId, TBody, TEntity, TPage> &
     EmitsToProps<QueryTableEmits<TEntity, TId>> &
     PublicProps,
 ) => {
-  $props: QueryTableProps<TBody, TEntity, TPage, TId> &
+  $props: QueryTableProps<TId, TBody, TEntity, TPage> &
     EmitsToProps<QueryTableEmits<TEntity, TId>> &
     PublicProps
   $slots: QueryTableSlots<TEntity>

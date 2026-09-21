@@ -28,7 +28,6 @@ import type {
   QueryCardGridItemActionsSlot,
   QueryCardGridItemSlot,
   QueryCardGridProps,
-  QueryCardGridRuntimeProps,
   QueryCardGridSlots,
 } from './types'
 
@@ -57,27 +56,27 @@ const QueryCardGrid = defineComponent({
   name: 'LQueryCardGrid',
   inheritAttrs: false,
   props: {
-    service: {type: Object as PropType<QueryCardGridRuntimeProps['service']>, required: true},
+    service: {type: Object as PropType<QueryCardGridProps['service']>, required: true},
     immediate: {type: Boolean, default: true},
     refreshOnActivate: {
       type: [Boolean, Function] as PropType<RefreshOnActivate>,
       default: true,
     },
     /** 卡片头（转发给基类）：`VNode` 直接用、`false` 不要卡片头、不给走 `CrudConfig.resolveDefaultTitle` */
-    title: [Object, Boolean] as PropType<QueryCardGridRuntimeProps['title']>,
+    title: [Object, Boolean] as PropType<QueryCardGridProps['title']>,
     hasPermission: Function as PropType<(permission: string) => boolean>,
     authority: Object as PropType<AuthorityProps>,
     /** 标题右侧的工具栏动作（转发给基类）：数组 = 与默认合并；`false` = 整排不出 */
-    toolbarActions: [Array, Boolean] as PropType<QueryCardGridRuntimeProps['toolbarActions']>,
+    toolbarActions: [Array, Boolean] as PropType<QueryCardGridProps['toolbarActions']>,
     /** 项内动作（转发给基类）：数组 = 与默认合并；`false` = 不要 */
-    recordActions: [Array, Boolean] as PropType<QueryCardGridRuntimeProps['recordActions']>,
+    recordActions: [Array, Boolean] as PropType<QueryCardGridProps['recordActions']>,
     /**
      * 拖拽开关 + 幽灵内容（同表格）；要给方向就写对象形态 `{dragPreview, direction}`，那时 `direction` 才生效
      */
-    drag: [Boolean, Function, Object] as PropType<QueryCardGridRuntimeProps['drag']>,
+    drag: [Boolean, Function, Object] as PropType<QueryCardGridProps['drag']>,
     gridColumns: {type: Number, default: 5},
     selectable: {type: Boolean, default: true},
-    rowKey: [String, Function] as PropType<QueryCardGridRuntimeProps['rowKey']>,
+    rowKey: [String, Function] as PropType<QueryCardGridProps['rowKey']>,
     pagination: {
       type: [Object, Boolean] as PropType<CardGridPagination>,
       default: () => ({hideOnSinglePage: true, align: 'center'}),

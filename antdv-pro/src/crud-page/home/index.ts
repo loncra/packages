@@ -6,7 +6,6 @@ export type {
   CrudHomePageSlots,
   CrudListPage,
   ListPageContext,
-  PageEnums,
   PageFieldComponent,
   PageFieldsDictionary,
   PageFieldSpec,

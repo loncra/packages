@@ -1,10 +1,10 @@
 import {createTextVNode, createVNode, Fragment, isVNode, type VNode} from 'vue'
+import type {EnumBucketsResponseBody} from '@loncra/client/resource'
 import type {SearchableColumnType} from '../../query-table/types'
 import {componentName, dictOptions, formatValue, resolveFieldSpec} from '../registry'
 import type {
   ListPageContext,
   PageDicts,
-  PageEnums,
   PageFieldsDictionary,
   PageListColumn,
   PageListEntry,
@@ -32,7 +32,7 @@ export function buildListColumns<TEntity extends object>(
   fields: PageFieldsDictionary<TEntity>,
   t: (key: string) => string,
   i18nPrefix: string,
-  buckets: PageEnums,
+  buckets: EnumBucketsResponseBody,
   dicts: PageDicts,
   ctx: ListPageContext,
   registry: PageRegistry,
@@ -109,7 +109,7 @@ export function renderCell<TEntity extends object>(
   fields: PageFieldsDictionary<TEntity>,
   columnKey: unknown,
   record: TEntity,
-  buckets: PageEnums,
+  buckets: EnumBucketsResponseBody,
   dicts: PageDicts,
   registry: PageRegistry,
 ): unknown {

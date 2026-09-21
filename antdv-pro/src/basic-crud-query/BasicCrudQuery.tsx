@@ -35,18 +35,13 @@ import DataLoadingCardPlan from '../data-loading-card-plan'
 import type {CardGridPagination} from '../query-card-grid/types'
 import type {DefaultCrudEntity} from '../query-table/types'
 import ActionButton from '../action-button'
-import {
-  fetchDataDicts,
-  fetchEnumBuckets,
-  type EnumBucketRequest,
-  type PageDicts,
-  type PageEnums,
-} from './dictionaries'
+import type {EnumBucketsResponseBody} from '@loncra/client/resource'
+import {fetchDataDicts, fetchEnumBuckets, type EnumBucketRequest, type PageDicts} from './dictionaries'
 import useStyle from './style'
 import type {
   BasicCrudQueryConstructor,
   BasicCrudQueryExpose,
-  BasicCrudQueryRuntimeProps,
+  BasicCrudQueryProps,
   BasicCrudQuerySelectedKey,
   BasicCrudQuerySlots,
 } from './types'
@@ -65,20 +60,20 @@ const BasicCrudQuery = defineComponent({
   name: 'LBasicCrudQuery',
   inheritAttrs: false,
   props: {
-    service: {type: Object as PropType<BasicCrudQueryRuntimeProps['service']>, required: true},
+    service: {type: Object as PropType<BasicCrudQueryProps['service']>, required: true},
     immediate: {type: Boolean, default: true},
     refreshOnActivate: {
-      type: [Boolean, Function] as PropType<BasicCrudQueryRuntimeProps['refreshOnActivate']>,
+      type: [Boolean, Function] as PropType<BasicCrudQueryProps['refreshOnActivate']>,
       default: true,
     },
     /** 卡片头：`VNode` 直接用、`false` 不要卡片头；不给则交给 plan 用 `CrudConfig.resolveDefaultTitle` */
     title: [Object, Boolean] as PropType<VNode | boolean>,
     hasPermission: Function as PropType<(permission: string) => boolean>,
-    authority: Object as PropType<BasicCrudQueryRuntimeProps['authority']>,
+    authority: Object as PropType<BasicCrudQueryProps['authority']>,
     /** 标题右侧的工具栏动作：数组 = 与默认合并；`false` = 整排按钮都不出（与 `title` 同形） */
-    toolbarActions: [Array, Boolean] as PropType<BasicCrudQueryRuntimeProps['toolbarActions']>,
+    toolbarActions: [Array, Boolean] as PropType<BasicCrudQueryProps['toolbarActions']>,
     /** 行内 / 项内动作：数组 = 与默认合并；`false` = 不要（与 `title` 同形） */
-    recordActions: [Array, Boolean] as PropType<BasicCrudQueryRuntimeProps['recordActions']>,
+    recordActions: [Array, Boolean] as PropType<BasicCrudQueryProps['recordActions']>,
     /** 选中集合挂在哪：表格 `selectedRows` / 卡片 `selectedItems` */
     selectedKey: {type: String as PropType<BasicCrudQuerySelectedKey>, default: 'selectedRows'},
     // 数据
@@ -94,7 +89,7 @@ const BasicCrudQuery = defineComponent({
     // 字典（枚举桶按模块分组）
     enums: Array as PropType<EnumBucketRequest[]>,
     dictCodes: Array as PropType<(string | undefined)[]>,
-    buckets: {type: Object as PropType<PageEnums>, default: () => ({})},
+    buckets: {type: Object as PropType<EnumBucketsResponseBody>, default: () => ({})},
     dicts: {type: Object as PropType<PageDicts>, default: () => ({})},
     prefixCls: String,
     rootClass: String,
@@ -137,7 +132,7 @@ const BasicCrudQuery = defineComponent({
       TableProps['pagination'] | CardGridPagination
     >
     const selected = useModel(props, props.selectedKey) as unknown as Ref<TEntity[]>
-    const buckets = useModel(props, 'buckets') as unknown as Ref<PageEnums>
+    const buckets = useModel(props, 'buckets') as unknown as Ref<EnumBucketsResponseBody>
     const dicts = useModel(props, 'dicts') as unknown as Ref<PageDicts>
 
     /** 取数：`loading` 由这里开关（挂载 / 切回那两个口由 plan 触发，它自己也会点 loading） */
