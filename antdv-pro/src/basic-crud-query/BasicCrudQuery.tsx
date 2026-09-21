@@ -35,7 +35,13 @@ import DataLoadingCardPlan from '../data-loading-card-plan'
 import type {CardGridPagination} from '../query-card-grid/types'
 import type {DefaultCrudEntity} from '../query-table/types'
 import ActionButton from '../action-button'
-import {fetchDataDicts, fetchEnumBuckets, type PageDicts, type PageEnums} from './dictionaries'
+import {
+  fetchDataDicts,
+  fetchEnumBuckets,
+  type EnumBucketRequest,
+  type PageDicts,
+  type PageEnums,
+} from './dictionaries'
 import useStyle from './style'
 import type {
   BasicCrudQueryConstructor,
@@ -85,8 +91,8 @@ const BasicCrudQuery = defineComponent({
     },
     selectedRows: {type: Array as PropType<DefaultCrudEntity[]>, default: () => []},
     selectedItems: {type: Array as PropType<DefaultCrudEntity[]>, default: () => []},
-    // 字典
-    enumIds: Array as PropType<(string | undefined)[]>,
+    // 字典（枚举桶按模块分组）
+    enums: Array as PropType<EnumBucketRequest[]>,
     dictCodes: Array as PropType<(string | undefined)[]>,
     buckets: {type: Object as PropType<PageEnums>, default: () => ({})},
     dicts: {type: Object as PropType<PageDicts>, default: () => ({})},
@@ -162,7 +168,7 @@ const BasicCrudQuery = defineComponent({
     /** 系统字典：与列表数据同一批、只在挂载时拉一次 */
     async function loadDictionaries() {
       const [nextBuckets, nextDicts] = await Promise.all([
-        fetchEnumBuckets(props.enumIds),
+        fetchEnumBuckets(props.enums),
         fetchDataDicts(props.dictCodes),
       ])
       buckets.value = nextBuckets

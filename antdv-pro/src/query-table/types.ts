@@ -18,7 +18,7 @@ import type {
 } from '../_util/crud/actions'
 import type {CollectionPagination, CollectionService} from '../_util/crud/useCollectionData'
 import type {DragPreviewContent, DragProp} from '../_util/crud/useDrag'
-import type {PageDicts, PageEnums} from '../basic-crud-query/dictionaries'
+import type {EnumBucketRequest, PageDicts, PageEnums} from '../basic-crud-query/dictionaries'
 
 /** 未指定业务实体时的回退：只保证有 id，对标 commons BasicIdMetadata */
 export type DefaultCrudEntity = BasicIdMetadata<string | number>
@@ -103,8 +103,8 @@ export interface QueryTableProps<
   toolbarActions?: ToolbarActionDefinition<TEntity>[] | false
   /** 行内动作：数组 = 与默认 `edit`/`detail`/`delete` 合并；`false` = 不要（`操作`列也不补） */
   recordActions?: RecordActionDefinition<TEntity>[] | false
-  /** 系统字典：要加载什么（声明侧 `list.enums` / `list.dicts`）—— 原样交给基类 */
-  enumIds?: (string | undefined)[]
+  /** 系统字典：要加载什么（声明侧 `list.enums` / `list.dicts`）—— 原样交给基类（枚举桶按模块分组） */
+  enums?: EnumBucketRequest[]
   dictCodes?: (string | undefined)[]
   /** 字典加载结果（基类 `v-model` 回给建列的地方） */
   buckets?: PageEnums

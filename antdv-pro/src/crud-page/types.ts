@@ -10,7 +10,7 @@ import type {RecordActionDefinition, ToolbarActionDefinition} from '../_util/cru
 import type {DragProp} from '../_util/crud/useDrag'
 import type {CrudNavigateTarget} from '../crud-config-provider/types'
 import type {AuthorityProps, ColumnSearchConfig, SearchableColumnType} from '../query-table/types'
-import type {PageDicts, PageEnums} from '../basic-crud-query/dictionaries'
+import type {EnumBucketRequest, EnumRef, PageDicts, PageEnums} from '../basic-crud-query/dictionaries'
 
 // #region 声明：核心（三种形态共用）
 
@@ -39,7 +39,7 @@ export interface CrudPageCore<
   routes?: CrudPageRoutes
   /** 操作轨迹表名（宿主自己的审计表标识）；列表不用，表单/详情壳以后用 */
   operationDataTraceTarget?: string
-  /** 字段字典：labelKey / format / enumId 的唯一事实来源 */
+  /** 字段字典：labelKey / format / enumRef 的唯一事实来源 */
   fields?: PageFieldsDictionary<TEntity>
   /**
    * label 解析：key → 文案（宿主声明层给一行 `(k, n) => i18n.global.t(k, n)`）。
@@ -63,7 +63,7 @@ export interface CrudPageCore<
 type BuiltinKey<T extends string> = T | (string & {})
 
 /**
- * 值格式名。内置六个：`'enum'` / `'enumList'`（要求条目有 `enumId`）、
+ * 值格式名。内置六个：`'enum'` / `'enumList'`（要求条目有 `enumRef`）、
  * `'dict'` / `'dictList'`（要求条目有 `dictId`）、
  * `'date'` / `'dateTime'`（显示用，格式串来自 `CrudConfigProvider.dateFormat` / `dateTimeFormat`）。
  */
@@ -80,7 +80,7 @@ export type PageFieldComponent = BuiltinKey<
  * 枚举桶 / 数据字典的类型。**实现与加载都在 `basic-crud-query/dictionaries.ts`**（基类挂载时拉），
  * 这里只 re-export，保住声明层一直在用的公开名。
  */
-export type {PageDicts, PageEnums} from '../basic-crud-query/dictionaries'
+export type {EnumBucketRequest, EnumRef, PageDicts, PageEnums} from '../basic-crud-query/dictionaries'
 
 /**
  * 声明里的函数拿到的上下文。故意很小：**没有 router / i18n / 弹层**——
@@ -98,9 +98,9 @@ export interface PageFieldSpec {
   labelKey?: string
   /** formatter 名。声明即断言值的形状，见 registry 的 FORMATTERS */
   format?: PageValueFormat
-  /** 枚举桶 id：列表补搜索下拉的 options，也是 `format: 'enum'` 的取值表 */
-  enumId?: string
-  /** 数据字典 code：同上，喂 `format: 'dict'`（与 `enumId` 二选一） */
+  /** 枚举桶定位（模块 + 枚举 id）：补搜索下拉的 options，也是 `format: 'enum'` 的取值表 */
+  enumRef?: EnumRef
+  /** 数据字典 code：同上，喂 `format: 'dict'`（与 `enumRef` 二选一） */
   dictId?: string
 }
 
@@ -129,8 +129,8 @@ export interface PageListColumn<TEntity> {
    */
   title?: string
   format?: PageValueFormat
-  enumId?: string
-  /** 数据字典 code：喂搜索下拉与 `format: 'dict'`（与 `enumId` 二选一） */
+  enumRef?: EnumRef
+  /** 数据字典 code：喂搜索下拉与 `format: 'dict'`（与 `enumRef` 二选一） */
   dictId?: string
   width?: number
   ellipsis?: boolean
@@ -149,8 +149,11 @@ export type PageListEntry<TEntity> = (keyof TEntity & string) | PageListColumn<T
 
 export interface PageListDefinition<TEntity extends BasicIdMetadata<unknown>> {
   authority?: AuthorityProps
-  /** 需要预加载的枚举桶 id，写 `@loncra/client/commons` 的常量，别写字符串 */
-  enums?: string[]
+  /**
+   * 需要预加载的枚举桶：**按模块分组**（桶 = 模块 + 枚举 id 索引，见 `EnumBucketRequest`）。
+   * module 写 `SYSTEM_MODULE_NAME.*`、id 写 `SYSTEM_ENUM_TYPE.*`，别写字符串字面量。
+   */
+  enums?: EnumBucketRequest[]
   /**
    * 需要预加载的**数据字典 code**（写宿主常量，如 `SKILL_GROUP_CODE_PREFIX`）。
    * 与 `enums` 同构：pro 自己走 client 拉（`findDataDictionariesByCodes`），宿主不接线；
@@ -204,8 +207,8 @@ export interface FieldComponentSpec {
 export interface FormatContext {
   key: string
   record: unknown
-  /** 该条目生效的枚举桶 id（条目 `enumId` ?? 字典 `enumId`） */
-  enumId?: string
+  /** 该条目生效的枚举桶定位（条目 `enumRef` ?? 字典 `enumRef`） */
+  enumRef?: EnumRef
   /** 该条目生效的数据字典 code（条目 `dictId` ?? 字典 `dictId`） */
   dictId?: string
   buckets: PageEnums

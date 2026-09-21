@@ -177,6 +177,8 @@ export type {
   CrudListPage,
   CrudPageCore,
   CrudPageRoutes,
+  EnumBucketRequest,
+  EnumRef,
   FieldComponentSpec,
   FormatContext,
   ListPageContext,

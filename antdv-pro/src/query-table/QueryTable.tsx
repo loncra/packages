@@ -18,7 +18,7 @@ import {classNames} from '@loncra/antdv'
 import {type FilterRequest, type PageRequest, SYSTEM_CONSTANT} from '@loncra/client/commons'
 import {useLocale} from '../_util/useLocale'
 import BasicCrudQuery from '../basic-crud-query'
-import type {BasicCrudQueryExpose, PageDicts, PageEnums} from '../basic-crud-query'
+import type {BasicCrudQueryExpose, EnumBucketRequest, PageDicts, PageEnums} from '../basic-crud-query'
 import {useMergeRowSelection} from '../_util/crud/useMergeRowSelection'
 import {isDragEnabled} from '../_util/crud/useDrag'
 import {useTableRowDrag} from '../_util/crud/useTableRowDrag'
@@ -81,7 +81,7 @@ const QueryTable = defineComponent({
     /** 行内动作：数组 = 与默认 `edit`/`detail`/`delete` 合并；`false` = 不要（`操作`列也不补） */
     recordActions: [Array, Boolean] as PropType<QueryTableRuntimeProps['recordActions']>,
     /** 系统字典：要加载什么（声明侧 `list.enums` / `list.dicts`）—— 原样交给基类 */
-    enumIds: Array as PropType<QueryTableRuntimeProps['enumIds']>,
+    enums: Array as PropType<QueryTableRuntimeProps['enums']>,
     dictCodes: Array as PropType<QueryTableRuntimeProps['dictCodes']>,
     prefixCls: String,
     rootClass: String,
@@ -427,7 +427,7 @@ const QueryTable = defineComponent({
           authority={props.authority}
           toolbarActions={props.toolbarActions}
           recordActions={props.recordActions}
-          enumIds={props.enumIds}
+          enums={props.enums}
           dictCodes={props.dictCodes}
           selectedKey="selectedRows"
           prefixCls={props.prefixCls}

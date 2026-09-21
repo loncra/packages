@@ -59,18 +59,18 @@ export function buildListColumns<TEntity extends object>(
 
     if (search) {
       const spec = resolveFieldSpec(search.component, registry.fieldComponents)
-      const enumId = merged.enumId
+      const enumRef = merged.enumRef
       const dictId = merged.dictId
-      if (enumId && dictId) {
+      if (enumRef && dictId) {
         throw new Error(
-          `[crud-page] 字段 ${merged.key} 同时声明了 enumId 与 dictId：选项来源只能有一个`,
+          `[crud-page] 字段 ${merged.key} 同时声明了 enumRef 与 dictId：选项来源只能有一个`,
         )
       }
-      const options = enumId ? buckets[enumId] ?? [] : []
-      if (enumId && !spec?.mapOptions) {
+      const options = enumRef ? buckets[enumRef.module]?.[enumRef.id] ?? [] : []
+      if (enumRef && !spec?.mapOptions) {
         throw new Error(
-          `[crud-page] 字段 ${merged.key} 的搜索项声明了 enumId，但组件 ${componentName(search.component)} 没有 mapOptions，`
-            + 'options 会被丢掉：用 CrudConfig.fieldComponents 给它补 mapOptions，或者去掉 enumId',
+          `[crud-page] 字段 ${merged.key} 的搜索项声明了 enumRef，但组件 ${componentName(search.component)} 没有 mapOptions，`
+            + 'options 会被丢掉：用 CrudConfig.fieldComponents 给它补 mapOptions，或者去掉 enumRef',
         )
       }
       column.search = {
@@ -135,7 +135,7 @@ export function renderCell<TEntity extends object>(
     {
       key: item.key,
       record,
-      enumId: item.enumId ?? fields[item.key]?.enumId,
+      enumRef: item.enumRef ?? fields[item.key]?.enumRef,
       dictId: item.dictId ?? fields[item.key]?.dictId,
       buckets,
       dicts,

@@ -49,7 +49,7 @@
 - `CrudHomePage`：把页面声明（`CrudListPage`）翻成 `CrudTable` 的 props；不认路由 / i18n / 弹层。
 - 声明（宿主业务目录里的 `xxx.page.ts` / `xxx.home.page.ts`）：`CrudPageCore`（service / i18nPrefix / routes / fields / `i18nResolver` / `onNavigate`）+ `PageListDefinition`（columns / enums / authority / rowActions / drag…）。
 - 跳转：页面声明给 `onNavigate` 就用它（`record` 是精确实体），否则落到 `CrudConfigProvider` 的 `onNavigate` 兜底，都没有则 no-op（内嵌选择器安全）。
-- 文案：宿主给 `i18nResolver`，pro 只拿 key；枚举：`format: 'enum' | 'enumList'` 用 `enumId` + `list.enums` 预载的桶自算（不走宿主的全局枚举表）。
+- 文案：宿主给 `i18nResolver`，pro 只拿 key；枚举：`format: 'enum' | 'enumList'` 用 `enumRef`（**模块 + 枚举 id**）+ `list.enums`（按模块分组，`EnumBucketRequest`）预载的桶自算（不走宿主的全局枚举表）。桶必须带模块：`resource-server` / `auth-server` / `ai-server` / `message-server` 各一套，只给 id 查不到。
 - 表单 / 详情形态（`defineFormPage` / `defineDetailPage`、壳层）尚未迁移。
 
 ## `@loncra/client`

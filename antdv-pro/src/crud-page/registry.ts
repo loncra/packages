@@ -52,11 +52,11 @@ export function componentName(name?: PageFieldComponent | Component): string {
 
 // #region 值格式注册表
 
-/** 用枚举桶把值翻译成名称；没给桶 id 就抛（声明写错了要当场知道） */
+/** 用枚举桶把值翻译成名称；没给 `enumRef` 就抛（声明写错了要当场知道） */
 function enumName(ctx: FormatContext, value: unknown): string {
-  if (!ctx.enumId) {
+  if (!ctx.enumRef) {
     throw new Error(
-      `[crud-page] 字段 ${ctx.key} 声明了枚举格式，但没给 enumId：没有桶就查不到名称`,
+      `[crud-page] 字段 ${ctx.key} 声明了枚举格式，但没给 enumRef（模块 + 枚举 id）：没有桶就查不到名称`,
     )
   }
   return getEnumName(value)
@@ -150,7 +150,7 @@ export function usePageRegistry(): ComputedRef<PageRegistry> {
     },
     /**
      * 声明 `format` 即断言值的形状，形状不对就抛。
-     * `enum` / `enumList` 吃 `enumId` + `list.enums`；`dict` / `dictList` 吃 `dictId` + `list.dicts`；
+     * `enum` / `enumList` 吃 `enumRef` + `list.enums`；`dict` / `dictList` 吃 `dictId` + `list.dicts`；
      * `date` / `dateTime` 走显示格式（见 `CrudConfigProvider.dateFormat` / `dateTimeFormat`）。
      * 不够用宿主在 `CrudConfig.formatters` 里加（金额、链接…），按 key 覆盖这张表。
      */

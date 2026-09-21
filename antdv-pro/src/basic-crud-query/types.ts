@@ -17,7 +17,7 @@ import type {
 } from '../_util/crud/actions'
 import type {CardGridPagination} from '../query-card-grid/types'
 import type {DefaultCrudEntity, QueryCollectionProps} from '../query-table/types'
-import type {PageDicts, PageEnums} from './dictionaries'
+import type {EnumBucketRequest, PageDicts, PageEnums} from './dictionaries'
 
 /** 选中集合挂在哪一个 prop 上（表格 `selectedRows` / 卡片 `selectedItems`） */
 export type BasicCrudQuerySelectedKey = 'selectedRows' | 'selectedItems'
@@ -50,8 +50,8 @@ export interface BasicCrudQueryProps<
    * 给 `false` 不要行内 / 项内动作（不给 `resolveRecordActions`，也不补"操作"列）。
    */
   recordActions?: RecordActionDefinition<TEntity>[] | false
-  /** 系统字典：要加载什么（声明侧 `list.enums` / `list.dicts`） */
-  enumIds?: (string | undefined)[]
+  /** 系统字典：要加载什么（声明侧 `list.enums` / `list.dicts`）—— 枚举桶按模块分组 */
+  enums?: EnumBucketRequest[]
   dictCodes?: (string | undefined)[]
   /** 字典加载结果（`v-model` 回给建列的地方） */
   buckets?: PageEnums

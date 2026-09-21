@@ -71,7 +71,7 @@ const CrudTable = defineComponent({
     rowActions: Array as PropType<RecordActionDefinition<DefaultCrudEntity>[]>,
     recordActions: {type: Boolean, default: true},
     /** 系统字典：要加载什么（声明侧 `list.enums` / `list.dicts`）—— 原样交给基类 */
-    enumIds: Array as PropType<CrudTableRuntimeProps['enumIds']>,
+    enums: Array as PropType<CrudTableRuntimeProps['enums']>,
     dictCodes: Array as PropType<CrudTableRuntimeProps['dictCodes']>,
     /** 字典加载结果（基类 `v-model` 回来） */
     buckets: {type: Object as PropType<CrudTableRuntimeProps['buckets']>, default: () => ({})},
@@ -134,7 +134,7 @@ const CrudTable = defineComponent({
         authority={props.authority}
         toolbarActions={props.actions}
         recordActions={recordActions.value}
-        enumIds={props.enumIds}
+        enums={props.enums}
         dictCodes={props.dictCodes}
         bordered={props.bordered}
         drag={props.drag}
