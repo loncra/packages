@@ -8,20 +8,75 @@ import type {
   ScrollPageResult,
 } from '@loncra/client/commons'
 import type {
+  AuthorityProps,
   RecordActionDefinition,
   RecordActionPayload,
   ResolvedAction,
-  ToolbarActionContext,
   ToolbarActionDefinition,
   ToolbarActionPayload,
 } from '../_util/crud/actions'
-import type {CardGridPagination} from '../query-card-grid/types'
-import type {DefaultCrudEntity, QueryCollectionProps} from '../query-table/types'
-import type {EnumBucketRequest, PageDicts} from './dictionaries'
-import type {EnumBucketsResponseBody} from '@loncra/client/resource'
+import type {CollectionExpose} from '../_util/crud/collectionExpose'
+import type {CollectionService} from '../_util/crud/useCollectionData'
+import type {DragProp} from '../_util/crud/useDrag'
+import type {DataDictionaryMetadata, EnumBucketsResponseBody} from '@loncra/client/resource'
+
+/** 一个枚举桶的定位：模块 + 枚举 id（声明里的 `enumRef` 用它） */
+export interface EnumRef {
+  module: string
+  id: string
+}
+
+/** 要加载的一组枚举桶：模块 + 该模块下的枚举 id 列表（对应后端 `EnumBucketsRequestBody` 的一项） */
+export interface EnumBucketRequest {
+  module: string
+  ids: string[]
+}
+
+/** 数据字典：字典 code → 字典项（client 的原样类型，含 code/name/valueType/metadata/children） */
+export type PageDicts = Record<string, DataDictionaryMetadata[]>
 
 /** 选中集合挂在哪一个 prop 上（表格 `selectedRows` / 卡片 `selectedItems`） */
 export type BasicCrudQuerySelectedKey = 'selectedRows' | 'selectedItems'
+
+/**
+ * 被 KeepAlive 缓存的实例从缓存切回（onActivated）时如何刷新数据。
+ * - `true`（默认）：自动重新取数
+ * - `false`：切回不刷新
+ * - 函数：完全交给调用方决定（组件不再自动取数），需要的数据请自行通过 v-model 绑定获取
+ */
+export type RefreshOnActivate = boolean | (() => void | Promise<void>)
+
+/**
+ * **集合层** props：取数 / 标题 / 权限 / 动作 / 字典 / 拖拽 / 数据与查询 —— 表格与卡片共用的那一层。
+ * 形态组件（`QueryTable` / `QueryCardGrid`）与两道门面都在这之上扩展自己那部分（列、分页形态…）。
+ */
+export interface QueryCollectionProps<
+  TBody extends BasicIdMetadata<TId>,
+  TEntity extends TBody,
+  TPage extends ScrollPageResult<TEntity>,
+  TId = TEntity[typeof SYSTEM_CONSTANT.ID_NAME],
+> {
+  service: CollectionService<TBody, TEntity, TPage, TId>
+  immediate?: boolean
+  refreshOnActivate?: RefreshOnActivate
+  /** 卡片头，与 `DataLoadingCardPlan` 同形：`VNode` 直接用、`false` 不要卡片头、不给走默认标题 */
+  title?: VNode | boolean
+  hasPermission?: (permission: string) => boolean
+  authority?: AuthorityProps
+  actions?: ToolbarActionDefinition<TEntity>[]
+  /**
+   * 拖拽开关 + 幽灵内容（一个口两件事）：`true` = 可拖（幽灵缺省是主键）；
+   * `(record) => 内容` = 可拖且它就是幽灵；`false` / 不给 = 不可拖。
+   */
+  drag?: DragProp<TEntity>
+  prefixCls?: string
+  rootClass?: string
+  dataSource?: TEntity[]
+  loading?: boolean
+  query?: FilterRequest | PageRequest
+  /** 主键字段名（或 antd 的取键函数）；缺省用 `SYSTEM_CONSTANT.ID_NAME`。表与卡片网格共用 */
+  rowKey?: TableProps['rowKey']
+}
 
 export interface BasicCrudQueryProps<
   TId = string | number,
@@ -42,8 +97,8 @@ export interface BasicCrudQueryProps<
   toolbarActions?: ToolbarActionDefinition<TEntity>[] | false
   /** 选中集合的 prop 名（由形态组件指定） */
   selectedKey?: BasicCrudQuerySelectedKey
-  /** 分页（表格 / 卡片共用同一份，由本组件渲染统一分页） */
-  pagination?: TableProps['pagination'] | CardGridPagination
+  /** 分页（表格 / 卡片共用同一份，由本组件渲染统一分页）：就是 antd 的分页对象 */
+  pagination?: TableProps['pagination']
   selectedRows?: TEntity[]
   selectedItems?: TEntity[]
   /**
@@ -68,7 +123,7 @@ export type BasicCrudQueryEmits<
   'update:query': [value: FilterRequest | PageRequest]
   'update:selectedRows': [value: TEntity[]]
   'update:selectedItems': [value: TEntity[]]
-  'update:pagination': [value: unknown]
+  'update:pagination': [value: TableProps['pagination']]
   'update:buckets': [value: EnumBucketsResponseBody]
   'update:dicts': [value: PageDicts]
   action: [payload: ToolbarActionPayload<TEntity> | RecordActionPayload<TEntity>]
@@ -87,13 +142,15 @@ export interface BasicCrudQuerySlots {
   extra?: () => VNodeChild
 }
 
+/**
+ * 内核暴露给**形态组件**（`QueryTable` / `QueryCardGrid`）的能力：对外那份（`CollectionExpose`）
+ * 加上只有内核能算的四个动作相关项 —— 权限、默认动作合并、运行态都在内核里，所以解析也只能在这。
+ * 宿主拿到的 ref 只会有 `CollectionExpose` 那两个成员，看不到这里的内部契约。
+ */
 export interface BasicCrudQueryExpose<
   TEntity extends BasicIdMetadata<TId>,
   TId = TEntity[typeof SYSTEM_CONSTANT.ID_NAME],
-> {
-  fetchDataSource: () => Promise<void>
-  remove: (records: TEntity[]) => void
-  actionContext: ComputedRef<ToolbarActionContext<TEntity>>
+> extends CollectionExpose<TEntity> {
   /** 行内 / 项内动作（形态组件要画"操作"列或卡片动作时用） */
   resolveRecordActions: (record: TEntity) => ResolvedAction[]
   onRecordAction: (id: string, record: TEntity) => void

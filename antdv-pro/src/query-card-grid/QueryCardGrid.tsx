@@ -8,26 +8,25 @@ import {
   useModel,
 } from 'vue'
 import {Card, CardGrid, Empty, Typography} from 'antdv-next'
+import type {TableProps} from 'antdv-next'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {classNames} from '@loncra/antdv'
 import {type FilterRequest, type PageRequest} from '@loncra/client/commons'
 import BasicCrudQuery from '../basic-crud-query'
-import {DEFAULT_COLLECTION_PAGINATION} from '../_util/crud/useCollectionData'
-import type {BasicCrudQueryExpose} from '../basic-crud-query/types'
+import type {AuthorityProps} from '../_util/crud/actions'
+import type {CollectionExpose} from '../_util/crud/collectionExpose'
+import {
+  DEFAULT_COLLECTION_PAGINATION,
+  type DefaultCrudEntity,
+} from '../_util/crud/useCollectionData'
+import type {BasicCrudQueryExpose, RefreshOnActivate} from '../basic-crud-query/types'
 import {resolveRowKey} from '../_util/crud/rowKey'
 import {isDragEnabled, type DragProp} from '../_util/crud/useDrag'
 import {useFlatDragDrop} from '../_util/crud/useFlatDragDrop'
 import ActionButton from '../action-button'
 import useStyle from './style'
 import type {
-  AuthorityProps,
-  CollectionExpose,
-  DefaultCrudEntity,
-  RefreshOnActivate,
-} from '../query-table/types'
-import type {
   CardGridDragDirection,
-  CardGridPagination,
   QueryCardGridConstructor,
   QueryCardGridEmits,
   QueryCardGridItemActionsSlot,
@@ -83,7 +82,7 @@ const QueryCardGrid = defineComponent({
     selectable: {type: Boolean, default: true},
     rowKey: [String, Function] as PropType<QueryCardGridProps['rowKey']>,
     pagination: {
-      type: [Object, Boolean] as PropType<CardGridPagination>,
+      type: [Object, Boolean] as PropType<TableProps['pagination']>,
       default: () => ({...DEFAULT_COLLECTION_PAGINATION}),
     },
     prefixCls: String,
@@ -114,7 +113,7 @@ const QueryCardGrid = defineComponent({
     const loading = useModel(props, 'loading') as unknown as Ref<boolean>
     const query = useModel(props, 'query') as unknown as Ref<FilterRequest | PageRequest>
     const selectedItems = useModel(props, 'selectedItems') as unknown as Ref<TEntity[]>
-    const pagination = useModel(props, 'pagination') as unknown as Ref<CardGridPagination>
+    const pagination = useModel(props, 'pagination') as unknown as Ref<TableProps['pagination']>
 
     /** `drag` 两种形态归一：对象形态才关心方向，否则按横向 */
     const dragPreview = computed((): DragProp<TEntity> | undefined =>
@@ -261,7 +260,7 @@ const QueryCardGrid = defineComponent({
             selectedItems.value = value
           }}
           onUpdate:pagination={(value) => {
-            pagination.value = value as CardGridPagination
+            pagination.value = value
           }}
           onAdd={() => emit('add')}
           onEdit={(record: TEntity) => emit('edit', record)}

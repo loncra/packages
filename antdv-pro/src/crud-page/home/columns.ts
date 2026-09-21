@@ -1,10 +1,10 @@
 import {createTextVNode, createVNode, Fragment, isVNode, type VNode} from 'vue'
 import type {EnumBucketsResponseBody} from '@loncra/client/resource'
 import type {SearchableColumnType} from '../../query-table/types'
+import type {PageDicts} from '../../basic-crud-query/types'
 import {componentName, dictOptions, formatValue, resolveFieldSpec} from '../registry'
 import type {
   ListPageContext,
-  PageDicts,
   PageFieldsDictionary,
   PageListColumn,
   PageListEntry,

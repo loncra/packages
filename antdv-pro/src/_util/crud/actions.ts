@@ -1,40 +1,60 @@
 import {ref, type VNode} from 'vue'
 import type {useAppProps} from 'antdv-next/dist/app/context'
 import {type BasicIdMetadata, type FilterRequest, type PageRequest, SYSTEM_CONSTANT,} from '@loncra/client/commons'
-import type {ActionAuth} from '../../crud-config-provider/types'
+import type {CollectionExpose} from './collectionExpose'
 
-/**
- * 应用内实例（提示 / 确认框）。**由壳在 setup 里 `App.useApp()` 拿到后注入**，
- * 不这么走就只能 `import {message, Modal} from 'antdv-next'` 用静态实例 —— 静态实例吃不到
- * `<a-app>` / ConfigProvider 的主题与语言配置。声明文件不在 setup 里，所以只能由壳传。
- */
-export interface ActionAppApis {
-  message: useAppProps['message']
-  modal: useAppProps['modal']
+/** 权限判定口：`CrudConfig.hasPermission` / 组件的 `has-permission` prop 最后都被包成它 */
+export interface ActionAuth {
+  can: (permission?: string | boolean) => boolean
 }
 
-/** 两种动作都有的：壳注入的提示 / 确认框 */
-export interface ActionContext {
-  /** 提示：来自壳的 `App.useApp()`（别用静态 message） */
-  message: ActionAppApis['message']
-  /** 确认框：同上（别用静态 Modal） */
-  modal: ActionAppApis['modal']
+/** 动作口各自需要的权限串（`undefined` / `false` = 不判权限），由形态组件的 `authority` prop 给 */
+export interface AuthorityProps {
+  add?: string | boolean
+  edit?: string | boolean
+  detail?: string | boolean
+  delete?: string | boolean
+}
+
+/**
+ * 应用内实例（提示 / 确认框）。**由持有数据的组件在 setup 里 `App.useApp()` 拿到后注入**，
+ * 不这么走就只能 `import {message, Modal} from 'antdv-next'` 用静态实例 —— 静态实例吃不到
+ * `<a-app>` / ConfigProvider 的主题与语言配置。声明文件不在 setup 里，所以只能由组件传。
+ */
+export interface ActionAppApis<TItem extends BasicIdMetadata<unknown>> {
+  message: useAppProps['message']
+  modal: useAppProps['modal']
+  /**
+   * 当前集合（表格 / 卡片网格）的能力 —— 等价于壳里 `table.value.fetchDataSource()` / `.remove(...)`。
+   * 声明文件里的动作拿不到壳的 ref，所以由集合组件把自己的能力注入进来。
+   */
+  collection: CollectionExpose<TItem>
+}
+
+/** 两种动作都有的：应用内实例（提示 / 确认框）+ 当前集合能力 */
+export interface ActionContext<TItem extends BasicIdMetadata<unknown>> {
+  app: ActionAppApis<TItem>
 }
 
 /** 工具栏 / 批量动作能看到的：整批数据、选中集合、当前查询 */
-export interface ToolbarActionContext<TItem extends BasicIdMetadata<unknown>> extends ActionContext {
+export interface ToolbarActionContext<TItem extends BasicIdMetadata<unknown>>
+  extends ActionContext<TItem> {
   items: TItem[]
   selectedItems: TItem[]
   query?: FilterRequest | PageRequest
 }
 
 /** 行内 / 项内动作能看到的：只有当前记录（要整批数据 / 选中集合就用工具栏动作） */
-export interface RecordActionContext<TItem extends BasicIdMetadata<unknown>> extends ActionContext {
+export interface RecordActionContext<TItem extends BasicIdMetadata<unknown>>
+  extends ActionContext<TItem> {
   record?: TItem
 }
 
 /** 两种动作定义的共同字段；`C` 是它们各自能看到的上下文（工具栏 / 行内不共用同一个） */
-export interface ActionDefinitionBase<TItem extends BasicIdMetadata<unknown>, C extends ActionContext> {
+export interface ActionDefinitionBase<
+  TItem extends BasicIdMetadata<unknown>,
+  C extends ActionContext<TItem>,
+> {
   id: string
   permission?: string | boolean
   danger?: boolean
@@ -167,7 +187,7 @@ export function useActionResolver(): ActionResolver {
       ? `toolbar:${def.id}`
       : `item:${String(context.record[SYSTEM_CONSTANT.ID_NAME])}:${def.id}`
 
-  function resolve<TItem extends BasicIdMetadata<unknown>, C extends ActionContext>(
+  function resolve<TItem extends BasicIdMetadata<unknown>, C extends ActionContext<TItem>>(
     definitions: ActionDefinitionBase<TItem, C>[],
     context: C,
     auth: ActionAuth,
@@ -213,31 +233,22 @@ export function useActionResolver(): ActionResolver {
   }
 }
 
-/** 建"工具栏 / 批量"的动作上下文：数据与选中由壳给，`message`/`modal` 也由壳注入 */
+/** 建"工具栏 / 批量"的动作上下文：数据与选中由形态组件给，`app` 也由它注入 */
 export function buildToolbarActionContext<TItem extends BasicIdMetadata<unknown>>(options: {
   items: TItem[]
   selectedItems?: TItem[]
   query?: FilterRequest | PageRequest
-  app: ActionAppApis
+  app: ActionAppApis<TItem>
 }): ToolbarActionContext<TItem> {
   const {items, selectedItems, query, app} = options
-  return {
-    items,
-    selectedItems: selectedItems ?? [],
-    query,
-    message: app.message,
-    modal: app.modal,
-  }
+  return {app, items, selectedItems: selectedItems ?? [], query}
 }
 
-/** 建"行内 / 项内"的动作上下文：只有当前记录 + 壳注入的 `message`/`modal` */
+/** 建"行内 / 项内"的动作上下文：只有当前记录 + 组件注入的 `app` */
 export function buildRecordActionContext<TItem extends BasicIdMetadata<unknown>>(options: {
   record: TItem
-  app: ActionAppApis
+  app: ActionAppApis<TItem>
 }): RecordActionContext<TItem> {
-  return {
-    record: options.record,
-    message: options.app.message,
-    modal: options.app.modal,
-  }
+  const {record, app} = options
+  return {app, record}
 }

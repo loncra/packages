@@ -42,14 +42,7 @@ export { default as FileEditor } from './file-editor'
 export type { FileEditorProps, FileEditorSlots } from './file-editor'
 
 export {default as CrudConfigProvider, useActionAuth, useCrudConfig} from './crud-config-provider'
-export type {
-  ActionAuth,
-  CrudConfig,
-  CrudConfigProviderProps,
-  CrudConfigProviderSlots,
-  CrudNavigateKind,
-  CrudNavigateTarget,
-} from './crud-config-provider'
+export type {CrudConfig, CrudConfigProviderProps, CrudConfigProviderSlots} from './crud-config-provider'
 
 export {default as ClientProvider, useClient, CLIENT_CONFIG_KEY} from './client-provider'
 export type {ClientProviderProps, ClientProviderSlots} from './client-provider'
@@ -78,9 +71,11 @@ export {
 } from './_util/crud/actions'
 export type {
   ActionAppApis,
+  ActionAuth,
   ActionContext,
   ActionDefinitionBase,
   ActionResolver,
+  AuthorityProps,
   RecordActionContext,
   RecordActionDefinition,
   RecordActionPayload,
@@ -103,7 +98,13 @@ export {
   syncPaginationFromFindResult,
   syncPaginationFromPageResult,
 } from './_util/crud/useCollectionData'
-export type {CollectionPagination, CollectionService} from './_util/crud/useCollectionData'
+export type {CollectionExpose} from './_util/crud/collectionExpose'
+export type {CrudNavigateKind, CrudNavigateTarget} from './_util/crud/navigate'
+export type {
+  CollectionPagination,
+  CollectionService,
+  DefaultCrudEntity,
+} from './_util/crud/useCollectionData'
 export {isDragEnabled, useDrag} from './_util/crud/useDrag'
 export type {DragPreviewContent, DragProp, UseDragOptions, UseDragReturn} from './_util/crud/useDrag'
 export {reorderFlatList, useFlatDragDrop} from './_util/crud/useFlatDragDrop'
@@ -129,14 +130,14 @@ export type {
   BasicCrudQueryProps,
   BasicCrudQuerySelectedKey,
   BasicCrudQuerySlots,
+  EnumBucketRequest,
+  EnumRef,
+  PageDicts,
+  QueryCollectionProps,
 } from './basic-crud-query'
 export {default as QueryTable} from './query-table'
 export type {
-  AuthorityProps,
   ColumnSearchConfig,
-  CollectionExpose,
-  DefaultCrudEntity,
-  QueryCollectionProps,
   QueryTableConstructor,
   QueryTableEmits,
   QueryTableProps,
@@ -144,24 +145,20 @@ export type {
   SearchableColumnType,
 } from './query-table'
 export {default as CrudTable} from './crud-table'
-export type {CrudTableConstructor, CrudTableEmits, CrudTableProps, CrudTableSlots} from './crud-table'
+export type {CrudTableConstructor, CrudTableProps} from './crud-table'
 export {default as QueryCardGrid} from './query-card-grid'
 export type {
   CardGridDragDirection,
   CardGridDragProp,
-  CardGridPagination,
-  CrudCardGridConstructor,
-  CrudCardGridEmits,
   QueryCardGridConstructor,
   QueryCardGridEmits,
   QueryCardGridItemActionsSlot,
   QueryCardGridItemSlot,
   QueryCardGridProps,
   QueryCardGridSlots,
-  CrudCardGridSlots,
 } from './query-card-grid'
 export {default as CrudCardGrid} from './crud-card-grid'
-export type {CrudCardGridProps} from './query-card-grid'
+export type {CrudCardGridConstructor, CrudCardGridProps} from './crud-card-grid'
 
 export {
   CrudHomePage,
@@ -175,12 +172,9 @@ export type {
   CrudListPage,
   CrudPageCore,
   CrudPageRoutes,
-  EnumBucketRequest,
-  EnumRef,
   FieldComponentSpec,
   FormatContext,
   ListPageContext,
-  PageDicts,
   PageFieldComponent,
   PageFieldsDictionary,
   PageFieldSpec,

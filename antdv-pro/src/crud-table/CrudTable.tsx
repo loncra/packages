@@ -9,24 +9,21 @@ import {
 } from 'vue'
 import type {TableProps} from 'antdv-next'
 import {type FilterRequest, type PageRequest} from '@loncra/client/commons'
-import type {RecordActionDefinition, ToolbarActionDefinition} from '../_util/crud/actions'
-import {DEFAULT_COLLECTION_PAGINATION} from '../_util/crud/useCollectionData'
-import QueryTable from '../query-table/QueryTable'
-import type {EnumBucketsResponseBody} from '@loncra/client/resource'
-import type {PageDicts} from '../basic-crud-query'
 import type {
   AuthorityProps,
-  CollectionExpose,
-  DefaultCrudEntity,
-  RefreshOnActivate,
-  SearchableColumnType,
-} from '../query-table/types'
-import type {
-  CrudTableConstructor,
-  CrudTableEmits,
-  CrudTableProps,
-  CrudTableSlots,
-} from './types'
+  RecordActionDefinition,
+  ToolbarActionDefinition,
+} from '../_util/crud/actions'
+import type {CollectionExpose} from '../_util/crud/collectionExpose'
+import {
+  DEFAULT_COLLECTION_PAGINATION,
+  type DefaultCrudEntity,
+} from '../_util/crud/useCollectionData'
+import QueryTable from '../query-table/QueryTable'
+import type {EnumBucketsResponseBody} from '@loncra/client/resource'
+import type {PageDicts, RefreshOnActivate} from '../basic-crud-query'
+import type {QueryTableSlots, SearchableColumnType} from '../query-table/types'
+import type {CrudTableConstructor, CrudTableProps} from './types'
 
 const CRUD_TABLE_EMITS = [
   'update:dataSource',
@@ -96,7 +93,7 @@ const CrudTable = defineComponent({
     selectedRows: {type: Array as PropType<DefaultCrudEntity[]>, default: () => []},
   },
   emits: [...CRUD_TABLE_EMITS],
-  slots: Object as SlotsType<CrudTableSlots<DefaultCrudEntity>>,
+  slots: Object as SlotsType<QueryTableSlots<DefaultCrudEntity>>,
   setup(props, {attrs, emit, expose, slots}) {
     type TEntity = DefaultCrudEntity
     type TId = string | number
@@ -190,4 +187,4 @@ const CrudTable = defineComponent({
 }) as unknown as CrudTableConstructor
 
 export default CrudTable
-export type {CrudTableConstructor, CrudTableEmits, CrudTableProps}
+export type {CrudTableConstructor, CrudTableProps}

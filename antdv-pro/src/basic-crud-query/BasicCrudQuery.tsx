@@ -29,18 +29,19 @@ import {
   createDefaultItemActions,
   createDefaultToolbarActions,
 } from '../_util/crud/defaultActions'
+import type {CollectionExpose} from '../_util/crud/collectionExpose'
 import {
   DEFAULT_COLLECTION_PAGINATION,
+  type DefaultCrudEntity,
   fetchCollectionData,
   patchQuery,
 } from '../_util/crud/useCollectionData'
 import {useCrudDelete} from '../_util/crud/useCrudDelete'
 import DataLoadingCardPlan from '../data-loading-card-plan'
-import type {CardGridPagination} from '../query-card-grid/types'
-import type {DefaultCrudEntity} from '../query-table/types'
 import ActionButton from '../action-button'
 import type {EnumBucketsResponseBody} from '@loncra/client/resource'
-import {fetchDataDicts, fetchEnumBuckets, type EnumBucketRequest, type PageDicts} from './dictionaries'
+import {fetchDataDicts, fetchEnumBuckets} from './dictionaries'
+import type {EnumBucketRequest, PageDicts} from './types'
 import useStyle from './style'
 import type {
   BasicCrudQueryConstructor,
@@ -85,7 +86,7 @@ const BasicCrudQuery = defineComponent({
     loading: {type: Boolean, default: false},
     query: {type: Object as PropType<FilterRequest | PageRequest>, default: () => ({})},
     pagination: {
-      type: [Object, Boolean] as PropType<TableProps['pagination'] | CardGridPagination>,
+      type: [Object, Boolean] as PropType<TableProps['pagination']>,
       default: () => ({...DEFAULT_COLLECTION_PAGINATION}),
     },
     selectedRows: {type: Array as PropType<DefaultCrudEntity[]>, default: () => []},
@@ -132,9 +133,7 @@ const BasicCrudQuery = defineComponent({
     const dataSource = useModel(props, 'dataSource') as unknown as Ref<TEntity[]>
     const loading = useModel(props, 'loading') as unknown as Ref<boolean>
     const query = useModel(props, 'query') as unknown as Ref<FilterRequest | PageRequest>
-    const pagination = useModel(props, 'pagination') as unknown as Ref<
-      TableProps['pagination'] | CardGridPagination
-    >
+    const pagination = useModel(props, 'pagination') as unknown as Ref<TableProps['pagination']>
     const selected = useModel(props, props.selectedKey) as unknown as Ref<TEntity[]>
     const buckets = useModel(props, 'buckets') as unknown as Ref<EnumBucketsResponseBody>
     const dicts = useModel(props, 'dicts') as unknown as Ref<PageDicts>
@@ -189,16 +188,6 @@ const BasicCrudQuery = defineComponent({
       return fetchDataSource()
     }
 
-    // ── 动作：默认定义 + 声明合并，解析一次
-    const actionContext = computed<ToolbarActionContext<TEntity>>(() =>
-      buildToolbarActionContext({
-        items: dataSource.value,
-        selectedItems: selected.value,
-        query: query.value,
-        app: {message, modal},
-      }),
-    )
-
     const {remove} = useCrudDelete<TBody, TEntity, TId>({
       service: props.service,
       locale: () => locale.value,
@@ -208,6 +197,19 @@ const BasicCrudQuery = defineComponent({
       onDeleted: (records) => emit('deleted', records),
       refresh: () => fetchDataSource(),
     })
+
+    // 本组件就是集合的宿主：这份能力既 expose 给外层，也注入动作上下文（一处定义、两处共用）
+    const collection: CollectionExpose<TEntity> = {fetchDataSource, remove}
+
+    // ── 动作：默认定义 + 声明合并，解析一次
+    const actionContext = computed<ToolbarActionContext<TEntity>>(() =>
+      buildToolbarActionContext({
+        items: dataSource.value,
+        selectedItems: selected.value,
+        query: query.value,
+        app: {message, modal, collection},
+      }),
+    )
 
     /** 工具栏定义：默认 `add` + `deleteSelected` + 声明的；`toolbarActions === false` 整排都不要 */
     const titleDefinitions = computed(() => {
@@ -259,7 +261,7 @@ const BasicCrudQuery = defineComponent({
     )
 
     function recordContext(record: TEntity) {
-      return buildRecordActionContext({record, app: {message, modal}})
+      return buildRecordActionContext({record, app: {message, modal, collection}})
     }
 
     const resolveRecordActions = (record: TEntity) =>
@@ -279,9 +281,7 @@ const BasicCrudQuery = defineComponent({
     )
 
     expose<BasicCrudQueryExpose<TEntity, TId>>({
-      fetchDataSource,
-      remove,
-      actionContext,
+      ...collection,
       resolveRecordActions,
       onRecordAction,
       hasRecordActions,

@@ -19,22 +19,29 @@ import {type FilterRequest, type PageRequest, SYSTEM_CONSTANT} from '@loncra/cli
 import {useLocale} from '../_util/useLocale'
 import BasicCrudQuery from '../basic-crud-query'
 import type {EnumBucketsResponseBody} from '@loncra/client/resource'
-import type {BasicCrudQueryExpose, EnumBucketRequest, PageDicts} from '../basic-crud-query'
-import {DEFAULT_COLLECTION_PAGINATION, patchQuery} from '../_util/crud/useCollectionData'
+import type {AuthorityProps} from '../_util/crud/actions'
+import type {CollectionExpose} from '../_util/crud/collectionExpose'
+import type {
+  BasicCrudQueryExpose,
+  EnumBucketRequest,
+  PageDicts,
+  RefreshOnActivate,
+} from '../basic-crud-query'
+import {
+  DEFAULT_COLLECTION_PAGINATION,
+  type DefaultCrudEntity,
+  patchQuery,
+} from '../_util/crud/useCollectionData'
 import {useMergeRowSelection} from '../_util/crud/useMergeRowSelection'
 import {isDragEnabled} from '../_util/crud/useDrag'
 import {useTableRowDrag} from '../_util/crud/useTableRowDrag'
 import ActionButton from '../action-button'
 import useStyle from './style'
 import type {
-  AuthorityProps,
-  CollectionExpose,
-  DefaultCrudEntity,
   QueryTableConstructor,
   QueryTableEmits,
   QueryTableProps,
   QueryTableSlots,
-  RefreshOnActivate,
   SearchableColumnType,
 } from './types'
 
@@ -54,6 +61,23 @@ const QUERY_TABLE_EMITS = [
   'drop',
   'treeDrop',
 ] as const
+
+/**
+ * 列的 `key` → 后端 `filter_[]` 要的**表字段名**：只把**第一段**做 camelCase → snake_case。
+ *
+ * 两边的命名规则不同，必须映射：
+ * - 列 `key` = **实体字段名**（`readPath` 按它取值、`renderCell` 按它匹配声明）⇒ 不能改；
+ * - 后端 `filter_[<字段>_<wildcard>]` 的顶层字段 = **表字段名**（名字原样进 MyBatis-Plus 的
+ *   `QueryWrapper`，没有驼峰归一化；后端自己的 filter 也都是 `phone_number_nen` 这种写法）
+ *   ⇒ 多词字段必须写成 `auth_mode` / `real_name`。
+ *
+ * 点后面的路径段**不转**：后端嵌套段走的是实体 / JSON 属性（如 `attachment_list.bucketName`），
+ * 本来就是 camelCase。已经有显式 `queryName` 的列不走这里。
+ */
+function toTableFieldName(key: string): string {
+  const [head = '', ...rest] = key.split('.')
+  return [head.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toLowerCase(), ...rest].join('.')
+}
 
 /**
  * 表格：**只画表格**（列、筛选、拖拽列、空壳筛选下拉、槽）。
@@ -292,7 +316,7 @@ const QueryTable = defineComponent({
         }
         optionsCol.filterDropdown = () => null
         if (!optionsCol.search.queryName) {
-          optionsCol.search.queryName = `filter_[${String(col.key)}_${optionsCol.search.expression || 'eq'}]`
+          optionsCol.search.queryName = `filter_[${toTableFieldName(String(col.key))}_${optionsCol.search.expression || 'eq'}]`
         }
         const queryName = optionsCol.search.queryName
         if (

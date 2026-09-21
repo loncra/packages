@@ -21,6 +21,9 @@ export interface CollectionPageState {
 
 export type CollectionPagination = false | CollectionPageState
 
+/** 未指定业务实体时的回退：只保证有 id，对标 commons `BasicIdMetadata` */
+export type DefaultCrudEntity = BasicIdMetadata<string | number>
+
 /** 统一默认分页：表格 / 卡片 / 基类三处 `pagination` 的默认值（单页隐藏 + 居中） */
 export const DEFAULT_COLLECTION_PAGINATION = {hideOnSinglePage: true, align: 'center'} as const
 

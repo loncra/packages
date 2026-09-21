@@ -6,12 +6,16 @@ import type {
   ScrollPageResult,
   SYSTEM_CONSTANT,
 } from '@loncra/client/commons'
-import type {RecordActionDefinition, ToolbarActionDefinition} from '../_util/crud/actions'
+import type {
+  AuthorityProps,
+  RecordActionDefinition,
+  ToolbarActionDefinition,
+} from '../_util/crud/actions'
 import type {CollectionService} from '../_util/crud/useCollectionData'
 import type {DragProp} from '../_util/crud/useDrag'
-import type {CrudNavigateTarget} from '../crud-config-provider/types'
-import type {AuthorityProps, ColumnSearchConfig, SearchableColumnType} from '../query-table/types'
-import type {EnumBucketRequest, EnumRef, PageDicts} from '../basic-crud-query/dictionaries'
+import type {CrudNavigateTarget} from '../_util/crud/navigate'
+import type {ColumnSearchConfig, SearchableColumnType} from '../query-table/types'
+import type {EnumBucketRequest, EnumRef, PageDicts} from '../basic-crud-query/types'
 import type {EnumBucketsResponseBody} from '@loncra/client/resource'
 
 // #region 声明：核心（三种形态共用）
@@ -86,12 +90,6 @@ export type PageFieldComponent = BuiltinKey<
 >
 
 /**
- * 枚举桶 / 数据字典的类型。**实现与加载都在 `basic-crud-query/dictionaries.ts`**（基类挂载时拉），
- * 这里只 re-export，保住声明层一直在用的公开名。
- */
-export type {EnumBucketRequest, EnumRef, PageDicts} from '../basic-crud-query/dictionaries'
-
-/**
  * 声明里的函数拿到的上下文。故意很小：**没有 router / i18n / 弹层**——
  * 那些是宿主环境，声明文件本身是宿主代码，要用就直接 import。
  */
@@ -130,7 +128,12 @@ export interface PageSearchConfig extends Omit<ColumnSearchConfig, 'component' |
 /** 列表列 */
 export interface PageListColumn<TEntity> {
   /**
-   * 列标识。**优先写实体字段名**（label 兜底用它、搜索默认按它拼 `filter_[key_expression]`）。
+   * 列标识。**优先写实体字段名**（label 兜底用它；搜索项没给 `queryName` 时也按它拼查询名）。
+   *
+   * 拼查询名会把**第一段**从实体字段名转成**表字段名**（`realName` → `filter_[real_name_like]`）：
+   * 后端 `filter_[]` 的顶层字段要的是表字段，而列 `key` 必须是实体字段名（`readPath` 按它取值）。
+   * 点后面的路径段不转（后端嵌套段就是 camelCase）；要跟表字段不一致就写显式 `queryName`。
+   *
    * 两种例外：
    * ① **路径**：写 `a.b.c`（数据不在顶层字段时，如 `data.details.x`），pro 按路径取值（见 `readPath`）；
    * ② **虚拟列名**：数据根本不在实体上，随便起，但必须自带 `labelKey`，搜索要写显式 `queryName`。
@@ -263,6 +266,11 @@ export interface CrudHomePageExpose<TEntity> {
   fetchDataSource: () => Promise<void | undefined> | undefined
   clearDataSource: () => void
   dataSource: {value: TEntity[]}
+  /**
+   * 页面声明里 `list.enums` 加载回来的枚举桶：壳里的弹层 / 条件判断要用同一份
+   * （声明已经拉了，别在壳里再发一次同样的请求）。
+   */
+  buckets: {value: EnumBucketsResponseBody}
 }
 
 export interface CrudHomePageSlots<TEntity extends object> {

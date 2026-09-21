@@ -1,5 +1,6 @@
 import {computed, type ComputedRef, inject, type Ref, unref} from 'vue'
-import {type ActionAuth, CRUD_CONFIG_KEY, type CrudConfig} from './types'
+import type {ActionAuth} from '../_util/crud/actions'
+import {CRUD_CONFIG_KEY, type CrudConfig} from './types'
 
 const EMPTY_CONFIG: CrudConfig = {}
 

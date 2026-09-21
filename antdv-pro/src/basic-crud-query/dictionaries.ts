@@ -1,25 +1,10 @@
 import type {RestResult} from '@loncra/client/commons'
 import {
   ResourceServerService,
-  type DataDictionaryMetadata,
   type EnumBucketsRequestBody,
   type EnumBucketsResponseBody,
 } from '@loncra/client/resource'
-
-/** 一个枚举桶的定位：模块 + 枚举 id（声明里的 `enumRef` 用它） */
-export interface EnumRef {
-  module: string
-  id: string
-}
-
-/** 要加载的一组枚举桶：模块 + 该模块下的枚举 id 列表（对应后端 `EnumBucketsRequestBody` 的一项） */
-export interface EnumBucketRequest {
-  module: string
-  ids: string[]
-}
-
-/** 数据字典：字典 code → 字典项（client 的原样类型，含 code/name/valueType/metadata/children） */
-export type PageDicts = Record<string, DataDictionaryMetadata[]>
+import type {EnumBucketRequest, PageDicts} from './types'
 
 /** 去重 + 丢掉空值（声明里的 id/code 常是宿主常量和 undefined 混着写） */
 function compact(values?: (string | undefined)[]) {

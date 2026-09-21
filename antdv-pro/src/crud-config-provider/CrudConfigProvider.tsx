@@ -1,6 +1,7 @@
 import {computed, defineComponent, type PropType, provide, type VNodeChild} from 'vue'
 import type {FieldComponentSpec, ValueFormatter} from '../crud-page/types'
-import {CRUD_CONFIG_KEY, type CrudConfig, type CrudNavigateTarget} from './types'
+import type {CrudNavigateTarget} from '../_util/crud/navigate'
+import {CRUD_CONFIG_KEY, type CrudConfig} from './types'
 
 export interface CrudConfigProviderProps extends CrudConfig {}
 

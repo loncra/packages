@@ -1,21 +1,17 @@
 import {defineComponent, type PropType, type Ref, ref, type SlotsType, useModel} from 'vue'
+import type {TableProps} from 'antdv-next'
 import type {FilterRequest, PageRequest} from '@loncra/client/commons'
 import QueryCardGrid from '../query-card-grid/QueryCardGrid'
+import type {AuthorityProps} from '../_util/crud/actions'
+import type {CollectionExpose} from '../_util/crud/collectionExpose'
+import type {DefaultCrudEntity} from '../_util/crud/useCollectionData'
+import type {RefreshOnActivate} from '../basic-crud-query/types'
 import type {
-  AuthorityProps,
-  CollectionExpose,
-  DefaultCrudEntity,
-  RefreshOnActivate,
-} from '../query-table/types'
-import type {
-  CardGridPagination,
-  CrudCardGridConstructor,
-  CrudCardGridEmits,
-  CrudCardGridProps,
-  CrudCardGridSlots,
   QueryCardGridItemActionsSlot,
   QueryCardGridItemSlot,
+  QueryCardGridSlots,
 } from '../query-card-grid/types'
+import type {CrudCardGridConstructor, CrudCardGridProps} from './types'
 
 const CRUD_CARD_GRID_EMITS = [
   'update:dataSource',
@@ -61,7 +57,7 @@ const CrudCardGrid = defineComponent({
     selectable: {type: Boolean, default: true},
     rowKey: [String, Function] as PropType<CrudCardGridProps['rowKey']>,
     pagination: {
-      type: [Object, Boolean] as PropType<CardGridPagination>,
+      type: [Object, Boolean] as PropType<TableProps['pagination']>,
       default: () => ({hideOnSinglePage: true}),
     },
     prefixCls: String,
@@ -75,7 +71,7 @@ const CrudCardGrid = defineComponent({
     selectedItems: {type: Array as PropType<DefaultCrudEntity[]>, default: () => []},
   },
   emits: [...CRUD_CARD_GRID_EMITS],
-  slots: Object as SlotsType<CrudCardGridSlots<DefaultCrudEntity>>,
+  slots: Object as SlotsType<QueryCardGridSlots<DefaultCrudEntity>>,
   setup(props, {attrs, emit, expose, slots}) {
     type TEntity = DefaultCrudEntity
     type TId = string | number
@@ -86,7 +82,7 @@ const CrudCardGrid = defineComponent({
     const selectedItems = useModel(props, 'selectedItems') as unknown as Ref<TEntity[]>
     const dataSource = useModel(props, 'dataSource') as unknown as Ref<TEntity[]>
     const query = useModel(props, 'query') as unknown as Ref<FilterRequest | PageRequest>
-    const pagination = useModel(props, 'pagination') as unknown as Ref<CardGridPagination>
+    const pagination = useModel(props, 'pagination') as unknown as Ref<TableProps['pagination']>
 
     expose<CollectionExpose<TEntity>>({
       fetchDataSource: async () => grid.value?.fetchDataSource(),
@@ -154,4 +150,4 @@ const CrudCardGrid = defineComponent({
 }) as unknown as CrudCardGridConstructor
 
 export default CrudCardGrid
-export type {CrudCardGridConstructor, CrudCardGridEmits, CrudCardGridProps}
+export type {CrudCardGridConstructor, CrudCardGridProps}

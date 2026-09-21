@@ -15,11 +15,11 @@ import type {
   RecordActionPayload,
   ToolbarActionPayload,
 } from '../_util/crud/actions'
-import type {EnumBucketRequest, PageDicts} from '../basic-crud-query/dictionaries'
-import type {CollectionExpose} from '../query-table/types'
+import type {EnumBucketRequest, PageDicts} from '../basic-crud-query/types'
+import type {CollectionExpose} from '../_util/crud/collectionExpose'
 import type {EnumBucketsResponseBody} from '@loncra/client/resource'
+import type {QueryCollectionProps} from '../basic-crud-query/types'
 import type {
-  QueryCollectionProps,
   QueryTableEmits,
   QueryTableSlots,
   SearchableColumnType,
@@ -54,13 +54,6 @@ export interface CrudTableProps<
   dicts?: PageDicts
 }
 
-export type CrudTableEmits<
-  TEntity extends BasicIdMetadata<TId>,
-  TId = TEntity[typeof SYSTEM_CONSTANT.ID_NAME],
-> = QueryTableEmits<TEntity, TId>
-
-export interface CrudTableSlots<TEntity extends object> extends QueryTableSlots<TEntity> {}
-
 export type CrudTableConstructor = new <
   TBody extends BasicIdMetadata<TId>,
   TEntity extends TBody,
@@ -68,13 +61,13 @@ export type CrudTableConstructor = new <
   TId = TEntity[typeof SYSTEM_CONSTANT.ID_NAME],
 >(
   props: CrudTableProps<TId, TBody, TEntity, TPage> &
-    EmitsToProps<CrudTableEmits<TEntity, TId>> &
+    EmitsToProps<QueryTableEmits<TEntity, TId>> &
     PublicProps,
 ) => {
   $props: CrudTableProps<TId, TBody, TEntity, TPage> &
-    EmitsToProps<CrudTableEmits<TEntity, TId>> &
+    EmitsToProps<QueryTableEmits<TEntity, TId>> &
     PublicProps
-  $slots: CrudTableSlots<TEntity>
+  $slots: QueryTableSlots<TEntity>
 } & CollectionExpose<TEntity>
 
 export type {

@@ -1,4 +1,5 @@
 import type {EmitsToProps, PublicProps} from 'vue'
+import type {TableProps} from 'antdv-next'
 import type {
   BasicIdMetadata,
   FilterRequest,
@@ -14,11 +15,9 @@ import type {
   ToolbarActionDefinition,
   ToolbarActionPayload,
 } from '../_util/crud/actions'
-import type {CollectionPageState} from '../_util/crud/useCollectionData'
+import type {CollectionExpose} from '../_util/crud/collectionExpose'
 import type {DragProp} from '../_util/crud/useDrag'
-import type {CollectionExpose, QueryCollectionProps} from '../query-table/types'
-
-export type CardGridPagination = false | (CollectionPageState & Record<string, unknown>)
+import type {QueryCollectionProps} from '../basic-crud-query/types'
 
 /** 卡片拖拽方向；不写就是横向 */
 export type CardGridDragDirection = 'horizontal' | 'vertical'
@@ -47,7 +46,8 @@ export interface QueryCardGridProps<
   toolbarActions?: ToolbarActionDefinition<TEntity>[] | false
   /** 项内动作（转给基类）：数组 = 与默认 `edit` / `detail` / `delete` 合并；`false` = 不要 */
   recordActions?: RecordActionDefinition<TEntity>[] | false
-  pagination?: CardGridPagination
+  /** 分页：与表格同一个类型（都由基类渲染那一个 `a-pagination`） */
+  pagination?: TableProps['pagination']
   /** 拖拽开关 + 幽灵内容（同表格）；要给方向就写对象形态，`direction` 才生效 */
   drag?: CardGridDragProp<TEntity>
   gridColumns?: number
@@ -63,7 +63,7 @@ export type QueryCardGridEmits<
   'update:loading': [value: boolean]
   'update:query': [value: FilterRequest | PageRequest]
   'update:selectedItems': [value: TEntity[]]
-  'update:pagination': [value: CardGridPagination]
+  'update:pagination': [value: TableProps['pagination']]
   action: [payload: ToolbarActionPayload<TEntity> | RecordActionPayload<TEntity>]
   add: []
   edit: [record: TEntity]
@@ -93,28 +93,6 @@ export interface QueryCardGridSlots<TEntity> {
   itemActions?: (slot: QueryCardGridItemActionsSlot<TEntity>) => unknown
 }
 
-/** 门面（旧入口）props：对外名不变，内部映射成内容层的名字 */
-export interface CrudCardGridProps<
-  TId = string | number,
-  TBody extends BasicIdMetadata<TId> = BasicIdMetadata<TId>,
-  TEntity extends TBody = TBody,
-  TPage extends ScrollPageResult<TEntity> = ScrollPageResult<TEntity>,
-> extends Omit<QueryCardGridProps<TId, TBody, TEntity, TPage>, 'toolbarActions' | 'recordActions'> {
-  /** 标题右侧的工具栏动作（旧名 → 内容层 `toolbarActions`；`false` = 整排不出） */
-  actions?: ToolbarActionDefinition<TEntity>[] | false
-  /** 项内动作定义（旧名 → 内容层 `recordActions`） */
-  itemActions?: RecordActionDefinition<TEntity>[]
-  /** 是否要项内动作（旧的是开关：`false` = 不要） */
-  recordActions?: boolean
-}
-
-export type CrudCardGridEmits<
-  TEntity extends BasicIdMetadata<TId>,
-  TId = TEntity[typeof SYSTEM_CONSTANT.ID_NAME],
-> = QueryCardGridEmits<TEntity, TId>
-
-export type CrudCardGridSlots<TEntity> = QueryCardGridSlots<TEntity>
-
 export type QueryCardGridConstructor = new <
   TBody extends BasicIdMetadata<TId>,
   TEntity extends TBody,
@@ -129,20 +107,4 @@ export type QueryCardGridConstructor = new <
     EmitsToProps<QueryCardGridEmits<TEntity, TId>> &
     PublicProps
   $slots: QueryCardGridSlots<TEntity>
-} & CollectionExpose<TEntity>
-
-export type CrudCardGridConstructor = new <
-  TBody extends BasicIdMetadata<TId>,
-  TEntity extends TBody,
-  TPage extends ScrollPageResult<TEntity>,
-  TId = TEntity[typeof SYSTEM_CONSTANT.ID_NAME],
->(
-  props: CrudCardGridProps<TId, TBody, TEntity, TPage> &
-    EmitsToProps<CrudCardGridEmits<TEntity, TId>> &
-    PublicProps,
-) => {
-  $props: CrudCardGridProps<TId, TBody, TEntity, TPage> &
-    EmitsToProps<CrudCardGridEmits<TEntity, TId>> &
-    PublicProps
-  $slots: CrudCardGridSlots<TEntity>
 } & CollectionExpose<TEntity>

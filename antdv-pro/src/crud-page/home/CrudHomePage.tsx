@@ -1,19 +1,20 @@
 import {computed, defineComponent, type PropType, type Ref, ref, type SlotsType} from 'vue'
 import type {EnumBucketsResponseBody} from '@loncra/client/resource'
 import {useCrudConfig} from '../../crud-config-provider'
-import type {CrudNavigateKind} from '../../crud-config-provider/types'
+import type {CrudNavigateKind} from '../../_util/crud/navigate'
 import CrudTable from '../../crud-table/CrudTable'
-import type {CollectionExpose} from '../../query-table/types'
-import type {DefaultCrudEntity, SearchableColumnType} from '../../query-table/types'
+import type {CollectionExpose} from '../../_util/crud/collectionExpose'
+import type {DefaultCrudEntity} from '../../_util/crud/useCollectionData'
+import type {SearchableColumnType} from '../../query-table/types'
 import {usePageRegistry} from '../registry'
 import {buildListColumns, renderCell, toCellVNode} from './columns'
+import type {PageDicts} from '../../basic-crud-query/types'
 import type {
   CrudHomePageConstructor,
   CrudHomePageExpose,
   CrudHomePageProps,
   CrudHomePageSlots,
   ListPageContext,
-  PageDicts,
   PageListEntry,
 } from '../types'
 
@@ -126,6 +127,7 @@ const CrudHomePage = defineComponent({
         dataSource.value = []
       },
       dataSource,
+      buckets,
     })
 
     return () => {

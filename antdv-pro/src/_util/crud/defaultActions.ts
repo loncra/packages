@@ -1,11 +1,11 @@
 import {h} from 'vue'
 import {DeleteOutlined, EditOutlined, FileAddOutlined, FileSearchOutlined,} from '@antdv-next/icons'
 import type {BasicIdMetadata} from '@loncra/client/commons'
-import type {AuthorityProps} from '../../query-table/types'
 import type {CrudLocale} from '../../locale'
 import {withCount} from '../format'
 import {
   BUILTIN_ACTION_ID,
+  type AuthorityProps,
   type RecordActionDefinition,
   type ToolbarActionContext,
   type ToolbarActionDefinition,

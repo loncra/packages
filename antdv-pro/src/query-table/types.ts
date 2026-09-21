@@ -11,18 +11,20 @@ import {
   type TreeSortMetadata,
 } from '@loncra/client/commons'
 import type {
+  AuthorityProps,
   RecordActionDefinition,
   RecordActionPayload,
   ToolbarActionDefinition,
   ToolbarActionPayload,
 } from '../_util/crud/actions'
-import type {CollectionPagination, CollectionService} from '../_util/crud/useCollectionData'
+import type {CollectionExpose} from '../_util/crud/collectionExpose'
+import type {
+  CollectionService,
+  DefaultCrudEntity,
+} from '../_util/crud/useCollectionData'
 import type {DragPreviewContent, DragProp} from '../_util/crud/useDrag'
-import type {EnumBucketRequest, PageDicts} from '../basic-crud-query/dictionaries'
+import type {EnumBucketRequest, PageDicts, RefreshOnActivate} from '../basic-crud-query/types'
 import type {EnumBucketsResponseBody} from '@loncra/client/resource'
-
-/** 未指定业务实体时的回退：只保证有 id，对标 commons BasicIdMetadata */
-export type DefaultCrudEntity = BasicIdMetadata<string | number>
 
 export interface ColumnSearchConfig {
   component?: Component
@@ -36,49 +38,6 @@ export type SearchableColumnType<RecordType extends object = DefaultCrudEntity> 
   ColumnType<RecordType> & {
     search?: ColumnSearchConfig
   }
-
-export interface AuthorityProps {
-  add?: string | boolean
-  edit?: string | boolean
-  detail?: string | boolean
-  delete?: string | boolean
-}
-
-/**
- * 被 KeepAlive 缓存的实例从缓存切回（onActivated）时如何刷新数据。
- * - `true`（默认）：自动重新取数
- * - `false`：切回不刷新
- * - 函数：完全交给调用方决定（组件不再自动取数），需要的数据请自行通过 v-model 绑定获取
- */
-export type RefreshOnActivate = boolean | (() => void | Promise<void>)
-
-export interface QueryCollectionProps<
-  TBody extends BasicIdMetadata<TId>,
-  TEntity extends TBody,
-  TPage extends ScrollPageResult<TEntity>,
-  TId = TEntity[typeof SYSTEM_CONSTANT.ID_NAME],
-> {
-  service: CollectionService<TBody, TEntity, TPage, TId>
-  immediate?: boolean
-  refreshOnActivate?: RefreshOnActivate
-  /** 卡片头，与 `DataLoadingCardPlan` 同形：`VNode` 直接用、`false` 不要卡片头、不给走默认标题 */
-  title?: VNode | boolean
-  hasPermission?: (permission: string) => boolean
-  authority?: AuthorityProps
-  actions?: ToolbarActionDefinition<TEntity>[]
-  /**
-   * 拖拽开关 + 幽灵内容（一个口两件事）：`true` = 可拖（幽灵缺省是主键）；
-   * `(record) => 内容` = 可拖且它就是幽灵；`false` / 不给 = 不可拖。
-   */
-  drag?: DragProp<TEntity>
-  prefixCls?: string
-  rootClass?: string
-  dataSource?: TEntity[]
-  loading?: boolean
-  query?: FilterRequest | PageRequest
-  /** 主键字段名（或 antd 的取键函数）；缺省用 `SYSTEM_CONSTANT.ID_NAME`。表与卡片网格共用 */
-  rowKey?: TableProps['rowKey']
-}
 
 /**
  * **内容层** props：表格自己画什么。
@@ -167,15 +126,6 @@ export interface QueryTableSlots<TEntity extends object> {
 }
 
 /**
- * 集合类组件的对外能力：**表格 / 卡片网格 / 两道门面共用这一份**（重取数 + 删除）。
- * 定义只在这里，各层不再各写一份同形接口。
- */
-export interface CollectionExpose<TEntity extends object> {
-  fetchDataSource: () => Promise<void | undefined>
-  remove: (records: TEntity[]) => void
-}
-
-/**
  * Vue 3.5 的 defineComponent 函数重载接不住泛型 setup。
  * 实现用对象形 defineComponent，导出时断言成这个 constructor，调用方才能带实体泛型使用。
  */
@@ -194,5 +144,3 @@ export type QueryTableConstructor = new <
     PublicProps
   $slots: QueryTableSlots<TEntity>
 } & CollectionExpose<TEntity>
-
-export type {CollectionPagination}
