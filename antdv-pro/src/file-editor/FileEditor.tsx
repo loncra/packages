@@ -1,4 +1,4 @@
-import {computed, defineComponent, h, type PropType} from 'vue'
+import {computed, defineComponent, h, type PropType, type VNodeChild} from 'vue'
 import {
   Badge,
   Button,
@@ -31,7 +31,7 @@ import {
   ReloadOutlined,
   SaveOutlined,
 } from '@antdv-next/icons'
-import {classNames, renderIconFont} from '@loncra/antdv'
+import {classNames} from '@loncra/antdv'
 import type {ObjectItemInfo} from '@loncra/client/resource'
 import FilePaneHost from './FilePaneHost'
 import type {EditObjectItemInfo, FileEditorProps} from './types'
@@ -191,7 +191,7 @@ const FileEditor = defineComponent({
                         iconRender: (item: EditObjectItemInfo) =>
                           item.loading
                             ? h(LoadingOutlined, {class: hashed(`${prefixCls.value}-icon-spin`)})
-                            : renderIconFont(resolveIcon(item)),
+                            : resolveIcon(item),
                         labelRender: (item: EditObjectItemInfo) =>
                           state.value.currentEditItem?.id === item.id &&
                           state.value.currentEditItem.editing ? (
@@ -297,7 +297,7 @@ const FileEditor = defineComponent({
                       labelRender: ({
                         item,
                       }: {
-                        item: {key: string; label: string; iconType: string; file: ObjectItemInfo}
+                        item: {key: string; label: string; icon: VNodeChild; file: ObjectItemInfo}
                       }) => (
                         <Flex
                           align="center"
@@ -305,7 +305,7 @@ const FileEditor = defineComponent({
                           class={hashed(`${prefixCls.value}-tab-label`)}
                         >
                           <Badge dot={tabMeta[item.key]?.dirty} offset={[0, 0]}>
-                            {renderIconFont(item.iconType)}
+                            {item.icon}
                           </Badge>
                           <TypographyText
                             class={hashed(`${prefixCls.value}-grow`)}

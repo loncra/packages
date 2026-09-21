@@ -1,10 +1,9 @@
 import {computed, defineComponent, h, type Ref, useModel} from 'vue'
-import {Button, Flex, FormItem, Input, Select, Space, SpaceCompact, Table, type TableColumnType,} from 'antdv-next'
+import {Button, Flex, FormItem, Input, Select, SpaceCompact, Table, type TableColumnType,} from 'antdv-next'
 import {CheckOutlined, CloseOutlined, DeleteOutlined, EditOutlined, PlusOutlined} from '@antdv-next/icons'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import TooltipValidationFormItem from '../tooltip-validation-form-item'
 import {classNames} from '../_util/classNames'
-import {renderIconFont} from '../_util/iconFont'
 import {useLocale} from '../_util/useLocale'
 import type {KeyValueRow} from './types'
 import useStyle from './style'
@@ -17,7 +16,6 @@ export interface KeyValueTableProps {
   title?: string
   multipleValue?: boolean
   edit?: boolean
-  icon?: string
   prefixCls?: string
   class?: unknown
   rootClass?: string
@@ -30,7 +28,11 @@ export interface KeyValueTableEmits {
 }
 
 export interface KeyValueTableSlots {
-  icon?: (ctx: { type: string; class?: string }) => unknown
+  /**
+   * 标题那一坨（图标 + 标题文本）整条由宿主渲染，包不再认识宿主的图标字体。
+   * 右上角的新增按钮仍由包渲染（`edit` 控制）。
+   */
+  title?: (ctx: { title?: string }) => unknown
 }
 
 export interface KeyValueTableExpose {
@@ -58,7 +60,6 @@ const KeyValueTable = defineComponent({
       type: Boolean,
       default: true,
     },
-    icon: String,
     prefixCls: String,
     rootClass: String,
   },
@@ -103,14 +104,6 @@ const KeyValueTable = defineComponent({
       }
       return result
     })
-
-    function renderIcon(type: string, className?: string) {
-      const custom = slots.icon?.({ type, class: className })
-      if (custom) {
-        return custom
-      }
-      return renderIconFont(type, className)
-    }
 
     function addKeyValueRow() {
       model.value = [
@@ -262,19 +255,17 @@ const KeyValueTable = defineComponent({
             columns={columns.value}
             rowKey="id"
             v-slots={{
-              title: props.title
-                ? () => (
-                    <Flex justify="space-between" align="center">
-                      <Space>
-                        {props.icon ? renderIcon(props.icon, 'align') : null}
-                        {props.title}
-                      </Space>
-                      {props.edit ? (
-                        <Button size="small" onClick={addKeyValueRow}>{h(PlusOutlined)}</Button>
-                      ) : null}
-                    </Flex>
-                  )
-                : undefined,
+              title:
+                props.title || slots.title
+                  ? () => (
+                      <Flex justify="space-between" align="center">
+                        {slots.title ? slots.title({ title: props.title }) : props.title}
+                        {props.edit ? (
+                          <Button size="small" onClick={addKeyValueRow}>{h(PlusOutlined)}</Button>
+                        ) : null}
+                      </Flex>
+                    )
+                  : undefined,
               bodyCell: ({
                 index,
                 column,

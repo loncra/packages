@@ -1,7 +1,6 @@
 import {
     computed,
     defineComponent,
-    getCurrentInstance,
     h,
     type PropType,
     type Ref,
@@ -15,34 +14,17 @@ import {Sender} from '@antdv-next/x'
 import type {ActionsComponents, SenderRef, SlotConfigType} from '@antdv-next/x/dist/sender/interface'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {classNames} from '../_util/classNames'
-import {createInstructionTagSlot} from './slot'
 import type {InstructionItem, InstructionMeasure, InstructionSenderHandle} from './types'
 import {useInstructionSender} from './useInstructionSender'
 import useStyle from './style'
 
 const EMPTY_SLOT_CONFIG: SlotConfigType[] = []
 
-function defaultFilterInstruction(
-  _keyword: string,
-  dataSource: InstructionItem[],
-): InstructionItem[] {
-  return dataSource
-}
-
-function defaultInsertInstruction(
-  sender: InstructionSenderHandle,
-  block: object,
-  measure: InstructionMeasure,
-) {
-  sender.insert([block, {type: 'text', value: ' '}], 'cursor', measure.prefix + measure.keyword)
-}
-
 export type {
   InstructionItem,
   InstructionMeasure,
   InstructionPopoverState,
   InstructionSenderHandle,
-  InstructionSlotProps,
   UseInstructionSenderParams,
 } from './types'
 
@@ -53,17 +35,20 @@ export interface InstructionSenderProps {
   disabled?: boolean
   instructionContextVisibleMargin?: number
   instructionMap?: Record<string, InstructionItem[]>
-  filterInstruction?: (
+  /** 按关键字筛候选：宿主自己实现（包不猜业务怎么匹配） */
+  onFilterDataSource: (
     keyword: string,
     dataSource: InstructionItem[],
     prefix: string,
   ) => InstructionItem[]
-  senderInsertInstruction?: (
+  /** 选中后怎么插进编辑器：宿主自己实现 */
+  senderInsertInstruction: (
     sender: InstructionSenderHandle,
     block: object,
     measure: InstructionMeasure,
   ) => void
-  getInstructionIcon?: (prefix: string) => string | undefined
+  /** 选中后造一个「指令芯片」塞进 slotConfig：形状 / 渲染 / metadata 全归宿主 */
+  createInstructionSlot: (option: InstructionItem, measure: InstructionMeasure) => object
   inputClass?: string
   prefixCls?: string
   class?: unknown
@@ -130,15 +115,18 @@ const InstructionSender = defineComponent({
       type: Object as PropType<Record<string, InstructionItem[]>>,
       default: () => ({}),
     },
-    filterInstruction: {
-      type: Function as PropType<InstructionSenderProps['filterInstruction']>,
-      default: defaultFilterInstruction,
+    onFilterDataSource: {
+      type: Function as PropType<InstructionSenderProps['onFilterDataSource']>,
+      required: true,
     },
     senderInsertInstruction: {
       type: Function as PropType<InstructionSenderProps['senderInsertInstruction']>,
-      default: defaultInsertInstruction,
+      required: true,
     },
-    getInstructionIcon: Function as PropType<InstructionSenderProps['getInstructionIcon']>,
+    createInstructionSlot: {
+      type: Function as PropType<InstructionSenderProps['createInstructionSlot']>,
+      required: true,
+    },
     inputClass: {
       type: String,
       default: 'chat-sender-input',
@@ -150,7 +138,6 @@ const InstructionSender = defineComponent({
   },
   emits: ['submit', 'cancel', 'change', 'pasteFile'],
   setup(props, {emit, slots, attrs, expose}) {
-    const instance = getCurrentInstance()
     const config = useConfig()
     const prefixCls = computed(() =>
       config.value.getPrefixCls('instruction-sender', props.prefixCls ?? 'loncra-instruction-sender'),
@@ -171,19 +158,10 @@ const InstructionSender = defineComponent({
       disabled: toRef(props, 'disabled'),
       senderRef: senderRef as Ref<InstructionSenderHandle | undefined>,
       onFilterDataSource: (keyword, dataSource, prefix) =>
-        (props.filterInstruction ?? defaultFilterInstruction)(keyword, dataSource, prefix),
+        props.onFilterDataSource(keyword, dataSource, prefix),
       senderInsertInstruction: (sender, block, measure) =>
-        (props.senderInsertInstruction ?? defaultInsertInstruction)(sender, block, measure),
-      createInstructionSlot: (option, measure) =>
-        createInstructionTagSlot(
-          {
-            id: String(crypto.randomUUID()),
-            value: option,
-            prefix: String(option.metadata?.slotPrefix ?? measure.prefix),
-          },
-          props.getInstructionIcon,
-          instance?.appContext,
-        ),
+        props.senderInsertInstruction(sender, block, measure),
+      createInstructionSlot: (option, measure) => props.createInstructionSlot(option, measure),
     })
 
     function clear(): void {

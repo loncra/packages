@@ -27,6 +27,11 @@
 
 当前控件：`TooltipValidationFormItem`、`QrCodeModal`、`BasicImage`、`IconSelect`、`EmojiButton`、`Markdown` / `MarkdownCodeRenderer`、`KeyValueTable`、`Editor`（`antdv-next-tiptap`）、`InstructionSender`。要对 API 的上传 / IM / Agent 进以后的业务包，不进本包。调 client 的通用控件进 `@loncra/antdv-pro`。
 
+**图标渲染归宿主**：包内**不解析宿主的全局 `IconFont`，也不渲染宿主的图标字体**（`_util/iconFont.ts` 已删）。
+需要画图标的地方一律由宿主注入：`IconSelect` 的 `iconRender` 属性、`KeyValueTable` 的 `#title` 插槽、
+`FileEditor` 的 `getIcon`（返回 VNode）、`InstructionSender` 的 `createInstructionSlot` 等。
+包内自带外观只用官方 `@antdv-next/icons`。
+
 ## `@loncra/antdv-pro`
 
 对标 `@loncra/antdv` 的 TSX 写法，直接调 `@loncra/client` Service。宿主（管理端）负责 `createClient()`。peer：`vue`、`antdv-next`、`@loncra/antdv`、`@loncra/client`；相对时间再 peer `dayjs`；上传分片再 peer `p-limit`；FileEditor 文本 pane 再 peer `@codemirror/*`；SystemUserPanel 列表再 peer `@antdv-next/x`。禁止 axios、`createClient`、Pinia、vue-i18n、路由、管理端 `@/apis`。CRUD 第二批。IM / Agent 以后另包。

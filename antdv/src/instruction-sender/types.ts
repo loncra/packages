@@ -6,12 +6,6 @@ export interface InstructionItem {
   metadata?: Record<string, unknown>
 }
 
-export type InstructionSlotProps = {
-  slotKind: 'instruction'
-  defaultValue: InstructionItem
-  prefix: string
-}
-
 export interface InstructionMeasure {
   location: number
   prefix: string

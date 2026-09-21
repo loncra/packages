@@ -1,7 +1,16 @@
-import {computed, h, onMounted, reactive, ref, watch} from 'vue'
+import {computed, h, onMounted, reactive, ref, type VNodeChild, watch} from 'vue'
 import type {MenuItemType, UploadChangeParam} from 'antdv-next'
 import useApp from 'antdv-next/dist/app/useApp'
-import {DeleteOutlined, FileAddOutlined, FolderAddOutlined, FormOutlined, ReloadOutlined} from '@antdv-next/icons'
+import {
+  DeleteOutlined,
+  FileAddOutlined,
+  FileOutlined,
+  FolderAddOutlined,
+  FolderOpenOutlined,
+  FolderOutlined,
+  FormOutlined,
+  ReloadOutlined,
+} from '@antdv-next/icons'
 import {
   filterTreeDeep,
   findFirstTreeNode,
@@ -48,11 +57,15 @@ export function useFileEditor(props: FileEditorProps) {
   const dirUploadTrigger = ref<HTMLElement>()
   const uploadTarget = ref<ObjectItemInfo>()
 
-  function resolveIcon(item: ObjectItemInfo): string {
+  /**
+   * 图标：目录用展开/收起两态，文件交给宿主按后缀自定义，没自定义就用内置的 antd 图标。
+   * 返回 VNode —— 本包不认识宿主的图标字体，也不再渲染它。
+   */
+  function resolveIcon(item: ObjectItemInfo): VNodeChild {
     if (item.dir) {
-      return state.value.openKeys.includes(item.id) ? 'loncra-folder-open' : 'loncra-folder-closed'
+      return h(state.value.openKeys.includes(item.id) ? FolderOpenOutlined : FolderOutlined)
     }
-    return props.getIcon?.(item) ?? 'loncra-file'
+    return props.getIcon?.(item) ?? h(FileOutlined)
   }
 
   function toEditObjectItemInfo(item: ObjectItemInfo, replacePath: string) {
@@ -445,7 +458,7 @@ export function useFileEditor(props: FileEditorProps) {
     state.value.tabs.map((file) => ({
       key: file.id,
       label: getDisplayName(file),
-      iconType: resolveIcon(file),
+      icon: resolveIcon(file),
       file,
     })),
   )

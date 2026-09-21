@@ -64,12 +64,9 @@ export type {
   InstructionSenderHandle,
   InstructionSenderProps,
   InstructionSenderSlots,
-  InstructionSlotProps,
   UseInstructionSenderParams,
 } from './instruction-sender'
 export {
-  createInstructionTagSlot,
-  isInstructionSlot,
   useInstructionSender,
 } from './instruction-sender'
 
@@ -81,7 +78,6 @@ export type { LocaleComponentName } from './_util/useLocale'
 export { classNames } from './_util/classNames'
 export { genStyleHooks } from './_util/genStyle'
 export type { LoncraStyleToken } from './_util/genStyle'
-export { renderIconFont } from './_util/iconFont'
 export { useIsDark } from './_util/useIsDark'
 export { useFormItemTrigger } from './_util/useFormItemTrigger'
 

@@ -1,4 +1,14 @@
-import {computed, defineComponent, h, type Ref, ref, useModel, watch} from 'vue'
+import {
+  computed,
+  defineComponent,
+  h,
+  type PropType,
+  type Ref,
+  ref,
+  useModel,
+  type VNodeChild,
+  watch,
+} from 'vue'
 import {
   Avatar,
   Button,
@@ -15,7 +25,6 @@ import {
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {SelectOutlined} from '@antdv-next/icons'
 import {classNames} from '../_util/classNames'
-import {renderIconFont} from '../_util/iconFont'
 import {useFormItemTrigger} from '../_util/useFormItemTrigger'
 import {useLocale} from '../_util/useLocale'
 import useStyle from './style'
@@ -42,6 +51,11 @@ export interface IconSelectProps {
   options?: IconfontJson[]
   mode?: IconSelectModeType
   preview?: boolean
+  /**
+   * 图标怎么画：宿主自己渲染（一般直接给它 `@/utils/commonUtils` 的 `renderIconFont`，
+   * 签名一致）。**包不认识宿主的图标字体**，所以这是唯一入口，不给就什么都不画。
+   */
+  iconRender?: (type: string, className?: string) => VNodeChild
   prefixCls?: string
   class?: unknown
   rootClass?: string
@@ -54,7 +68,6 @@ export interface IconSelectEmits {
 
 export interface IconSelectSlots {
   afterAvatar?: () => unknown
-  icon?: (ctx: { type: string; class?: string }) => unknown
 }
 
 function glyphType(pack: IconfontJson, glyph: IconfontGlyph) {
@@ -95,6 +108,7 @@ const IconSelect = defineComponent({
       type: Boolean,
       default: false,
     },
+    iconRender: Function as PropType<IconSelectProps['iconRender']>,
     prefixCls: String,
     rootClass: String,
   },
@@ -186,12 +200,8 @@ const IconSelect = defineComponent({
 
     watch(() => props.options, () => search(), { immediate: true })
 
-    function renderIcon(type: string, className?: string) {
-      const custom = slots.icon?.({ type, class: className })
-      if (custom) {
-        return custom
-      }
-      return renderIconFont(type, className)
+    function renderIcon(type: string, className?: string): VNodeChild {
+      return props.iconRender?.(type, className) ?? null
     }
 
     function renderAvatar(payload: string, avatarAttrs: Record<string, unknown> = {}) {

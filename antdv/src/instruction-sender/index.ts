@@ -12,9 +12,7 @@ export type {
   InstructionMeasure,
   InstructionPopoverState,
   InstructionSenderHandle,
-  InstructionSlotProps,
   UseInstructionSenderParams,
 } from './types'
-export {createInstructionTagSlot, isInstructionSlot} from './slot'
 export {useInstructionSender} from './useInstructionSender'
 export type {InstructionSenderApi} from './useInstructionSender'
