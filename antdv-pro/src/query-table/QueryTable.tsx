@@ -97,14 +97,35 @@ const QueryTable = defineComponent({
       type: [Boolean, Function] as PropType<RefreshOnActivate>,
       default: true,
     },
-    /** 卡片头，与 `DataLoadingCardPlan` 同形：`VNode` 直接用、`false` 不要卡片头、不给走默认标题 */
-    title: [Object, Boolean] as PropType<QueryTableProps['title']>,
+    /**
+     * 卡片头，与 `DataLoadingCardPlan` 同形：`VNode` 直接用、`false` 不要卡片头、不给走默认标题。
+     *
+     * ⚠️ **`default: undefined` 不能删**：类型里带了 `Boolean`，父级"不传"时 Vue 的布尔转换会把它
+     * 变成 `false`（= "不要卡片头"）⇒ 默认标题与工具栏都没了。
+     */
+    title: {type: [Object, Boolean] as PropType<QueryTableProps['title']>, default: undefined},
     hasPermission: Function as PropType<(permission: string) => boolean>,
     authority: Object as PropType<AuthorityProps>,
-    /** 标题右侧的工具栏动作：数组 = 与默认 `add`/`deleteSelected` 合并；`false` = 整排不出 */
-    toolbarActions: [Array, Boolean] as PropType<QueryTableProps['toolbarActions']>,
-    /** 行内动作：数组 = 与默认 `edit`/`detail`/`delete` 合并；`false` = 不要（`操作`列也不补） */
-    recordActions: [Array, Boolean] as PropType<QueryTableProps['recordActions']>,
+    /**
+     * 标题右侧的工具栏动作：数组 = 与默认 `add`/`deleteSelected` 合并；`false` = 整排不出。
+     *
+     * ⚠️ **`default: undefined` 不能删**（与 `title` 同一个坑）：类型里带 `Boolean` 时"不传"会被
+     * Vue 转成 `false`，那语义就成了"整排按钮都不出"。
+     */
+    toolbarActions: {
+      type: [Array, Boolean] as PropType<QueryTableProps['toolbarActions']>,
+      default: undefined,
+    },
+    /**
+     * 行内动作：数组 = 与默认 `edit`/`detail`/`delete` 合并；`false` = 不要（`操作`列也不补）。
+     *
+     * ⚠️ **`default: undefined` 不能删**：不传被转成 `false` 时，基类 `hasRecordActions` 直接判"没有
+     * 行内动作" ⇒ **"操作"列整列不补**（`BasicCrudQuery.tsx:284`）。
+     */
+    recordActions: {
+      type: [Array, Boolean] as PropType<QueryTableProps['recordActions']>,
+      default: undefined,
+    },
     /** 系统字典：要加载什么（声明侧 `list.enums` / `list.dicts`）—— 原样交给基类 */
     enums: Array as PropType<QueryTableProps['enums']>,
     dictCodes: Array as PropType<QueryTableProps['dictCodes']>,
@@ -191,8 +212,12 @@ const QueryTable = defineComponent({
         emit('treeDrop', sorts, drag, target, {dropPosition, tree}),
     })
 
-    /** "操作"列要不要补：基类已经算过 `recordActions === false` 与权限，表格只负责画 */
-    const hasActionsColumn = computed(() => basic.value?.hasRecordActions.value ?? false)
+    /**
+     * "操作"列要不要补：基类已经算过 `recordActions === false` 与权限，表格只负责画。
+     * `hasRecordActions` 是**值**（expose 出来的 ref 会被 Vue 解包）⇒ 不许再写 `.value`；
+     * `?? false` 兜的是"基类还没挂载"（`basic.value` 为 undefined）那一瞬间。
+     */
+    const hasActionsColumn = computed(() => basic.value?.hasRecordActions ?? false)
 
     const externalRowSelection = computed((): TableProps['rowSelection'] | false | null => {
       const raw = (props.rowSelection ?? attrs.rowSelection) as
@@ -202,8 +227,8 @@ const QueryTable = defineComponent({
       if (raw === false) {
         return null
       }
-      // 没有批量动作（基类看的）就不自动开多选
-      if (raw === undefined && !(basic.value?.needsBulkSelection.value ?? false)) {
+      // 没有批量动作（基类看的）就不自动开多选（同样是值，不是 ref）
+      if (raw === undefined && !(basic.value?.needsBulkSelection ?? false)) {
         return null
       }
       return raw ?? {fixed: true, type: 'checkbox' as const}

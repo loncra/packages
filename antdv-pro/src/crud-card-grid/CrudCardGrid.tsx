@@ -41,12 +41,21 @@ const CrudCardGrid = defineComponent({
       type: [Boolean, Function] as PropType<RefreshOnActivate>,
       default: true,
     },
-    /** 卡片头：`VNode` 直接用、`false` 不要卡片头、不给走 `CrudConfig.resolveDefaultTitle` */
-    title: [Object, Boolean] as PropType<CrudCardGridProps['title']>,
+    /**
+     * 卡片头：`VNode` 直接用、`false` 不要卡片头、不给走 `CrudConfig.resolveDefaultTitle`。
+     *
+     * ⚠️ **`default: undefined` 不能删**：类型里带了 `Boolean`，父级"不传"会被 Vue 的布尔转换变成
+     * `false`（= "不要卡片头"）⇒ 默认标题与工具栏都没了。
+     */
+    title: {type: [Object, Boolean] as PropType<CrudCardGridProps['title']>, default: undefined},
     hasPermission: Function as PropType<(permission: string) => boolean>,
     authority: Object as PropType<AuthorityProps>,
-    /** 标题右侧的工具栏动作（旧名 → `toolbarActions`）：`false` = 整排不出 */
-    actions: [Array, Boolean] as PropType<CrudCardGridProps['actions']>,
+    /**
+     * 标题右侧的工具栏动作（旧名 → `toolbarActions`）：`false` = 整排不出。
+     *
+     * ⚠️ **`default: undefined` 不能删**（与 `title` 同一个坑）：不传会被转成 `false` ⇒ 整排不出。
+     */
+    actions: {type: [Array, Boolean] as PropType<CrudCardGridProps['actions']>, default: undefined},
     /** 项内动作定义（旧名 → `recordActions`） */
     itemActions: Array as PropType<CrudCardGridProps['itemActions']>,
     /** 是否要项内动作（开关 → `recordActions: false | 数组`） */

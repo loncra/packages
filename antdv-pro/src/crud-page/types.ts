@@ -262,15 +262,22 @@ export interface CrudHomePageProps<
   extra?: Record<string, unknown>
 }
 
+/**
+ * 列表页壳暴露给宿主的能力。
+ *
+ * ⚠️ **一律是"值"不是 ref**：Vue 对 `expose` 出来的 ref 会自动解包（`proxyRefs`）⇒ 宿主写
+ * `table.value?.buckets` 就是当前值，写成 `table.value?.buckets.value` 只会得到 `undefined`。
+ */
 export interface CrudHomePageExpose<TEntity> {
   fetchDataSource: () => Promise<void | undefined> | undefined
   clearDataSource: () => void
-  dataSource: {value: TEntity[]}
+  /** 当前数据（`v-model:data-source` 回流的那份） */
+  dataSource: TEntity[]
   /**
    * 页面声明里 `list.enums` 加载回来的枚举桶：壳里的弹层 / 条件判断要用同一份
    * （声明已经拉了，别在壳里再发一次同样的请求）。
    */
-  buckets: {value: EnumBucketsResponseBody}
+  buckets: EnumBucketsResponseBody
 }
 
 export interface CrudHomePageSlots<TEntity extends object> {

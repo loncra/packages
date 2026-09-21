@@ -31,7 +31,11 @@ const DataLoadingCardPlan = defineComponent({
     loading: {type: Boolean, default: false},
     onMounted: Function as PropType<DataLoadingTask>,
     onActivated: Function as PropType<DataLoadingTask>,
-    title: [Object, Boolean] as PropType<VNode | boolean>,
+    /**
+     * ⚠️ **`default: undefined` 不能删**：类型里带了 `Boolean`，父级"不传"会被 Vue 的布尔转换变成
+     * `false` ⇒ 被当成"不要卡片头"，`CrudConfig.resolveDefaultTitle` 永远不执行。
+     */
+    title: {type: [Object, Boolean] as PropType<VNode | boolean>, default: undefined},
   },
   emits: {
     'update:loading': (_value: boolean) => true,

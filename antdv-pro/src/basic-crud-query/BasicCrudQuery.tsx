@@ -71,14 +71,34 @@ const BasicCrudQuery = defineComponent({
       type: [Boolean, Function] as PropType<BasicCrudQueryProps['refreshOnActivate']>,
       default: true,
     },
-    /** 卡片头：`VNode` 直接用、`false` 不要卡片头；不给则交给 plan 用 `CrudConfig.resolveDefaultTitle` */
-    title: [Object, Boolean] as PropType<VNode | boolean>,
+    /**
+     * 卡片头：`VNode` 直接用、`false` 不要卡片头；不给则交给 plan 用 `CrudConfig.resolveDefaultTitle`。
+     *
+     * ⚠️ **`default: undefined` 不能删**：类型里带了 `Boolean`，父级"不传"会被 Vue 的布尔转换变成
+     * `false` ⇒ `resolveDefaultTitle` 不会被调用，且本组件的 `extra` 也会 `return null`（工具栏整排消失）。
+     */
+    title: {type: [Object, Boolean] as PropType<VNode | boolean>, default: undefined},
     hasPermission: Function as PropType<(permission: string) => boolean>,
     authority: Object as PropType<BasicCrudQueryProps['authority']>,
-    /** 标题右侧的工具栏动作：数组 = 与默认合并；`false` = 整排按钮都不出（与 `title` 同形） */
-    toolbarActions: [Array, Boolean] as PropType<BasicCrudQueryProps['toolbarActions']>,
-    /** 行内 / 项内动作：数组 = 与默认合并；`false` = 不要（与 `title` 同形） */
-    recordActions: [Array, Boolean] as PropType<BasicCrudQueryProps['recordActions']>,
+    /**
+     * 标题右侧的工具栏动作：数组 = 与默认合并；`false` = 整排按钮都不出（与 `title` 同形）。
+     *
+     * ⚠️ **`default: undefined` 不能删**：类型里带 `Boolean` 时"不传"会被 Vue 转成 `false`。
+     */
+    toolbarActions: {
+      type: [Array, Boolean] as PropType<BasicCrudQueryProps['toolbarActions']>,
+      default: undefined,
+    },
+    /**
+     * 行内 / 项内动作：数组 = 与默认合并；`false` = 不要（与 `title` 同形）。
+     *
+     * ⚠️ **`default: undefined` 不能删**：不传被转成 `false` 时，本组件 `hasRecordActions` 里的
+     * `props.recordActions !== false` 直接判"没有行内动作" ⇒ **"操作"列整列不补**（见 `:284`）。
+     */
+    recordActions: {
+      type: [Array, Boolean] as PropType<BasicCrudQueryProps['recordActions']>,
+      default: undefined,
+    },
     /** 选中集合挂在哪：表格 `selectedRows` / 卡片 `selectedItems` */
     selectedKey: {type: String as PropType<BasicCrudQuerySelectedKey>, default: 'selectedRows'},
     // 数据
@@ -284,8 +304,17 @@ const BasicCrudQuery = defineComponent({
       ...collection,
       resolveRecordActions,
       onRecordAction,
-      hasRecordActions,
-      needsBulkSelection,
+      /**
+       * **expose 出去的一律是"值"**：Vue 会把 exposed 的 ref / computed 解包（`proxyRefs`），
+       * 所以契约里写的是 `boolean`。这里用 getter 读 ref ⇒ 对外是当前值，
+       * 消费方在 computed / 渲染里读它仍然会跟着变（响应式不丢）。
+       */
+      get hasRecordActions() {
+        return hasRecordActions.value
+      },
+      get needsBulkSelection() {
+        return needsBulkSelection.value
+      },
     })
 
     return () => (

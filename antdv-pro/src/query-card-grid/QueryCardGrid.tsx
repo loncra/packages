@@ -66,14 +66,29 @@ const QueryCardGrid = defineComponent({
       type: [Boolean, Function] as PropType<RefreshOnActivate>,
       default: true,
     },
-    /** 卡片头（转发给基类）：`VNode` 直接用、`false` 不要卡片头、不给走 `CrudConfig.resolveDefaultTitle` */
-    title: [Object, Boolean] as PropType<QueryCardGridProps['title']>,
+    /**
+     * 卡片头（转发给基类）：`VNode` 直接用、`false` 不要卡片头、不给走 `CrudConfig.resolveDefaultTitle`。
+     *
+     * ⚠️ **`default: undefined` 不能删**：类型里带了 `Boolean`，父级"不传"会被 Vue 的布尔转换变成
+     * `false`（= "不要卡片头"）⇒ 默认标题与工具栏都没了。
+     */
+    title: {type: [Object, Boolean] as PropType<QueryCardGridProps['title']>, default: undefined},
     hasPermission: Function as PropType<(permission: string) => boolean>,
     authority: Object as PropType<AuthorityProps>,
-    /** 标题右侧的工具栏动作（转发给基类）：数组 = 与默认合并；`false` = 整排不出 */
-    toolbarActions: [Array, Boolean] as PropType<QueryCardGridProps['toolbarActions']>,
-    /** 项内动作（转发给基类）：数组 = 与默认合并；`false` = 不要 */
-    recordActions: [Array, Boolean] as PropType<QueryCardGridProps['recordActions']>,
+    /**
+     * 标题右侧的工具栏动作（转发给基类）：数组 = 与默认合并；`false` = 整排不出。
+     *
+     * ⚠️ **`default: undefined` 不能删**（与 `title` 同一个坑）：不传会被 Vue 的布尔转换变成 `false`。
+     */
+    toolbarActions: {
+      type: [Array, Boolean] as PropType<QueryCardGridProps['toolbarActions']>,
+      default: undefined,
+    },
+    /** 项内动作（转发给基类）：数组 = 与默认合并；`false` = 不要（同样不能删 `default: undefined`） */
+    recordActions: {
+      type: [Array, Boolean] as PropType<QueryCardGridProps['recordActions']>,
+      default: undefined,
+    },
     /**
      * 拖拽开关 + 幽灵内容（同表格）；要给方向就写对象形态 `{dragPreview, direction}`，那时 `direction` 才生效
      */

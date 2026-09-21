@@ -126,9 +126,21 @@ const CrudHomePage = defineComponent({
       clearDataSource: () => {
         dataSource.value = []
       },
-      dataSource,
-      buckets,
+      // 同 `BasicCrudQuery`：expose 出去的一律是"值"（Vue 会解包 ref），用 getter 读 ref 保响应式
+      get dataSource() {
+        return dataSource.value
+      },
+      get buckets() {
+        return buckets.value
+      },
     })
+
+    /**
+     * 转给表格的透传属性：`scroll` **缺省 `{x: 'max-content'}`** —— 列表几乎都要横向铺开，
+     * 没必要让每个页面壳（`*.home.page.ts` 的壳）都写一遍；宿主自己传了 `scroll` 就用宿主的
+     * （`...attrs` 在后，天然覆盖默认）。有特殊需求（如再加 `y`）就自己传。
+     */
+    const tableAttrs = computed(() => ({scroll: {x: 'max-content'}, ...attrs}))
 
     return () => {
       return (
@@ -172,9 +184,10 @@ const CrudHomePage = defineComponent({
                   slots.expandedRowRender?.(args)
               : undefined,
           }}
-          // `$attrs` 直通（宿主的 `:record-actions` / `:drag` / `:scroll` … 从这里转给 CrudTable）。
+          // `$attrs` 直通（宿主的 `:record-actions` / `:drag` / `:query` … 从这里转给 CrudTable），
+          // 其中 `scroll` 上面给了 `{x: 'max-content'}` 的默认值。
           // add / edit / detail 的默认语义是"跳转"（见上面的 `go()`）；宿主真在组件上绑同名事件，就是接管跳转。
-          {...attrs}
+          {...tableAttrs.value}
         />
       )
     }

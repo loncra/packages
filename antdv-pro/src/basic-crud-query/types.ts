@@ -1,4 +1,4 @@
-import type {ComputedRef, EmitsToProps, PublicProps, VNode, VNodeChild} from 'vue'
+import type {EmitsToProps, PublicProps, VNode, VNodeChild} from 'vue'
 import type {TableProps} from 'antdv-next'
 import {SYSTEM_CONSTANT} from '@loncra/client/commons'
 import type {
@@ -146,6 +146,11 @@ export interface BasicCrudQuerySlots {
  * 内核暴露给**形态组件**（`QueryTable` / `QueryCardGrid`）的能力：对外那份（`CollectionExpose`）
  * 加上只有内核能算的四个动作相关项 —— 权限、默认动作合并、运行态都在内核里，所以解析也只能在这。
  * 宿主拿到的 ref 只会有 `CollectionExpose` 那两个成员，看不到这里的内部契约。
+ *
+ * ⚠️ **暴露出去的成员一律写"值"**：Vue 对 `expose` 出来的 `Ref` / `ComputedRef` 会自动解包
+ * （`getComponentPublicInstance` 里是 `new Proxy(proxyRefs(markRaw(instance.exposed)))`）⇒
+ * 消费方（模板 ref）读到的**已经是当前值**，写 `.value` 只会拿到 `undefined`。
+ * 要保响应式就在 `expose` 处用 getter（见 `BasicCrudQuery.tsx` 的 `expose`）。
  */
 export interface BasicCrudQueryExpose<
   TEntity extends BasicIdMetadata<TId>,
@@ -155,9 +160,9 @@ export interface BasicCrudQueryExpose<
   resolveRecordActions: (record: TEntity) => ResolvedAction[]
   onRecordAction: (id: string, record: TEntity) => void
   /** 有行内 / 项内动作 */
-  hasRecordActions: ComputedRef<boolean>
+  hasRecordActions: boolean
   /** 需要自动开行选择（有 delete 权限或声明了内置批量动作） */
-  needsBulkSelection: ComputedRef<boolean>
+  needsBulkSelection: boolean
 }
 
 export type BasicCrudQueryConstructor = new <

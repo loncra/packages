@@ -60,8 +60,14 @@ const CrudTable = defineComponent({
       default: true,
     },
     bordered: {type: Boolean, default: true},
-    /** 卡片头，与 `DataLoadingCardPlan` 同形：`VNode` 直接用、`false` 不要卡片头、不给走默认标题 */
-    title: [Object, Boolean] as PropType<CrudTableProps['title']>,
+    /**
+     * 卡片头，与 `DataLoadingCardPlan` 同形：`VNode` 直接用、`false` 不要卡片头、不给走默认标题。
+     *
+     * ⚠️ **`default: undefined` 不能删**：类型里带了 `Boolean`，父级"不传"时 Vue 的布尔转换会把
+     * 它变成 `false`（Vue 的既定行为，不是 bug）—— 那就等于"不要卡片头"：默认标题不出现，
+     * 工具栏也会整排消失（见 `BasicCrudQuery` 的 `extra`）。
+     */
+    title: {type: [Object, Boolean] as PropType<CrudTableProps['title']>, default: undefined},
     hasPermission: Function as PropType<(permission: string) => boolean>,
     authority: Object as PropType<AuthorityProps>,
     actions: Array as PropType<ToolbarActionDefinition<DefaultCrudEntity>[]>,
