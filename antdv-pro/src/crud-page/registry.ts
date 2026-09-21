@@ -1,7 +1,12 @@
 import {type Component, computed, type ComputedRef, markRaw} from 'vue'
 import {DatePicker, Input, InputNumber, Select} from 'antdv-next'
-import {getEnumName, type DataDictionaryMetadata, type NameValueEnumMetadata} from '@loncra/client/commons'
+import {
+  getEnumName,
+  type DataDictionaryMetadata,
+  type NameValueEnumMetadata,
+} from '@loncra/client/commons'
 import {useCrudConfig} from '../crud-config-provider'
+import {byteFormat} from '../_util/format'
 import {useDateFormat} from '../_util/crud/useDateFormat'
 import type {
   FieldComponentSpec,
@@ -151,7 +156,8 @@ export function usePageRegistry(): ComputedRef<PageRegistry> {
     /**
      * 声明 `format` 即断言值的形状，形状不对就抛。
      * `enum` / `enumList` 吃 `enumRef` + `list.enums`；`dict` / `dictList` 吃 `dictId` + `list.dicts`；
-     * `date` / `dateTime` 走显示格式（见 `CrudConfigProvider.dateFormat` / `dateTimeFormat`）。
+     * `date` / `dateTime` 走显示格式（见 `CrudConfigProvider.dateFormat` / `dateTimeFormat`）；
+     * `byte` 是字节数（实现在 `@loncra/client/commons`，不依赖宿主）。
      * 不够用宿主在 `CrudConfig.formatters` 里加（金额、链接…），按 key 覆盖这张表。
      */
     formatters: {
@@ -161,6 +167,7 @@ export function usePageRegistry(): ComputedRef<PageRegistry> {
       dictList: listFormatter('dictList', dictName),
       date: (value) => dateFormat(value),
       dateTime: (value) => dateTimeFormat(value),
+      byte: (value) => byteFormat(Number(value)),
       ...config.value.formatters,
     },
   }))

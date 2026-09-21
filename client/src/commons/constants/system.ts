@@ -21,6 +21,8 @@ export const SYSTEM_ENUM_TYPE = {
   DATA_STATUS_ENUM: 'DataStatusEnum',
   EXECUTE_STATUS_ENUM: 'ExecuteStatus',
   GENDER_ENUM: 'GenderEnum',
+  /** `ExportDataMetadata.type`：后端 `commons/enumerate/ImportExportTypeEnum`（导出类型） */
+  IMPORT_EXPORT_TYPE_ENUM: 'ImportExportTypeEnum',
   MCP_PACKAGE_AUTH_MODE_ENUM: 'McpPackageAuthModeEnum',
   MCP_PACKAGE_TYPE_ENUM: 'PackageTypeEnum',
   MCP_CLIENT_TYPE_ENUM: 'McpClientTypeEnum',

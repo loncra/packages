@@ -1,3 +1,20 @@
+import {h} from 'vue'
+import {Space, Tooltip} from 'antdv-next'
+import {IconSelect, ICON_SELECT_AVATAR_MODE_VALUE, type IconSelectProps} from '@loncra/antdv'
+import {
+  EXECUTE_STATUS_TYPE,
+  getEnumName,
+  getEnumValue,
+  type NameValueEnumMetadata,
+} from '@loncra/client/commons'
+
+/**
+ * 纯格式化 + **单元格渲染**都在这一个文件里（单函数不单独建文件）。
+ *
+ * 字节大小过去在 `@loncra/client/commons`、宿主 `utils/fileUtils.ts` 各有一份 —— 现在**只留这一份**，
+ * 宿主那边改成从 pro 转出。
+ */
+
 /**
  * 用实际数量替换文案里的 `{count}` 占位符
  *
@@ -9,12 +26,7 @@ export function withCount(template: string, count: number): string {
 }
 
 /**
- * 格式化字节大小为可读的字符串
- * 将字节数转换为合适的单位（bytes、KB、MB、GB 等）
- * 使用 1024 为进制进行计算
- *
- * @param bytes - 要格式化的字节数
- * @returns 格式化后的字符串，例如 "1.5 MB"
+ * 格式化字节大小为可读的字符串：按 1024 进制换算成合适的单位（bytes / KB / MB / GB …）。
  *
  * @example
  * ```typescript
@@ -46,3 +58,66 @@ export function byteFormat(bytes: number): string {
   }
   return formattedBytes + ' ' + symbols[i]
 }
+
+// #region 单元格渲染：同一个值在不同取值下画不同内容
+
+/**
+ * 图标怎么画由**宿主注入**：包不认宿主的 `IconFont` 组件，也不替业务决定画哪个图标。
+ * 类型直接复用 `IconSelect` 的 `iconRender`（同一个口径，不另造一份）。
+ */
+export type IconRender = NonNullable<IconSelectProps['iconRender']>
+
+/** 带执行状态的记录（`BatchMessageEntity`、导出记录都是这个形状） */
+export interface ExecuteStatusRecord {
+  executeStatus?: NameValueEnumMetadata<number> | number
+  exception?: string
+}
+
+/**
+ * 执行状态单元格：状态名 +（失败时）一个图标、悬浮显示异常信息。
+ *
+ * 图标的**类型与渲染**都由宿主给（`iconType` + `renderIcon`），
+ * 包只负责布局（图标 + 文本）和"哪个值算失败"这个判断。
+ */
+export function executeStatusCell(options: {
+  renderIcon: IconRender
+  iconType: string
+  failureValue?: number
+}) {
+  const failure = options.failureValue ?? EXECUTE_STATUS_TYPE.FAILURE
+  return (_value: unknown, record: ExecuteStatusRecord) =>
+    h(Space, null, [
+      getEnumValue(record.executeStatus) === failure
+        ? h(
+            Tooltip,
+            {title: record.exception},
+            {default: () => options.renderIcon(options.iconType, 'align')},
+          )
+        : null,
+      getEnumName(record.executeStatus),
+    ])
+}
+
+/**
+ * 图标 + 名称单元格（企业 / 插件 / 技能包那一列都长这样）。
+ * 没图标时退化为名称首字（`IconSelect` 的 `INPUT` 形态）。
+ */
+export function iconNameCell<TRecord>(options: {
+  renderIcon: IconRender
+  nameOf: (record: TRecord) => string
+  iconOf?: (record: TRecord) => string | undefined
+}) {
+  return (_value: unknown, record: TRecord) => {
+    const name = options.nameOf(record)
+    return h(Space, null, [
+      h(IconSelect, {
+        preview: true,
+        iconRender: options.renderIcon,
+        value: options.iconOf?.(record) || ICON_SELECT_AVATAR_MODE_VALUE.INPUT + name,
+      }),
+      name,
+    ])
+  }
+}
+
+// #endregion

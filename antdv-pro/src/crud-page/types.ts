@@ -1,12 +1,13 @@
 import type {Component, PublicProps, VNode} from 'vue'
 import type {TableProps} from 'antdv-next'
 import type {
-  BasicCrudService,
   BasicIdMetadata,
   NameValueEnumMetadata,
+  ScrollPageResult,
   SYSTEM_CONSTANT,
 } from '@loncra/client/commons'
 import type {RecordActionDefinition, ToolbarActionDefinition} from '../_util/crud/actions'
+import type {CollectionService} from '../_util/crud/useCollectionData'
 import type {DragProp} from '../_util/crud/useDrag'
 import type {CrudNavigateTarget} from '../crud-config-provider/types'
 import type {AuthorityProps, ColumnSearchConfig, SearchableColumnType} from '../query-table/types'
@@ -32,7 +33,13 @@ export interface CrudPageCore<
   TEntity extends TBody = TBody,
   TId = TEntity[typeof SYSTEM_CONSTANT.ID_NAME],
 > {
-  service: BasicCrudService<TBody, TEntity, TId>
+  /**
+   * 列表只需要"读得到数据"：与 `QueryTable` / `CrudTable` 吃的是**同一个联合**
+   * （只读的 `find` / `page` 服务也能用）。`save` 是表单形态的事，别在这里要求。
+   * `TPage` 固定用 `ScrollPageResult<TEntity>`：只读服务自己的 `TotalPage<T>` 是它的子类型，
+   * 在 `page()` 的返回位置协变 ⇒ 不必要再往声明层透一个类型参数。
+   */
+  service: CollectionService<TBody, TEntity, ScrollPageResult<TEntity>, TId>
   /** 主键字段名；不传时表格用 `SYSTEM_CONSTANT.ID_NAME` */
   rowKey?: keyof TEntity & string
   /** 列/字段 label 的 i18n 前缀，如 'authServer.role' */
@@ -64,12 +71,13 @@ export interface CrudPageCore<
 type BuiltinKey<T extends string> = T | (string & {})
 
 /**
- * 值格式名。内置六个：`'enum'` / `'enumList'`（要求条目有 `enumRef`）、
+ * 值格式名。内置七个：`'enum'` / `'enumList'`（要求条目有 `enumRef`）、
  * `'dict'` / `'dictList'`（要求条目有 `dictId`）、
- * `'date'` / `'dateTime'`（显示用，格式串来自 `CrudConfigProvider.dateFormat` / `dateTimeFormat`）。
+ * `'date'` / `'dateTime'`（显示用，格式串来自 `CrudConfigProvider.dateFormat` / `dateTimeFormat`）、
+ * `'byte'`（字节数 → 可读大小）。
  */
 export type PageValueFormat = BuiltinKey<
-  'enum' | 'enumList' | 'dict' | 'dictList' | 'date' | 'dateTime'
+  'enum' | 'enumList' | 'dict' | 'dictList' | 'date' | 'dateTime' | 'byte'
 >
 
 /** 字段组件名（内置 input/password/textarea/number/select/date/dateRange，见 registry） */
@@ -121,7 +129,13 @@ export interface PageSearchConfig extends Omit<ColumnSearchConfig, 'component' |
 
 /** 列表列 */
 export interface PageListColumn<TEntity> {
-  key: keyof TEntity & string
+  /**
+   * 列标识。**优先写实体字段名**（label 兜底用它、搜索默认按它拼 `filter_[key_expression]`）。
+   * 两种例外：
+   * ① **路径**：写 `a.b.c`（数据不在顶层字段时，如 `data.details.x`），pro 按路径取值（见 `readPath`）；
+   * ② **虚拟列名**：数据根本不在实体上，随便起，但必须自带 `labelKey`，搜索要写显式 `queryName`。
+   */
+  key: string
   /** 覆盖字典 */
   labelKey?: string
   /**

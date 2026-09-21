@@ -3,6 +3,8 @@ export { default as enUS } from './locale/en_US'
 export type { Locale } from './locale'
 export { useLocale } from './_util/useLocale'
 export type { LocaleComponentName } from './_util/useLocale'
+export {byteFormat, executeStatusCell, iconNameCell, withCount} from './_util/format'
+export type {ExecuteStatusRecord, IconRender} from './_util/format'
 
 export { default as UserAvatar } from './user-avatar'
 export type { UserAvatarProps, UserAvatarSlots } from './user-avatar'

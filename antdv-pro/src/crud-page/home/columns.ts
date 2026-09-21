@@ -11,11 +11,35 @@ import type {
   PageRegistry,
 } from '../types'
 
+/**
+ * 按 `a.b.c` 取嵌套值：列 key 允许写**路径**，数据不在顶层字段时用
+ * （如 `data.details.requestDetails.remoteAddress`）。
+ *
+ * 顶层字段就是退化的单段路径 ⇒ 两种写法走同一条路，不需要额外的 prop 或 formatter。
+ * 不支持 `a['b.c']`（段名里带点）：后端字段名里没有点，真出现了再说。
+ */
+function readPath(source: unknown, path: string): unknown {
+  return path
+    .split('.')
+    .reduce<unknown>(
+      (acc, key) => (acc == null ? undefined : (acc as Record<string, unknown>)[key]),
+      source,
+    )
+}
+
 /** 裸 key → 完整列 */
 export function toListColumn<TEntity extends object>(
   entry: PageListEntry<TEntity>,
 ): PageListColumn<TEntity> {
   return typeof entry === 'string' ? {key: entry} : entry
+}
+
+/**
+ * 字段字典按**实体字段名**索引；列 key 可以是路径 / 虚拟列名 ⇒ 只在"读字典"这里松一下
+ * （字典里查不到就 undefined，条的 `labelKey` / `format` / `enumRef` 都在条目上）。
+ */
+function fieldSpecOf<TEntity>(fields: PageFieldsDictionary<TEntity>, key: string) {
+  return fields[key as keyof TEntity & string]
 }
 
 /**
@@ -47,7 +71,7 @@ export function buildListColumns<TEntity extends object>(
     if (item.visible && !item.visible(ctx)) {
       continue
     }
-    const merged: PageListColumn<TEntity> = {...fields[item.key], ...item}
+    const merged: PageListColumn<TEntity> = {...fieldSpecOf(fields, item.key), ...item}
     const search = merged.search
     const column = {
       title: resolveLabel(merged.key, merged.labelKey, merged.title),
@@ -100,7 +124,9 @@ export function buildListColumns<TEntity extends object>(
 /**
  * 单元格内容：条目里的 `render` 优先，其次按 `format` 格式化。
  *
- * **返回 `undefined` = 不认领这个单元格**，调用方应改用手上的 `text`
+ * 声明里认领的列**一定返回内容**（没有 `render` / `format` 就返回按 key 解析出来的原始值 ——
+ * 路径列必须靠它显示，表格按 `dataIndex` 取不到；字段列与表格自己的 `text` 同值）。
+ * 只有 `render` 返回 `undefined` 才是"不认领"，调用方应改用手上的 `text`
  * （表格自己算好的内容：选择列的复选框、行操作列等都是这样过来的，它们是 VNode，
  * 绝不能拿去当文本插值）。
  */
@@ -120,14 +146,15 @@ export function renderCell<TEntity extends object>(
     return undefined
   }
   const item = toListColumn(entry)
-  // 取原始值只信 record：插槽给的 text 可能已经被表格包装过
-  const value = (record as Record<string, unknown>)[item.key]
+  // 取原始值只信 record：插槽给的 text 可能已经被表格包装过。
+  // key 允许写 `a.b.c` 路径（数据不在顶层字段时），顶层字段是退化的单段路径 ⇒ 同一条路。
+  const value = readPath(record, item.key)
   if (item.render) {
     return item.render(value, record)
   }
-  const format = item.format ?? fields[item.key]?.format
+  const format = item.format ?? fieldSpecOf(fields, item.key)?.format
   if (!format) {
-    return undefined
+    return value
   }
   return formatValue(
     format,
@@ -135,8 +162,8 @@ export function renderCell<TEntity extends object>(
     {
       key: item.key,
       record,
-      enumRef: item.enumRef ?? fields[item.key]?.enumRef,
-      dictId: item.dictId ?? fields[item.key]?.dictId,
+      enumRef: item.enumRef ?? fieldSpecOf(fields, item.key)?.enumRef,
+      dictId: item.dictId ?? fieldSpecOf(fields, item.key)?.dictId,
       buckets,
       dicts,
     },
