@@ -124,6 +124,7 @@ export {
 } from './_util/crud/useCollectionData'
 export type {CollectionExpose} from './_util/crud/collectionExpose'
 export type {CrudNavigateKind, CrudNavigateTarget} from './_util/crud/navigate'
+export type {CrudStaleInfo, StaleCheckMode} from './_util/crud/useStaleCheck'
 export type {
   CollectionPagination,
   CollectionService,
@@ -185,14 +186,27 @@ export {default as CrudCardGrid} from './crud-card-grid'
 export type {CrudCardGridConstructor} from './crud-card-grid'
 
 export {
+  CrudDetailPage,
+  CrudFormPage,
   CrudHomePage,
+  OPERATION_TRACE_VARIANT,
+  OperationTrace,
+  operationTracePage,
   defineDetailPage,
   defineFormPage,
   defineHomePage,
 } from './crud-page'
 export type {
   CrudDetailDefinition,
+  CrudDetailPageConstructor,
+  CrudDetailPageExpose,
+  CrudDetailPageProps,
+  CrudDetailPageSlots,
   CrudFormDefinition,
+  CrudFormPageConstructor,
+  CrudFormPageExpose,
+  CrudFormPageProps,
+  CrudFormPageSlots,
   CrudHomePageConstructor,
   CrudHomePageExpose,
   CrudHomePageProps,

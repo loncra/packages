@@ -39,6 +39,16 @@ const locale: Locale = {
   Crud: {
     search: '搜索',
     reset: '重置',
+    save: '保存',
+    basicInformation: '基础信息',
+    stale: {
+      deletedTitle: '页面内容已失效',
+      deletedContent: '找不到这条信息。若刚在别处删除过，请从列表重新进入。',
+      modifiedTitle: '此记录已被其他人修改',
+      modifiedContent: '服务器上的内容已经更新。你可以使用服务器版本（会丢弃你的修改），或保留自己的修改继续编辑。',
+      useRemote: '使用服务器版本',
+      keepMine: '保留我的修改',
+    },
     clear: '清空',
     add: '新增',
     edit: '编辑',
@@ -49,6 +59,20 @@ const locale: Locale = {
     deleteConfirmTitle: '删除确认',
     deleteConfirmSingle: '确定要删除该记录吗？',
     deleteConfirmBatch: '确定要删除选中的 {count} 条记录吗？',
+    /**
+     * 操作记录（审计）块的文案。
+     * ⚠️ 与宿主旧文案**逐条一致**（`form.operationDataTrace` / `operation.*` / `authServer.auditEvent.*` / `common.remark`）。
+     */
+    operationTrace: {
+      title: '操作记录',
+      auditType: '审计类型',
+      target: '审计目标',
+      time: '操作时间',
+      principal: '操作账户',
+      type: '操作类型',
+      traceId: '关联业务 id',
+      remark: '备注',
+    },
   },
   ConfigProviderSetting: {
     lang: '语言',

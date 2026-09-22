@@ -40,6 +40,18 @@ const locale: Locale = {
   Crud: {
     search: 'Search',
     reset: 'Reset',
+    save: 'Save',
+    basicInformation: 'Basic information',
+    stale: {
+      deletedTitle: 'This page is no longer valid',
+      deletedContent:
+        'This record could not be found. It may have been deleted elsewhere. Please open it again from the list.',
+      modifiedTitle: 'This record has been modified',
+      modifiedContent:
+        'The server version has changed. You can use the server version (your changes will be lost) or keep your own changes and continue editing.',
+      useRemote: 'Use server version',
+      keepMine: 'Keep my changes',
+    },
     clear: 'Clear',
     add: 'Add',
     edit: 'Edit',
@@ -50,6 +62,17 @@ const locale: Locale = {
     deleteConfirmTitle: 'Delete confirmation',
     deleteConfirmSingle: 'Are you sure to delete this record?',
     deleteConfirmBatch: 'Are you sure to delete the {count} selected records?',
+    /** Operation-trace (audit) block; wording copied 1:1 from the host's old copy. */
+    operationTrace: {
+      title: 'Operation history',
+      auditType: 'Audit type',
+      target: 'Audit target',
+      time: 'Operation time',
+      principal: 'Operator account',
+      type: 'Operation type',
+      traceId: 'Related business ID',
+      remark: 'Remark',
+    },
   },
   ConfigProviderSetting: {
     lang: 'Language',

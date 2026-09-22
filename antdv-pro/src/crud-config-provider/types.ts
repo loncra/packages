@@ -1,6 +1,7 @@
 import type {ComputedRef, InjectionKey, VNodeChild} from 'vue'
 import type {FieldComponentSpec, ValueFormatter} from '../crud-page/types'
 import type {CrudNavigateTarget} from '../_util/crud/navigate'
+import type {StaleCheckMode} from '../_util/crud/useStaleCheck'
 
 export interface CrudConfig {
   /** 权限判定；缺省时一律判为无权限 */
@@ -35,6 +36,12 @@ export interface CrudConfig {
   dateFormat?: string
   /** 同上，日期 + 时间（宿主注入 `VITE_APP_DATE_TIME_VALUE_FORMAT`） */
   dateTimeFormat?: string
+  /**
+   * **陈旧检查的 app 级默认**（切回页签时重拉 + 跟基线比）：`false` 关掉、`'overwrite'` 变了就覆盖、
+   * `'prompt'` 本地动过才问。页面声明（`CrudPageCore.staleCheck`）优先于它；两处都不给用形态默认
+   * （表单 `'prompt'` / 详情 `'overwrite'`）。
+   */
+  staleCheck?: StaleCheckMode
 }
 
 export const CRUD_CONFIG_KEY: InjectionKey<ComputedRef<CrudConfig>> = Symbol('loncraCrudConfig')

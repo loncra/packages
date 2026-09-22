@@ -1,9 +1,20 @@
 export {CrudHomePage} from './home'
+export {CrudFormPage} from './form'
+export {CrudDetailPage} from './detail'
+export {OPERATION_TRACE_VARIANT, OperationTrace, operationTracePage} from './operation-trace'
 export {defineDetailPage, defineFormPage, defineHomePage} from './define'
 
 export type {
   CrudDetailDefinition,
+  CrudDetailPageConstructor,
+  CrudDetailPageExpose,
+  CrudDetailPageProps,
+  CrudDetailPageSlots,
   CrudFormDefinition,
+  CrudFormPageConstructor,
+  CrudFormPageExpose,
+  CrudFormPageProps,
+  CrudFormPageSlots,
   CrudHomePageConstructor,
   CrudHomePageExpose,
   CrudHomePageProps,
@@ -11,6 +22,7 @@ export type {
   CrudListPage,
   CrudPageCore,
   CrudPageRoutes,
+  CrudStaleInfo,
   FieldComponentSpec,
   FormatContext,
   PageDeclContext,
@@ -31,5 +43,7 @@ export type {
   PageRegistry,
   PageSearchConfig,
   PageValueFormat,
+  StaleCheckMode,
   ValueFormatter,
 } from './types'
+export type {OperationTraceProps, OperationTraceSlots} from './operation-trace'

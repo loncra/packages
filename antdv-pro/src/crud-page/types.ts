@@ -3,6 +3,7 @@ import type {FormItemProps, TableProps} from 'antdv-next'
 import type {
   BasicIdMetadata,
   NameValueEnumMetadata,
+  RestResult,
   ScrollPageResult,
   SYSTEM_CONSTANT,
 } from '@loncra/client/commons'
@@ -14,7 +15,10 @@ import type {
 import type {CollectionService} from '../_util/crud/useCollectionData'
 import type {DragProp} from '../_util/crud/useDrag'
 import type {CrudNavigateTarget} from '../_util/crud/navigate'
-import type {ColumnSearchConfig, SearchableColumnType} from '../query-table/types'
+import type {StaleCheckMode} from '../_util/crud/useStaleCheck'
+
+export type {CrudStaleInfo, StaleCheckMode} from '../_util/crud/useStaleCheck'
+import type {ColumnSearchConfig, QueryTableProps, SearchableColumnType} from '../query-table/types'
 import type {EnumBucketRequest, EnumRef, PageDictionaries} from '../basic-crud-query/types'
 import type {EnumBucketsResponseBody} from '@loncra/client/resource'
 
@@ -51,6 +55,12 @@ export interface CrudPageCore<
   routes?: CrudPageRoutes
   /** 操作轨迹表名（宿主自己的审计表标识）；列表不用，表单/详情壳以后用 */
   operationDataTraceTarget?: string
+  /**
+   * 陈旧检查（切回页签时重拉 + 跟基线比）：`false` 关掉、`'overwrite'` 变了就覆盖、`'prompt'`
+   * 本地动过才问。不给就落到 `CrudConfig.staleCheck`，再不给用形态默认（表单 `'prompt'` / 详情 `'overwrite'`）。
+   * 冲突时壳会 `emit('stale', {reason, remote})` 让宿主收尾（关 tab / 回列表）。
+   */
+  staleCheck?: StaleCheckMode
   /**
    * 字段字典：`labelKey` / `format`（本体）与 `enumRef` / `dictId`（来源）的唯一事实来源。
    * 来源的**加载清单按形态从这里推导**（列表只收"列上有搜索项"的那些，见 `collectListSources`）
@@ -228,15 +238,21 @@ export interface PageListDefinition<TEntity extends BasicIdMetadata<unknown>> {
    */
   drag?: DragProp<TEntity>
   rowSelection?: TableProps['rowSelection'] | false
-  /** 行内动作（名字与内容层/基类的 `recordActions` 一致）；函数形态用于按 `variant` 裁剪动作集合 */
+  /**
+   * 行内动作（名字与内容层/基类的 `recordActions` 一致）：**`false` = 不要行内动作**
+   * （不给 `resolveRecordActions`，也不补"操作"列 —— 与 `CrudTable` 的语义一字不差）；
+   * 函数形态用于按 `variant` 裁剪动作集合（可以返回 `false`）。
+   */
   recordActions?:
     | RecordActionDefinition<TEntity>[]
-    | ((ctx: PageDeclContext) => RecordActionDefinition<TEntity>[])
+    | false
+    | ((ctx: PageDeclContext) => RecordActionDefinition<TEntity>[] | false)
   /**
    * 标题栏动作（名字与内容层/基类的 `toolbarActions` 一致）：与 pro 内置的新增按钮**合并**
-   * （同 id 后者覆盖）。业务自己的导出、批量动作都写这里 —— pro 不预置任何业务动作。
+   * （同 id 后者覆盖）。业务自己的导出、批量动作都写这里 —— pro 不预置任何业务动作；
+   * **`false` = 连默认的"新增 / 删除选中"都不要**（审计这类只读表用）。
    */
-  toolbarActions?: ToolbarActionDefinition<TEntity>[]
+  toolbarActions?: ToolbarActionDefinition<TEntity>[] | false
 }
 
 /** `Home.vue` 的声明 = 核心 + 列表（`defineHomePage` 产出） */
@@ -430,6 +446,16 @@ export interface CrudHomePageProps<
   variant?: string
   /** 宿主数据，透传给声明里的 `visible` / `recordActions`（见 `PageDeclContext.extra`） */
   extra?: Record<string, unknown>
+  /**
+   * 表格标题（与 `CrudTable.title` 同形）：**`false` = 不渲染标题**（嵌入到别的页面里的表用，
+   * 否则会顶出宿主默认的页面标题）。不给就交给表格自己（页面槽 `#title` 优先）。
+   */
+  title?: VNode | boolean
+  /**
+   * 预置查询条件（与 `CrudTable.query` 同形）：嵌入表用 —— 如操作记录块按"审计目标 + 关联业务 id +
+   * 该记录创建之后"过滤；不传就是"无预置条件"。
+   */
+  query?: QueryTableProps['query']
 }
 
 /**
@@ -480,5 +506,112 @@ export type CrudHomePageConstructor = new <
   $props: CrudHomePageProps<TId, TBody, TEntity> & PublicProps
   $slots: CrudHomePageSlots<TEntity>
 } & CrudHomePageExpose<TEntity>
+
+/**
+ * 表单壳要的服务：**取数 + 保存**。
+ *
+ * `CrudPageCore.service` 只保证"读得到数据"（列表形态共用，只读服务也能用）⇒ 表单壳按**事实**窄化：
+ * 用这个类型收 props，别去污染 `CrudPageCore`。声明层给的服务满足它（`BasicCrudService`）时
+ * 零成本；不满足也没关系 —— 报错点会落在"哪里用了 save"上。
+ */
+export type FormService<
+  TBody extends BasicIdMetadata<TId>,
+  TEntity extends TBody,
+  TId = TEntity[typeof SYSTEM_CONSTANT.ID_NAME],
+> = CollectionService<TBody, TEntity, ScrollPageResult<TEntity>, TId> & {
+  save: (body: TBody) => Promise<RestResult<TId>>
+}
+
+export interface CrudFormPageProps<
+  TId = string | number,
+  TBody extends BasicIdMetadata<TId> = BasicIdMetadata<TId>,
+  TEntity extends TBody = TBody,
+> {
+  page: CrudFormDefinition<TBody, TEntity, TId>
+  /**
+   * 要编辑的记录主键；不传 = 新增。
+   *
+   * **pro 不认路由**：宿主页壳自己从 `route.query` 里取出来传进来（旧 `BasicForm` 是直接读
+   * `$route.query.id` 的，那属于宿主环境）。
+   */
+  id?: TId
+  /**
+   * 壳交给声明里钩子 / 字段函数的宿主数据（子表 ref、查询条件等声明管不到的东西）——
+   * 就是 `PageDeclContext.extra` 与 `PageFieldRenderContext.extra` 那一份。
+   */
+  contextExtra?: Record<string, unknown>
+  /** 宿主形态名：宿主自己起名（如 `'picker'`）；不传 = 宿主没给形态名（整页） */
+  variant?: string
+}
+
+/**
+ * 表单页壳暴露给宿主的能力。
+ *
+ * ⚠️ 同 `CrudHomePageExpose`：**一律是"值"不是 ref**（Vue 对 `expose` 出来的 ref 自动解包）。
+ * 标题不在这里：怎么写标题是宿主的事（见 `PageFormDefinition` 的说明）。
+ */
+export interface CrudFormPageExpose<TBody> {
+  /** 当前表单实体：宿主做标题、陈旧判断、子表联动时读它（写值走声明钩子） */
+  entity: TBody
+}
+
+export interface CrudFormPageSlots<TBody extends object> {
+  /** 字段行之后、按钮之前（放操作轨迹块、子表这类宿主内容）；作用域给当前实体与 `extra` */
+  default?: (arg: {entity: TBody; extra: Record<string, unknown>}) => unknown
+  /** 表单按钮区之前 / 之后（不传就用壳自己的按钮组） */
+  beforeButton?: () => unknown
+  afterButton?: () => unknown
+}
+
+export type CrudFormPageConstructor = new <
+  TBody extends BasicIdMetadata<TId>,
+  TEntity extends TBody = TBody,
+  TId = TEntity[typeof SYSTEM_CONSTANT.ID_NAME],
+>(
+  props: CrudFormPageProps<TId, TBody, TEntity> & PublicProps,
+) => {
+  $props: CrudFormPageProps<TId, TBody, TEntity> & PublicProps
+  $slots: CrudFormPageSlots<TBody>
+} & CrudFormPageExpose<TBody>
+
+export interface CrudDetailPageProps<
+  TId = string | number,
+  TBody extends BasicIdMetadata<TId> = BasicIdMetadata<TId>,
+  TEntity extends TBody = TBody,
+> {
+  page: CrudDetailDefinition<TBody, TEntity, TId>
+  /** 要看的主键；不传就不取数（`pro` 不认路由，宿主页壳从 `route.query` 取出来传进来） */
+  id?: TId
+  /** 交给声明里钩子的宿主数据（附表 ref、查询条件…），同 `CrudFormPageProps.contextExtra` */
+  contextExtra?: Record<string, unknown>
+  /** 宿主形态名：宿主自己起名（如 `'picker'`）；不传 = 宿主没给形态名（整页） */
+  variant?: string
+}
+
+/** 详情页壳暴露给宿主的能力（`expose` 出来的都是"值"，见 `CrudHomePageExpose` 的说明） */
+export interface CrudDetailPageExpose<TEntity> {
+  /** 当前实体：宿主做标题、附表联动时读它 */
+  entity: TEntity
+}
+
+export interface CrudDetailPageSlots<TEntity extends object> {
+  /** `a-descriptions` 的右侧操作区 */
+  extra?: () => unknown
+  /** 描述列表之后（附表、资源树这类宿主内容）；作用域给实体与 `extra` */
+  afterDescriptions?: (arg: {entity: TEntity; extra: Record<string, unknown>}) => unknown
+  /** 操作轨迹块之后（宿主壳放"操作轨迹表"那类内容的位置之一） */
+  afterOperationDataTrace?: () => unknown
+}
+
+export type CrudDetailPageConstructor = new <
+  TBody extends BasicIdMetadata<TId>,
+  TEntity extends TBody = TBody,
+  TId = TEntity[typeof SYSTEM_CONSTANT.ID_NAME],
+>(
+  props: CrudDetailPageProps<TId, TBody, TEntity> & PublicProps,
+) => {
+  $props: CrudDetailPageProps<TId, TBody, TEntity> & PublicProps
+  $slots: CrudDetailPageSlots<TEntity>
+} & CrudDetailPageExpose<TEntity>
 
 // #endregion

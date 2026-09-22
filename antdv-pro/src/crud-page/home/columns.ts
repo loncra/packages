@@ -2,6 +2,7 @@ import {createTextVNode, createVNode, Fragment, isVNode, type VNode} from 'vue'
 import type {EnumBucketsResponseBody} from '@loncra/client/resource'
 import type {SearchableColumnType} from '../../query-table/types'
 import type {PageDictionaries} from '../../basic-crud-query/types'
+import {readPath} from '../../_util/crud/readPath'
 import {componentName, dictOptions, formatValue, resolveFieldSpec} from '../registry'
 import type {
   PageDeclContext,
@@ -10,22 +11,6 @@ import type {
   PageListEntry,
   PageRegistry,
 } from '../types'
-
-/**
- * 按 `a.b.c` 取嵌套值：列 key 允许写**路径**，数据不在顶层字段时用
- * （如 `data.details.requestDetails.remoteAddress`）。
- *
- * 顶层字段就是退化的单段路径 ⇒ 两种写法走同一条路，不需要额外的 prop 或 formatter。
- * 不支持 `a['b.c']`（段名里带点）：后端字段名里没有点，真出现了再说。
- */
-function readPath(source: unknown, path: string): unknown {
-  return path
-    .split('.')
-    .reduce<unknown>(
-      (acc, key) => (acc == null ? undefined : (acc as Record<string, unknown>)[key]),
-      source,
-    )
-}
 
 /** 裸 key → 完整列 */
 export function toListColumn<TEntity extends object>(

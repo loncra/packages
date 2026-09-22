@@ -36,9 +36,37 @@ export interface SystemUserPanelLocale {
   email: string
 }
 
+/** 操作记录（审计）块的文案（`Crud.operationTrace.*`，声明里写相对 key） */
+export interface OperationTraceLocale {
+  title: string
+  auditType: string
+  target: string
+  time: string
+  principal: string
+  type: string
+  traceId: string
+  remark: string
+}
+
 export interface CrudLocale {
   search: string
   reset: string
+  save: string
+  /** 详情描述区的标题（旧 host `common.basicInformation`） */
+  basicInformation: string
+  /** 陈旧检查（切回页签时）：文案在这里，宿主可用 `locale-message` 覆写 */
+  stale: {
+    /** 记录已被删 */
+    deletedTitle: string
+    deletedContent: string
+    /** 记录被别处改过 */
+    modifiedTitle: string
+    modifiedContent: string
+    /** 用服务器版本（丢本地修改） */
+    useRemote: string
+    /** 保留我的修改 */
+    keepMine: string
+  }
   clear: string
   add: string
   edit: string
@@ -49,6 +77,7 @@ export interface CrudLocale {
   deleteConfirmTitle: string
   deleteConfirmSingle: string
   deleteConfirmBatch: string
+  operationTrace: OperationTraceLocale
 }
 
 /** 颜色细项：标题 + 一句说明（与宿主原 `systemSetting.colorSetting.<item>` 同形） */

@@ -36,6 +36,10 @@ const CrudHomePage = defineComponent({
     page: {type: Object as PropType<CrudHomePageProps['page']>, required: true},
     variant: String,
     extra: {type: Object as PropType<Record<string, unknown>>, default: () => ({})},
+    /** `false` = 不渲染表格标题（嵌入用的表）；`default: undefined` 不能删，同 `CrudTable.title` 的坑 */
+    title: {type: [Object, Boolean] as PropType<CrudHomePageProps['title']>, default: undefined},
+    /** 预置查询条件（嵌入表用：操作记录块就是靠它按实体过滤） */
+    query: {type: Object as PropType<CrudHomePageProps['query']>, default: undefined},
   },
   slots: Object as SlotsType<CrudHomePageSlots<DefaultCrudEntity>>,
   setup(props, {attrs, expose, slots}) {
@@ -157,6 +161,8 @@ const CrudHomePage = defineComponent({
         <CrudTable
           ref={tableRef}
           service={props.page.service}
+          title={props.title}
+          query={props.query}
           columns={columns.value}
           drag={props.page.list?.drag}
           authority={props.page.list?.authority}
