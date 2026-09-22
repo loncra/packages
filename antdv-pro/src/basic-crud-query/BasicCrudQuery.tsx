@@ -21,12 +21,12 @@ import {
   BUILTIN_RECORD_ACTION_IDS,
   buildRecordActionContext,
   buildToolbarActionContext,
-  mergeDefinitions,
+  mergeDefinitionsNewFirst,
   useActionResolver,
 } from '../_util/crud/actions'
 import {
   createDefaultBulkActions,
-  createDefaultItemActions,
+  createDefaultRecordActions,
   createDefaultToolbarActions,
 } from '../_util/crud/defaultActions'
 import type {CollectionExpose} from '../_util/crud/collectionExpose'
@@ -40,8 +40,8 @@ import {useCrudDelete} from '../_util/crud/useCrudDelete'
 import DataLoadingCardPlan from '../data-loading-card-plan'
 import ActionButton from '../action-button'
 import type {EnumBucketsResponseBody} from '@loncra/client/resource'
-import {fetchDataDicts, fetchEnumBuckets} from './dictionaries'
-import type {EnumBucketRequest, PageDicts} from './types'
+import {fetchDataDictionaries, fetchEnumBuckets} from './dictionaries'
+import type {EnumBucketRequest, PageDictionaries} from './types'
 import useStyle from './style'
 import type {
   BasicCrudQueryConstructor,
@@ -55,7 +55,7 @@ import type {
  * crud 的**基类**：装的是所有展示形态共用的东西 ——
  *
  * - 数据：`dataSource` / `loading` / `query` / `pagination` / 选中集合（`selectedKey` 指定挂在哪个 prop 上）
- * - 字典：`list.enums` / `list.dicts` 在这里拉，结果用 `v-model` 回给建列的地方
+ * - 字典：`list.enums` / `list.dictionaries` 在这里拉，结果用 `v-model` 回给建列的地方
  * - 动作：默认定义（add / deleteSelected / edit·detail·delete）+ 声明的合并、解析
  * - 布局：套 `DataLoadingCardPlan`；**标题右侧放权限按钮**；**统一分页由本组件渲染**
  *
@@ -115,7 +115,7 @@ const BasicCrudQuery = defineComponent({
     enums: Array as PropType<EnumBucketRequest[]>,
     dictCodes: Array as PropType<(string | undefined)[]>,
     buckets: {type: Object as PropType<EnumBucketsResponseBody>, default: () => ({})},
-    dicts: {type: Object as PropType<PageDicts>, default: () => ({})},
+    dictionaries: {type: Object as PropType<PageDictionaries>, default: () => ({})},
     prefixCls: String,
     rootClass: String,
   },
@@ -127,7 +127,7 @@ const BasicCrudQuery = defineComponent({
     'update:selectedItems',
     'update:pagination',
     'update:buckets',
-    'update:dicts',
+    'update:dictionaries',
     'action',
     'add',
     'edit',
@@ -156,7 +156,7 @@ const BasicCrudQuery = defineComponent({
     const pagination = useModel(props, 'pagination') as unknown as Ref<TableProps['pagination']>
     const selected = useModel(props, props.selectedKey) as unknown as Ref<TEntity[]>
     const buckets = useModel(props, 'buckets') as unknown as Ref<EnumBucketsResponseBody>
-    const dicts = useModel(props, 'dicts') as unknown as Ref<PageDicts>
+    const dictionaries = useModel(props, 'dictionaries') as unknown as Ref<PageDictionaries>
 
     /** 取数：`loading` 由这里开关（挂载 / 切回那两个口由 plan 触发，它自己也会点 loading） */
     async function fetchDataSource() {
@@ -181,12 +181,12 @@ const BasicCrudQuery = defineComponent({
 
     /** 系统字典：与列表数据同一批、只在挂载时拉一次 */
     async function loadDictionaries() {
-      const [nextBuckets, nextDicts] = await Promise.all([
+      const [nextBuckets, nextDictionaries] = await Promise.all([
         fetchEnumBuckets(props.enums),
-        fetchDataDicts(props.dictCodes),
+        fetchDataDictionaries(props.dictCodes),
       ])
       buckets.value = nextBuckets
-      dicts.value = nextDicts
+      dictionaries.value = nextDictionaries
     }
 
     /** plan 的 `onMounted` 口：字典 + 首屏（`immediate: false` 时只拉字典） */
@@ -231,27 +231,32 @@ const BasicCrudQuery = defineComponent({
       }),
     )
 
-    /** 工具栏定义：默认 `add` + `deleteSelected` + 声明的；`toolbarActions === false` 整排都不要 */
+    /**
+     * 工具栏定义：**声明的在前**，默认动作在下（`add` + `deleteSelected`）；
+     * `toolbarActions === false` 整排都不要。
+     */
     const titleDefinitions = computed(() => {
       if (props.toolbarActions === false) {
         return []
       }
-      return mergeDefinitions(
-        createDefaultToolbarActions<TEntity>({
-          authority: props.authority,
-          locale: locale.value,
-          iconClass: 'align',
-          onAdd: (ctx) => {
-            emit('add')
-            emit('action', {id: 'add', context: ctx})
-          },
-        }),
-        createDefaultBulkActions<TBody, TEntity, TId>({
-          authority: props.authority,
-          service: props.service,
-          locale: locale.value,
-          remove,
-        }),
+      return mergeDefinitionsNewFirst(
+        [
+          ...createDefaultToolbarActions<TEntity>({
+            authority: props.authority,
+            locale: locale.value,
+            iconClass: 'align',
+            onAdd: (ctx) => {
+              emit('add')
+              emit('action', {id: 'add', context: ctx})
+            },
+          }),
+          ...createDefaultBulkActions<TBody, TEntity, TId>({
+            authority: props.authority,
+            service: props.service,
+            locale: locale.value,
+            remove,
+          }),
+        ],
         Array.isArray(props.toolbarActions) ? props.toolbarActions : [],
       )
     })
@@ -266,9 +271,10 @@ const BasicCrudQuery = defineComponent({
       ),
     )
 
+    /** 行内定义：**声明的在前**，默认动作在下（`edit` / `detail` / `delete`） */
     const recordDefinitions = computed(() =>
-      mergeDefinitions(
-        createDefaultItemActions<TBody, TEntity, TId>({
+      mergeDefinitionsNewFirst(
+        createDefaultRecordActions<TBody, TEntity, TId>({
           authority: props.authority,
           service: props.service,
           locale: locale.value,

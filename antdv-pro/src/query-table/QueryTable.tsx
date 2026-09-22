@@ -14,7 +14,7 @@ import type {TableProps} from 'antdv-next'
 import {Button, Space, SpaceCompact, Table, Typography} from 'antdv-next'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {DeleteOutlined, FilterOutlined, SearchOutlined, UndoOutlined} from '@antdv-next/icons'
-import {classNames} from '@loncra/antdv'
+import {classNames, splitSemantic} from '@loncra/antdv'
 import {type FilterRequest, type PageRequest, SYSTEM_CONSTANT} from '@loncra/client/commons'
 import {useLocale} from '../_util/useLocale'
 import BasicCrudQuery from '../basic-crud-query'
@@ -24,7 +24,7 @@ import type {CollectionExpose} from '../_util/crud/collectionExpose'
 import type {
   BasicCrudQueryExpose,
   EnumBucketRequest,
-  PageDicts,
+  PageDictionaries,
   RefreshOnActivate,
 } from '../basic-crud-query'
 import {
@@ -52,7 +52,7 @@ const QUERY_TABLE_EMITS = [
   'update:selectedRows',
   'update:pagination',
   'update:buckets',
-  'update:dicts',
+  'update:dictionaries',
   'action',
   'add',
   'edit',
@@ -83,9 +83,13 @@ function toTableFieldName(key: string): string {
  * 表格：**只画表格**（列、筛选、拖拽列、空壳筛选下拉、槽）。
  *
  * 取数 / 分页 / 字典 / 标题 / 动作全部由 `BasicCrudQuery` 基类做（本组件把数据 model
- * `v-model` 交给它，并把它 expose 的能力转发出去）。所以要"贴边"之类的卡片外观，
- * 在门面那层给 `classes`（基类会把 `$attrs` 交给 `DataLoadingCardPlan` 的 `Card`）。
+ * `v-model` 交给它，并把它 expose 的能力转发出去）。
+ *
+ * 外观：`classes` / `styles` 只留**一个**入口，键用「部件.语义路径」——
+ * `table.xxx` 是这张表格（antd Table 的语义键），不带前缀的算卡片本体（plan 的 `Card`），
+ * 拆法见 `@loncra/antdv` 的 `splitSemantic`。
  */
+const SEMANTIC_PARTS = ['card', 'table'] as const
 const QueryTable = defineComponent({
   name: 'LQueryTable',
   inheritAttrs: false,
@@ -126,7 +130,7 @@ const QueryTable = defineComponent({
       type: [Array, Boolean] as PropType<QueryTableProps['recordActions']>,
       default: undefined,
     },
-    /** 系统字典：要加载什么（声明侧 `list.enums` / `list.dicts`）—— 原样交给基类 */
+    /** 系统字典：要加载什么（声明侧 `list.enums` / `list.dictionaries`）—— 原样交给基类 */
     enums: Array as PropType<QueryTableProps['enums']>,
     dictCodes: Array as PropType<QueryTableProps['dictCodes']>,
     prefixCls: String,
@@ -156,7 +160,7 @@ const QueryTable = defineComponent({
     },
     /** 字典加载结果（基类拉完 `v-model` 回来） */
     buckets: {type: Object as PropType<QueryTableProps['buckets']>, default: () => ({})},
-    dicts: {type: Object as PropType<QueryTableProps['dicts']>, default: () => ({})},
+    dictionaries: {type: Object as PropType<QueryTableProps['dictionaries']>, default: () => ({})},
   },
   emits: [...QUERY_TABLE_EMITS],
   slots: Object as SlotsType<QueryTableSlots<DefaultCrudEntity>>,
@@ -181,7 +185,7 @@ const QueryTable = defineComponent({
     const selectedRows = useModel(props, 'selectedRows') as unknown as Ref<TEntity[]>
     const tablePagination = useModel(props, 'pagination') as unknown as Ref<TableProps['pagination']>
     const buckets = useModel(props, 'buckets') as unknown as Ref<EnumBucketsResponseBody>
-    const dicts = useModel(props, 'dicts') as unknown as Ref<PageDicts>
+    const dictionaries = useModel(props, 'dictionaries') as unknown as Ref<PageDictionaries>
     const tableColumns = ref<SearchableColumnType<TEntity>[]>([])
     const appliedDefaultValueKeys = new Set<string>()
 
@@ -241,9 +245,24 @@ const QueryTable = defineComponent({
       props.rowKey,
     )
 
+    /** 语义样式按部件拆（键前缀见 `SEMANTIC_PARTS`）：卡片的给基类、表格的给 `<DataTable>` */
+    const classSemantic = computed(() =>
+      splitSemantic(attrs.classes as Record<string, string> | undefined, SEMANTIC_PARTS, 'card'),
+    )
+    const styleSemantic = computed(() =>
+      splitSemantic(attrs.styles as Record<string, unknown> | undefined, SEMANTIC_PARTS, 'card'),
+    )
+
     const tablePassthroughAttrs = computed(() => {
-      // `classes` 是卡片（plan 的 `Card`）的外观，交给基类；其余未知 attrs 照旧落表格
-      const {class: _class, style: _style, rowSelection: _rowSelection, classes: _classes, ...rest} = attrs
+      // `classes` / `styles` 已在上面按部件分流；其余未知 attrs 照旧落表格
+      const {
+        class: _class,
+        style: _style,
+        rowSelection: _rowSelection,
+        classes: _classes,
+        styles: _styles,
+        ...rest
+      } = attrs
       if (rest.scroll === undefined) {
         // 显式收窄成"只关心 width"：在 antd 那层泛型列类型上做 `.every` 会触发 TS2589（类型递归预算）
         const cols: {width?: string | number}[] = tableColumns.value
@@ -475,21 +494,24 @@ const QueryTable = defineComponent({
           selectedKey="selectedRows"
           prefixCls={props.prefixCls}
           rootClass={props.rootClass}
-          {...({classes: attrs.classes} as Record<string, unknown>)}
+          {...({classes: classSemantic.value.card, styles: styleSemantic.value.card} as Record<
+            string,
+            unknown
+          >)}
           dataSource={dataSource.value}
           loading={loading.value}
           query={query.value}
           selectedRows={selectedRows.value}
           pagination={tablePagination.value}
           buckets={buckets.value}
-          dicts={dicts.value}
+          dictionaries={dictionaries.value}
           onUpdate:dataSource={(value: TEntity[]) => (dataSource.value = value)}
           onUpdate:loading={(value: boolean) => (loading.value = value)}
           onUpdate:query={(value: FilterRequest | PageRequest) => (query.value = value)}
           onUpdate:selectedRows={(value: TEntity[]) => (selectedRows.value = value)}
           onUpdate:pagination={(value: unknown) => (tablePagination.value = value as TableProps['pagination'])}
           onUpdate:buckets={(value: EnumBucketsResponseBody) => (buckets.value = value)}
-          onUpdate:dicts={(value: PageDicts) => (dicts.value = value)}
+          onUpdate:dictionaries={(value: PageDictionaries) => (dictionaries.value = value)}
           onAction={(payload) => emit('action', payload)}
           onAdd={() => emit('add')}
           onEdit={(record: TEntity) => emit('edit', record)}
@@ -502,6 +524,8 @@ const QueryTable = defineComponent({
                 {...(tablePassthroughAttrs.value as Record<string, unknown>)}
                 class={hashedClass}
                 style={attrs.style}
+                classes={classSemantic.value.table}
+                styles={styleSemantic.value.table}
                 columns={tableColumns.value}
                 pagination={false}
                 rowKey={props.rowKey}

@@ -15,7 +15,7 @@ import type {CollectionService} from '../_util/crud/useCollectionData'
 import type {DragProp} from '../_util/crud/useDrag'
 import type {CrudNavigateTarget} from '../_util/crud/navigate'
 import type {ColumnSearchConfig, SearchableColumnType} from '../query-table/types'
-import type {EnumBucketRequest, EnumRef, PageDicts} from '../basic-crud-query/types'
+import type {EnumBucketRequest, EnumRef, PageDictionaries} from '../basic-crud-query/types'
 import type {EnumBucketsResponseBody} from '@loncra/client/resource'
 
 // #region 声明：核心（三种形态共用）
@@ -177,7 +177,7 @@ export interface PageListDefinition<TEntity extends BasicIdMetadata<unknown>> {
    * 与 `enums` 同构：pro 自己走 client 拉（`findDataDictionariesByCodes`），宿主不接线；
    * 字段上写 `dictId` 消费它。
    */
-  dicts?: string[]
+  dictionaries?: string[]
   /** 列顺序 = 数组顺序；按形态显隐用列自己的 `visible` */
   columns: PageListEntry<TEntity>[]
   /**
@@ -230,8 +230,8 @@ export interface FormatContext {
   /** 该条目生效的数据字典 code（条目 `dictId` ?? 字典 `dictId`） */
   dictId?: string
   buckets: EnumBucketsResponseBody
-  /** 声明里 `dicts` 预载回来的字典 */
-  dicts: PageDicts
+  /** 声明里 `dictionaries` 预载回来的字典 */
+  dictionaries: PageDictionaries
 }
 
 /** formatter：返回值直接当单元格内容渲染（string 或 VNode） */

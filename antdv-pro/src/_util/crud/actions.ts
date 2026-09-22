@@ -121,6 +121,22 @@ export function mergeDefinitions<D extends {id: string}>(...lists: Array<D[] | u
   return [...map.values()]
 }
 
+/**
+ * 同 `mergeDefinitions`（按 id 合并、后者按字段覆盖），但把**只在新列表里出现的 id 提到最前**：
+ * 页面声明里自定义的动作排在框架默认动作之上（默认的删除类动作由 `ActionButton` 自己加分隔线）。
+ */
+export function mergeDefinitionsNewFirst<D extends {id: string}>(
+  bases: D[],
+  additions?: D[],
+): D[] {
+  const known = new Set(bases.map((def) => def.id))
+  const merged = mergeDefinitions(bases, additions)
+  return [
+    ...merged.filter((def) => !known.has(def.id)),
+    ...merged.filter((def) => known.has(def.id)),
+  ]
+}
+
 export function overrideAction<D extends {id: string}>(
   definitions: D[],
   id: string,

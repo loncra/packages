@@ -8,7 +8,7 @@ import type {DefaultCrudEntity} from '../../_util/crud/useCollectionData'
 import type {SearchableColumnType} from '../../query-table/types'
 import {usePageRegistry} from '../registry'
 import {buildListColumns, renderCell, toCellVNode} from './columns'
-import type {PageDicts} from '../../basic-crud-query/types'
+import type {PageDictionaries} from '../../basic-crud-query/types'
 import type {
   CrudHomePageConstructor,
   CrudHomePageExpose,
@@ -52,7 +52,7 @@ const CrudHomePage = defineComponent({
      * 这里只把声明里的 id/code 交下去，结果 `v-model` 回来喂给建列 / 单元格。
      */
     const buckets = ref<EnumBucketsResponseBody>({})
-    const dicts = ref<PageDicts>({})
+    const dictionaries = ref<PageDictionaries>({})
     /** 字段组件表 + 值格式表（内置 + 宿主 CrudConfig 覆盖） */
     const registry = usePageRegistry()
 
@@ -75,7 +75,7 @@ const CrudHomePage = defineComponent({
         t,
         props.page.i18nPrefix,
         buckets.value,
-        dicts.value,
+        dictionaries.value,
         ctx.value,
         registry.value,
       ),
@@ -115,7 +115,7 @@ const CrudHomePage = defineComponent({
         slotProps.column?.key,
         slotProps.record,
         buckets.value,
-        dicts.value,
+        dictionaries.value,
         registry.value,
       )
       return toCellVNode(declared === undefined ? slotProps.text : declared)
@@ -155,18 +155,18 @@ const CrudHomePage = defineComponent({
           rowKey={props.page.rowKey}
           rowSelection={props.page.list?.rowSelection}
           enums={props.page.list?.enums}
-          dictCodes={props.page.list?.dicts}
+          dictCodes={props.page.list?.dictionaries}
           dataSource={dataSource.value}
           buckets={buckets.value}
-          dicts={dicts.value}
+          dictionaries={dictionaries.value}
           onUpdate:dataSource={(value: TEntity[]) => {
             dataSource.value = value
           }}
           onUpdate:buckets={(value: EnumBucketsResponseBody) => {
             buckets.value = value
           }}
-          onUpdate:dicts={(value: PageDicts) => {
-            dicts.value = value
+          onUpdate:dictionaries={(value: PageDictionaries) => {
+            dictionaries.value = value
           }}
           onAdd={() => go('add')}
           onEdit={(record: TEntity) => go('edit', record)}

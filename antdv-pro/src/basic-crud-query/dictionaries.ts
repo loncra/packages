@@ -4,7 +4,7 @@ import {
   type EnumBucketsRequestBody,
   type EnumBucketsResponseBody,
 } from '@loncra/client/resource'
-import type {EnumBucketRequest, PageDicts} from './types'
+import type {EnumBucketRequest, PageDictionaries} from './types'
 
 /** 去重 + 丢掉空值（声明里的 id/code 常是宿主常量和 undefined 混着写） */
 function compact(values?: (string | undefined)[]) {
@@ -34,10 +34,10 @@ export async function fetchEnumBuckets(requests?: EnumBucketRequest[]): Promise<
 }
 
 /**
- * 拉数据字典（声明里的 `list.dicts`）。**原样收下不归一化**：
+ * 拉数据字典（声明里的 `list.dictionaries`）。**原样收下不归一化**：
  * `valueType` / `metadata` / `children` 后面都还要用。
  */
-export async function fetchDataDicts(codes?: (string | undefined)[]): Promise<PageDicts> {
+export async function fetchDataDictionaries(codes?: (string | undefined)[]): Promise<PageDictionaries> {
   const dictCodes = compact(codes)
   if (dictCodes.length === 0) {
     return {}

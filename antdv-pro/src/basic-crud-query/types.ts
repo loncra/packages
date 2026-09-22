@@ -33,7 +33,7 @@ export interface EnumBucketRequest {
 }
 
 /** 数据字典：字典 code → 字典项（client 的原样类型，含 code/name/valueType/metadata/children） */
-export type PageDicts = Record<string, DataDictionaryMetadata[]>
+export type PageDictionaries = Record<string, DataDictionaryMetadata[]>
 
 /** 选中集合挂在哪一个 prop 上（表格 `selectedRows` / 卡片 `selectedItems`） */
 export type BasicCrudQuerySelectedKey = 'selectedRows' | 'selectedItems'
@@ -106,12 +106,12 @@ export interface BasicCrudQueryProps<
    * 给 `false` 不要行内 / 项内动作（不给 `resolveRecordActions`，也不补"操作"列）。
    */
   recordActions?: RecordActionDefinition<TEntity>[] | false
-  /** 系统字典：要加载什么（声明侧 `list.enums` / `list.dicts`）—— 枚举桶按模块分组 */
+  /** 系统字典：要加载什么（声明侧 `list.enums` / `list.dictionaries`）—— 枚举桶按模块分组 */
   enums?: EnumBucketRequest[]
   dictCodes?: (string | undefined)[]
   /** 字典加载结果（`v-model` 回给建列的地方） */
   buckets?: EnumBucketsResponseBody
-  dicts?: PageDicts
+  dictionaries?: PageDictionaries
 }
 
 export type BasicCrudQueryEmits<
@@ -125,7 +125,7 @@ export type BasicCrudQueryEmits<
   'update:selectedItems': [value: TEntity[]]
   'update:pagination': [value: TableProps['pagination']]
   'update:buckets': [value: EnumBucketsResponseBody]
-  'update:dicts': [value: PageDicts]
+  'update:dictionaries': [value: PageDictionaries]
   action: [payload: ToolbarActionPayload<TEntity> | RecordActionPayload<TEntity>]
   add: []
   edit: [record: TEntity]

@@ -42,13 +42,19 @@ const ActionButton = defineComponent({
     const loneAction = computed(() => (props.actions.length === 1 ? props.actions[0] ?? null : null))
 
     const menuItems = computed(() =>
-      props.actions.map((action) => ({
-        key: action.id,
-        label: action.label,
-        danger: action.danger,
-        icon: action.icon ? () => action.icon : undefined,
-        disabled: action.disabled,
-      })),
+      props.actions.flatMap((action, index) => {
+        const item = {
+          key: action.id,
+          label: action.label,
+          danger: action.danger,
+          icon: action.icon ? () => action.icon : undefined,
+          disabled: action.disabled,
+        }
+        // danger（删除类）动作上面来一条分割线，跟普通动作分开；它本来就是第一个时不加
+        return action.danger && index > 0
+          ? [{type: 'divider' as const, key: `${action.id}-divider`}, item]
+          : [item]
+      }),
     )
 
     function dispatchAction(action: ResolvedAction) {

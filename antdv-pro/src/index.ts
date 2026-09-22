@@ -86,7 +86,7 @@ export type {
 } from './_util/crud/actions'
 export {
   createDefaultBulkActions,
-  createDefaultItemActions,
+  createDefaultRecordActions,
   createDefaultToolbarActions,
 } from './_util/crud/defaultActions'
 export {useCrudDelete} from './_util/crud/useCrudDelete'
@@ -132,7 +132,7 @@ export type {
   BasicCrudQuerySlots,
   EnumBucketRequest,
   EnumRef,
-  PageDicts,
+  PageDictionaries,
   QueryCollectionProps,
 } from './basic-crud-query'
 export {default as QueryTable} from './query-table'

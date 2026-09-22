@@ -1,7 +1,7 @@
 import {createTextVNode, createVNode, Fragment, isVNode, type VNode} from 'vue'
 import type {EnumBucketsResponseBody} from '@loncra/client/resource'
 import type {SearchableColumnType} from '../../query-table/types'
-import type {PageDicts} from '../../basic-crud-query/types'
+import type {PageDictionaries} from '../../basic-crud-query/types'
 import {componentName, dictOptions, formatValue, resolveFieldSpec} from '../registry'
 import type {
   ListPageContext,
@@ -57,7 +57,7 @@ export function buildListColumns<TEntity extends object>(
   t: (key: string) => string,
   i18nPrefix: string,
   buckets: EnumBucketsResponseBody,
-  dicts: PageDicts,
+  dictionaries: PageDictionaries,
   ctx: ListPageContext,
   registry: PageRegistry,
 ): SearchableColumnType<TEntity>[] {
@@ -106,7 +106,7 @@ export function buildListColumns<TEntity extends object>(
         props: {
           // 字典的喂法是字典自己的语义（label=name、value=code），不走组件的 mapOptions
           ...(dictId
-            ? dictOptions(dicts[dictId])
+            ? dictOptions(dictionaries[dictId])
             : options.length > 0
               ? spec?.mapOptions?.(options) ?? {}
               : {}),
@@ -136,7 +136,7 @@ export function renderCell<TEntity extends object>(
   columnKey: unknown,
   record: TEntity,
   buckets: EnumBucketsResponseBody,
-  dicts: PageDicts,
+  dictionaries: PageDictionaries,
   registry: PageRegistry,
 ): unknown {
   const entry = declared.find(
@@ -165,7 +165,7 @@ export function renderCell<TEntity extends object>(
       enumRef: item.enumRef ?? fieldSpecOf(fields, item.key)?.enumRef,
       dictId: item.dictId ?? fieldSpecOf(fields, item.key)?.dictId,
       buckets,
-      dicts,
+      dictionaries,
     },
     registry.formatters,
   )

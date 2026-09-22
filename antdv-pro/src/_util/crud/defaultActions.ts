@@ -20,6 +20,7 @@ export interface DefaultToolbarActionsOptions<TEntity extends BasicIdMetadata<un
   onAdd: (ctx: ToolbarActionContext<TEntity>) => void
 }
 
+/** 默认工具栏动作（**集合**级：不针对某条记录）：`add` */
 export function createDefaultToolbarActions<TEntity extends BasicIdMetadata<unknown>>(
   options: DefaultToolbarActionsOptions<TEntity>,
 ): ToolbarActionDefinition<TEntity>[] {
@@ -42,6 +43,7 @@ export interface DefaultBulkActionsOptions<TEntity extends BasicIdMetadata<unkno
   remove: (records: TEntity[]) => void
 }
 
+/** 默认批量动作（**选中集合**级）：`deleteSelected` */
 export function createDefaultBulkActions<
   TBody extends BasicIdMetadata<TId>,
   TEntity extends TBody,
@@ -61,7 +63,7 @@ export function createDefaultBulkActions<
   ]
 }
 
-export interface DefaultItemActionsOptions<TEntity extends BasicIdMetadata<unknown>> {
+export interface DefaultRecordActionsOptions<TEntity extends BasicIdMetadata<unknown>> {
   authority?: AuthorityProps
   service: unknown
   locale: CrudLocale
@@ -70,11 +72,12 @@ export interface DefaultItemActionsOptions<TEntity extends BasicIdMetadata<unkno
   onDetail: (record: TEntity) => void
 }
 
-export function createDefaultItemActions<
+/** 默认行内动作（**单条记录**级）：`edit` / `detail` / `delete` —— 对齐它喂的 `recordActions` */
+export function createDefaultRecordActions<
   TBody extends BasicIdMetadata<TId>,
   TEntity extends TBody,
   TId,
->(options: DefaultItemActionsOptions<TEntity>): RecordActionDefinition<TEntity>[] {
+>(options: DefaultRecordActionsOptions<TEntity>): RecordActionDefinition<TEntity>[] {
   return [
     {
       id: BUILTIN_ACTION_ID.EDIT,

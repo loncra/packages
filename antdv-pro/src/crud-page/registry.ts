@@ -69,7 +69,7 @@ function enumName(ctx: FormatContext, value: unknown): string {
 
 /**
  * 数据字典 → 名称。值是字典项（后端给整条 `DataDictionaryMetadata`）就直接取 `name`；
- * 只给了 code 才回查声明 `dicts` 预载回来的字典。
+ * 只给了 code 才回查声明 `dictionaries` 预载回来的字典。
  */
 function dictName(ctx: FormatContext, value: unknown): string {
   if (!ctx.dictId) {
@@ -80,7 +80,7 @@ function dictName(ctx: FormatContext, value: unknown): string {
   if (value != null && typeof value === 'object' && 'name' in value) {
     return String((value as DataDictionaryMetadata).name)
   }
-  return ctx.dicts[ctx.dictId]?.find((item) => String(item.code) === String(value))?.name ?? ''
+  return ctx.dictionaries[ctx.dictId]?.find((item) => String(item.code) === String(value))?.name ?? ''
 }
 
 /** 字典项喂给 Select：label 取 `name`、值取 `code`（字典的"值"就是 code） */
@@ -155,7 +155,7 @@ export function usePageRegistry(): ComputedRef<PageRegistry> {
     },
     /**
      * 声明 `format` 即断言值的形状，形状不对就抛。
-     * `enum` / `enumList` 吃 `enumRef` + `list.enums`；`dict` / `dictList` 吃 `dictId` + `list.dicts`；
+     * `enum` / `enumList` 吃 `enumRef` + `list.enums`；`dict` / `dictList` 吃 `dictId` + `list.dictionaries`；
      * `date` / `dateTime` 走显示格式（见 `CrudConfigProvider.dateFormat` / `dateTimeFormat`）；
      * `byte` 是字节数（实现在 `@loncra/client/commons`，不依赖宿主）。
      * 不够用宿主在 `CrudConfig.formatters` 里加（金额、链接…），按 key 覆盖这张表。
