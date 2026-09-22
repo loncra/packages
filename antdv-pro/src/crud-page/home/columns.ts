@@ -4,7 +4,7 @@ import type {SearchableColumnType} from '../../query-table/types'
 import type {PageDictionaries} from '../../basic-crud-query/types'
 import {componentName, dictOptions, formatValue, resolveFieldSpec} from '../registry'
 import type {
-  ListPageContext,
+  PageDeclContext,
   PageFieldsDictionary,
   PageListColumn,
   PageListEntry,
@@ -58,7 +58,7 @@ export function buildListColumns<TEntity extends object>(
   i18nPrefix: string,
   buckets: EnumBucketsResponseBody,
   dictionaries: PageDictionaries,
-  ctx: ListPageContext,
+  ctx: PageDeclContext,
   registry: PageRegistry,
 ): SearchableColumnType<TEntity>[] {
   /** 标题优先级：写死的 `title` > 字典 → 翻译器（`t` 里再分 页面声明 / CrudConfig / key 本身） */
@@ -97,22 +97,32 @@ export function buildListColumns<TEntity extends object>(
             + 'options 会被丢掉：用 CrudConfig.fieldComponents 给它补 mapOptions，或者去掉 enumRef',
         )
       }
+      // 来源 → 组件 props：字典走字典自己的语义（label=name、value=code），枚举走组件的 mapOptions
+      const sourceProps = dictId
+        ? dictOptions(dictionaries[dictId])
+        : options.length > 0
+          ? spec?.mapOptions?.(options) ?? {}
+          : {}
+      // 声明里给的 props 在**最后**求值 ⇒ 可以覆盖来源（options 由壳从 `:extra` 递进来就走这条路）
+      const declaredProps = typeof search.props === 'function' ? search.props(ctx) : search.props
+      const props = {...sourceProps, ...declaredProps}
+      /**
+       * 组件靠 options 吃东西，却既没有来源、props 里也没给 ⇒ 今天会**静默**出一个空下拉
+       * （旧 mcp-package 的 `name` 列就是这么来的）。声明写错要当场知道。
+       */
+      if (spec?.mapOptions && !('options' in props)) {
+        throw new Error(
+          `[crud-page] 字段 ${merged.key} 的搜索项是 ${componentName(search.component)}（会吃 options），`
+            + '但既没有 enumRef / dictId、props 里也没给 options：下拉会是空的',
+        )
+      }
       column.search = {
         // 声明里给的东西（queryName / defaultValue / 以后 pro 新增的字段）原样透传给 QueryTable，
         // 只有下面三个要在这里"解析"：key → 组件、props 函数 → 对象、expression 补默认
         ...search,
         component: spec?.component,
         expression: search.expression ?? 'eq',
-        props: {
-          // 字典的喂法是字典自己的语义（label=name、value=code），不走组件的 mapOptions
-          ...(dictId
-            ? dictOptions(dictionaries[dictId])
-            : options.length > 0
-              ? spec?.mapOptions?.(options) ?? {}
-              : {}),
-          // 函数形态在这里求值（本函数跑在 computed 内）：placeholder 这类跟随语言的 props 才刷得动
-          ...(typeof search.props === 'function' ? search.props(ctx) : search.props),
-        },
+        props,
       }
     }
     columns.push(column)

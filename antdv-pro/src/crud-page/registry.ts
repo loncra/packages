@@ -2,6 +2,7 @@ import {type Component, computed, type ComputedRef, markRaw} from 'vue'
 import {DatePicker, Input, InputNumber, Select} from 'antdv-next'
 import {
   getEnumName,
+  isNameValueEnumMetadata,
   type DataDictionaryMetadata,
   type NameValueEnumMetadata,
 } from '@loncra/client/commons'
@@ -57,31 +58,6 @@ export function componentName(name?: PageFieldComponent | Component): string {
 
 // #region 值格式注册表
 
-/** 用枚举桶把值翻译成名称；没给 `enumRef` 就抛（声明写错了要当场知道） */
-function enumName(ctx: FormatContext, value: unknown): string {
-  if (!ctx.enumRef) {
-    throw new Error(
-      `[crud-page] 字段 ${ctx.key} 声明了枚举格式，但没给 enumRef（模块 + 枚举 id）：没有桶就查不到名称`,
-    )
-  }
-  return getEnumName(value)
-}
-
-/**
- * 数据字典 → 名称。值是字典项（后端给整条 `DataDictionaryMetadata`）就直接取 `name`；
- * 只给了 code 才回查声明 `dictionaries` 预载回来的字典。
- */
-function dictName(ctx: FormatContext, value: unknown): string {
-  if (!ctx.dictId) {
-    throw new Error(
-      `[crud-page] 字段 ${ctx.key} 声明了字典格式，但没给 dictId：没有字典就查不到名称`,
-    )
-  }
-  if (value != null && typeof value === 'object' && 'name' in value) {
-    return String((value as DataDictionaryMetadata).name)
-  }
-  return ctx.dictionaries[ctx.dictId]?.find((item) => String(item.code) === String(value))?.name ?? ''
-}
 
 /** 字典项喂给 Select：label 取 `name`、值取 `code`（字典的"值"就是 code） */
 export function dictOptions(list: DataDictionaryMetadata[] | undefined): Record<string, unknown> {
@@ -89,17 +65,14 @@ export function dictOptions(list: DataDictionaryMetadata[] | undefined): Record<
 }
 
 /** 列表型格式：值必须是数组，逐个翻译后逗号连接 */
-function listFormatter(
-  format: string,
-  resolve: (ctx: FormatContext, value: unknown) => string,
-): ValueFormatter {
+function listFormatter(format: string, resolve: (value: unknown, ctx: FormatContext) => string): ValueFormatter {
   return (value, ctx) => {
     if (!Array.isArray(value)) {
       throw new Error(
         `[crud-page] 字段 ${ctx.key} 声明 format: '${format}'，但值不是数组：${JSON.stringify(value)}`,
       )
     }
-    return value.map((item) => resolve(ctx, item)).join(',')
+    return value.map((item) => resolve(item, ctx)).join(',')
   }
 }
 
@@ -154,17 +127,16 @@ export function usePageRegistry(): ComputedRef<PageRegistry> {
       ...config.value.fieldComponents,
     },
     /**
-     * 声明 `format` 即断言值的形状，形状不对就抛。
-     * `enum` / `enumList` 吃 `enumRef` + `list.enums`；`dict` / `dictList` 吃 `dictId` + `list.dictionaries`；
-     * `date` / `dateTime` 走显示格式（见 `CrudConfigProvider.dateFormat` / `dateTimeFormat`）；
-     * `byte` 是字节数（实现在 `@loncra/client/commons`，不依赖宿主）。
+     * `enum` / `enumList` 与 `dict` / `dictList` 都是**取值→名称**：用 `getEnumName`（值自带 name
+     * 就出 name，裸值原样显示）；字典多一步"裸 code 回查预载的字典"（查不到也原样显示，不抛）。
+     * 形状断言只剩列表型（值必须是数组）与 `date` / `dateTime` / `byte` 的转换。
      * 不够用宿主在 `CrudConfig.formatters` 里加（金额、链接…），按 key 覆盖这张表。
      */
     formatters: {
-      enum: (value, ctx) => enumName(ctx, value),
-      enumList: listFormatter('enumList', enumName),
-      dict: (value, ctx) => dictName(ctx, value),
-      dictList: listFormatter('dictList', dictName),
+      enum: (value) => getEnumName(value),
+      enumList: listFormatter('enumList', (value) => getEnumName(value)),
+      dict: (value, ctx) => getEnumName(value),
+      dictList: listFormatter('dictList', getEnumName),
       date: (value) => dateFormat(value),
       dateTime: (value) => dateTimeFormat(value),
       byte: (value) => byteFormat(Number(value)),

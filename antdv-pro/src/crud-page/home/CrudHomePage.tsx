@@ -8,13 +8,14 @@ import type {DefaultCrudEntity} from '../../_util/crud/useCollectionData'
 import type {SearchableColumnType} from '../../query-table/types'
 import {usePageRegistry} from '../registry'
 import {buildListColumns, renderCell, toCellVNode} from './columns'
+import {collectListSources, mergeSources} from '../../_util/crud/sources.ts'
 import type {PageDictionaries} from '../../basic-crud-query/types'
 import type {
   CrudHomePageConstructor,
   CrudHomePageExpose,
   CrudHomePageProps,
   CrudHomePageSlots,
-  ListPageContext,
+  PageDeclContext,
   PageListEntry,
 } from '../types'
 
@@ -56,7 +57,7 @@ const CrudHomePage = defineComponent({
     /** 字段组件表 + 值格式表（内置 + 宿主 CrudConfig 覆盖） */
     const registry = usePageRegistry()
 
-    const ctx = computed<ListPageContext>(() => ({variant: props.variant, extra: props.extra}))
+    const ctx = computed<PageDeclContext>(() => ({variant: props.variant, extra: props.extra}))
 
     /**
      * i18n key → 文案。三级兜底，谁都没有才原样返回 key（可见、可调试，不静默变空）：
@@ -67,6 +68,15 @@ const CrudHomePage = defineComponent({
       props.page.i18nResolver?.(key) ?? config.value.i18nResolver?.(key) ?? key
 
     const columnDefs = computed<PageListEntry<TEntity>[]>(() => props.page.list?.columns ?? [])
+
+    /**
+     * 要预载的来源（枚举桶 + 数据字典）：**从字段字典 + 列上的搜索项推导**
+     * （来源在 `fields` 里写一处就够了）；页面显式写的 `list.enums` / `list.dictionaryCodes`
+     * 只作逃生口合并进来（如 `enterprise-invitation` 的壳要从 `buckets` 取选项）。
+     */
+    const sources = computed(() =>
+      mergeSources(collectListSources(columnDefs.value, props.page.fields ?? {}), props.page.list),
+    )
 
     const columns = computed(() =>
       buildListColumns(
@@ -154,8 +164,8 @@ const CrudHomePage = defineComponent({
           recordActions={recordActions.value}
           rowKey={props.page.rowKey}
           rowSelection={props.page.list?.rowSelection}
-          enums={props.page.list?.enums}
-          dictionaryCodes={props.page.list?.dictionaryCodes}
+          enums={sources.value.enums}
+          dictionaryCodes={sources.value.dictionaryCodes}
           dataSource={dataSource.value}
           buckets={buckets.value}
           dictionaries={dictionaries.value}

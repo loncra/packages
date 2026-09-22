@@ -51,7 +51,11 @@ export interface CrudPageCore<
   routes?: CrudPageRoutes
   /** 操作轨迹表名（宿主自己的审计表标识）；列表不用，表单/详情壳以后用 */
   operationDataTraceTarget?: string
-  /** 字段字典：labelKey / format / enumRef 的唯一事实来源 */
+  /**
+   * 字段字典：`labelKey` / `format`（本体）与 `enumRef` / `dictId`（来源）的唯一事实来源。
+   * 来源的**加载清单按形态从这里推导**（列表只收"列上有搜索项"的那些，见 `collectListSources`）
+   * ⇒ 页面不必再写一份 `enums` / `dictionaryCodes`。
+   */
   fields?: PageFieldsDictionary<TEntity>
   /**
    * label 解析：key → 文案（宿主声明层给一行 `(k, n) => i18n.global.t(k, n)`）。
@@ -69,16 +73,21 @@ export interface CrudPageCore<
 
 // #endregion
 
-// #region 声明：列表形态
+// #region 字段与声明上下文（三种形态共用）
 
 /** 注册表 key：内置值有补全提示，同时允许自定义（见 `defineFormatter` / `defineFieldComponent`） */
 type BuiltinKey<T extends string> = T | (string & {})
 
 /**
- * 值格式名。内置七个：`'enum'` / `'enumList'`（要求条目有 `enumRef`）、
- * `'dict'` / `'dictList'`（要求条目有 `dictId`）、
+ * 值格式名：**只断言"值是什么形状 / 怎么显示"**，与"取值来源"无关（来源见 `PageLookupFieldSpec`）。
+ *
+ * 内置七个：`'enum'` / `'enumList'`（值是 `{name, value}` 枚举元数据，显示取 `name`）、
+ * `'dict'` / `'dictList'`（值是整条字典项，或裸 code）、
  * `'date'` / `'dateTime'`（显示用，格式串来自 `CrudConfigProvider.dateFormat` / `dateTimeFormat`）、
  * `'byte'`（字节数 → 可读大小）。
+ *
+ * ⚠️ "值是**裸 code/id**、却要显示名称"是另一件事：`enum` **不做形状断言**，裸值就原样显示
+ * （要按来源查名得另加格式，如以后可能加的 `enumCode`）—— 别把"要求来源"加到 `enum` 上。
  */
 export type PageValueFormat = BuiltinKey<
   'enum' | 'enumList' | 'dict' | 'dictList' | 'date' | 'dateTime' | 'byte'
@@ -90,29 +99,65 @@ export type PageFieldComponent = BuiltinKey<
 >
 
 /**
- * 声明里的函数拿到的上下文。故意很小：**没有 router / i18n / 弹层**——
+ * 字段**本体**：叫什么（i18n）+ 值是什么形状 / 怎么显示。三种形态共用。
+ * 形态条目里写了就以条目为准（`buildListColumns` 用 `{...fields[key], ...column}` 合并）。
+ */
+export interface PageFieldSpec {
+  labelKey?: string
+  /** formatter 名。**只断言值的形状**（见 `PageValueFormat`），不要求任何来源 */
+  format?: PageValueFormat
+}
+
+/**
+ * 字段的**取值来源**：值是裸 code/id、或组件要靠它喂 options 时才写。
+ *
+ * 与 `format` **正交** —— `format` 说"值长什么样"，来源说"值/选项从哪来"。两个用途：
+ * ① 给搜索下拉 / 表单选择组件喂 options（桶 → 组件 `mapOptions`、字典 → `dictOptions`）；
+ * ② 值是裸 code 时按它查名（字典会回查；枚举的裸值格式以后再加，见 `PageValueFormat`）。
+ *
+ * 加载清单**按形态从字段推导**（列表见 `collectListSources`），页面不必再抄一份 `enums` /
+ * `dictionaryCodes`。只有"详情"不吃来源：它的值自带 `{name, value}`，显示不需要桶。
+ */
+export interface PageLookupFieldSpec extends PageFieldSpec {
+  /** 枚举桶定位（模块 + 枚举 id） */
+  enumRef?: EnumRef
+  /** 数据字典 code */
+  dictId?: string
+}
+
+/** 字段字典（按实体字段名索引）：写在 core 的 `xxx.page.ts` 里，页面只写一次 */
+export type PageFieldsDictionary<TEntity> = Partial<
+  Record<keyof TEntity & string, PageLookupFieldSpec>
+>
+
+/**
+ * 声明里的函数拿到的**声明级**上下文。故意很小：**没有 router / i18n / 弹层**——
  * 那些是宿主环境，声明文件本身是宿主代码，要用就直接 import。
  */
-export interface ListPageContext {
+export interface PageDeclContext {
   /** 宿主形态名：宿主自己起名（如 `'picker'`）；不传 = 宿主没给形态名（整页） */
   variant?: string
   /** 壳传进来的宿主数据（子表 ref、查询条件等声明管不到的东西） */
   extra: Record<string, unknown>
 }
 
-/** 字段字典：字段自身的属性，条目里写了就以条目为准 */
-export interface PageFieldSpec {
-  labelKey?: string
-  /** formatter 名。声明即断言值的形状，见 registry 的 FORMATTERS */
-  format?: PageValueFormat
-  /** 枚举桶定位（模块 + 枚举 id）：补搜索下拉的 options，也是 `format: 'enum'` 的取值表 */
-  enumRef?: EnumRef
-  /** 数据字典 code：同上，喂 `format: 'dict'`（与 `enumRef` 二选一） */
-  dictId?: string
+/**
+ * **字段级**上下文：表单的 `props` / `rules` 这类"按字段求值、要读当前实体"的函数拿它。
+ * 与声明级上下文分开 —— 那种函数必须有 `entity`，而声明级的 `visible` / `recordActions` 不需要。
+ * （对齐宿主旧 kit 的 `PageFieldRenderContext`；form 形态落地时启用。）
+ */
+export interface PageFieldRenderContext<TBody> {
+  /** 当前实体（只读用法；写初值走页级钩子） */
+  entity: TBody
+  /** label 解析：与页面声明的 `i18nResolver` 同一份 */
+  t: (key: string, named?: Record<string, unknown>) => string
+  variant?: string
+  extra: Record<string, unknown>
 }
 
-/** 字段字典（按实体字段名索引） */
-export type PageFieldsDictionary<TEntity> = Partial<Record<keyof TEntity & string, PageFieldSpec>>
+// #endregion
+
+// #region 声明：列表形态
 
 /**
  * 声明式搜索项：`QueryTable` 的 `ColumnSearchConfig` 再放宽两点 ——
@@ -122,11 +167,14 @@ export type PageFieldsDictionary<TEntity> = Partial<Record<keyof TEntity & strin
  */
 export interface PageSearchConfig extends Omit<ColumnSearchConfig, 'component' | 'props'> {
   component: PageFieldComponent | Component
-  props?: Record<string, unknown> | ((ctx: ListPageContext) => Record<string, unknown>)
+  props?: Record<string, unknown> | ((ctx: PageDeclContext) => Record<string, unknown>)
 }
 
-/** 列表列 */
-export interface PageListColumn<TEntity> {
+/**
+ * 列表列：**字段本体与来源**都从字段字典继承（`extends PageLookupFieldSpec`），条目里写了就以条目为准
+ * （`buildListColumns` 用 `{...fields[key], ...column}` 合并）。
+ */
+export interface PageListColumn<TEntity> extends PageLookupFieldSpec {
   /**
    * 列标识。**优先写实体字段名**（label 兜底用它；搜索项没给 `queryName` 时也按它拼查询名）。
    *
@@ -139,17 +187,11 @@ export interface PageListColumn<TEntity> {
    * ② **虚拟列名**：数据根本不在实体上，随便起，但必须自带 `labelKey`，搜索要写显式 `queryName`。
    */
   key: string
-  /** 覆盖字典 */
-  labelKey?: string
   /**
    * 直接写死的列标题：**不查字典、不过翻译**，给了它就不再走 `labelKey` / `${i18nPrefix}.${key}`。
    * 要跟着语言切换就别用它（写 `labelKey`）。
    */
   title?: string
-  format?: PageValueFormat
-  enumRef?: EnumRef
-  /** 数据字典 code：喂搜索下拉与 `format: 'dict'`（与 `enumRef` 二选一） */
-  dictId?: string
   width?: number
   ellipsis?: boolean
   /** 声明式搜索项 */
@@ -159,7 +201,7 @@ export interface PageListColumn<TEntity> {
    */
   render?: (value: unknown, record: TEntity) => unknown
   /** 该形态下是否显示这一列；缺省显示 */
-  visible?: (ctx: ListPageContext) => boolean
+  visible?: (ctx: PageDeclContext) => boolean
 }
 
 /** 列表条目：裸 key 或完整列 */
@@ -189,7 +231,7 @@ export interface PageListDefinition<TEntity extends BasicIdMetadata<unknown>> {
   /** 行内动作（名字与内容层/基类的 `recordActions` 一致）；函数形态用于按 `variant` 裁剪动作集合 */
   recordActions?:
     | RecordActionDefinition<TEntity>[]
-    | ((ctx: ListPageContext) => RecordActionDefinition<TEntity>[])
+    | ((ctx: PageDeclContext) => RecordActionDefinition<TEntity>[])
   /**
    * 标题栏动作（名字与内容层/基类的 `toolbarActions` 一致）：与 pro 内置的新增按钮**合并**
    * （同 id 后者覆盖）。业务自己的导出、批量动作都写这里 —— pro 不预置任何业务动作。
@@ -225,9 +267,9 @@ export interface FieldComponentSpec {
 export interface FormatContext {
   key: string
   record: unknown
-  /** 该条目生效的枚举桶定位（条目 `enumRef` ?? 字典 `enumRef`） */
+  /** 该条目生效的枚举桶定位（条目 `enumRef` ?? 字典 `enumRef`）—— 值自带元数据时用不到 */
   enumRef?: EnumRef
-  /** 该条目生效的数据字典 code（条目 `dictId` ?? 字典 `dictId`） */
+  /** 该条目生效的数据字典 code（条目 `dictId` ?? 字典 `dictId`）—— 值是裸 code 时才用得到 */
   dictId?: string
   buckets: EnumBucketsResponseBody
   /** 声明里 `dictionaries` 预载回来的字典 */
@@ -258,7 +300,7 @@ export interface CrudHomePageProps<
   page: CrudListPage<TBody, TEntity, TId>
   /** 宿主形态名：宿主自己起名（如 `'picker'`）；不传 = 宿主没给形态名（整页） */
   variant?: string
-  /** 宿主数据，透传给声明里的 `visible` / `recordActions`（见 `ListPageContext.extra`） */
+  /** 宿主数据，透传给声明里的 `visible` / `recordActions`（见 `PageDeclContext.extra`） */
   extra?: Record<string, unknown>
 }
 
