@@ -1,7 +1,9 @@
 export {CrudHomePage} from './home'
-export {defineHomePage} from './define'
+export {defineDetailPage, defineFormPage, defineHomePage} from './define'
 
 export type {
+  CrudDetailDefinition,
+  CrudFormDefinition,
   CrudHomePageConstructor,
   CrudHomePageExpose,
   CrudHomePageProps,
@@ -12,10 +14,16 @@ export type {
   FieldComponentSpec,
   FormatContext,
   PageDeclContext,
+  PageDetailDefinition,
+  PageDetailEntry,
+  PageDetailItem,
   PageFieldComponent,
   PageFieldRenderContext,
   PageFieldsDictionary,
   PageFieldSpec,
+  PageFormContext,
+  PageFormDefinition,
+  PageFormField,
   PageListColumn,
   PageListDefinition,
   PageListEntry,

@@ -1,5 +1,5 @@
-import type {Component, PublicProps, VNode} from 'vue'
-import type {TableProps} from 'antdv-next'
+import type {Component, PublicProps, Ref, VNode} from 'vue'
+import type {FormItemProps, TableProps} from 'antdv-next'
 import type {
   BasicIdMetadata,
   NameValueEnumMetadata,
@@ -246,6 +246,134 @@ export interface CrudListPage<
   TId = TEntity[typeof SYSTEM_CONSTANT.ID_NAME],
 > extends CrudPageCore<TBody, TEntity, TId> {
   list: PageListDefinition<TEntity>
+}
+
+// #endregion
+
+// #region 声明：表单形态
+
+/**
+ * 表单字段：**字段本体与来源**都从字段字典继承（`extends PageLookupFieldSpec`），条目里写了就以条目为准
+ * （`buildFormFields` 用 `{...fields[key], ...field}` 合并）。
+ *
+ * 所以"表单要用枚举 options"只需在字段上写 `enumRef` / `dictId` —— `collectFormSources`
+ * 按形态收成加载清单，页面不必再写一份 `enums` / `dictionaryCodes`。
+ */
+export interface PageFormField<TBody> extends PageLookupFieldSpec {
+  key: keyof TBody & string
+  /** 注册表 key（内置 input / password / textarea / number / select / date / dateRange），或直接给组件 */
+  component?: PageFieldComponent | Component
+  /**
+   * 校验规则。函数形态拿得到实体，用于"按当前值变化"的规则
+   * （如资源分类是插件时某字段不必填）。
+   */
+  rules?: FormItemProps['rules'] | ((ctx: PageFieldRenderContext<TBody>) => FormItemProps['rules'])
+  /** 24 栅格跨度，默认 12 */
+  span?: number
+  /** 组件 props。函数形态拿得到实体（编辑态 disabled、选项来自异步 ref 这类） */
+  props?:
+    | Record<string, unknown>
+    | ((ctx: PageFieldRenderContext<TBody>) => Record<string, unknown>)
+  /** 逃生：完全自定义这个控件（与 `component` 二选一） */
+  render?: (ctx: PageFieldRenderContext<TBody>) => unknown
+  /** 该形态下是否显示；缺省显示（新增/编辑两态不一致时用它） */
+  visible?: (ctx: PageDeclContext) => boolean
+}
+
+/**
+ * 表单**页级钩子**拿到的上下文：与声明级上下文只差一点 —— `entity` 是 **Ref**（钩子要写初值）。
+ *
+ * 照旧**不带** router / modal / message：那些是宿主环境，声明文件本身是宿主代码，要用就直接 import。
+ */
+export interface PageFormContext<TBody> extends PageDeclContext {
+  /** 表单实体（`preMounted` 里写初值用，写完表单立刻可见） */
+  entity: Ref<TBody>
+  /** label 解析：与页面声明的 `i18nResolver` 同一份 */
+  t: (key: string, named?: Record<string, unknown>) => string
+}
+
+/**
+ * 表单形态声明。钩子名与宿主旧 kit（`components/basic/page/types.ts`）**一字不改**；
+ * 只有上下文从旧 `PageContext` 换成 `PageFormContext` / `PageFieldRenderContext`（宿主环境不进上下文）。
+ *
+ * ⚠️ **标题不在这里**：怎么写标题（面包屑 / tab 名 / `(${entity.name})` 这类拼装）是**宿主的事**，
+ * pro 既不解析标题、也不提供 `titleText` 口 —— 宿主在自己的页壳里实现，用得到实体就写在
+ * `postMounted` / `postGetEntity` 里（需要壳里的东西就从 `ctx.extra` 拿）。
+ */
+export interface PageFormDefinition<TBody, TEntity> {
+  /** 字段顺序 = 数组顺序；按形态显隐用字段自己的 `visible` */
+  fields: PageFormField<TBody>[]
+  /** 实体初值：等价于页面原来手写的那坨 `ref({...})` */
+  createEntity: () => TBody
+  preMounted?: (ctx: PageFormContext<TBody>) => void | Promise<void>
+  postMounted?: () => void | Promise<void>
+  preSubmit?: (ctx: PageFormContext<TBody>) => void | Promise<void>
+  /**
+   * 提交之后（`save` 已成功）。**返回真值 = 调用方接管**：壳跳过自己的成功行为、只 emit `success`
+   * —— 宿主"回列表 / 关 tab / 记住偏好"这类策略走这条路（与旧 `BasicForm` 的语义一致）。
+   */
+  postSubmit?: (
+    result: unknown,
+    ctx: PageFormContext<TBody>,
+  ) => boolean | void | Promise<boolean | void>
+  /** 拿到服务端实体后、写回表单前（可改值） */
+  postGetEntity?: (entity: TEntity, ctx: PageFormContext<TBody>) => TEntity | Promise<TEntity>
+  /** 表单"重置"之后：清掉**不在表单字段里**的残留（如内嵌选择器写回的 `ids`） */
+  onReset?: (ctx: PageFormContext<TBody>) => void
+}
+
+/** `Form.vue` 的声明 = 核心 + 表单（`defineFormPage` 产出） */
+export interface CrudFormDefinition<
+  TBody extends BasicIdMetadata<TId>,
+  TEntity extends TBody = TBody,
+  TId = TEntity[typeof SYSTEM_CONSTANT.ID_NAME],
+> extends CrudPageCore<TBody, TEntity, TId> {
+  form: PageFormDefinition<TBody, TEntity>
+}
+
+// #endregion
+
+// #region 声明：详情形态
+
+/**
+ * 详情项：**只有字段本体，没有来源**（`extends PageFieldSpec`，写 `enumRef` / `dictId` 会报错）
+ * —— 详情不喂组件 options、也不拉桶查名：值自带 `{name, value}` 时 `format: 'enum'` 直接显示。
+ */
+export interface PageDetailItem<TEntity> extends PageFieldSpec {
+  /** 实体字段名；支持 `a.b` **嵌套路径**（如 `initialization.randomPassword`） */
+  key: string
+  /** `a-descriptions` 的跨列数 */
+  span?: number
+  /** 逃生：自定义这一项的内容（string / VNode）；返回 `undefined` 交回默认渲染 */
+  render?: (value: unknown, record: TEntity) => unknown
+}
+
+/** 详情条目：裸 key 或完整项 */
+export type PageDetailEntry<TEntity> = (keyof TEntity & string) | PageDetailItem<TEntity>
+
+/**
+ * 详情形态声明。与表单形态同一条纪律：**标题不在这里**（宿主自己在页壳 / 钩子里实现）。
+ */
+export interface PageDetailDefinition<TEntity, TId = string | number> {
+  /** 顺序 = 数组顺序；裸 key 从字段字典取 labelKey / format */
+  fields: PageDetailEntry<TEntity>[]
+  /** `a-descriptions` 的响应式列数；省略用内置默认 */
+  column?: Record<string, number>
+  postGetEntity?: (entity: TEntity, ctx: PageDeclContext) => TEntity | Promise<TEntity>
+  /**
+   * 自定义取数：不写就 `service.get(id)`。
+   * 宿主的路由约定（`queryFields` 400、`after` 这类）**不进 pro** —— 要那种行为就写这个钩子。
+   */
+  getDetail?: (id: TId, ctx: PageDeclContext) => Promise<TEntity | undefined>
+}
+
+/** `Detail.vue` 的声明 = 核心 + 详情（`defineDetailPage` 产出） */
+export interface CrudDetailDefinition<
+  TBody extends BasicIdMetadata<TId>,
+  TEntity extends TBody = TBody,
+  TId = TEntity[typeof SYSTEM_CONSTANT.ID_NAME],
+> extends CrudPageCore<TBody, TEntity, TId> {
+  detail: PageDetailDefinition<TEntity, TId>
 }
 
 // #endregion

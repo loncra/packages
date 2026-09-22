@@ -1,5 +1,10 @@
 import type {EnumBucketRequest, EnumRef} from '../../basic-crud-query/types.ts'
-import type {PageFieldsDictionary, PageListEntry, PageLookupFieldSpec} from '../../crud-page/types.ts'
+import type {
+  PageFieldsDictionary,
+  PageFormField,
+  PageListEntry,
+  PageLookupFieldSpec,
+} from '../../crud-page/types.ts'
 import {toListColumn} from '../../crud-page/home/columns.ts'
 
 /** 一个页面要预载的来源（去掉重复、按 module 分组） */
@@ -51,6 +56,23 @@ export function collectListSources<TEntity extends object>(
     specs.push({...fields[item.key as keyof TEntity & string], ...item})
   }
   return groupSources(specs)
+}
+
+/**
+ * 表单要预载的来源：**收表单里出现的全部字段**（表单没有"搜索项"那种过滤条件 ——
+ * 写了 `enumRef` / `dictId` 就是为了给组件喂 options）。
+ *
+ * 与列表那半各算各的：同一份字段字典，列表只收"列上有搜索项"的、表单收全部
+ * ⇒ "只为表单写的来源"不会被列表白拉，"列表要用但表单不用"的也不会进表单。
+ */
+export function collectFormSources<TEntity extends object>(
+  fields: PageFormField<TEntity>[],
+  dictionary: PageFieldsDictionary<TEntity>,
+): PageSourceLoads {
+  return groupSources(
+    // 与 `buildFormFields` 同一套合并：条目里写了就以条目为准
+    fields.map((field) => ({...dictionary[field.key], ...field})),
+  )
 }
 
 /**
