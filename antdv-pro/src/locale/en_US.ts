@@ -51,6 +51,103 @@ const locale: Locale = {
     deleteConfirmSingle: 'Are you sure to delete this record?',
     deleteConfirmBatch: 'Are you sure to delete the {count} selected records?',
   },
+  ConfigProviderSetting: {
+    lang: 'Language',
+    open: 'On',
+    close: 'Off',
+    defaultText: 'Default',
+    theme: {text: 'Theme', system: 'System', dark: 'Dark', light: 'Light'},
+    compact: 'Compact',
+    componentSize: 'Default component size',
+    wireframe: 'Wireframe',
+    tabs: {color: 'Color', size: 'Size', style: 'Style', other: 'Other'},
+    size: {
+      common: 'Common size',
+      large: 'Large',
+      middle: 'Middle',
+      small: 'Small',
+      lg: 'Large',
+      md: 'Medium',
+      sm: 'Small',
+      xl: 'Extra large',
+      xs: 'Extra small',
+      xxl: 'Huge',
+      xxs: 'Tiny',
+    },
+    color: {
+      text: 'Colors',
+      prepare: 'Preset colors',
+      colorPrimary: 'Brand color',
+      colorSuccess: 'Success color',
+      colorError: 'Error color',
+      colorWarning: 'Warning color',
+      other: {
+        blue: 'Blue',
+        purple: 'Purple',
+        cyan: 'Cyan',
+        red: 'Red',
+        orange: 'Orange',
+        yellow: 'Yellow',
+        green: 'Green',
+        magenta: 'Magenta',
+        pink: 'Pink',
+        volcano: 'Volcano',
+        geekblue: 'Geek blue',
+        lime: 'Lime',
+        gold: 'Gold',
+      },
+      active: {
+        title: 'Active',
+        subTitle:
+          'In this color ramp, used for selected or pressed emphasis on dark or high-contrast surfaces.',
+      },
+      bg: {
+        title: 'Soft background',
+        subTitle:
+          'Light tint in the same palette, often for weaker hierarchy or low-emphasis selection.',
+      },
+      bgHover: {
+        title: 'Soft background (hover)',
+        subTitle: 'Hover color paired with the soft background for interactive feedback.',
+      },
+      border: {
+        title: 'Border',
+        subTitle: 'Outline color in this ramp for sliders, inputs, and similar strokes.',
+      },
+      borderHover: {
+        title: 'Border (hover)',
+        subTitle: 'Border color on hover for buttons, sliders, and similar outlines.',
+      },
+      hover: {
+        title: 'Hover',
+        subTitle:
+          'General hover accent in this ramp for surfaces or icons (not dedicated text color).',
+      },
+      colorText: {
+        title: 'Text color',
+        subTitle: 'Primary color for body text, secondary copy, and icons in this ramp.',
+      },
+      colorTextActive: {
+        title: 'Text (active)',
+        subTitle: 'Text or link color when active or selected.',
+      },
+      colorTextHover: {
+        title: 'Text (hover)',
+        subTitle: 'Text or link color on hover.',
+      },
+    },
+    border: {
+      radius: 'Border radius',
+      shadow: 'Box shadow',
+      shadowSecondary: 'Secondary shadow',
+      shadowTertiary: 'Tertiary shadow',
+    },
+    font: {text: 'Font size', heading: 'Heading {number} size'},
+    lineHeight: {text: 'Line height', heading: 'Heading {number} line height'},
+    margin: 'Margin',
+    padding: 'Padding',
+    transparency: {text: 'Opacity', loading: 'Loading opacity', image: 'Image opacity'},
+  },
 }
 
 export default locale

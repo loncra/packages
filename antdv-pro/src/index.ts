@@ -1,5 +1,29 @@
 export { default as zhCN } from './locale/zh_CN'
 export { default as enUS } from './locale/en_US'
+export { default as Provider } from './config-provider'
+export {
+  createAntdvConfig,
+  useAntdvConfig,
+  ANTDV_CONFIG_KEY,
+} from './config-provider'
+export type {
+  AntdvComponentSize,
+  AntdvConfig,
+  AntdvConfigInitial,
+  AntdvConfigProviderProps,
+  AntdvConfigProviderSlots,
+  AntdvConfigState,
+  AntdvDetailLayout,
+  AntdvFormLayout,
+  AntdvResolvedTheme,
+  AntdvThemeMode,
+  AntdvTokenOverrides,
+} from './config-provider'
+export { default as ConfigProviderSetting } from './config-provider-setting'
+export type {
+  ConfigProviderSettingProps,
+  ConfigProviderSettingSlots,
+} from './config-provider-setting'
 export type { Locale } from './locale'
 export { useLocale } from './_util/useLocale'
 export type { LocaleComponentName } from './_util/useLocale'

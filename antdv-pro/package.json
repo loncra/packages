@@ -8,6 +8,7 @@
     "./locale/en_US": "./src/locale/en_US.ts"
   },
   "peerDependencies": {
+    "@antdv-next/icons": "^1.1.0",
     "@antdv-next/x": "^1.2.0",
     "@codemirror/autocomplete": "^6.0.0",
     "@codemirror/commands": "^6.0.0",
