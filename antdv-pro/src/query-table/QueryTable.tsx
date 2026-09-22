@@ -130,9 +130,9 @@ const QueryTable = defineComponent({
       type: [Array, Boolean] as PropType<QueryTableProps['recordActions']>,
       default: undefined,
     },
-    /** 系统字典：要加载什么（声明侧 `list.enums` / `list.dictionaries`）—— 原样交给基类 */
+    /** 系统字典：要加载什么（声明侧 `list.enums` / `list.dictionaryCodes`）—— 原样交给基类 */
     enums: Array as PropType<QueryTableProps['enums']>,
-    dictCodes: Array as PropType<QueryTableProps['dictCodes']>,
+    dictionaryCodes: Array as PropType<QueryTableProps['dictionaryCodes']>,
     prefixCls: String,
     rootClass: String,
     // ── 表格自己的 ──
@@ -490,7 +490,7 @@ const QueryTable = defineComponent({
           toolbarActions={props.toolbarActions}
           recordActions={props.recordActions}
           enums={props.enums}
-          dictCodes={props.dictCodes}
+          dictionaryCodes={props.dictionaryCodes}
           selectedKey="selectedRows"
           prefixCls={props.prefixCls}
           rootClass={props.rootClass}

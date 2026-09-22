@@ -1,2 +1,2 @@
 export {default} from './CrudCardGrid'
-export type {CrudCardGridConstructor, CrudCardGridProps} from './types'
+export type {CrudCardGridConstructor} from './types'

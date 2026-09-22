@@ -1,13 +1,5 @@
 import type {EmitsToProps, PublicProps} from 'vue'
-import type {
-  BasicIdMetadata,
-  ScrollPageResult,
-  SYSTEM_CONSTANT,
-} from '@loncra/client/commons'
-import type {
-  RecordActionDefinition,
-  ToolbarActionDefinition,
-} from '../_util/crud/actions'
+import type {BasicIdMetadata, ScrollPageResult, SYSTEM_CONSTANT} from '@loncra/client/commons'
 import type {CollectionExpose} from '../_util/crud/collectionExpose'
 import type {
   QueryCardGridEmits,
@@ -16,34 +8,21 @@ import type {
 } from '../query-card-grid/types'
 
 /**
- * 门面（旧入口）props：对外名不变，内部映射成内容层的名字
- * （`actions` → `toolbarActions`、`itemActions` + `recordActions`(boolean) → `recordActions`）。
+ * 门面组件类型：props **就是内容层 `QueryCardGridProps`** —— 门面不自造名字，
+ * 也没有自己的 `actions` / `itemActions` / 布尔开关。
+ * 所以这里**没有** `CrudCardGridProps` 这个名字（曾经是个空接口，纯别名）。
  */
-export interface CrudCardGridProps<
-  TId = string | number,
-  TBody extends BasicIdMetadata<TId> = BasicIdMetadata<TId>,
-  TEntity extends TBody = TBody,
-  TPage extends ScrollPageResult<TEntity> = ScrollPageResult<TEntity>,
-> extends Omit<QueryCardGridProps<TId, TBody, TEntity, TPage>, 'toolbarActions' | 'recordActions'> {
-  /** 标题右侧的工具栏动作（旧名 → 内容层 `toolbarActions`；`false` = 整排不出） */
-  actions?: ToolbarActionDefinition<TEntity>[] | false
-  /** 项内动作定义（旧名 → 内容层 `recordActions`） */
-  itemActions?: RecordActionDefinition<TEntity>[]
-  /** 是否要项内动作（旧的是开关：`false` = 不要） */
-  recordActions?: boolean
-}
-
 export type CrudCardGridConstructor = new <
   TBody extends BasicIdMetadata<TId>,
   TEntity extends TBody,
   TPage extends ScrollPageResult<TEntity>,
   TId = TEntity[typeof SYSTEM_CONSTANT.ID_NAME],
 >(
-  props: CrudCardGridProps<TId, TBody, TEntity, TPage> &
+  props: QueryCardGridProps<TId, TBody, TEntity, TPage> &
     EmitsToProps<QueryCardGridEmits<TEntity, TId>> &
     PublicProps,
 ) => {
-  $props: CrudCardGridProps<TId, TBody, TEntity, TPage> &
+  $props: QueryCardGridProps<TId, TBody, TEntity, TPage> &
     EmitsToProps<QueryCardGridEmits<TEntity, TId>> &
     PublicProps
   $slots: QueryCardGridSlots<TEntity>

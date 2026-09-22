@@ -81,8 +81,8 @@ const CrudHomePage = defineComponent({
       ),
     )
 
-    const rowActions = computed(() => {
-      const declared = props.page.list?.rowActions
+    const recordActions = computed(() => {
+      const declared = props.page.list?.recordActions
       return typeof declared === 'function' ? declared(ctx.value) : declared ?? []
     })
 
@@ -150,12 +150,12 @@ const CrudHomePage = defineComponent({
           columns={columns.value}
           drag={props.page.list?.drag}
           authority={props.page.list?.authority}
-          actions={props.page.list?.titleActions}
-          rowActions={rowActions.value}
+          toolbarActions={props.page.list?.toolbarActions}
+          recordActions={recordActions.value}
           rowKey={props.page.rowKey}
           rowSelection={props.page.list?.rowSelection}
           enums={props.page.list?.enums}
-          dictCodes={props.page.list?.dictionaries}
+          dictionaryCodes={props.page.list?.dictionaryCodes}
           dataSource={dataSource.value}
           buckets={buckets.value}
           dictionaries={dictionaries.value}

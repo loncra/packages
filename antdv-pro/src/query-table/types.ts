@@ -63,9 +63,9 @@ export interface QueryTableProps<
   toolbarActions?: ToolbarActionDefinition<TEntity>[] | false
   /** 行内动作：数组 = 与默认 `edit`/`detail`/`delete` 合并；`false` = 不要（`操作`列也不补） */
   recordActions?: RecordActionDefinition<TEntity>[] | false
-  /** 系统字典：要加载什么（声明侧 `list.enums` / `list.dictionaries`）—— 原样交给基类（枚举桶按模块分组） */
+  /** 系统字典：要加载什么（声明侧 `list.enums` / `list.dictionaryCodes`）—— 原样交给基类（枚举桶按模块分组） */
   enums?: EnumBucketRequest[]
-  dictCodes?: (string | undefined)[]
+  dictionaryCodes?: (string | undefined)[]
   /** 字典加载结果（基类 `v-model` 回给建列的地方） */
   buckets?: EnumBucketsResponseBody
   dictionaries?: PageDictionaries

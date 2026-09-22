@@ -48,11 +48,11 @@
 目录：核心在 `crud-page/`（`types.ts` / `registry.ts` / `define.ts`），列表形态在 `crud-page/home/`（`CrudHomePage.tsx` / `columns.ts`）；表单、详情以后按同样的 `<形态>/` 目录进来。
 `define.ts` 是三种形态**共用**的声明入口（恒等合并 `{...core, <形态>}`）：已有 `defineHomePage`，`defineFormPage` / `defineDetailPage` 随形态一起并排加在这里。
 
-分层（列表）：`DataLoadingCardPlan`（Card 壳 + 生命周期 + loading）→ `BasicCrudQuery`（数据 / 系统字典 / 标题 / 统一分页 / 动作解析）→ `QueryTable` · `QueryCardGrid`（内容层，受控：只画自己那套）→ `CrudTable` · `CrudCardGrid`（门面：只把旧 prop 名映射成新名，宿主零改动）。
-系统字典（声明里的 `list.enums` / `list.dictionaries`）由 `BasicCrudQuery` 挂载时加载（`basic-crud-query/dictionaries.ts`），用 `v-model:buckets` / `v-model:dictionaries` 回传给建列的地方。
+分层（列表）：`DataLoadingCardPlan`（Card 壳 + 生命周期 + loading）→ `BasicCrudQuery`（数据 / 系统字典 / 标题 / 统一分页 / 动作解析）→ `QueryTable` · `QueryCardGrid`（内容层，受控：只画自己那套）→ `CrudTable` · `CrudCardGrid`（门面：**props 与内容层完全同名同形、只做透传**，不自造名字）。
+系统字典（声明里的 `list.enums` / `list.dictionaryCodes`）由 `BasicCrudQuery` 挂载时加载（`basic-crud-query/dictionaries.ts`），用 `v-model:buckets` / `v-model:dictionaries` 回传给建列的地方（**`dictionaryCodes` = 要加载什么，`dictionaries` = 加载结果**）。
 
 - `CrudHomePage`：把页面声明（`CrudListPage`）翻成 `CrudTable` 的 props；不认路由 / i18n / 弹层。
-- 声明（宿主业务目录里的 `xxx.page.ts` / `xxx.home.page.ts`）：`CrudPageCore`（service / i18nPrefix / routes / fields / `i18nResolver` / `onNavigate`）+ `PageListDefinition`（columns / enums / authority / rowActions / drag…）。
+- 声明（宿主业务目录里的 `xxx.page.ts` / `xxx.home.page.ts`）：`CrudPageCore`（service / i18nPrefix / routes / fields / `i18nResolver` / `onNavigate`）+ `PageListDefinition`（columns / enums / authority / `toolbarActions` / `recordActions` / drag…）。
 - 跳转：页面声明给 `onNavigate` 就用它（`record` 是精确实体），否则落到 `CrudConfigProvider` 的 `onNavigate` 兜底，都没有则 no-op（内嵌选择器安全）。
 - 文案：宿主给 `i18nResolver`，pro 只拿 key；枚举：`format: 'enum' | 'enumList'` 用 `enumRef`（**模块 + 枚举 id**）+ `list.enums`（按模块分组，`EnumBucketRequest`）预载的桶自算（不走宿主的全局枚举表）。桶必须带模块：`resource-server` / `auth-server` / `ai-server` / `message-server` 各一套，只给 id 查不到。
 - 表单 / 详情形态（`defineFormPage` / `defineDetailPage`、壳层）尚未迁移。

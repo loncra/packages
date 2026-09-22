@@ -9,9 +9,10 @@ import type {RefreshOnActivate} from '../basic-crud-query/types'
 import type {
   QueryCardGridItemActionsSlot,
   QueryCardGridItemSlot,
+  QueryCardGridProps,
   QueryCardGridSlots,
 } from '../query-card-grid/types'
-import type {CrudCardGridConstructor, CrudCardGridProps} from './types'
+import type {CrudCardGridConstructor} from './types'
 
 const CRUD_CARD_GRID_EMITS = [
   'update:dataSource',
@@ -28,14 +29,14 @@ const CRUD_CARD_GRID_EMITS = [
 ] as const
 
 /**
- * 卡片网格的**门面**：对外名字保持旧样（`:actions` / `:item-actions` / `record-actions` 开关），
- * 内部一律映射进内容层（`QueryCardGrid`）—— 数据、标题、分页、动作解析都在基类里，这里不做事。
+ * 卡片网格的**门面**：**只把宿主给的东西原样转给 `QueryCardGrid`**（数据、标题、分页、
+ * 动作解析都在基类里，这里不做事）；不自造名字 —— `toolbarActions` / `recordActions` 与内容层同名同形。
  */
 const CrudCardGrid = defineComponent({
   name: 'LCrudCardGrid',
   inheritAttrs: false,
   props: {
-    service: {type: Object as PropType<CrudCardGridProps['service']>, required: true},
+    service: {type: Object as PropType<QueryCardGridProps['service']>, required: true},
     immediate: {type: Boolean, default: true},
     refreshOnActivate: {
       type: [Boolean, Function] as PropType<RefreshOnActivate>,
@@ -47,24 +48,28 @@ const CrudCardGrid = defineComponent({
      * ⚠️ **`default: undefined` 不能删**：类型里带了 `Boolean`，父级"不传"会被 Vue 的布尔转换变成
      * `false`（= "不要卡片头"）⇒ 默认标题与工具栏都没了。
      */
-    title: {type: [Object, Boolean] as PropType<CrudCardGridProps['title']>, default: undefined},
+    title: {type: [Object, Boolean] as PropType<QueryCardGridProps['title']>, default: undefined},
     hasPermission: Function as PropType<(permission: string) => boolean>,
     authority: Object as PropType<AuthorityProps>,
     /**
-     * 标题右侧的工具栏动作（旧名 → `toolbarActions`）：`false` = 整排不出。
+     * 标题右侧的工具栏动作：与内容层同名透传（数组 = 与默认合并；`false` = 整排不出）。
      *
      * ⚠️ **`default: undefined` 不能删**（与 `title` 同一个坑）：不传会被转成 `false` ⇒ 整排不出。
      */
-    actions: {type: [Array, Boolean] as PropType<CrudCardGridProps['actions']>, default: undefined},
-    /** 项内动作定义（旧名 → `recordActions`） */
-    itemActions: Array as PropType<CrudCardGridProps['itemActions']>,
-    /** 是否要项内动作（开关 → `recordActions: false | 数组`） */
-    recordActions: {type: Boolean, default: true},
+    toolbarActions: {
+      type: [Array, Boolean] as PropType<QueryCardGridProps['toolbarActions']>,
+      default: undefined,
+    },
+    /** 项内动作：与内容层同名透传（数组 = 与默认合并；`false` = 不要项内动作） */
+    recordActions: {
+      type: [Array, Boolean] as PropType<QueryCardGridProps['recordActions']>,
+      default: undefined,
+    },
     /** 拖拽开关 + 幽灵内容：`true` = 可拖（幽灵缺省主键）；`(record) => 内容` = 可拖且它就是幽灵 */
-    drag: [Boolean, Function, Object] as PropType<CrudCardGridProps['drag']>,
+    drag: [Boolean, Function, Object] as PropType<QueryCardGridProps['drag']>,
     gridColumns: {type: Number, default: 5},
     selectable: {type: Boolean, default: true},
-    rowKey: [String, Function] as PropType<CrudCardGridProps['rowKey']>,
+    rowKey: [String, Function] as PropType<QueryCardGridProps['rowKey']>,
     pagination: {
       type: [Object, Boolean] as PropType<TableProps['pagination']>,
       default: () => ({hideOnSinglePage: true}),
@@ -108,8 +113,8 @@ const CrudCardGrid = defineComponent({
         title={props.title}
         hasPermission={props.hasPermission}
         authority={props.authority}
-        toolbarActions={props.actions}
-        recordActions={props.recordActions ? (props.itemActions ?? []) : false}
+        toolbarActions={props.toolbarActions}
+        recordActions={props.recordActions}
         drag={props.drag}
         gridColumns={props.gridColumns}
         selectable={props.selectable}
@@ -159,4 +164,4 @@ const CrudCardGrid = defineComponent({
 }) as unknown as CrudCardGridConstructor
 
 export default CrudCardGrid
-export type {CrudCardGridConstructor, CrudCardGridProps}
+export type {CrudCardGridConstructor}

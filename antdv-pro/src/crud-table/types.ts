@@ -10,61 +10,27 @@ import type {
   SYSTEM_CONSTANT,
   TreeSortMetadata,
 } from '@loncra/client/commons'
-import type {
-  RecordActionDefinition,
-  RecordActionPayload,
-  ToolbarActionPayload,
-} from '../_util/crud/actions'
-import type {EnumBucketRequest, PageDictionaries} from '../basic-crud-query/types'
+import type {RecordActionPayload, ToolbarActionPayload} from '../_util/crud/actions'
 import type {CollectionExpose} from '../_util/crud/collectionExpose'
-import type {EnumBucketsResponseBody} from '@loncra/client/resource'
-import type {QueryCollectionProps} from '../basic-crud-query/types'
-import type {
-  QueryTableEmits,
-  QueryTableSlots,
-  SearchableColumnType,
-} from '../query-table/types'
+import type {QueryTableEmits, QueryTableProps, QueryTableSlots} from '../query-table/types'
 
 /**
- * 门面 props：对外契约与以前一样（宿主 22 处在用），内部只做两处映射 ——
- * `actions` → `toolbarActions`、`recordActions`(boolean)+`rowActions` → `recordActions`；
- * 标题直接用基类统一的 `title`（`VNode | false`，`hide-title` 等价于 `:title="false"`）。
+ * 门面组件类型：props **就是内容层 `QueryTableProps`** —— 门面不自造名字
+ * （`toolbarActions` / `recordActions` 原样透传；`recordActions: false` 就是"不要行内动作、
+ * 连操作列也不补"），也没有自己的 `actions` / `rowActions` / 布尔开关。
+ * 所以这里**没有** `CrudTableProps` 这个名字（曾经是个空接口，纯别名）。
  */
-export interface CrudTableProps<
-  TId = string | number,
-  TBody extends BasicIdMetadata<TId> = BasicIdMetadata<TId>,
-  TEntity extends TBody = TBody,
-  TPage extends ScrollPageResult<TEntity> = ScrollPageResult<TEntity>,
-> extends QueryCollectionProps<TBody, TEntity, TPage, TId> {
-  columns?: SearchableColumnType<TEntity>[]
-  bordered?: boolean
-  onRow?: TableProps['onRow']
-  rowSelection?: TableProps['rowSelection'] | false
-  pagination?: TableProps['pagination']
-  selectedRows?: TEntity[]
-  /** 旧的布尔开关：`false` = 不要行内动作（连"操作"列都不补） */
-  recordActions?: boolean
-  /** 行内动作（与默认 `edit`/`detail`/`delete` 合并） */
-  rowActions?: RecordActionDefinition<TEntity>[]
-  /** 系统字典：要加载什么（声明侧 `list.enums` / `list.dictionaries`）—— 原样交给基类加载（枚举桶按模块分组） */
-  enums?: EnumBucketRequest[]
-  dictCodes?: (string | undefined)[]
-  /** 字典加载结果（基类 `v-model` 回给建列的地方） */
-  buckets?: EnumBucketsResponseBody
-  dictionaries?: PageDictionaries
-}
-
 export type CrudTableConstructor = new <
   TBody extends BasicIdMetadata<TId>,
   TEntity extends TBody,
   TPage extends ScrollPageResult<TEntity>,
   TId = TEntity[typeof SYSTEM_CONSTANT.ID_NAME],
 >(
-  props: CrudTableProps<TId, TBody, TEntity, TPage> &
+  props: QueryTableProps<TId, TBody, TEntity, TPage> &
     EmitsToProps<QueryTableEmits<TEntity, TId>> &
     PublicProps,
 ) => {
-  $props: CrudTableProps<TId, TBody, TEntity, TPage> &
+  $props: QueryTableProps<TId, TBody, TEntity, TPage> &
     EmitsToProps<QueryTableEmits<TEntity, TId>> &
     PublicProps
   $slots: QueryTableSlots<TEntity>

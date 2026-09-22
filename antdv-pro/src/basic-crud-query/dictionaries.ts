@@ -34,14 +34,14 @@ export async function fetchEnumBuckets(requests?: EnumBucketRequest[]): Promise<
 }
 
 /**
- * 拉数据字典（声明里的 `list.dictionaries`）。**原样收下不归一化**：
+ * 拉数据字典（声明里的 `list.dictionaryCodes`）。**原样收下不归一化**：
  * `valueType` / `metadata` / `children` 后面都还要用。
  */
 export async function fetchDataDictionaries(codes?: (string | undefined)[]): Promise<PageDictionaries> {
-  const dictCodes = compact(codes)
-  if (dictCodes.length === 0) {
+  const dictionaryCodes = compact(codes)
+  if (dictionaryCodes.length === 0) {
     return {}
   }
-  const result = await ResourceServerService.findDataDictionariesByCodes(dictCodes)
+  const result = await ResourceServerService.findDataDictionariesByCodes(dictionaryCodes)
   return result.data ?? {}
 }

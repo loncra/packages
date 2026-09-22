@@ -145,7 +145,7 @@ export type {
   SearchableColumnType,
 } from './query-table'
 export {default as CrudTable} from './crud-table'
-export type {CrudTableConstructor, CrudTableProps} from './crud-table'
+export type {CrudTableConstructor} from './crud-table'
 export {default as QueryCardGrid} from './query-card-grid'
 export type {
   CardGridDragDirection,
@@ -158,7 +158,7 @@ export type {
   QueryCardGridSlots,
 } from './query-card-grid'
 export {default as CrudCardGrid} from './crud-card-grid'
-export type {CrudCardGridConstructor, CrudCardGridProps} from './crud-card-grid'
+export type {CrudCardGridConstructor} from './crud-card-grid'
 
 export {
   CrudHomePage,

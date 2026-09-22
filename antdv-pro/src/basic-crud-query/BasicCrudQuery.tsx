@@ -55,7 +55,7 @@ import type {
  * crud 的**基类**：装的是所有展示形态共用的东西 ——
  *
  * - 数据：`dataSource` / `loading` / `query` / `pagination` / 选中集合（`selectedKey` 指定挂在哪个 prop 上）
- * - 字典：`list.enums` / `list.dictionaries` 在这里拉，结果用 `v-model` 回给建列的地方
+ * - 字典：`list.enums` / `list.dictionaryCodes` 在这里拉，结果用 `v-model` 回给建列的地方
  * - 动作：默认定义（add / deleteSelected / edit·detail·delete）+ 声明的合并、解析
  * - 布局：套 `DataLoadingCardPlan`；**标题右侧放权限按钮**；**统一分页由本组件渲染**
  *
@@ -113,7 +113,7 @@ const BasicCrudQuery = defineComponent({
     selectedItems: {type: Array as PropType<DefaultCrudEntity[]>, default: () => []},
     // 字典（枚举桶按模块分组）
     enums: Array as PropType<EnumBucketRequest[]>,
-    dictCodes: Array as PropType<(string | undefined)[]>,
+    dictionaryCodes: Array as PropType<(string | undefined)[]>,
     buckets: {type: Object as PropType<EnumBucketsResponseBody>, default: () => ({})},
     dictionaries: {type: Object as PropType<PageDictionaries>, default: () => ({})},
     prefixCls: String,
@@ -183,7 +183,7 @@ const BasicCrudQuery = defineComponent({
     async function loadDictionaries() {
       const [nextBuckets, nextDictionaries] = await Promise.all([
         fetchEnumBuckets(props.enums),
-        fetchDataDictionaries(props.dictCodes),
+        fetchDataDictionaries(props.dictionaryCodes),
       ])
       buckets.value = nextBuckets
       dictionaries.value = nextDictionaries
@@ -235,7 +235,7 @@ const BasicCrudQuery = defineComponent({
      * 工具栏定义：**声明的在前**，默认动作在下（`add` + `deleteSelected`）；
      * `toolbarActions === false` 整排都不要。
      */
-    const titleDefinitions = computed(() => {
+    const toolbarDefinitions = computed(() => {
       if (props.toolbarActions === false) {
         return []
       }
@@ -260,13 +260,13 @@ const BasicCrudQuery = defineComponent({
         Array.isArray(props.toolbarActions) ? props.toolbarActions : [],
       )
     })
-    const titleActions = computed(() =>
-      resolver.resolveToolbarActions(titleDefinitions.value, actionContext.value, auth),
+    const toolbarActions = computed(() =>
+      resolver.resolveToolbarActions(toolbarDefinitions.value, actionContext.value, auth),
     )
 
     /** 需要自动开行选择：工具栏定义里出现了内置批量动作（默认就带一个 `deleteSelected`） */
     const needsBulkSelection = computed(() =>
-      titleDefinitions.value.some((def) =>
+      toolbarDefinitions.value.some((def) =>
         BUILTIN_BULK_ACTION_IDS.includes(def.id as (typeof BUILTIN_BULK_ACTION_IDS)[number]),
       ),
     )
@@ -338,7 +338,7 @@ const BasicCrudQuery = defineComponent({
             if (props.title === false || props.toolbarActions === false) {
               return null
             }
-            return slots.extra ? slots.extra() : <ActionButton actions={titleActions.value} />
+            return slots.extra ? slots.extra() : <ActionButton actions={toolbarActions.value} />
           },
           default: () => (
             <>

@@ -1,19 +1,7 @@
-import {
-  computed,
-  defineComponent,
-  type PropType,
-  type Ref,
-  ref,
-  type SlotsType,
-  useModel,
-} from 'vue'
+import {defineComponent, type PropType, type Ref, ref, type SlotsType, useModel} from 'vue'
 import type {TableProps} from 'antdv-next'
 import {type FilterRequest, type PageRequest} from '@loncra/client/commons'
-import type {
-  AuthorityProps,
-  RecordActionDefinition,
-  ToolbarActionDefinition,
-} from '../_util/crud/actions'
+import type {AuthorityProps} from '../_util/crud/actions'
 import type {CollectionExpose} from '../_util/crud/collectionExpose'
 import {
   DEFAULT_COLLECTION_PAGINATION,
@@ -22,8 +10,8 @@ import {
 import QueryTable from '../query-table/QueryTable'
 import type {EnumBucketsResponseBody} from '@loncra/client/resource'
 import type {PageDictionaries, RefreshOnActivate} from '../basic-crud-query'
-import type {QueryTableSlots, SearchableColumnType} from '../query-table/types'
-import type {CrudTableConstructor, CrudTableProps} from './types'
+import type {QueryTableProps, QueryTableSlots, SearchableColumnType} from '../query-table/types'
+import type {CrudTableConstructor} from './types'
 
 const CRUD_TABLE_EMITS = [
   'update:dataSource',
@@ -43,16 +31,14 @@ const CRUD_TABLE_EMITS = [
 ] as const
 
 /**
- * CRUD 表格门面：对外契约与以前完全一样，内部只做三处映射 ——
- * 旧标题三件套 → 基类 `title`（`hide-title` ⇔ `title={false}`）、
- * `actions` → `toolbarActions`、`recordActions`(boolean)+`rowActions` → 基类 `recordActions`。
- * 其余原样转发给 `QueryTable`（它再交给 `BasicCrudQuery` 基类）。
+ * CRUD 表格门面：**只把宿主给的东西原样转给 `QueryTable`**（它再交给 `BasicCrudQuery` 基类）。
+ * 不造名字、不做合成 —— `toolbarActions` / `recordActions` 与内容层同名同形。
  */
 const CrudTable = defineComponent({
   name: 'LCrudTable',
   inheritAttrs: false,
   props: {
-    service: {type: Object as PropType<CrudTableProps['service']>, required: true},
+    service: {type: Object as PropType<QueryTableProps['service']>, required: true},
     columns: {type: Array as PropType<SearchableColumnType<DefaultCrudEntity>[]>, default: () => []},
     immediate: {type: Boolean, default: true},
     refreshOnActivate: {
@@ -67,20 +53,33 @@ const CrudTable = defineComponent({
      * 它变成 `false`（Vue 的既定行为，不是 bug）—— 那就等于"不要卡片头"：默认标题不出现，
      * 工具栏也会整排消失（见 `BasicCrudQuery` 的 `extra`）。
      */
-    title: {type: [Object, Boolean] as PropType<CrudTableProps['title']>, default: undefined},
+    title: {type: [Object, Boolean] as PropType<QueryTableProps['title']>, default: undefined},
     hasPermission: Function as PropType<(permission: string) => boolean>,
     authority: Object as PropType<AuthorityProps>,
-    actions: Array as PropType<ToolbarActionDefinition<DefaultCrudEntity>[]>,
-    rowActions: Array as PropType<RecordActionDefinition<DefaultCrudEntity>[]>,
-    recordActions: {type: Boolean, default: true},
-    /** 系统字典：要加载什么（声明侧 `list.enums` / `list.dictionaries`）—— 原样交给基类 */
-    enums: Array as PropType<CrudTableProps['enums']>,
-    dictCodes: Array as PropType<CrudTableProps['dictCodes']>,
+    /**
+     * 标题右侧的工具栏动作：与内容层同名透传（数组 = 与默认 `add` / `deleteSelected` 合并；
+     * `false` = 整排不出）。
+     *
+     * ⚠️ **`default: undefined` 不能删**（与 `title` 同一个坑）：类型里带 `Boolean` 时"不传"会被
+     * Vue 转成 `false`，那语义就成了"整排不出"。
+     */
+    toolbarActions: {
+      type: [Array, Boolean] as PropType<QueryTableProps['toolbarActions']>,
+      default: undefined,
+    },
+    /** 行内动作：与内容层同名透传（数组 = 与默认 `edit`/`detail`/`delete` 合并；`false` = 不要行内动作、操作列也不补） */
+    recordActions: {
+      type: [Array, Boolean] as PropType<QueryTableProps['recordActions']>,
+      default: undefined,
+    },
+    /** 系统字典：要加载什么（声明侧 `list.enums` / `list.dictionaryCodes`）—— 原样交给基类 */
+    enums: Array as PropType<QueryTableProps['enums']>,
+    dictionaryCodes: Array as PropType<QueryTableProps['dictionaryCodes']>,
     /** 字典加载结果（基类 `v-model` 回来） */
-    buckets: {type: Object as PropType<CrudTableProps['buckets']>, default: () => ({})},
-    dictionaries: {type: Object as PropType<CrudTableProps['dictionaries']>, default: () => ({})},
+    buckets: {type: Object as PropType<QueryTableProps['buckets']>, default: () => ({})},
+    dictionaries: {type: Object as PropType<QueryTableProps['dictionaries']>, default: () => ({})},
     /** 拖拽开关 + 幽灵内容：`true` = 可拖（幽灵缺省主键）；`(record) => 内容` = 可拖且它就是幽灵 */
-    drag: [Boolean, Function] as PropType<CrudTableProps['drag']>,
+    drag: [Boolean, Function] as PropType<QueryTableProps['drag']>,
     onRow: Function as PropType<TableProps['onRow']>,
     rowKey: [String, Function] as PropType<TableProps['rowKey']>,
     rowSelection: [Object, Boolean] as PropType<TableProps['rowSelection'] | false>,
@@ -114,11 +113,6 @@ const CrudTable = defineComponent({
     const buckets = useModel(props, 'buckets') as unknown as Ref<EnumBucketsResponseBody>
     const dictionaries = useModel(props, 'dictionaries') as unknown as Ref<PageDictionaries>
 
-    /** 行内动作：旧的"布尔开关 + 数组定义"合成基类的一个 `recordActions` */
-    const recordActions = computed<RecordActionDefinition<TEntity>[] | false>(() =>
-      props.recordActions === false ? false : (props.rowActions ?? []),
-    )
-
     expose<CollectionExpose<TEntity>>({
       fetchDataSource: () => queryTable.value?.fetchDataSource() ?? Promise.resolve(),
       remove: (records) => queryTable.value?.remove(records),
@@ -135,10 +129,10 @@ const CrudTable = defineComponent({
         title={props.title}
         hasPermission={props.hasPermission}
         authority={props.authority}
-        toolbarActions={props.actions}
-        recordActions={recordActions.value}
+        toolbarActions={props.toolbarActions}
+        recordActions={props.recordActions}
         enums={props.enums}
-        dictCodes={props.dictCodes}
+        dictionaryCodes={props.dictionaryCodes}
         bordered={props.bordered}
         drag={props.drag}
         onRow={props.onRow}
@@ -193,4 +187,4 @@ const CrudTable = defineComponent({
 }) as unknown as CrudTableConstructor
 
 export default CrudTable
-export type {CrudTableConstructor, CrudTableProps}
+export type {CrudTableConstructor}

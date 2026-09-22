@@ -63,7 +63,6 @@ export interface QueryCollectionProps<
   title?: VNode | boolean
   hasPermission?: (permission: string) => boolean
   authority?: AuthorityProps
-  actions?: ToolbarActionDefinition<TEntity>[]
   /**
    * 拖拽开关 + 幽灵内容（一个口两件事）：`true` = 可拖（幽灵缺省是主键）；
    * `(record) => 内容` = 可拖且它就是幽灵；`false` / 不给 = 不可拖。
@@ -83,11 +82,7 @@ export interface BasicCrudQueryProps<
   TBody extends BasicIdMetadata<TId> = BasicIdMetadata<TId>,
   TEntity extends TBody = TBody,
   TPage extends ScrollPageResult<TEntity> = ScrollPageResult<TEntity>,
-> extends Omit<
-  QueryCollectionProps<TBody, TEntity, TPage, TId>,
-  // 屏蔽继承来的 `actions`：本层叫 `toolbarActions`，不与行内 / 项内动作混名
-  'actions'
-> {
+> extends QueryCollectionProps<TBody, TEntity, TPage, TId> {
   /** 卡片头，与 `DataLoadingCardPlan` 同形：`VNode` 直接用、`false` 不要卡片头、不给走默认标题 */
   title?: VNode | boolean
   /**
@@ -106,9 +101,9 @@ export interface BasicCrudQueryProps<
    * 给 `false` 不要行内 / 项内动作（不给 `resolveRecordActions`，也不补"操作"列）。
    */
   recordActions?: RecordActionDefinition<TEntity>[] | false
-  /** 系统字典：要加载什么（声明侧 `list.enums` / `list.dictionaries`）—— 枚举桶按模块分组 */
+  /** 系统字典：要加载什么（声明侧 `list.enums` / `list.dictionaryCodes`）—— 枚举桶按模块分组 */
   enums?: EnumBucketRequest[]
-  dictCodes?: (string | undefined)[]
+  dictionaryCodes?: (string | undefined)[]
   /** 字典加载结果（`v-model` 回给建列的地方） */
   buckets?: EnumBucketsResponseBody
   dictionaries?: PageDictionaries

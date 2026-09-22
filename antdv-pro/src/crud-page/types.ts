@@ -175,9 +175,9 @@ export interface PageListDefinition<TEntity extends BasicIdMetadata<unknown>> {
   /**
    * 需要预加载的**数据字典 code**（写宿主常量，如 `SKILL_GROUP_CODE_PREFIX`）。
    * 与 `enums` 同构：pro 自己走 client 拉（`findDataDictionariesByCodes`），宿主不接线；
-   * 字段上写 `dictId` 消费它。
+   * 字段上写 `dictId` 消费它。**名字与内容层/基类的 `dictionaryCodes` 一致**（加载结果叫 `dictionaries`）。
    */
-  dictionaries?: string[]
+  dictionaryCodes?: string[]
   /** 列顺序 = 数组顺序；按形态显隐用列自己的 `visible` */
   columns: PageListEntry<TEntity>[]
   /**
@@ -186,15 +186,15 @@ export interface PageListDefinition<TEntity extends BasicIdMetadata<unknown>> {
    */
   drag?: DragProp<TEntity>
   rowSelection?: TableProps['rowSelection'] | false
-  /** 行内动作；函数形态用于按 `variant` 裁剪动作集合 */
-  rowActions?:
+  /** 行内动作（名字与内容层/基类的 `recordActions` 一致）；函数形态用于按 `variant` 裁剪动作集合 */
+  recordActions?:
     | RecordActionDefinition<TEntity>[]
     | ((ctx: ListPageContext) => RecordActionDefinition<TEntity>[])
   /**
-   * 标题栏动作：与 pro 内置的新增按钮**合并**（同 id 后者覆盖）。
-   * 业务自己的导出、批量动作都写这里 —— pro 不预置任何业务动作。
+   * 标题栏动作（名字与内容层/基类的 `toolbarActions` 一致）：与 pro 内置的新增按钮**合并**
+   * （同 id 后者覆盖）。业务自己的导出、批量动作都写这里 —— pro 不预置任何业务动作。
    */
-  titleActions?: ToolbarActionDefinition<TEntity>[]
+  toolbarActions?: ToolbarActionDefinition<TEntity>[]
 }
 
 /** `Home.vue` 的声明 = 核心 + 列表（`defineHomePage` 产出） */
@@ -258,7 +258,7 @@ export interface CrudHomePageProps<
   page: CrudListPage<TBody, TEntity, TId>
   /** 宿主形态名：宿主自己起名（如 `'picker'`）；不传 = 宿主没给形态名（整页） */
   variant?: string
-  /** 宿主数据，透传给声明里的 `visible` / `rowActions`（见 `ListPageContext.extra`） */
+  /** 宿主数据，透传给声明里的 `visible` / `recordActions`（见 `ListPageContext.extra`） */
   extra?: Record<string, unknown>
 }
 
