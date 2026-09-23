@@ -99,6 +99,11 @@ const BasicCrudQuery = defineComponent({
       type: [Array, Boolean] as PropType<BasicCrudQueryProps['recordActions']>,
       default: undefined,
     },
+    /**
+     * 朴素卡片：去掉卡片壳边框 + body 内边距（样式见本目录 `style/index.ts` 的 `-plain`）。
+     * 卡片根就是本组件的根元素，所以只需给它加一个带 hashId 的类。
+     */
+    plain: {type: Boolean, default: false},
     /** 选中集合挂在哪：表格 `selectedRows` / 卡片 `selectedItems` */
     selectedKey: {type: String as PropType<BasicCrudQuerySelectedKey>, default: 'selectedRows'},
     // 数据
@@ -323,9 +328,17 @@ const BasicCrudQuery = defineComponent({
       },
     })
 
+    /** `plain`：卡片根就是本组件的根元素，加一个带 hashId 的类即可命中 `-plain` 的样式 */
+    const plainClass = computed(() =>
+      props.plain
+        ? classNames(hashId.value, cssVarCls.value, `${prefixCls.value}-plain`)
+        : undefined,
+    )
+
     return () => (
       <DataLoadingCardPlan
         {...attrs}
+        class={classNames(attrs.class as string | undefined, plainClass.value)}
         loading={loading.value}
         onUpdate:loading={(value: boolean) => (loading.value = value)}
         onMounted={onPlanMounted}

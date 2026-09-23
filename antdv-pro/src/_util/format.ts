@@ -85,17 +85,21 @@ export function executeStatusCell(options: {
   failureValue?: number
 }) {
   const failure = options.failureValue ?? EXECUTE_STATUS_TYPE.FAILURE
+  // ⚠️ 给**组件**传 children 必须走 slots（`{default: () => [...]}`）：直接传数组会被 Vue 认成
+  // "非函数 default 槽"并每格 warn 一次（`normalizeVNodeSlots`）—— 表格里就是"很多警告"。
   return (_value: unknown, record: ExecuteStatusRecord) =>
-    h(Space, null, [
-      getEnumValue(record.executeStatus) === failure
-        ? h(
-            Tooltip,
-            {title: record.exception},
-            {default: () => options.renderIcon(options.iconType, 'align')},
-          )
-        : null,
-      getEnumName(record.executeStatus),
-    ])
+    h(Space, null, {
+      default: () => [
+        getEnumValue(record.executeStatus) === failure
+          ? h(
+              Tooltip,
+              {title: record.exception},
+              {default: () => options.renderIcon(options.iconType, 'align')},
+            )
+          : null,
+        getEnumName(record.executeStatus),
+      ],
+    })
 }
 
 /**
@@ -109,14 +113,17 @@ export function iconNameCell<TRecord>(options: {
 }) {
   return (_value: unknown, record: TRecord) => {
     const name = options.nameOf(record)
-    return h(Space, null, [
-      h(IconSelect, {
-        preview: true,
-        iconRender: options.renderIcon,
-        value: options.iconOf?.(record) || ICON_SELECT_AVATAR_MODE_VALUE.INPUT + name,
-      }),
-      name,
-    ])
+    // 同上：组件的 children 走 slots，别直接给数组
+    return h(Space, null, {
+      default: () => [
+        h(IconSelect, {
+          preview: true,
+          iconRender: options.renderIcon,
+          value: options.iconOf?.(record) || ICON_SELECT_AVATAR_MODE_VALUE.INPUT + name,
+        }),
+        name,
+      ],
+    })
   }
 }
 

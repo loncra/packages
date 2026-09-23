@@ -70,6 +70,12 @@ export interface QueryTableProps<
   buckets?: EnumBucketsResponseBody
   dictionaries?: PageDictionaries
   bordered?: boolean
+  /**
+   * **朴素卡片**：把外面那层卡片壳的边框与 body 内边距去掉，让它"贴"进父容器
+   * （表单/详情里嵌的表格最常用）。样式由 pro 自己的 `genStyleHooks` 生成（pro 不带 Tailwind），
+   * 宿主的 `classes` **仍然优先**（按语义部件合并）⇒ 想再改 header/圆角照旧传 `classes`。
+   */
+  plain?: boolean
   /** 拖拽开关 + 幽灵内容（同 `QueryCollectionProps.drag`） */
   drag?: DragProp<TEntity>
   onRow?: TableProps['onRow']

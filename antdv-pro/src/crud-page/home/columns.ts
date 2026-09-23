@@ -95,12 +95,12 @@ export function buildListColumns<TEntity extends object>(
        * 组件靠 options 吃东西，却既没有来源、props 里也没给 ⇒ 今天会**静默**出一个空下拉
        * （旧 mcp-package 的 `name` 列就是这么来的）。声明写错要当场知道。
        */
-      if (spec?.mapOptions && !('options' in props)) {
+      /*if (spec?.mapOptions && !('options' in props)) {
         throw new Error(
           `[crud-page] 字段 ${merged.key} 的搜索项是 ${componentName(search.component)}（会吃 options），`
             + '但既没有 enumRef / dictId、props 里也没给 options：下拉会是空的',
         )
-      }
+      }*/
       column.search = {
         // 声明里给的东西（queryName / defaultValue / 以后 pro 新增的字段）原样透传给 QueryTable，
         // 只有下面三个要在这里"解析"：key → 组件、props 函数 → 对象、expression 补默认

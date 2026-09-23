@@ -20,7 +20,9 @@ import type {DataLoadingCardPlanSlots, DataLoadingTask} from './types'
 /**
  * 加载卡片壳：只做两件事 —— 卡片布局 + 生命周期编排。
  *
- * - 布局：`title` / `#extra` / 默认插槽；`$attrs` 直通 `Card`（贴边就写 `:classes="{body:'p-0!'}"`）。
+ * - 布局：`title` / `#extra` / 默认插槽；`$attrs` 直通 `Card`。
+ *   "贴边"（去边框 + 去 body 内边距）不在这里：上层 CRUD 声明 **`plain`**（见 `BasicCrudQuery`），
+ *   样式由 pro 的 `genStyleHooks` 出（pro 不带 Tailwind，别在 pro 里写工具类）。
  * - 生命周期：`onMounted` / `onActivated` 两个口，各自 `try/finally` 包同一个 `loading`。
  * 它不认内容：加载什么由消费者通过这两个口交进来。
  */

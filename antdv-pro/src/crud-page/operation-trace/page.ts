@@ -12,6 +12,12 @@ import type {PageListEntry} from '../types'
  * - **整页**：不给 `variant`（`audit-event` 的整页审计列表）；
  * - **嵌入**：`variant = OPERATION_TRACE_VARIANT`（表单 / 详情里那块操作记录，由 `OperationTrace` 渲染），
  *   它隐藏三列（旧 `OperationDataTraceTable` 的 `detailView` 过滤：审计类型 / 审计目标 / 关联业务 id）。
+ *
+ * ⚠️ **本模块必须保持"纯数据"**（只允许常量 / 类型 / 工厂函数，**不许模块级 `new` 服务**）：
+ * 它在 pro barrel 的路径上（`App.vue` `import {Provider}` 就会把整棵图求值一遍），而服务类
+ * **在构造期**就会取 `BASE_URL` → `getClient()` ⇒ 那时 `LClientProvider` 还没 setup，直接抛。
+ * 本仓既成的规矩同理：**带服务构造的模块不许进 eager 图**（对照宿主 `src/routers/index.ts:77`
+ * 那条"必须懒加载"的注释）。
  */
 export const OPERATION_TRACE_VARIANT = 'embedded'
 
@@ -97,21 +103,25 @@ const columns: PageListEntry<AuditEventEntity>[] = [
  * 操作记录声明（只读表）：`recordActions: false` = 不要行内动作、也不补"操作"列；
  * `toolbarActions: false` = 连默认的"新增 / 删除选中"都不要（审计没有增删）。
  */
-export const operationTracePage = defineHomePage<AuditEventEntity>(
-  {
-    service: new OperationDataTraceAuditEventService(),
-    /** 列都自带 `labelKey`，这里只是兜底前缀（`${i18nPrefix}.${key}`） */
-    i18nPrefix: 'operationTrace',
-  },
-  {
-    enums: [
-      {
-        module: SYSTEM_MODULE_NAME.RESOURCE_SERVER,
-        ids: [SYSTEM_ENUM_TYPE.OPERATION_DATA_TYPE_ENUM],
-      },
-    ],
-    columns,
-    recordActions: false,
-    toolbarActions: false,
-  },
-)
+export function createOperationTracePage(
+  service = new OperationDataTraceAuditEventService(),
+) {
+  return defineHomePage<AuditEventEntity>(
+    {
+      service,
+      /** 列都自带 `labelKey`，这里只是兜底前缀（`${i18nPrefix}.${key}`） */
+      i18nPrefix: 'operationTrace',
+    },
+    {
+      enums: [
+        {
+          module: SYSTEM_MODULE_NAME.RESOURCE_SERVER,
+          ids: [SYSTEM_ENUM_TYPE.OPERATION_DATA_TYPE_ENUM],
+        },
+      ],
+      columns,
+      recordActions: false,
+      toolbarActions: false,
+    },
+  )
+}

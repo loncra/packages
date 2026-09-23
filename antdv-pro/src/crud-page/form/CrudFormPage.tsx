@@ -8,8 +8,19 @@ import {
   type SlotsType,
   type VNodeChild,
 } from 'vue'
-import {App, Button, Col, Form, FormItem, type FormInstance, Row, Space, theme} from 'antdv-next'
-import {SaveOutlined, UndoOutlined} from '@antdv-next/icons'
+import {
+  App,
+  Button,
+  Col,
+  Divider,
+  Form,
+  FormItem,
+  type FormInstance,
+  Row,
+  Space,
+  theme,
+} from 'antdv-next'
+import {HistoryOutlined, SaveOutlined, UndoOutlined} from '@antdv-next/icons'
 import {isBusinessSuccess, type RestResult} from '@loncra/client/commons'
 import type {EnumBucketsResponseBody} from '@loncra/client/resource'
 import {useAntdvConfig} from '../../config-provider/useAntdvConfig'
@@ -19,9 +30,17 @@ import {useStaleCheck} from '../../_util/crud/useStaleCheck'
 import type {DefaultCrudEntity} from '../../_util/crud/useCollectionData'
 import type {PageDictionaries} from '../../basic-crud-query/types'
 import {useLocale} from '../../_util/useLocale'
-import {OperationTrace} from '../operation-trace'
+import {isOperationTraceVisible, OperationTraceTable} from '../operation-trace'
 import {usePageRegistry} from '../registry'
 import {buildFormFields} from './fields'
+
+/**
+ * 壳自己要用、但**不一定在表单字段里**的实体键（见 `fetchEntity` 里的说明）。
+ * - `id`：编辑态判定（禁用规则 / 标题 / 陈旧检查都要它）
+ * - `version`：乐观锁版本戳（保留本地修改时要把服务端版本回写，见 `useStaleCheck`）
+ * - `creationTime`：操作记录块的渲染条件 + 审计查询的 `after`
+ */
+const SHELL_ENTITY_KEYS = ['id', 'version', 'creationTime'] as const
 import type {
   CrudFormPageConstructor,
   CrudFormPageExpose,
@@ -148,7 +167,16 @@ const CrudFormPage = defineComponent({
         return
       }
       const value = await mergeRemote(result.data)
+      // 表单字段：只写回"初值（`createEntity`）里存在的键"，别把服务端的无关字段拉进来
       for (const key in entity.value) {
+        const next = (value as Record<string, unknown>)[key]
+        if (next !== undefined) {
+          ;(entity.value as Record<string, unknown>)[key] = next
+        }
+      }
+      // 壳自己要用的字段：**声明里漏写就复制不到**（上面那条规则按初值过滤），这里替声明兜住 ——
+      // 缺 `creationTime` 会让操作记录块永远不渲染，缺 `id` 会让编辑态判定/陈旧检查全失效。
+      for (const key of SHELL_ENTITY_KEYS) {
         const next = (value as Record<string, unknown>)[key]
         if (next !== undefined) {
           ;(entity.value as Record<string, unknown>)[key] = next
@@ -230,6 +258,8 @@ const CrudFormPage = defineComponent({
       get entity() {
         return entity.value
       },
+      // 重置走同一条路（antd resetFields + 声明的 onReset + emit）—— 注意它清不到 `id` 之类的非表单键
+      resetFields: doReset,
     })
 
     return () => (
@@ -279,7 +309,25 @@ const CrudFormPage = defineComponent({
           </Row>
           {/* 字段行之后：宿主内容（子表这类）；再下面是操作记录（pro 的能力，值不齐自动不渲染） */}
           {slots.default?.({entity: entity.value, extra: props.contextExtra})}
-          <OperationTrace target={props.page.operationDataTraceTarget} entity={entity.value} />
+          {/*
+            操作记录：**分割线由这里（页面壳）自己加**，表格组件只管表格（这样只想要表格的场景
+            —— 如审计列表页 —— 引表格时不会被带上一块标题）。条件用同一个判定函数，
+            值不齐时连分割线一起不出。
+          */}
+          {isOperationTraceVisible(props.page.operationDataTraceTarget, entity.value) && (
+            <>
+              <Divider titlePlacement="start" plain>
+                <Space>
+                  <HistoryOutlined />
+                  <span>{locale.value.operationTrace.title}</span>
+                </Space>
+              </Divider>
+              <OperationTraceTable
+                target={props.page.operationDataTraceTarget}
+                entity={entity.value}
+              />
+            </>
+          )}
           <Space>
             {slots.beforeButton?.()}
             <Button type="primary" htmlType="submit" loading={spinning.value}>

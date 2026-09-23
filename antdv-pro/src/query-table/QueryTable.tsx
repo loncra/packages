@@ -110,6 +110,8 @@ const QueryTable = defineComponent({
     title: {type: [Object, Boolean] as PropType<QueryTableProps['title']>, default: undefined},
     hasPermission: Function as PropType<(permission: string) => boolean>,
     authority: Object as PropType<AuthorityProps>,
+    /** 朴素卡片：去掉卡片壳边框 + body 内边距（透传给基类，样式由 pro 的 `genStyleHooks` 出） */
+    plain: {type: Boolean, default: false},
     /**
      * 标题右侧的工具栏动作：数组 = 与默认 `add`/`deleteSelected` 合并；`false` = 整排不出。
      *
@@ -494,6 +496,7 @@ const QueryTable = defineComponent({
           selectedKey="selectedRows"
           prefixCls={props.prefixCls}
           rootClass={props.rootClass}
+          plain={props.plain}
           {...({classes: classSemantic.value.card, styles: styleSemantic.value.card} as Record<
             string,
             unknown

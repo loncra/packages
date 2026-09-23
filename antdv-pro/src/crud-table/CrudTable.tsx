@@ -46,6 +46,8 @@ const CrudTable = defineComponent({
       default: true,
     },
     bordered: {type: Boolean, default: true},
+    /** 朴素卡片：去掉卡片壳边框 + body 内边距（透传） */
+    plain: {type: Boolean, default: false},
     /**
      * 卡片头，与 `DataLoadingCardPlan` 同形：`VNode` 直接用、`false` 不要卡片头、不给走默认标题。
      *
@@ -134,6 +136,7 @@ const CrudTable = defineComponent({
         enums={props.enums}
         dictionaryCodes={props.dictionaryCodes}
         bordered={props.bordered}
+        plain={props.plain}
         drag={props.drag}
         onRow={props.onRow}
         rowKey={props.rowKey}

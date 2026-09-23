@@ -32,10 +32,13 @@ import {
   LineHeightOutlined,
   SettingOutlined,
 } from '@antdv-next/icons'
+import {useConfig} from 'antdv-next/dist/config-provider/context'
+import {classNames} from '@loncra/antdv'
 import {useLocale} from '../_util/useLocale'
 import {useAntdvConfig} from '../config-provider/useAntdvConfig'
 import type {AntdvThemeMode} from '../config-provider'
 import type {ConfigProviderSettingProps} from './types'
+import useStyle from './style'
 
 /** 面板里的控件都占满一行 */
 const FULL_WIDTH = {width: '100%'} as const
@@ -63,6 +66,18 @@ const ConfigProviderSetting = defineComponent({
     const locale = useLocale('ConfigProviderSetting')
     const config = useAntdvConfig()
     const {token} = theme.useToken()
+    /** antd 的 config（拿 `getPrefixCls`）；pro 自己的 `useAntdvConfig` 只管主题/尺寸那套状态 */
+    const antdConfig = useConfig()
+    const prefixCls = computed(() =>
+      antdConfig.value.getPrefixCls('config-provider-setting', 'loncra-config-provider-setting'),
+    )
+    const [hashId, cssVarCls] = useStyle(prefixCls)
+    /**
+     * 本组件自己的语义类：**样式都写在 `style/index.ts`**（pro 不带 Tailwind，也不写内联 `style`）。
+     * 2026-09-23：原来 5 处内联 style 就是从这里挪走的。
+     */
+    const cls = (name: string) =>
+      classNames(hashId.value, cssVarCls.value, `${prefixCls.value}-${name}`)
     const activeTab = ref('color')
 
     const themeOptions = computed(() => [
@@ -110,7 +125,7 @@ const ConfigProviderSetting = defineComponent({
     function row(label: VNodeChild, control: VNodeChild): VNodeChild {
       return (
         <Flex justify="space-between" align="center" gap={8}>
-          <TypographyText strong style={{whiteSpace: 'nowrap'}}>
+          <TypographyText strong class={cls('row-label')}>
             {label}
           </TypographyText>
           {control}
@@ -136,20 +151,18 @@ const ConfigProviderSetting = defineComponent({
     }
 
     /**
-     * 颜色细项：标题 + 一句说明。
+     * 颜色细项：标题 + 一句说明（两个类的样式都在 `style/index.ts`，不再用 inline style）。
      *
-     * ⚠️ **inline style 里的数字尺寸必须自己带单位**：Vue 的 `setStyle` 对数字不补 `px`
-     * （`style.fontSize = 12` ⇒ `font-size: 12` 非法 ⇒ 被浏览器直接丢掉），所以写
-     * `` `${token.value.fontSizeSM}px` `` 而不是裸数字。（`0` 这种除外，`"0"` 本身合法。）
+     * 原来这里有个坑注：inline style 的数字尺寸要自己带 `px`。挪进 CSS-in-JS 后不存在了 ——
+     * 样式文件里直接 `fontSize: token.fontSizeSM`，cssinjs 会按 px 处理，还跟着主题变。
      */
     function colorRow(item: {title: string; subTitle: string}, key: string): VNodeChild {
       return row(
         <Flex vertical gap={2}>
-          <TypographyText strong style={{whiteSpace: 'nowrap'}}>
+          <TypographyText strong class={cls('row-label')}>
             {item.title}
           </TypographyText>
-          <TypographyText type="secondary" style={{ fontSize: `${token.value.fontSizeSM}px`,}}
-          >
+          <TypographyText type="secondary" class={cls('row-sub')}>
             {item.subTitle}
           </TypographyText>
         </Flex>,
@@ -160,7 +173,7 @@ const ConfigProviderSetting = defineComponent({
     /** 预设色板一行（只有名字，没有说明） */
     function presetColorRow(label: string, key: string): VNodeChild {
       return row(
-        <TypographyText strong style={{whiteSpace: 'nowrap'}}>
+        <TypographyText strong class={cls('row-label')}>
           {label}
         </TypographyText>,
         colorPicker(key),
@@ -272,7 +285,7 @@ const ConfigProviderSetting = defineComponent({
         label,
         <Input
           // 阴影值是长串（`0 6px 16px 0 rgba(…)`），窄了看不清（数字要带单位，见 colorRow 的注释）
-          style={{width: '420px'}}
+          class={cls('token-input')}
           value={String(tokenValue(key) ?? '')}
           onChange={(event) => setToken(key, (event.target as HTMLInputElement).value)}
         />,

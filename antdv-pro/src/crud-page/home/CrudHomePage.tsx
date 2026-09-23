@@ -40,6 +40,8 @@ const CrudHomePage = defineComponent({
     title: {type: [Object, Boolean] as PropType<CrudHomePageProps['title']>, default: undefined},
     /** 预置查询条件（嵌入表用：操作记录块就是靠它按实体过滤） */
     query: {type: Object as PropType<CrudHomePageProps['query']>, default: undefined},
+    /** 朴素卡片：去掉卡片壳边框 + body 内边距（嵌在表单/详情里的表格用） */
+    plain: {type: Boolean, default: false},
   },
   slots: Object as SlotsType<CrudHomePageSlots<DefaultCrudEntity>>,
   setup(props, {attrs, expose, slots}) {
@@ -163,6 +165,7 @@ const CrudHomePage = defineComponent({
           service={props.page.service}
           title={props.title}
           query={props.query}
+          plain={props.plain}
           columns={columns.value}
           drag={props.page.list?.drag}
           authority={props.page.list?.authority}

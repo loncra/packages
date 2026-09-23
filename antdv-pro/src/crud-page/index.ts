@@ -1,7 +1,12 @@
 export {CrudHomePage} from './home'
 export {CrudFormPage} from './form'
 export {CrudDetailPage} from './detail'
-export {OPERATION_TRACE_VARIANT, OperationTrace, operationTracePage} from './operation-trace'
+export {
+  createOperationTracePage,
+  isOperationTraceVisible,
+  OPERATION_TRACE_VARIANT,
+  OperationTraceTable,
+} from './operation-trace'
 export {defineDetailPage, defineFormPage, defineHomePage} from './define'
 
 export type {
@@ -46,4 +51,8 @@ export type {
   StaleCheckMode,
   ValueFormatter,
 } from './types'
-export type {OperationTraceProps, OperationTraceSlots} from './operation-trace'
+export type {
+  OperationTraceEntity,
+  OperationTraceTableProps,
+  OperationTraceTableSlots,
+} from './operation-trace'

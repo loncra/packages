@@ -127,10 +127,16 @@ const AttachmentDraggerUpload = defineComponent({
                       } as Record<string, unknown>)}
                     >
                       <Space orientation="vertical">
-                        <TypographyTitle level={2} class={hashed()} style={{margin: 0}}>
+                        <TypographyTitle
+                          level={2}
+                          class={hashed(`${prefixCls.value}-dragger-title`)}
+                        >
                           {h(UploadOutlined)}
                         </TypographyTitle>
-                        <TypographyTitle level={5} class={hashed()} style={{margin: 0}}>
+                        <TypographyTitle
+                          level={5}
+                          class={hashed(`${prefixCls.value}-dragger-title`)}
+                        >
                           {locale.value.draggerTitle}
                         </TypographyTitle>
                         <TypographyText type="secondary">

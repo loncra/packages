@@ -112,6 +112,12 @@ const FileEditor = defineComponent({
       }
 
       return (
+        /*
+         * ⚠️ 这是 pro 里**唯一保留的内联样式**，且是有意的例外（2026-09-23 全仓审计后确认）：
+         * - `sizeStyle`：按 `height` / `maxHeight` **逐实例**算出来的尺寸，没法预先写进 `genStyleHooks`；
+         * - `attrStyle`：宿主自己传进来的 `style`，本就该原样透传。
+         * 想彻底去掉的话只能走 CSS 变量（仍要靠 `style` 设变量），收益为零 ⇒ 保持现状。
+         */
         <div
           class={hashed(prefixCls.value, props.rootClass, attrClass as string)}
           style={[sizeStyle, attrStyle] as never}

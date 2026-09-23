@@ -232,6 +232,10 @@ function genAttachmentUploadStyle(token: LoncraStyleToken): CSSInterpolation {
     [`${componentCls}-preview-hidden`]: {
       display: 'none',
     },
+    /** 拖拽区里那两行标题（图标 + 文案）：不要 typography 自带的上下 margin（2026-09-23 从内联样式挪来） */
+    [`${componentCls}-dragger-title`]: {
+      margin: 0,
+    },
   }
 }
 

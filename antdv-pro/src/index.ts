@@ -190,11 +190,12 @@ export {
   CrudFormPage,
   CrudHomePage,
   OPERATION_TRACE_VARIANT,
-  OperationTrace,
-  operationTracePage,
+  OperationTraceTable,
+  createOperationTracePage,
   defineDetailPage,
   defineFormPage,
   defineHomePage,
+  isOperationTraceVisible,
 } from './crud-page'
 export type {
   CrudDetailDefinition,

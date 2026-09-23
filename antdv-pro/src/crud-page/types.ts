@@ -456,6 +456,12 @@ export interface CrudHomePageProps<
    * 该记录创建之后"过滤；不传就是"无预置条件"。
    */
   query?: QueryTableProps['query']
+  /**
+   * **朴素卡片**（透传给表格）：去掉卡片壳边框与 body 内边距 —— 嵌在表单/详情里的表格用。
+   * 等价于以前宿主到处复制的 `:classes="{root:'border-none', body:'p-0!'}"`（pro 不带 Tailwind，
+   * 那份样式改由 pro 的 `genStyleHooks` 出）。
+   */
+  plain?: boolean
 }
 
 /**
@@ -553,6 +559,14 @@ export interface CrudFormPageProps<
 export interface CrudFormPageExpose<TBody> {
   /** 当前表单实体：宿主做标题、陈旧判断、子表联动时读它（写值走声明钩子） */
   entity: TBody
+  /**
+   * 程序化重置：**与壳上"重置"按钮同一条路径**（antd `resetFields()` + 声明的 `onReset` + `emit('resetFields')`）。
+   *
+   * ⚠️ 它清的是**表单字段**：`createEntity` 里那些**不是 `FormItem`** 的键（典型是 `id`、`version`）
+   * 不会被清掉 ⇒ 保存成功后想"再来一条"**别用它**（会拿旧 `id` 变成 update），换 `:key` 重挂壳
+   * （宿主 `useFormSuccessBack` 就是那么做的）。
+   */
+  resetFields: () => void
 }
 
 export interface CrudFormPageSlots<TBody extends object> {

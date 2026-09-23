@@ -1,3 +1,10 @@
-export {default as OperationTrace} from './OperationTrace'
-export type {OperationTraceProps, OperationTraceSlots} from './OperationTrace'
-export {OPERATION_TRACE_VARIANT, operationTracePage} from './page'
+export {
+  default as OperationTraceTable,
+  isOperationTraceVisible,
+} from './OperationTraceTable'
+export type {
+  OperationTraceEntity,
+  OperationTraceTableProps,
+  OperationTraceTableSlots,
+} from './OperationTraceTable'
+export {createOperationTracePage, OPERATION_TRACE_VARIANT} from './page'

@@ -69,6 +69,11 @@ export interface QueryCollectionProps<
    */
   drag?: DragProp<TEntity>
   prefixCls?: string
+  /**
+   * **朴素卡片**：去掉卡片壳的边框与 body 内边距（样式在本目录 `style/index.ts` 的 `-plain` 里，
+   * 走 `genStyleHooks`）。宿主 `classes` 传的值仍然优先 —— 想再改 header / 圆角照旧传 `classes`。
+   */
+  plain?: boolean
   rootClass?: string
   dataSource?: TEntity[]
   loading?: boolean

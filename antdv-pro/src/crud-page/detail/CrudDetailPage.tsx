@@ -1,10 +1,12 @@
 import {computed, defineComponent, type PropType, ref, type Ref, type SlotsType} from 'vue'
-import {App, Descriptions} from 'antdv-next'
+import {App, Descriptions, Divider, Space} from 'antdv-next'
+import {HistoryOutlined} from '@antdv-next/icons'
 import {isBusinessSuccess, type RestResult} from '@loncra/client/commons'
 import type {EnumBucketsResponseBody} from '@loncra/client/resource'
 import {useAntdvConfig} from '../../config-provider/useAntdvConfig'
 import {useCrudConfig} from '../../crud-config-provider'
 import DataLoadingCardPlan from '../../data-loading-card-plan'
+import {isOperationTraceVisible, OperationTraceTable} from '../operation-trace'
 import {useStaleCheck} from '../../_util/crud/useStaleCheck'
 import type {DefaultCrudEntity} from '../../_util/crud/useCollectionData'
 import type {PageDictionaries} from '../../basic-crud-query/types'
@@ -176,7 +178,26 @@ const CrudDetailPage = defineComponent({
               />
               {/* 描述列表之后、操作记录之前：宿主放附表 / 资源树这类内容（作用域给实体与 extra） */}
               {slots.afterDescriptions?.({entity: entity.value, extra: props.contextExtra})}
-              {/* 操作记录块之后的位置（详情侧的操作记录待接，接法见计划稿 §7.7） */}
+              {/*
+                操作记录（审计）：与表单壳同款 —— **分割线由页面壳自己加**（表格组件只管表格），
+                条件用同一个判定函数（`target` + 实体 `id` / `creationTime` 三者齐），
+                值不齐时连分割线一起不出。
+              */}
+              {isOperationTraceVisible(props.page.operationDataTraceTarget, entity.value) && (
+                <>
+                  <Divider titlePlacement="start" plain>
+                    <Space>
+                      <HistoryOutlined />
+                      <span>{locale.value.operationTrace.title}</span>
+                    </Space>
+                  </Divider>
+                  <OperationTraceTable
+                    target={props.page.operationDataTraceTarget}
+                    entity={entity.value}
+                  />
+                </>
+              )}
+              {/* 操作记录块之后的位置：宿主放"操作记录下面想要的东西" */}
               {slots.afterOperationDataTrace?.()}
             </>
           ),

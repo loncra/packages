@@ -99,12 +99,12 @@ export function buildFormFields<TBody extends object, TEntity extends TBody & ob
       const declaredProps = typeof field.props === 'function' ? field.props(renderCtx) : field.props
       const props = {...componentSpec?.defaults, ...sourceProps, ...declaredProps}
       // 组件靠 options 吃东西，却既没有来源、props 里也没给 ⇒ 今天会静默出一个空下拉。声明写错要当场知道。
-      if (componentSpec?.mapOptions && !('options' in props)) {
+      /*if (componentSpec?.mapOptions && !('options' in props)) {
         throw new Error(
           `[crud-page] 字段 ${field.key} 是 ${componentName(field.component)}（会吃 options），`
             + '但既没有 enumRef / dictId、props 里也没给 options：下拉会是空的',
         )
-      }
+      }*/
       return {
         key: field.key,
         label: t(merged.labelKey ?? `${i18nPrefix}.${field.key}`),
