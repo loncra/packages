@@ -3,7 +3,7 @@ import type {LoncraStyleToken} from '../../_util/genStyle'
 import {genStyleHooks} from '../../_util/genStyle'
 
 function genIconSelectStyle(token: LoncraStyleToken): CSSInterpolation {
-  const {componentCls, controlHeightLG, fontSizeXL, marginXS, calc} = token
+  const {componentCls, antCls, controlHeightLG, fontSizeXL, marginXS, paddingMD, calc} = token
 
   return {
     [componentCls]: {
@@ -20,6 +20,13 @@ function genIconSelectStyle(token: LoncraStyleToken): CSSInterpolation {
       [`${componentCls}-payload`]: {
         width: '100%',
       },
+      [`${antCls}-tabs-nav`]: {
+        margin: 0
+      },
+      [`${antCls}-tabs-body`]: {
+        margin: 0,
+        paddingTop: paddingMD
+      }
     },
     [`${componentCls}-avatar`]: {
       width: '100%',

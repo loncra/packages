@@ -1,12 +1,7 @@
 import {h} from 'vue'
-import {Space, Tooltip} from 'antdv-next'
-import {IconSelect, ICON_SELECT_AVATAR_MODE_VALUE, type IconSelectProps} from '@loncra/antdv'
-import {
-  EXECUTE_STATUS_TYPE,
-  getEnumName,
-  getEnumValue,
-  type NameValueEnumMetadata,
-} from '@loncra/client/commons'
+import {Badge, type BadgeProps, Space, Tooltip} from 'antdv-next'
+import {ICON_SELECT_AVATAR_MODE_VALUE, IconSelect, type IconSelectProps} from '@loncra/antdv'
+import {EXECUTE_STATUS_TYPE, getEnumName, getEnumValue, type NameValueEnumMetadata,} from '@loncra/client/commons'
 
 /**
  * 纯格式化 + **单元格渲染**都在这一个文件里（单函数不单独建文件）。
@@ -74,32 +69,38 @@ export interface ExecuteStatusRecord {
 }
 
 /**
- * 执行状态单元格：状态名 +（失败时）一个图标、悬浮显示异常信息。
+ * 执行状态 → 状态点（`a-badge` 的 `status`）。
  *
- * 图标的**类型与渲染**都由宿主给（`iconType` + `renderIcon`），
- * 包只负责布局（图标 + 文本）和"哪个值算失败"这个判断。
+ * 后端一个枚举、蚂蚁五个状态点 ⇒ **多对一**：
+ * `PENDING` → default；`PROCESSING` / `RETRYING` → processing；`SUCCESS` → success；
+ * `IGNORE` / `UNKNOWN` → warning；`FAILURE` → error。
+ *
+ * 改外观只动这一张表；它与宿主的图标字体无关 ⇒ 这个单元格**不需要宿主的图标渲染**。
  */
-export function executeStatusCell(options: {
-  renderIcon: IconRender
-  iconType: string
-  failureValue?: number
-}) {
-  const failure = options.failureValue ?? EXECUTE_STATUS_TYPE.FAILURE
-  // ⚠️ 给**组件**传 children 必须走 slots（`{default: () => [...]}`）：直接传数组会被 Vue 认成
-  // "非函数 default 槽"并每格 warn 一次（`normalizeVNodeSlots`）—— 表格里就是"很多警告"。
-  return (_value: unknown, record: ExecuteStatusRecord) =>
-    h(Space, null, {
-      default: () => [
-        getEnumValue(record.executeStatus) === failure
-          ? h(
-              Tooltip,
-              {title: record.exception},
-              {default: () => options.renderIcon(options.iconType, 'align')},
-            )
-          : null,
-        getEnumName(record.executeStatus),
-      ],
-    })
+const EXECUTE_STATUS_BADGE: Record<number, BadgeProps['status']> = {
+  [EXECUTE_STATUS_TYPE.PENDING]: 'default',
+  [EXECUTE_STATUS_TYPE.PROCESSING]: 'processing',
+  [EXECUTE_STATUS_TYPE.SUCCESS]: 'success',
+  [EXECUTE_STATUS_TYPE.RETRYING]: 'processing',
+  [EXECUTE_STATUS_TYPE.IGNORE]: 'warning',
+  [EXECUTE_STATUS_TYPE.FAILURE]: 'error',
+  [EXECUTE_STATUS_TYPE.UNKNOWN]: 'warning',
+}
+
+/**
+ * 执行状态单元格：**状态点 + 状态名**（`a-badge`）。
+ *
+ * 失败（`error`）且带 `exception` 时，整块外面套 `Tooltip` 显示异常原因 —— 不再另塞一个图标。
+ */
+export function executeStatusCell() {
+  return (_value: unknown, record: ExecuteStatusRecord) => {
+    const status = EXECUTE_STATUS_BADGE[Number(getEnumValue(record.executeStatus))] ?? 'default'
+    const badge = h(Badge, {status, text: getEnumName(record.executeStatus)})
+    if (status !== 'error' || !record.exception) {
+      return badge
+    }
+    return h(Tooltip, {title: record.exception}, {default: () => badge})
+  }
 }
 
 /**
