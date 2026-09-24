@@ -1,5 +1,5 @@
 import {h} from 'vue'
-import {Badge, type BadgeProps, Space, Tooltip} from 'antdv-next'
+import {type AvatarProps, Badge, type BadgeProps, Space, Tooltip} from 'antdv-next'
 import {ICON_SELECT_AVATAR_MODE_VALUE, IconSelect, type IconSelectProps} from '@loncra/antdv'
 import {EXECUTE_STATUS_TYPE, getEnumName, getEnumValue, type NameValueEnumMetadata,} from '@loncra/client/commons'
 
@@ -106,11 +106,15 @@ export function executeStatusCell() {
 /**
  * 图标 + 名称单元格（企业 / 插件 / 技能包那一列都长这样）。
  * 没图标时退化为名称首字（`IconSelect` 的 `INPUT` 形态）。
+ *
+ * `size` 透给 `IconSelect`（它落在 `Avatar` 上：`IconSelect` 没声明这个 prop ⇒ 走 attrs，
+ * 见 `IconSelect.tsx:256/268` + `renderAvatar` 的三条分支）；不传 = `Avatar` 默认（32px）。
  */
 export function iconNameCell<TRecord>(options: {
   renderIcon: IconRender
   nameOf: (record: TRecord) => string
   iconOf?: (record: TRecord) => string | undefined
+  size?: AvatarProps['size']
 }) {
   return (_value: unknown, record: TRecord) => {
     const name = options.nameOf(record)
@@ -119,6 +123,7 @@ export function iconNameCell<TRecord>(options: {
       default: () => [
         h(IconSelect, {
           preview: true,
+          size: options.size,
           iconRender: options.renderIcon,
           value: options.iconOf?.(record) || ICON_SELECT_AVATAR_MODE_VALUE.INPUT + name,
         }),

@@ -15,6 +15,7 @@ import type {
   PageFieldComponent,
   PageRegistry,
   PageValueFormat,
+  PageValueFormatSpec,
   ValueFormatter,
 } from './types'
 
@@ -76,9 +77,14 @@ function listFormatter(format: string, resolve: (value: unknown, ctx: FormatCont
   }
 }
 
-/** 没声明 `format` 就原样返回；声明了但表里没有对应 formatter → 抛（别静默略过） */
+/**
+ * 没声明 `format` 就原样返回；声明了但表里没有对应 formatter → 抛（别静默略过）。
+ *
+ * `format` 允许两种写法（见 `PageValueFormatSpec`）：光名字，或**名字 + `args`**。
+ * `args` 原样透传给注册的 formatter —— pro **不认它的内容**（宿主的扩展点）。
+ */
 export function formatValue(
-  format: PageValueFormat | undefined,
+  format: PageValueFormat | PageValueFormatSpec | undefined,
   value: unknown,
   ctx: FormatContext,
   table: Record<string, ValueFormatter>,
@@ -89,13 +95,15 @@ export function formatValue(
   if (!format) {
     return value
   }
-  const formatter = table[format]
+  const name = typeof format === 'string' ? format : format.name
+  const args = typeof format === 'string' ? undefined : format.args
+  const formatter = table[name]
   if (!formatter) {
     throw new Error(
-      `[crud-page] 字段 ${ctx.key} 声明 format: '${format}'，但没有这个 formatter（在 CrudConfig.formatters 里注册）`,
+      `[crud-page] 字段 ${ctx.key} 声明 format: '${name}'，但没有这个 formatter（在 CrudConfig.formatters 里注册）`,
     )
   }
-  return formatter(value, ctx)
+  return formatter(value, ctx, args)
 }
 
 // #endregion

@@ -103,6 +103,20 @@ export type PageValueFormat = BuiltinKey<
   'enum' | 'enumList' | 'dict' | 'dictList' | 'date' | 'dateTime' | 'byte'
 >
 
+/**
+ * `format` 的**带参写法**：名字 + 该 formatter 自己的参数。
+ *
+ * `args` 是"**宿主写、宿主读**"的透传位 —— pro 只在 `formatValue` 里把它取出来原样递给注册的
+ * formatter，**不认识、不读、不索引**里面的 key（形状由注册方与声明方自己约定，同 `formatters`
+ * 注册表本身）。反例是被删掉的 `actionContextExtras`：那是 pro **主动去读业务 key**。
+ *
+ * 典型的宿主用法：`format: {name: 'iconName', args: {size: 'large'}}`。
+ */
+export interface PageValueFormatSpec {
+  name: PageValueFormat
+  args?: unknown
+}
+
 /** 字段组件名（内置 input/password/textarea/number/select/date/dateRange，见 registry） */
 export type PageFieldComponent = BuiltinKey<
   'input' | 'password' | 'textarea' | 'number' | 'select' | 'date' | 'dateRange'
@@ -114,8 +128,12 @@ export type PageFieldComponent = BuiltinKey<
  */
 export interface PageFieldSpec {
   labelKey?: string
-  /** formatter 名。**只断言值的形状**（见 `PageValueFormat`），不要求任何来源 */
-  format?: PageValueFormat
+  /**
+   * formatter：**只断言值的形状**（见 `PageValueFormat`），不要求任何来源。
+   * 两种写法 —— 光名字（`'dateTime'`），或名字 + 参数（`{name: 'iconName', args: {…}}`，
+   * 见 `PageValueFormatSpec`）。
+   */
+  format?: PageValueFormat | PageValueFormatSpec
 }
 
 /**
@@ -420,8 +438,19 @@ export interface FormatContext {
   dictionaries: PageDictionaries
 }
 
-/** formatter：返回值直接当单元格内容渲染（string 或 VNode） */
-export type ValueFormatter = (value: unknown, ctx: FormatContext) => string | VNode
+/**
+ * formatter：返回值直接当单元格内容渲染（string 或 VNode）。
+ *
+ * `args` = 声明里 `format` 写了对象形态时带的参数（`undefined` = 声明只写了名字）。
+ * **pro 不认识它的内容**，只把它原样递进来 ⇒ 注册方（宿主）自己收窄成约定好的形状。
+ * 不做成泛型是因为函数参数是**逆变**的：注册方按自己的参数形状特化后，塞不进
+ * `Record<string, ValueFormatter>`（同 `CollectionExpose.remove` 当年那个坑）。
+ */
+export type ValueFormatter = (
+  value: unknown,
+  ctx: FormatContext,
+  args?: unknown,
+) => string | VNode
 
 /**
  * 两张注册表。内置表见 `registry.ts` 的 `DEFAULT_*`；
