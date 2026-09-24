@@ -20,14 +20,18 @@ function genBasicCrudQueryStyle(token: LoncraStyleToken): CSSInterpolation {
        * 去掉边框 + 去掉 body 内边距（等价宿主以前复制的 `{root:'border-none', body:'p-0!'}`，
        * 但走 pro 自己的 CSS-in-JS，pro 不带 Tailwind）。
        *
-       * ⚠️ **类名故意写两遍来提权**：`:where(...)` 里的作用域类是 0 权重 ⇒ 只写一个类的话本规则是
-       * (0,1,0)，跟 antd Card 自带的 `.ant-card-bordered` 打平，**谁后注入谁赢（不稳定）**；
-       * 重复一次得到 (0,2,0)，子规则 (0,3,0)，与注入顺序 / 层序都无关。
-       * 另：**别指望用宿主 `classes` 覆盖 `plain` 已设的属性**（同属性冲突看层序，不可靠）。
+       * ⚠️ **两条都用 `!important`（2026-09-24 定稿）**：`:where(...)` 里的作用域类是 0 权重 ⇒
+       * 单类选择器只有 (0,1,0)，跟 antd 的 `.ant-card-bordered`（(0,1,0)）**打平**，子规则
+       * (0,2,0) 也跟 `.ant-card .ant-card-body`（(0,2,0)）打平 ⇒ **谁后注入谁赢** ✗：
+       * 实测"从列表进详情（SPA，规则按需注入）"被压掉、"硬刷新（直链）"却生效。
+       * 加 `!important` 后与注入顺序 / 层序都无关 ✓。
+       *
+       * 代价（已知并接受）：**这两个属性**宿主再用 `classes` 也覆盖不了（其余属性照旧可覆盖）；
+       * 想换别的做法见 2026-09-24 的方案记录（`variant="borderless"` + `styles.body` / `hashPriority: 'high'`）。
        */
       [`${componentCls}-plain`]: {
-        border: 'none',
-        [`& > ${antCls}-card-body`]: {padding: 0},
+        border: 'none !important',
+        [`& > ${antCls}-card-body`]: {padding: '0 !important'},
       },
     },
   ]
