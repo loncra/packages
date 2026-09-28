@@ -32,6 +32,8 @@ import type {PageDictionaries} from '../../basic-crud-query/types'
 import {useLocale} from '../../_util/useLocale'
 import {isOperationTraceVisible, OperationTraceTable} from '../operation-trace'
 import {usePageRegistry} from '../registry'
+import {collectFormSources, mergeSources} from '../../_util/crud/sources.ts'
+import {fetchDataDictionaries, fetchEnumBuckets} from '../../basic-crud-query'
 import {buildFormFields} from './fields'
 
 /**
@@ -104,9 +106,28 @@ const CrudFormPage = defineComponent({
     const {token} = theme.useToken()
     /** 字段组件表 + 值格式表（内置 + 宿主 CrudConfig 覆盖） */
     const registry = usePageRegistry()
-    /** 系统字典（枚举桶 + 数据字典）：由基类统一拉，这里只消费 */
+    /**
+     * 系统字典（枚举桶 + 数据字典）：**form 不走 `BasicCrudQuery`（那是列表的基类）⇒ 由本壳自己拉**。
+     * 加载清单从**字段字典 + 表单条目**推导（`collectFormSources`）—— 声明里写 `enumRef` / `dictId`
+     * 就够，页面不必再抄一份 `enums` / `dictionaryCodes`。列表那半是自己的 `collectListSources`
+     * （只收"列上有搜索项"的），两边各算各的。
+     */
     const buckets = ref<EnumBucketsResponseBody>({})
     const dictionaries = ref<PageDictionaries>({})
+
+    const sources = computed(() =>
+      mergeSources(collectFormSources(props.page.form.fields, props.page.fields ?? {})),
+    )
+
+    /** 拉来源（与列表同一个口径）：结果喂给 `buildFormFields` 的 options */
+    async function loadSources(): Promise<void> {
+      const [nextBuckets, nextDictionaries] = await Promise.all([
+        fetchEnumBuckets(sources.value.enums),
+        fetchDataDictionaries(sources.value.dictionaryCodes),
+      ])
+      buckets.value = nextBuckets
+      dictionaries.value = nextDictionaries
+    }
 
     const formRef = ref<FormInstance>()
     /** 初始加载 + 提交共用的加载态（卡片壳的 `Spin` 与保存按钮都读它） */
@@ -202,6 +223,8 @@ const CrudFormPage = defineComponent({
 
     /** 初始加载：loading 交给 `DataLoadingCardPlan`（它 `try/finally` 包住，并做 in-flight 去重） */
     async function load(): Promise<void> {
+      // 先拉来源（枚举桶 / 数据字典）：下拉的 options 由 `buildFormFields` 从它们算出来
+      await loadSources()
       await props.page.form.preMounted?.(formCtx())
       if (props.id != null) {
         const value = await fetchEntity(props.id)

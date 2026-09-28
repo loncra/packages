@@ -102,6 +102,15 @@ function isFindSearchService<
   return 'find' in service && typeof service.find === 'function'
 }
 
+/**
+ * 自定义取数：**替代 `service.find`**（列表型取数）。给了就以它为准，分页按返回行数推（同 `find` 那条路）。
+ *
+ * 用途：同一份声明在不同入口要打**不同接口** —— 例如「独立资源」在企业侧只能走
+ * `/resource/find/enterprise`（`resource/find` 只给运营后台）⇒ 宿主换这一个函数即可，
+ * 不必再造一个 `service` 类（`CollectionService` 的每个形态都还要 `get` / `exportData`，太重）。
+ */
+export type CollectionFetch<TEntity> = (request: FilterRequest) => Promise<RestResult<TEntity[]>>
+
 export async function fetchCollectionData<
   TBody extends BasicIdMetadata<TId>,
   TEntity extends TBody,
@@ -111,11 +120,21 @@ export async function fetchCollectionData<
   service: CollectionService<TBody, TEntity, TPage, TId>
   query: FilterRequest | PageRequest
   pagination: Ref<CollectionPagination | undefined>
+  /** 自定义取数（可选）：给了就不看 `service` 的形态，一律按列表型处理 */
+  fetch?: CollectionFetch<TEntity>
 }): Promise<TEntity[]> {
-  const {service, query, pagination} = options
+  const {service, query, pagination, fetch} = options
   const data: TEntity[] = []
 
-  if (isPageSearchService(service)) {
+  if (fetch) {
+    const result = await fetch(query)
+    data.push(...(result.data || []))
+    if (pagination.value === undefined) {
+      pagination.value = false
+    } else if (pagination.value !== false) {
+      syncPaginationFromFindResult(pagination.value, query, data.length)
+    }
+  } else if (isPageSearchService(service)) {
     const number = typeof query.number === 'number' ? query.number : 1
     const result: RestResult<TPage> = await service.page({...query, number})
     data.push(...(result.data?.elements || []))
