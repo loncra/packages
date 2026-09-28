@@ -20,7 +20,9 @@ import {
   Space,
   theme,
 } from 'antdv-next'
+import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {HistoryOutlined, SaveOutlined, UndoOutlined} from '@antdv-next/icons'
+import {classNames} from '@loncra/antdv'
 import {isBusinessSuccess, type RestResult} from '@loncra/client/commons'
 import type {EnumBucketsResponseBody} from '@loncra/client/resource'
 import {useAntdvConfig} from '../../config-provider/useAntdvConfig'
@@ -35,6 +37,7 @@ import {usePageRegistry} from '../registry'
 import {collectFormSources, mergeSources} from '../../_util/crud/sources.ts'
 import {fetchDataDictionaries, fetchEnumBuckets} from '../../basic-crud-query'
 import {buildFormFields} from './fields'
+import useStyle from './style'
 
 /**
  * 壳自己要用、但**不一定在表单字段里**的实体键（见 `fetchEntity` 里的说明）。
@@ -104,6 +107,15 @@ const CrudFormPage = defineComponent({
     const locale = useLocale('Crud')
     const {message} = App.useApp()
     const {token} = theme.useToken()
+    /**
+     * 样式：pro **不写内联 `style`**（规矩）+ 不带 Tailwind ⇒ 一律 CSS-in-JS。
+     * ⚠️ `hashId` / `cssVarCls` 必须挂到元素上，否则规则生成了也不命中。
+     */
+    const antdConfig = useConfig()
+    const prefixCls = computed(() =>
+      antdConfig.value.getPrefixCls('crud-form-page', 'loncra-crud-form-page'),
+    )
+    const [hashId, cssVarCls] = useStyle(prefixCls)
     /** 字段组件表 + 值格式表（内置 + 宿主 CrudConfig 覆盖） */
     const registry = usePageRegistry()
     /**
@@ -300,17 +312,11 @@ const CrudFormPage = defineComponent({
           model={entity.value}
           onFinish={() => doSubmit()}
         >
-          <Row gutter={[token.value.sizeMD, token.value.sizeMD]}>
+          <Row gutter={[token.value.sizeMD,0]}>
             {fields.value.map((field) => (
-              <Col
-                key={String(field.key)}
-                xs={24}
-                sm={24}
-                md={field.span}
-                lg={field.span}
-                xl={field.span}
-                xxl={field.span}
-              >
+              // 栅格跨度**整包来自声明**（`field.col`；没写 `col` 时 `buildFormFields` 已补上
+              // pro 默认断点）—— pro 不在这里加工任何断点，官方 `Col` 的语义原样生效
+              <Col key={String(field.key)} {...field.col}>
                 <FormItem name={field.key} label={field.label} rules={field.rules}>
                   {field.render
                     ? (field.render({
@@ -338,7 +344,13 @@ const CrudFormPage = defineComponent({
             值不齐时连分割线一起不出。
           */}
           {isOperationTraceVisible(props.page.operationDataTraceTarget, entity.value) && (
-            <>
+            <div
+              class={classNames(
+                hashId.value,
+                cssVarCls.value,
+                `${prefixCls.value}-operation-trace`,
+              )}
+            >
               <Divider titlePlacement="start" plain>
                 <Space>
                   <HistoryOutlined />
@@ -349,7 +361,7 @@ const CrudFormPage = defineComponent({
                 target={props.page.operationDataTraceTarget}
                 entity={entity.value}
               />
-            </>
+            </div>
           )}
           <Space>
             {slots.beforeButton?.()}

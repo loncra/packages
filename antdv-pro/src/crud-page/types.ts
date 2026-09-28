@@ -1,5 +1,5 @@
 import type {Component, PublicProps, Ref, VNode} from 'vue'
-import type {FormItemProps, TableProps} from 'antdv-next'
+import type {ColProps, FormItemProps, TableProps} from 'antdv-next'
 import type {
   BasicIdMetadata,
   NameValueEnumMetadata,
@@ -302,8 +302,17 @@ export interface PageFormField<TBody> extends PageLookupFieldSpec {
    * （如资源分类是插件时某字段不必填）。
    */
   rules?: FormItemProps['rules'] | ((ctx: PageFieldRenderContext<TBody>) => FormItemProps['rules'])
-  /** 24 栅格跨度，默认 12 */
-  span?: number
+  /**
+   * 该字段所在 `<a-col>` 的 props：**整包透传**给 antd 的 `Col`（官方类型 `ColProps`）——
+   * `span` / `offset` / `order` / `pull` / `push` / `flex` / `xs` ~ `xxxl`，官方语义原样生效，
+   * pro 不加工、不加自己的规则。
+   *
+   * **不传** = pro 的默认断点（`FORM_FIELD_DEFAULT_COL`：`span: 12` + `xs`/`sm` 24 +
+   * `md`~`xxxl` 12 ⇒ 手机一列、平板起两列）；**传了就整包替换默认**（不与默认合并）
+   * ⇒ 想让手机一列、`md` 起三列，`xs`/`sm` 也要写出来：
+   * `{xs: 24, sm: 24, md: 8, lg: 8, xl: 8, xxl: 8}`。
+   */
+  col?: ColProps
   /** 组件 props。函数形态拿得到实体（编辑态 disabled、选项来自异步 ref 这类） */
   props?:
     | Record<string, unknown>

@@ -1,5 +1,5 @@
 import type {Component} from 'vue'
-import type {FormItemProps} from 'antdv-next'
+import type {ColProps, FormItemProps} from 'antdv-next'
 import type {EnumBucketsResponseBody} from '@loncra/client/resource'
 import type {PageDictionaries} from '../../basic-crud-query/types'
 import {componentName, dictOptions, resolveFieldSpec} from '../registry'
@@ -12,14 +12,32 @@ import type {
 } from '../types'
 
 /**
+ * 表单字段的默认栅格（`<a-col>`）：**手机一列（`xs`/`sm` = 24）、平板起两列**。
+ *
+ * 声明里不写 `col` 就用它；写了 `col` 就**整包替换**它（不与它合并，见 `PageFormField.col`）。
+ * `span: 12` 是兜底基数（官方语义：没被断点命中的尺寸都落 `span`），显式写出 `md`~`xxxl`
+ * 是为了"默认值一眼看全"，也照顾以后官方再加断点时的可读性。
+ */
+const FORM_FIELD_DEFAULT_COL: ColProps = {
+  span: 12,
+  xs: 24,
+  sm: 24,
+  md: 12,
+  lg: 12,
+  xl: 12,
+  xxl: 12,
+  xxxl: 12,
+}
+
+/**
  * 建好的表单控件描述：标签 / 组件 / props / 校验规则一次算好，模板保持"笨"
  * （与列表的 `buildListColumns` 同一个思路：声明 → 组件能吃的形状）。
  */
 export interface BuiltFormField<TBody> {
   key: keyof TBody & string
   label: string
-  /** 24 栅格跨度 */
-  span: number
+  /** `<a-col>` 的 props（声明给了就用声明的，否则 pro 默认，见 `FORM_FIELD_DEFAULT_COL`） */
+  col: ColProps
   rules?: FormItemProps['rules']
   /** 注册表解析出来的组件；`render` 逃生时为空 */
   component?: Component
@@ -108,7 +126,7 @@ export function buildFormFields<TBody extends object, TEntity extends TBody & ob
       return {
         key: field.key,
         label: t(merged.labelKey ?? `${i18nPrefix}.${field.key}`),
-        span: field.span ?? 12,
+        col: field.col ?? FORM_FIELD_DEFAULT_COL,
         rules: typeof field.rules === 'function' ? field.rules(renderCtx) : field.rules,
         component: componentSpec?.component,
         props,
