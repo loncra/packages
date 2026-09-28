@@ -46,8 +46,10 @@ const CrudTable = defineComponent({
       default: true,
     },
     bordered: {type: Boolean, default: true},
-    /** 朴素卡片：去掉卡片壳边框 + body 内边距（透传） */
+    /** 内嵌形态：不要卡片壳与外层 `Spin`（透传给基类，标题落到表格自带标题） */
     plain: {type: Boolean, default: false},
+    /** 自定义取数：给了就不再走 `service.find`（与内容层同名透传，见 `CollectionFetch`） */
+    fetch: {type: Function as PropType<QueryTableProps['fetch']>, default: undefined},
     /**
      * 卡片头，与 `DataLoadingCardPlan` 同形：`VNode` 直接用、`false` 不要卡片头、不给走默认标题。
      *
@@ -137,6 +139,7 @@ const CrudTable = defineComponent({
         dictionaryCodes={props.dictionaryCodes}
         bordered={props.bordered}
         plain={props.plain}
+        fetch={props.fetch}
         drag={props.drag}
         onRow={props.onRow}
         rowKey={props.rowKey}

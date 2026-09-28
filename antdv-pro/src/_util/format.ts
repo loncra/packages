@@ -91,9 +91,15 @@ const EXECUTE_STATUS_BADGE: Record<number, BadgeProps['status']> = {
  * 执行状态单元格：**状态点 + 状态名**（`a-badge`）。
  *
  * 失败（`error`）且带 `exception` 时，整块外面套 `Tooltip` 显示异常原因 —— 不再另塞一个图标。
+ *
+ * 没有值（`null` / `undefined`，如刚建好还没跑过的记录）⇒ 返回 `undefined`（不认领这一格，
+ * 交回表格自己渲染）。⚠️ 只能判 `== null`：**`PROCESSING` 的值是 `0`**，用 `!value` 会把"处理中"吞掉。
  */
 export function executeStatusCell() {
   return (_value: unknown, record: ExecuteStatusRecord) => {
+    if (record.executeStatus == null) {
+      return undefined
+    }
     const status = EXECUTE_STATUS_BADGE[Number(getEnumValue(record.executeStatus))] ?? 'default'
     const badge = h(Badge, {status, text: getEnumName(record.executeStatus)})
     if (status !== 'error' || !record.exception) {

@@ -7,6 +7,7 @@ import {
   toRef,
   useModel,
   type VNode,
+  type VNodeChild,
 } from 'vue'
 import type {TableProps} from 'antdv-next'
 import {App, Pagination} from 'antdv-next'
@@ -14,7 +15,7 @@ import {classNames} from '@loncra/antdv'
 import type {FilterRequest, PageRequest} from '@loncra/client/commons'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {useLocale} from '../_util/useLocale'
-import {useActionAuth} from '../crud-config-provider'
+import {useActionAuth, useCrudConfig} from '../crud-config-provider'
 import {
   type ToolbarActionContext,
   BUILTIN_BULK_ACTION_IDS,
@@ -100,10 +101,12 @@ const BasicCrudQuery = defineComponent({
       default: undefined,
     },
     /**
-     * 朴素卡片：去掉卡片壳边框 + body 内边距（样式见本目录 `style/index.ts` 的 `-plain`）。
-     * 卡片根就是本组件的根元素，所以只需给它加一个带 hashId 的类。
+     * **内嵌形态**：不要卡片壳、也不要外层 `Spin`（加载态归内容：表格自带 `loading`），
+     * 标题 / 工具栏随默认插槽交给内容自己落位（表格 → `Table.title`）。见 `types.ts` 的说明。
      */
     plain: {type: Boolean, default: false},
+    /** 自定义取数：给了就不再走 `service.find`（见 `CollectionFetch`） */
+    fetch: {type: Function as PropType<BasicCrudQueryProps['fetch']>, default: undefined},
     /** 选中集合挂在哪：表格 `selectedRows` / 卡片 `selectedItems` */
     selectedKey: {type: String as PropType<BasicCrudQuerySelectedKey>, default: 'selectedRows'},
     // 数据
@@ -147,6 +150,7 @@ const BasicCrudQuery = defineComponent({
     const {message, modal} = App.useApp()
     const locale = useLocale('Crud')
     const config = useConfig()
+    const crudConfig = useCrudConfig()
     const auth = useActionAuth(toRef(props, 'hasPermission'))
     const resolver = useActionResolver()
     const prefixCls = computed(() =>
@@ -171,6 +175,7 @@ const BasicCrudQuery = defineComponent({
           service: props.service as never,
           query: query.value,
           pagination: pagination as never,
+          fetch: props.fetch as never,
         })
         emit('update:pagination', pagination.value)
       } finally {
@@ -328,34 +333,64 @@ const BasicCrudQuery = defineComponent({
       },
     })
 
-    /** `plain`：卡片根就是本组件的根元素，加一个带 hashId 的类即可命中 `-plain` 的样式 */
-    const plainClass = computed(() =>
-      props.plain
-        ? classNames(hashId.value, cssVarCls.value, `${prefixCls.value}-plain`)
-        : undefined,
-    )
+    /**
+     * `plain` 时交给内容的「标题 / 工具栏」：
+     * 标题解析口径与卡片头**完全一致**（`#title` 插槽 > `props.title` > `CrudConfig.resolveDefaultTitle`），
+     * `title === false` / `toolbarActions === false` 时对应项不给（整块不出）。
+     * 非 `plain` 不用它（标题 / 工具栏仍走卡片头）。
+     */
+    const contentTitle = computed<VNodeChild>(() => {
+      if (props.title === false) {
+        return undefined
+      }
+      if (slots.title) {
+        return slots.title()
+      }
+      return props.title == null
+        ? (crudConfig.value.resolveDefaultTitle?.() ?? undefined)
+        : props.title
+    })
+    const contentExtra = computed<VNodeChild>(() => {
+      if (props.title === false || props.toolbarActions === false) {
+        return undefined
+      }
+      return slots.extra ? slots.extra() : <ActionButton actions={toolbarActions.value} />
+    })
 
     return () => (
       <DataLoadingCardPlan
         {...attrs}
-        class={classNames(attrs.class as string | undefined, plainClass.value)}
+        class={attrs.class as string | undefined}
         loading={loading.value}
         onUpdate:loading={(value: boolean) => (loading.value = value)}
         onMounted={onPlanMounted}
         onActivated={onPlanActivated}
+        plain={props.plain}
+        // 加载态归内容自己（表格自带 `loading`、卡片网格自己出 `Spin`）⇒ 不再套第二层遮罩
+        spin={false}
         title={props.title}
         v-slots={{
-          title: slots.title ? () => slots.title?.() : undefined,
+          // `plain` 不出卡片头：标题 / 工具栏已随默认插槽交给内容
+          title: !props.plain && slots.title ? () => slots.title?.() : undefined,
           // 标题右侧：不要卡片头或不要工具栏动作时整块都不出（连 `#extra` 一起关）；否则插槽优先、没插槽就用动作按钮
-          extra: () => {
-            if (props.title === false || props.toolbarActions === false) {
-              return null
-            }
-            return slots.extra ? slots.extra() : <ActionButton actions={toolbarActions.value} />
-          },
+          extra: props.plain
+            ? undefined
+            : () => {
+                if (props.title === false || props.toolbarActions === false) {
+                  return null
+                }
+                return slots.extra ? slots.extra() : <ActionButton actions={toolbarActions.value} />
+              },
           default: () => (
             <>
-              {slots.default?.()}
+              {/*
+                `plain` 时把「标题 / 工具栏」交给内容（`QueryTable` 把它们落到 `Table.title`）；
+                非 `plain` 时两项都是 `undefined`（内容不用管）。
+              */}
+              {slots.default?.({
+                title: props.plain ? contentTitle.value : undefined,
+                extra: props.plain ? contentExtra.value : undefined,
+              })}
               {pagination.value === false ? null : (
                 <Pagination
                   class={classNames(

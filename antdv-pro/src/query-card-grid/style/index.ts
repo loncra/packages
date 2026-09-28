@@ -22,6 +22,14 @@ function genQueryCardGridStyle(token: LoncraStyleToken): CSSInterpolation {
           display: 'flex',
           flexWrap: 'wrap',
         },
+        // 内容区的转圈包裹层：基类不再出 `Spin`（`plain` 用不上、表格自带 `loading`），
+        // 卡片网格自己出 ⇒ 撑满 + block，免得住 flex / 全高布局的页面因多出这层而塌掉。
+        [`${componentCls}-spin`]: {
+          display: 'block',
+          width: '100%',
+          height: '100%',
+          [`${antCls}-spin-container`]: {height: '100%'},
+        },
         [`${antCls}-card-grid${componentCls}-item`]: {
           width: 'calc(100% / var(--loncra-card-grid-columns, 5))',
         },

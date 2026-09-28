@@ -15,6 +15,17 @@ export interface DataLoadingCardPlanProps {
    * 不给（或用 `#title` 插槽）则用 `CrudConfig.resolveDefaultTitle()`。
    */
   title?: VNode | boolean
+  /**
+   * **内嵌形态**：不渲染卡片壳（只留一个裸容器，`attrs` 照旧落上去），并且**不消费
+   * `title` / `#extra` 插槽、不出外层 `Spin`** —— 标题与加载态都归内容自己（表格用它的
+   * `loading`）。生命周期编排（`onMounted` / `onActivated` + `loading`）不变。
+   */
+  plain?: boolean
+  /**
+   * 内容区是否套 `Spin`：`true`（默认）= 转圈盖住内容区（form / detail 的"初始加载 + 提交"要它）；
+   * `false` = 内容自己管加载态。**CRUD 列表关掉它**：表格自带 `loading`，再套一层就是两层遮罩。
+   */
+  spin?: boolean
 }
 
 export interface DataLoadingCardPlanSlots {

@@ -16,7 +16,7 @@ import type {
   ToolbarActionPayload,
 } from '../_util/crud/actions'
 import type {CollectionExpose} from '../_util/crud/collectionExpose'
-import type {CollectionService} from '../_util/crud/useCollectionData'
+import type {CollectionFetch, CollectionService} from '../_util/crud/useCollectionData'
 import type {DragProp} from '../_util/crud/useDrag'
 import type {DataDictionaryMetadata, EnumBucketsResponseBody} from '@loncra/client/resource'
 
@@ -70,10 +70,20 @@ export interface QueryCollectionProps<
   drag?: DragProp<TEntity>
   prefixCls?: string
   /**
-   * **朴素卡片**：去掉卡片壳的边框与 body 内边距（样式在本目录 `style/index.ts` 的 `-plain` 里，
-   * 走 `genStyleHooks`）。宿主 `classes` 传的值仍然优先 —— 想再改 header / 圆角照旧传 `classes`。
+   * **内嵌形态**：不要卡片壳（不渲染 `Card`，只留一个裸容器），也**不要外层 `Spin`**
+   * （加载态归内容自己：表格自带 `loading`），标题 / 工具栏交给内容落到它的位置
+   * （表格 → `Table.title`，即 `.ant-table-title`）。
+   *
+   * 与旧版 `plain`（只把卡片壳的边框与 body 内边距去掉）的区别：**那次是"留壳去样式"，
+   * 这次是"不留壳"** —— 嵌套在别人的表格 / 卡片里时，卡片壳会跟 antd 的嵌套表规则打架
+   * （`.ant-table-wrapper:only-child .ant-table` 会把里面的表拉走 32px，而卡片头留在原地 ⇒ 错位）。
    */
   plain?: boolean
+  /**
+   * 自定义取数：给了就**不再走 `service.find`**（列表型取数，见 `CollectionFetch`）。
+   * 用途：同一份声明在不同入口要打不同接口（如资源列表在企业侧只能走 `/resource/find/enterprise`）。
+   */
+  fetch?: CollectionFetch<TEntity>
   rootClass?: string
   dataSource?: TEntity[]
   loading?: boolean
@@ -133,9 +143,20 @@ export type BasicCrudQueryEmits<
   deleted: [records: TEntity[]]
 }
 
+/** `plain` 时基类通过默认插槽交给内容的「标题 / 工具栏」（非 `plain` 时两项都没有） */
+export interface BasicCrudQueryContentProps {
+  /** 标题：`#title` 插槽 > `props.title` > `CrudConfig.resolveDefaultTitle`；`title: false` 时为 `undefined` */
+  title?: VNodeChild
+  /** 工具栏：`title: false` / `toolbarActions: false` 时为 `undefined` */
+  extra?: VNodeChild
+}
+
 export interface BasicCrudQuerySlots {
-  /** 内容：表格 / 卡片网格（数据由形态组件自己通过 v-model 传进来，插槽不带参数） */
-  default?: () => VNodeChild
+  /**
+   * 内容：表格 / 卡片网格（数据由形态组件自己通过 v-model 传进来）。
+   * `plain` 时带 `{title, extra}`（见 `BasicCrudQueryContentProps`），非 `plain` 时是空的。
+   */
+  default?: (props: BasicCrudQueryContentProps) => VNodeChild
   /** 页面自带标题；不给就用 `CrudConfig.resolveDefaultTitle` */
   title?: () => VNodeChild
   /** 标题右侧；不给就放动作按钮 */

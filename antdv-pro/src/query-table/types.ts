@@ -19,6 +19,7 @@ import type {
 } from '../_util/crud/actions'
 import type {CollectionExpose} from '../_util/crud/collectionExpose'
 import type {
+  CollectionFetch,
   CollectionService,
   DefaultCrudEntity,
 } from '../_util/crud/useCollectionData'
@@ -71,11 +72,15 @@ export interface QueryTableProps<
   dictionaries?: PageDictionaries
   bordered?: boolean
   /**
-   * **朴素卡片**：把外面那层卡片壳的边框与 body 内边距去掉，让它"贴"进父容器
-   * （表单/详情里嵌的表格最常用）。样式由 pro 自己的 `genStyleHooks` 生成（pro 不带 Tailwind），
-   * 宿主的 `classes` **仍然优先**（按语义部件合并）⇒ 想再改 header/圆角照旧传 `classes`。
+   * **内嵌形态**：不要卡片壳、也不要外层 `Spin`；标题 / 工具栏落到表格自带标题（`.ant-table-title`）。
+   * 表单 / 详情里嵌的表格用它（旧 `preview` 的等价物）。加载态归表格自己的 `loading`。
    */
   plain?: boolean
+  /**
+   * 自定义取数：给了就**不再走 `service.find`**（列表型取数，见 `CollectionFetch`）。
+   * 用途：同一份声明在不同入口要打不同接口（如资源列表在企业侧只能走 `/resource/find/enterprise`）。
+   */
+  fetch?: CollectionFetch<TEntity>
   /** 拖拽开关 + 幽灵内容（同 `QueryCollectionProps.drag`） */
   drag?: DragProp<TEntity>
   onRow?: TableProps['onRow']

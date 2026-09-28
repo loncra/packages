@@ -68,6 +68,10 @@ export function dictOptions(list: DataDictionaryMetadata[] | undefined): Record<
 /** 列表型格式：值必须是数组，逐个翻译后逗号连接 */
 function listFormatter(format: string, resolve: (value: unknown, ctx: FormatContext) => string): ValueFormatter {
   return (value, ctx) => {
+    // 空值不是"值不是数组"：返回空串（`formatValue` 不再替内置 formatter 提前挡空值）
+    if (value == null) {
+      return ''
+    }
     if (!Array.isArray(value)) {
       throw new Error(
         `[crud-page] 字段 ${ctx.key} 声明 format: '${format}'，但值不是数组：${JSON.stringify(value)}`,
@@ -78,7 +82,11 @@ function listFormatter(format: string, resolve: (value: unknown, ctx: FormatCont
 }
 
 /**
- * 没声明 `format` 就原样返回；声明了但表里没有对应 formatter → 抛（别静默略过）。
+ * 没声明 `format` 就原样返回（空值给空串）；**声明了就一定交给 formatter —— 空值也交**。
+ *
+ * 空值不提前挡掉是有意的：宿主注册的 formatter 常见形态是"列的值只是可选字段，显示要靠整条
+ * 记录"（如用户列显示"头像 + 显示名"，值 `realName` / `nickname` 缺失也要出人）。挡掉就等于
+ * 让这类 formatter 收不到调用、整格空白。**内置的那几个自己守空值**（见 `usePageRegistry`）。
  *
  * `format` 允许两种写法（见 `PageValueFormatSpec`）：光名字，或**名字 + `args`**。
  * `args` 原样透传给注册的 formatter —— pro **不认它的内容**（宿主的扩展点）。
@@ -89,11 +97,8 @@ export function formatValue(
   ctx: FormatContext,
   table: Record<string, ValueFormatter>,
 ): unknown {
-  if (value === null || value === undefined) {
-    return ''
-  }
   if (!format) {
-    return value
+    return value ?? ''
   }
   const name = typeof format === 'string' ? format : format.name
   const args = typeof format === 'string' ? undefined : format.args
@@ -139,15 +144,19 @@ export function usePageRegistry(): ComputedRef<PageRegistry> {
      * 就出 name，裸值原样显示）；字典多一步"裸 code 回查预载的字典"（查不到也原样显示，不抛）。
      * 形状断言只剩列表型（值必须是数组）与 `date` / `dateTime` / `byte` 的转换。
      * 不够用宿主在 `CrudConfig.formatters` 里加（金额、链接…），按 key 覆盖这张表。
+     *
+     * **空值由这张表自己守**（`formatValue` 对声明了 `format` 的格子不再提前挡空值）：
+     * `enum` / `dict` / `byte` 判空返回空串（`getEnumName(null)` 会得到字符串 `"null"`、
+     * `Number(null)` 会得到 `0`），列表型在 `listFormatter` 里挡；`date` / `dateTime` 本身耐空。
      */
     formatters: {
-      enum: (value) => getEnumName(value),
+      enum: (value) => (value == null ? '' : getEnumName(value)),
       enumList: listFormatter('enumList', (value) => getEnumName(value)),
-      dict: (value, ctx) => getEnumName(value),
+      dict: (value) => (value == null ? '' : getEnumName(value)),
       dictList: listFormatter('dictList', getEnumName),
       date: (value) => dateFormat(value),
       dateTime: (value) => dateTimeFormat(value),
-      byte: (value) => byteFormat(Number(value)),
+      byte: (value) => (value == null ? '' : byteFormat(Number(value))),
       ...config.value.formatters,
     },
   }))

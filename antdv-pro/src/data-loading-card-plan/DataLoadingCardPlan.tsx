@@ -38,6 +38,10 @@ const DataLoadingCardPlan = defineComponent({
      * `false` ⇒ 被当成"不要卡片头"，`CrudConfig.resolveDefaultTitle` 永远不执行。
      */
     title: {type: [Object, Boolean] as PropType<VNode | boolean>, default: undefined},
+    /** 内嵌形态：不渲染卡片壳；也不出 `Spin`、不消费 `title` / `#extra`（见 `types.ts` 的说明） */
+    plain: {type: Boolean, default: false},
+    /** 内容区是否套 `Spin`（默认 `true`；CRUD 列表传 `false`，内容自带 `loading`） */
+    spin: {type: Boolean, default: true},
   },
   emits: {
     'update:loading': (_value: boolean) => true,
@@ -91,12 +95,20 @@ const DataLoadingCardPlan = defineComponent({
     }
 
     return () => {
+      // 内嵌形态：不套卡片，只留一个裸容器（`attrs` 照旧落上去）——
+      // 标题与工具栏由上层交给内容自己（表格落到 `Table.title`），加载态也归内容。
+      if (props.plain) {
+        return <div {...(attrs as Record<string, unknown>)}>{slots.default?.()}</div>
+      }
+
       const titleSlot =
         props.title === false
           ? undefined
           : slots.title
             ? () => slots.title?.()
             : () => (props.title == null ? defaultHeader() : (props.title as VNodeChild))
+
+      const content = slots.default?.()
 
       return (
         <Card
@@ -105,15 +117,19 @@ const DataLoadingCardPlan = defineComponent({
             title: titleSlot,
             extra: slots.extra ? () => slots.extra?.() : undefined,
             // 加载交互放在 body：卡片头（标题/动作）保持可见，只有内容区转圈
-            // （包裹层撑满由本组件的样式负责，见 `-spin`）
-            default: () => (
-              <Spin
-                class={classNames(hashId.value, cssVarCls.value, `${prefixCls.value}-spin`)}
-                spinning={loading.value}
-              >
-                {slots.default?.()}
-              </Spin>
-            ),
+            // （包裹层撑满由本组件的样式负责，见 `-spin`）。
+            // `spin: false` = 内容自己管（表格自带 `loading`，再套一层就是两层遮罩）。
+            default: () =>
+              props.spin ? (
+                <Spin
+                  class={classNames(hashId.value, cssVarCls.value, `${prefixCls.value}-spin`)}
+                  spinning={loading.value}
+                >
+                  {content}
+                </Spin>
+              ) : (
+                content
+              ),
           }}
         />
       )

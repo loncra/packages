@@ -17,7 +17,7 @@ import {DeleteOutlined, FilterOutlined, SearchOutlined, UndoOutlined} from '@ant
 import {classNames, splitSemantic} from '@loncra/antdv'
 import {type FilterRequest, type PageRequest, SYSTEM_CONSTANT} from '@loncra/client/commons'
 import {useLocale} from '../_util/useLocale'
-import BasicCrudQuery from '../basic-crud-query'
+import BasicCrudQuery, {type BasicCrudQueryContentProps} from '../basic-crud-query'
 import type {EnumBucketsResponseBody} from '@loncra/client/resource'
 import type {AuthorityProps} from '../_util/crud/actions'
 import type {CollectionExpose} from '../_util/crud/collectionExpose'
@@ -110,8 +110,10 @@ const QueryTable = defineComponent({
     title: {type: [Object, Boolean] as PropType<QueryTableProps['title']>, default: undefined},
     hasPermission: Function as PropType<(permission: string) => boolean>,
     authority: Object as PropType<AuthorityProps>,
-    /** 朴素卡片：去掉卡片壳边框 + body 内边距（透传给基类，样式由 pro 的 `genStyleHooks` 出） */
+    /** 内嵌形态：不要卡片壳、不要外层 `Spin`，标题落到表格自带标题（透传给基类） */
     plain: {type: Boolean, default: false},
+    /** 自定义取数：给了就不再走 `service.find`（透传给基类，见 `CollectionFetch`） */
+    fetch: {type: Function as PropType<QueryTableProps['fetch']>, default: undefined},
     /**
      * 标题右侧的工具栏动作：数组 = 与默认 `add`/`deleteSelected` 合并；`false` = 整排不出。
      *
@@ -417,6 +419,28 @@ const QueryTable = defineComponent({
         attrs.class,
       )
 
+      /**
+       * `plain` 时表格**自带标题**（`.ant-table-title`）：一行 flex —— 左标题、右工具栏。
+       * 标题必须挂在表格自己身上才会跟表格**同进同退**（antd 对嵌套表会整体偏移
+       * `.ant-table-wrapper:only-child .ant-table`；标题若留在卡片头就与表格错位）。两项都没有就不出。
+       */
+      const tableTitle = (content?: BasicCrudQueryContentProps) =>
+        !content || (content.title == null && content.extra == null)
+          ? undefined
+          : () => (
+              <div
+                class={classNames(
+                  prefixCls.value,
+                  hashId.value,
+                  cssVarCls.value,
+                  `${prefixCls.value}-table-title`,
+                )}
+              >
+                <div>{content.title}</div>
+                {content.extra ? <div>{content.extra}</div> : null}
+              </div>
+            )
+
       type FilterDropdownArgs = {
         column: SearchableColumnType<TEntity>
         setSelectedKeys: (keys: string[]) => void
@@ -497,6 +521,7 @@ const QueryTable = defineComponent({
           prefixCls={props.prefixCls}
           rootClass={props.rootClass}
           plain={props.plain}
+          fetch={props.fetch}
           {...({classes: classSemantic.value.card, styles: styleSemantic.value.card} as Record<
             string,
             unknown
@@ -522,9 +547,11 @@ const QueryTable = defineComponent({
           onDeleted={(records: TEntity[]) => emit('deleted', records)}
           v-slots={{
             title: slots.title ? () => slots.title?.() : undefined,
-            default: () => (
+            // `plain` 时基类把「标题 / 工具栏」交进来 ⇒ 落到表格自带标题上
+            default: (content: BasicCrudQueryContentProps) => (
               <DataTable
                 {...(tablePassthroughAttrs.value as Record<string, unknown>)}
+                title={tableTitle(content)}
                 class={hashedClass}
                 style={attrs.style}
                 classes={classSemantic.value.table}

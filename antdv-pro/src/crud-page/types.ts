@@ -486,11 +486,20 @@ export interface CrudHomePageProps<
    */
   query?: QueryTableProps['query']
   /**
-   * **朴素卡片**（透传给表格）：去掉卡片壳边框与 body 内边距 —— 嵌在表单/详情里的表格用。
-   * 等价于以前宿主到处复制的 `:classes="{root:'border-none', body:'p-0!'}"`（pro 不带 Tailwind，
-   * 那份样式改由 pro 的 `genStyleHooks` 出）。
+   * **内嵌形态**（透传给表格）：不要卡片壳、也不要外层 `Spin`；标题 / 工具栏落到表格自带标题
+   * （`.ant-table-title`）。嵌在表单 / 详情 / **表格展开行**里的列表用。
+   *
+   * 为什么要"不留壳"而不是"留壳去样式"：卡片壳嵌在别人的表格里时，antd 的嵌套表规则
+   * （`.ant-table-wrapper:only-child .ant-table`）会把里面的表整体偏移（左 32px / 上下 −16px），
+   * 而卡片头留在原地 ⇒ 标题与表格错位。标题挂到表格自己身上才会跟表格同进同退。
    */
   plain?: boolean
+  /**
+   * 自定义取数（透传给表格，见 `CollectionFetch`）：给了就不再走 `service.find`。
+   * 用途：同一份声明在不同入口要打不同接口 —— 如「独立资源」在企业侧只能走
+   * `/resource/find/enterprise`（`resource/find` 只给运营后台）⇒ 壳换这一个函数即可，不必造 service 类。
+   */
+  fetch?: QueryTableProps['fetch']
 }
 
 /**

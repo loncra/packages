@@ -39,3 +39,12 @@ export const TIME_UNIT_TYPE = {
   HOURS: 'HOURS',
   DAYS: 'DAYS',
 } as const
+
+/** 审核状态（后端 `AuditStatusEnum`，resource-server）：企业成员 / 邀请 / 短信签名与模板共用 */
+export const AUDIT_STATUS_VALUE = {
+  AUDITABLE: 10,
+  AGREED: 20,
+  DISAGREE: 30,
+  REJECTED: 40,
+  UNKNOWN: 99,
+} as const
