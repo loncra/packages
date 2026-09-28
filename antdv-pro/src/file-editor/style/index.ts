@@ -1,4 +1,5 @@
 import type {CSSInterpolation} from '@antdv-next/cssinjs'
+import {unit} from '@antdv-next/cssinjs'
 import {genStyleHooks, type LoncraStyleToken} from '@loncra/antdv'
 
 function genFileEditorStyle(token: LoncraStyleToken): CSSInterpolation {
@@ -11,6 +12,7 @@ function genFileEditorStyle(token: LoncraStyleToken): CSSInterpolation {
     borderRadiusLG,
     paddingXS,
     paddingSM,
+      marginXS,
     lineWidth,
     lineType,
     antCls,
@@ -172,17 +174,15 @@ function genFileEditorStyle(token: LoncraStyleToken): CSSInterpolation {
       height: '100%',
     },
     [`${componentCls}-tab-item`]: {
-      paddingInline: paddingXS,
-      paddingTop: paddingXS,
-      paddingBottom: paddingSM,
-      margin: 0,
+      position: 'relative',
+      padding: `${token.calc(paddingXS).add(1.5).equal()} ${unit(paddingSM)} !important`,
+      marginLeft: `${unit(marginXS)} !important`,
     },
     [`${componentCls}-tab-header`]: {
       paddingInlineEnd: paddingXS,
-      marginBottom: 0,
+      marginBottom: `0 !important`,
     },
     [`${componentCls}-tab-label`]: {
-      position: 'relative',
       overflow: 'hidden',
     },
     [`${componentCls}-tab-close`]: {
@@ -198,8 +198,12 @@ function genFileEditorStyle(token: LoncraStyleToken): CSSInterpolation {
         background: colorBgContainer,
       },
     },
-    [`${componentCls}-tab-label:hover ${componentCls}-tab-close`]: {
-      opacity: 0.8,
+    [`${componentCls}-tab-item:hover ${componentCls}-tab-close`]: {
+      opacity: 1,
+      [`&${antCls}-btn, &${antCls}-btn:hover, &${antCls}-btn:active`]: {
+        background: colorBgContainer,
+        boxShadow: 'none',
+      },
     },
     [`${componentCls}-icon-spin`]: {
       marginBottom: 3,

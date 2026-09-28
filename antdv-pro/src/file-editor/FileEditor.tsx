@@ -160,19 +160,19 @@ const FileEditor = defineComponent({
                   </Flex>
                   <SpaceCompact size="small">
                     <Tooltip title={locale.value.refresh}>
-                      <Button onClick={onRefresh}>
+                      <Button size="small" onClick={onRefresh}>
                         {{icon: () => h(ReloadOutlined)}}
                       </Button>
                     </Tooltip>
                     {!props.readonly ? (
                       <>
                         <Tooltip title={locale.value.uploadFile}>
-                          <Button onClick={() => onRootUpload(false)}>
+                          <Button size="small" onClick={() => onRootUpload(false)}>
                             {{icon: () => h(FileAddOutlined)}}
                           </Button>
                         </Tooltip>
                         <Tooltip title={locale.value.uploadDirectory}>
-                          <Button onClick={() => onRootUpload(true)}>
+                          <Button size="small" onClick={() => onRootUpload(true)}>
                             {{icon: () => h(FolderAddOutlined)}}
                           </Button>
                         </Tooltip>
@@ -288,6 +288,7 @@ const FileEditor = defineComponent({
                 <Flex vertical class={hashed(`${prefixCls.value}-tabs`)}>
                   <Tabs
                     hideAdd
+                    size="small"
                     destroyOnHidden={false}
                     activeKey={state.value.selectedItem?.id}
                     items={tabItems.value}
@@ -303,15 +304,19 @@ const FileEditor = defineComponent({
                       labelRender: ({
                         item,
                       }: {
-                        item: {key: string; label: string; icon: VNodeChild; file: ObjectItemInfo}
+                        item: {key: string; label: string; file: ObjectItemInfo}
                       }) => (
                         <Flex
                           align="center"
                           gap="small"
                           class={hashed(`${prefixCls.value}-tab-label`)}
                         >
+                          {/*
+                            图标**在这里画**（要套 `Badge` 的"未保存"圆点）—— 不能交给 `items[].icon`：
+                            `@v-c/tabs` 的 `TabNode` 会把那份再画一遍 ⇒ 两个图标（见 `useFileEditor` 的 `tabItems`）
+                          */}
                           <Badge dot={tabMeta[item.key]?.dirty} offset={[0, 0]}>
-                            {item.icon}
+                            {resolveIcon(item.file)}
                           </Badge>
                           <TypographyText
                             class={hashed(`${prefixCls.value}-grow`)}
@@ -362,13 +367,14 @@ const FileEditor = defineComponent({
                           <SpaceCompact size="small">
                             {activeCanSave.value ? (
                               <Tooltip title={locale.value.save}>
-                                <Button onClick={saveActive}>
+                                <Button size="small" onClick={saveActive}>
                                   {{icon: () => h(SaveOutlined)}}
                                 </Button>
                               </Tooltip>
                             ) : null}
                             <Tooltip title={locale.value.locate}>
                               <Button
+                                size="small"
                                 onClick={() =>
                                   state.value.selectedItem &&
                                   onSelectOpenFile(state.value.selectedItem)
@@ -379,6 +385,7 @@ const FileEditor = defineComponent({
                             </Tooltip>
                             <Tooltip title={locale.value.download}>
                               <Button
+                                size="small"
                                 onClick={() =>
                                   state.value.selectedItem &&
                                   onDownloadFile(state.value.selectedItem)

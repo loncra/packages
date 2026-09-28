@@ -454,11 +454,18 @@ export function useFileEditor(props: FileEditorProps) {
     AttachmentService.download(props.bucket, item.objectName)
   }
 
+  /**
+   * tab 条目：**只给 `key` / `label` / `file`** —— 图标交给 `FileEditor` 的 `labelRender` 插槽
+   * 自己画（它要套 `Badge` 的"未保存"圆点，这是插槽存在的理由）。
+   *
+   * ⚠️ **别在这里给 `icon`**：`@v-c/tabs` 的 `TabNode` 会把 `items[].icon` 自己再画一份
+   * （`<span class="ant-tabs-tab-icon">`）⇒ 和插槽里那个凑成**两个图标**（2026-09-28 用户报）。
+   * 插槽里拿到的是 `item.file`，要用图标就 `resolveIcon(item.file)`。
+   */
   const tabItems = computed(() =>
     state.value.tabs.map((file) => ({
       key: file.id,
       label: getDisplayName(file),
-      icon: resolveIcon(file),
       file,
     })),
   )

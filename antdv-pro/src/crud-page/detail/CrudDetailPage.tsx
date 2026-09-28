@@ -70,7 +70,9 @@ const CrudDetailPage = defineComponent({
     const buckets = ref<EnumBucketsResponseBody>({})
     const dictionaries = ref<PageDictionaries>({})
 
-    const entity = ref({} as TEntity) as Ref<TEntity>
+    // 初值来自声明（同表单形态的 `createEntity`）：取数前就用它渲染 —— 宿主插槽里的
+    // `entity.metadata.xxx` 这类深层取值必须有个能站住的对象，否则一进页面就抛
+    const entity = ref((props.page.detail.createEntity?.() ?? {}) as TEntity) as Ref<TEntity>
     /** 陈旧检查：默认 `'overwrite'`（详情无本地编辑 ⇒ 变了直接覆盖；被删才提示） */
     const stale = useStaleCheck({
       pageMode: props.page.staleCheck,

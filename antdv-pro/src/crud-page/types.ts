@@ -400,6 +400,14 @@ export type PageDetailEntry<TEntity> = (keyof TEntity & string) | PageDetailItem
 export interface PageDetailDefinition<TEntity, TId = string | number> {
   /** 顺序 = 数组顺序；裸 key 从字段字典取 labelKey / format */
   fields: PageDetailEntry<TEntity>[]
+  /**
+   * 实体初值（**与表单形态的 `createEntity` 同名同义**）：取数之前先用它渲染。
+   *
+   * 旧 kit 的详情页是"页面自己 `ref({...初值...})` + `v-model:entity`"⇒ 加载期间宿主插槽
+   * （`#afterDescriptions` 附表）看到的是**初值**；不写这个就是空对象 `{}`，
+   * 插槽里 `entity.metadata.xxx` 这类**深层取值会直接抛**（2026-09-28 踩过）。
+   */
+  createEntity?: () => TEntity
   /** `a-descriptions` 的响应式列数；省略用内置默认 */
   column?: Record<string, number>
   postGetEntity?: (entity: TEntity, ctx: PageDeclContext) => TEntity | Promise<TEntity>
