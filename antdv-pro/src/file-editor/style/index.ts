@@ -12,7 +12,8 @@ function genFileEditorStyle(token: LoncraStyleToken): CSSInterpolation {
     borderRadiusLG,
     paddingXS,
     paddingSM,
-      marginXS,
+    marginXS,
+    controlHeightSM,
     lineWidth,
     lineType,
     antCls,
@@ -174,9 +175,13 @@ function genFileEditorStyle(token: LoncraStyleToken): CSSInterpolation {
       height: '100%',
     },
     [`${componentCls}-tab-item`]: {
+      // `-tab-close` 以它（= `.ant-tabs-tab`，antd 自己也是 relative）为定位基准
       position: 'relative',
+      // 下面两个 `!important` 是**必要**的：antd 的 `.ant-tabs-tab`（0,2,0）与
+      // `.ant-tabs-tab + .ant-tabs-tab`（0,3,0）都压在只写语义类的这条（0,1,0）上面
       padding: `${token.calc(paddingXS).add(1.5).equal()} ${unit(paddingSM)} !important`,
-      marginLeft: `${unit(marginXS)} !important`,
+      // 逻辑属性（RTL 会跟着翻）—— 别写 `marginLeft`
+      marginInlineStart: `${unit(marginXS)} !important`,
     },
     [`${componentCls}-tab-header`]: {
       paddingInlineEnd: paddingXS,
@@ -194,6 +199,8 @@ function genFileEditorStyle(token: LoncraStyleToken): CSSInterpolation {
       background: colorBgContainer,
       opacity: 0,
       color: colorTextSecondary,
+      // 淡入淡出，别"闪"（hover 判定在 `-tab-item` 上，见下一条）
+      transition: `opacity ${motionDurationMid}`,
       [`&${antCls}-btn`]: {
         background: colorBgContainer,
       },
