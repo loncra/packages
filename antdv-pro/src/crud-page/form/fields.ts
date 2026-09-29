@@ -39,7 +39,8 @@ export interface BuiltFormField<TBody> {
   key: PageFormFieldKey<TBody>
   /** `key` 拆出来的段：`a-form-item` 的 `name`（单段 key 就是 `[key]`，antd 两种写法等价） */
   name: string[]
-  label: string
+  /** 解析好的 label；声明写 `label: false` 的字段是 `undefined`（`a-form-item` 不渲染 label 区） */
+  label?: string
   /** `<a-col>` 的 props（声明给了就用声明的，否则 pro 默认，见 `FORM_FIELD_DEFAULT_COL`） */
   col: ColProps
   rules?: FormItemProps['rules']
@@ -121,6 +122,9 @@ export function buildFormFields<TBody extends object, TEntity extends TBody & ob
       const renderCtx: PageFieldRenderContext<TBody> = {
         entity,
         t,
+        // 统一加载的那两份来源进字段级 ctx：`render` 逃生拿不到 `props`，只能从这里取（见类型注释）
+        buckets,
+        dictionaries,
         variant: ctx.variant,
         extra: ctx.extra,
       }
@@ -141,7 +145,8 @@ export function buildFormFields<TBody extends object, TEntity extends TBody & ob
       return {
         key: field.key,
         name: pathSegments(field.key),
-        label: t(merged.labelKey ?? `${i18nPrefix}.${field.key}`),
+        // `label: false` = 这条不出 label（见 `PageFormField.label`）；缺省才走兜底 key
+        label: merged.label === false ? undefined : t(merged.labelKey ?? `${i18nPrefix}.${field.key}`),
         col: field.col ?? FORM_FIELD_DEFAULT_COL,
         rules: typeof field.rules === 'function' ? field.rules(renderCtx) : field.rules,
         component: componentSpec?.component,

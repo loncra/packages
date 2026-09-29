@@ -397,6 +397,10 @@ const CrudFormPage = defineComponent({
                 ? (field.render({
                     entity: entity.value,
                     t,
+                    // 与 `buildFormFields` 的 `renderCtx` 同一份来源：逃生字段自己取桶喂控件，
+                    // 不必让宿主/壳再拉一次（同一份桶两处请求 = 不规范）
+                    buckets: buckets.value,
+                    dictionaries: dictionaries.value,
                     variant: props.variant,
                     extra: props.contextExtra,
                   }) as VNodeChild)

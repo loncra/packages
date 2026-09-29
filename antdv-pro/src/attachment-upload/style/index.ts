@@ -19,6 +19,8 @@ function genAttachmentUploadStyle(token: LoncraStyleToken): CSSInterpolation {
     borderRadiusSM,
     borderRadiusLG,
     paddingXS,
+    paddingSM,
+    padding,
     fontSizeHeading3,
     fontSizeLG,
     fontSizeSM,
@@ -186,7 +188,7 @@ function genAttachmentUploadStyle(token: LoncraStyleToken): CSSInterpolation {
     [`${componentCls}-trigger`]: {
       display: 'inline-flex',
       flexDirection: 'column',
-      padding: paddingXS,
+      padding: `${paddingSM} ${padding} `,
       border: `${token.lineWidth} dashed ${colorBorderSecondary}`,
       borderRadius: borderRadiusLG,
     },

@@ -187,6 +187,17 @@ export interface PageFieldRenderContext<TBody> {
   entity: TBody
   /** label 解析：与页面声明的 `i18nResolver` 同一份 */
   t: (key: string, named?: Record<string, unknown>) => string
+  /**
+   * 本页**已经加载好**的枚举桶 / 数据字典 —— 就是壳按字段声明的 `enumRef` / `dictId`
+   * 统一收清单、拉一次的那份结果（`collectFormSources` + `loadSources`）。
+   *
+   * 主要是给 **`render` 逃生字段**用的：它是宿主自绘的（复合控件之类），**拿不到注册表解析出来的
+   * props**（`sourceProps` 只进 `component` 那条路）⇒ 没有这份递进来，宿主只能自己再拉一次同一个桶，
+   * 于是"同一份来源两处请求、散在两个文件里" ✗。递进来之后：声明里照旧只写 `enumRef`（加载清单
+   * 归 pro 统一算），逃生从 `buckets[module]?.[id] ?? []` 取同一份结果自己喂控件。
+   */
+  buckets: EnumBucketsResponseBody
+  dictionaries: PageDictionaries
   variant?: string
   extra: Record<string, unknown>
 }
@@ -389,6 +400,14 @@ export interface PageFormField<TBody> extends PageLookupFieldSpec {
   key: PageFormFieldKey<TBody>
   /** 注册表 key（内置 input / password / textarea / number / select / date / dateRange），或直接给组件 */
   component?: PageFieldComponent | Component
+  /**
+   * `false` = 这条 form-item **不出 label**（控件独占整宽）。
+   *
+   * 缺省会照 `labelKey` > `${i18nPrefix}.${key}` 兜底（pro 的既有口径：宁可显示 key 也不要空着）
+   * ⇒ "没有值就不出 label" 这件事必须**显式**写出来 —— 给旧 kit 里那种"只有控件、没有标签"的块
+   * （封面、纯插槽块）。`Col` 栅格与 `rules` 校验都不受影响，只是 `a-form-item` 不再渲染 label 区。
+   */
+  label?: false
   /**
    * 校验规则。函数形态拿得到实体，用于"按当前值变化"的规则
    * （如资源分类是插件时某字段不必填）。
