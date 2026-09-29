@@ -139,7 +139,23 @@ const AttachmentUpload = defineComponent({
     watch(
       fileList,
       (list) => {
-        lastEmitted = denormalizeAttachmentFromList(list, props.value ?? undefined, props.maxCount)
+        /**
+         * ⚠️ **已经传完的叶子必须交回 `ObjectWriteResult`（= `item.response`），不能交 `UploadFile` 外壳。**
+         *
+         * `upload()` 上传完会把内部 `fileList` 写成 `ObjectWriteResult[]`（见 `upload()` 里那句注释），
+         * 而子组件的两向回流（`useAttachmentUploadFiles`：`toTree()` 把 OWR 包成 `UploadFile` 再写回）
+         * 会让这一轮 watch **再跑一次** —— 那时 `list` 里是 `UploadFile` 外壳，直接 emit 出去的话，
+         * 父级拿到的值里就**没有** `bucketName` / `objectName`（它们被套在 `response` 里）⇒ 提交给
+         * 后端时对象信息整块丢失（DB 里 `bucketName` / `objectName` 为空、图片拼不出可用 URL）。
+         *
+         * 取不到 `response`（还没上传：父级持有的本来就是"待上传的文件"）时才交回 `item` 本身。
+         * 这样"父级把同一个 OWR 写回来"会命中上面的回声守卫（`v === lastEmitted`），不会来回震荡。
+         */
+        lastEmitted = denormalizeAttachmentFromList(
+          list.map((item) => getObjectWriteResult(item) ?? item),
+          props.value ?? undefined,
+          props.maxCount,
+        )
         emit('update:value', lastEmitted)
       },
       {deep: true},

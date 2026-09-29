@@ -320,7 +320,14 @@ const QueryCardGrid = defineComponent({
                 spinning={loading.value}
               >
                 <div
-                  class={classNames(hashId.value, `${prefixCls.value}-grid`, gridClasses?.root)}
+                  class={classNames(
+                    hashId.value,
+                    `${prefixCls.value}-grid`,
+                    // 空状态时多挂一个类：让 `<Empty>` 在**可用高度里居中**（见 style/index.ts）。
+                    // 不给的话它就是个 flex item ⇒ 贴左上角 ✗（2026-09-29 用户截图报）
+                    (dataSource.value || []).length <= 0 && `${prefixCls.value}-grid-empty`,
+                    gridClasses?.root,
+                  )}
                   style={gridStyles?.root as CSSProperties | undefined}
                 >
                   {(dataSource.value || []).length <= 0 ? (
