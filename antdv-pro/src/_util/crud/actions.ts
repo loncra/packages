@@ -3,12 +3,23 @@ import type {useAppProps} from 'antdv-next/dist/app/context'
 import {type BasicIdMetadata, type FilterRequest, type PageRequest, SYSTEM_CONSTANT,} from '@loncra/client/commons'
 import type {CollectionExpose} from './collectionExpose'
 
-/** 权限判定口：`CrudConfig.hasPermission` / 组件的 `has-permission` prop 最后都被包成它 */
+/**
+ * 权限判定口：`CrudConfig.hasPermission` / 组件的 `has-permission` prop 最后都被包成它。
+ *
+ * ⚠️ **`undefined` / `false` ⇒ `false`**（动作会被过滤掉、按钮不显示）；**`true` ⇒ `true`**（不判权限）。
+ * 见 `crud-config-provider/useCrudConfig.ts` 的实现（fail-closed：没配权限就是没有）。
+ */
 export interface ActionAuth {
   can: (permission?: string | boolean) => boolean
 }
 
-/** 动作口各自需要的权限串（`undefined` / `false` = 不判权限），由形态组件的 `authority` prop 给 */
+/**
+ * 动作口各自需要的权限串（由形态组件的 `authority` prop 给）。
+ *
+ * ⚠️ **`undefined` / `false` 不是"不判权限"，而是"没有权限"** ⇒ 默认动作直接不显示；
+ * "永远显示"要显式写 `true`（`authority: {add: true}` / 动作上 `permission: true`）。
+ * 2026-09-29 踩过：把 `permission: true` 当成噪音删掉 ⇒ 那个按钮整条消失。
+ */
 export interface AuthorityProps {
   add?: string | boolean
   edit?: string | boolean

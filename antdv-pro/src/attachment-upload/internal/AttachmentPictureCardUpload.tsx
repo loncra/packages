@@ -77,13 +77,6 @@ const AttachmentPictureCardUpload = defineComponent({
       emit('change', info)
     }
 
-    const uploadClasses = computed(() => ({
-      trigger: props.classes?.trigger,
-    }))
-    const uploadStyles = computed(() => ({
-      trigger: props.styles?.trigger,
-    }))
-
     return () => {
       const {class: _attrClass, style: _attrStyle, ...rest} = attrs
       const hashed = (...names: (string | undefined)[]) =>
@@ -114,15 +107,23 @@ const AttachmentPictureCardUpload = defineComponent({
             pictureCardAfter: showTrigger
               ? ({showMeta}: {showMeta: boolean}) =>
                   !props.preview && !props.disabled ? (
-                    <span class={hashed(`${prefixCls.value}-trigger`)}>
+                    /**
+                     * 触发区：`classes.trigger` / `styles.trigger` 挂在这块虚线框上（宿主看到的就是它）。
+                     * ⚠️ **不再转给 antd 的 `Upload`** —— 语义键 `trigger` 的归属就是"触发上传的那块区域"，
+                     * 里面那层 `.ant-upload` 要改只能自己写全局类名（见 `types.ts` 的语义键说明）。
+                     */
+                    <span
+                      class={hashed(
+                        classNames(`${prefixCls.value}-trigger`, props.classes?.trigger),
+                      )}
+                      style={props.styles?.trigger}
+                    >
                       <Upload
                         {...rest}
                         class={hashed(
                           `${prefixCls.value}-trigger-upload`,
                           multi ? `${prefixCls.value}-trigger-upload-multi` : undefined,
                         )}
-                        classes={uploadClasses.value}
-                        styles={uploadStyles.value}
                         fileList={antdFileList.value}
                         beforeUpload={() => false}
                         showUploadList={false}

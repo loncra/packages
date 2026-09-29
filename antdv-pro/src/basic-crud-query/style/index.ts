@@ -14,9 +14,9 @@ function genBasicCrudQueryStyle(token: LoncraStyleToken): CSSInterpolation {
     {
       // 统一分页由基类渲染；分页元素自己带 componentCls + hashId（不在某个形态的组件根下），
       // 所以选择器写在顶层（同 `-drag-ghost` 的写法）
-      [`${componentCls}-pagination`]: {marginTop: margin},
+      [`${componentCls}-pagination`]: {marginTop: `${margin} !important`},
     },
   ]
 }
 
-export default genStyleHooks('BasicCrudQuery', genBasicCrudQueryStyle)
+export default genStyleHooks('BasicCrudQuery', genBasicCrudQueryStyle, {order: 0})

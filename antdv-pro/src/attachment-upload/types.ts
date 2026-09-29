@@ -45,6 +45,19 @@ export interface AttachmentSemanticContextProps {
   multiple?: boolean
 }
 
+/**
+ * 宿主可挂的语义类名（`classes`）—— **每个键落在哪个元素上写清楚，别猜**：
+ *
+ * - `container`：最外层容器（列表 / 卡片两种模式共用）
+ * - `list`：列表容器（列表模式 = `-list`；卡片模式 = `-list-cards`）
+ * - `item`：每个附件项
+ * - `meta`：附件项里"名称 / 说明"那一块
+ * - `trigger`：**触发上传的那块区域** —— picture-card 模式 = pro 自己那个虚线框（`-trigger`，
+ *   `padding` / `1px dashed` / 圆角都在它身上）；dragger 模式 pro 没有 wrapper ⇒ 转给 antd
+ *   `UploadDragger` 的 `trigger`（就是那个大拖拽区）。
+ *   ⚠️ **不再透传给 antd 的 `Upload`**（2026-09-29 起）：`trigger` 的归属就是"宿主看到的那块触发区"；
+ *   里面那层 `.ant-upload` 要改只能自己写全局类名。
+ */
 export interface AttachmentUploadSemanticClassNames {
   container?: string
   list?: string
@@ -53,6 +66,7 @@ export interface AttachmentUploadSemanticClassNames {
   meta?: string
 }
 
+/** 与 `AttachmentUploadSemanticClassNames` **同一套落点**（`meta` 没有对应的 styles 项） */
 export interface AttachmentUploadSemanticStyles {
   container?: CSSProperties
   list?: CSSProperties

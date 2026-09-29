@@ -78,6 +78,11 @@ const AttachmentDraggerUpload = defineComponent({
       emit('change', info)
     }
 
+    /**
+     * ⚠️ 与 picture-card 那半**有意不同**：dragger 模式 pro 没有自己的 wrapper（`-trigger` 那层只存在于
+     * picture-card）⇒ 语义键 `trigger` 这里**转给 antd `UploadDragger`** —— 宿主看到的那块大拖拽区就是它，
+     * 落点一致。picture-card 那半则挂在 pro 自己的虚线框上（见那边的注释 + `types.ts` 的键说明）。
+     */
     const uploadClasses = computed(() => ({
       trigger: props.classes?.trigger,
     }))

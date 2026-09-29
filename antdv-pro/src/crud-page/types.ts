@@ -570,6 +570,16 @@ export interface PageDetailDefinition<TEntity, TId = string | number> {
   /** 顺序 = 数组顺序；裸 key 从字段字典取 labelKey / format */
   fields: PageDetailEntry<TEntity>[]
   /**
+   * 显式声明的预载来源 —— **逃生口**，与 `form.enums` / `list.enums` 同一用途：给
+   * "**详情字段本身不引用、但宿主插槽（`afterDescriptions` 那张附表）要用**"的桶与字典。
+   *
+   * ⚠️ 详情**不从字段推导**来源（这点别于 form / list）：详情的枚举显示靠值自带的元数据
+   * （`format: 'enum'` → `getEnumName`），本来用不上桶 ⇒ 推导只会白发请求。**声明了才拉**，
+   * 拉到的结果有两个出口：`afterDescriptions` 的槽作用域、`CrudDetailPageExpose`。
+   */
+  enums?: EnumBucketRequest[]
+  dictionaryCodes?: string[]
+  /**
    * 实体初值（**与表单形态的 `createEntity` 同名同义**）：取数之前先用它渲染。
    *
    * 旧 kit 的详情页是"页面自己 `ref({...初值...})` + `v-model:entity`"⇒ 加载期间宿主插槽
@@ -948,13 +958,30 @@ export interface CrudDetailPageProps<
 export interface CrudDetailPageExpose<TEntity> {
   /** 当前实体：宿主做标题、附表联动时读它 */
   entity: TEntity
+  /**
+   * 本页**已经加载好**的枚举桶 / 数据字典（**只有在 `detail.enums` / `detail.dictionaryCodes`
+   * 里声明过的才有值**）—— 与 `CrudFormPageExpose.buckets` 同一口径：声明已经拉了，
+   * **别在壳里再发一次同样的请求**（壳的插槽逃生读它）。
+   */
+  buckets: EnumBucketsResponseBody
+  dictionaries: PageDictionaries
 }
 
 export interface CrudDetailPageSlots<TEntity extends object> {
   /** `a-descriptions` 的右侧操作区 */
   extra?: () => unknown
-  /** 描述列表之后（附表、资源树这类宿主内容）；作用域给实体与 `extra` */
-  afterDescriptions?: (arg: {entity: TEntity; extra: Record<string, unknown>}) => unknown
+  /**
+   * 描述列表之后（附表、资源树这类宿主内容）。
+   *
+   * 作用域 = 实体 + `extra` + **本页已经加载好的来源**（`buckets` / `dictionaries`，只有
+   * `detail.enums` / `detail.dictionaryCodes` 声明过的才有值）—— 与表单壳 `#default` 槽同一口径。
+   */
+  afterDescriptions?: (arg: {
+    entity: TEntity
+    extra: Record<string, unknown>
+    buckets: EnumBucketsResponseBody
+    dictionaries: PageDictionaries
+  }) => unknown
   /** 操作轨迹块之后（宿主壳放"操作轨迹表"那类内容的位置之一） */
   afterOperationDataTrace?: () => unknown
 }

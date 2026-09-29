@@ -185,6 +185,7 @@ function genFileEditorStyle(token: LoncraStyleToken): CSSInterpolation {
     },
     [`${componentCls}-tab-header`]: {
       paddingInlineEnd: paddingXS,
+      // 与上面 `-tab-item` 那两处同理：要压的 antd 规则比本选择器**更具体** ⇒ `!important` 留着
       marginBottom: `0 !important`,
     },
     [`${componentCls}-tab-label`]: {
@@ -259,4 +260,10 @@ function genFileEditorStyle(token: LoncraStyleToken): CSSInterpolation {
   }
 }
 
-export default genStyleHooks('FileEditor', genFileEditorStyle, {order: 0})
+/**
+ * `order` 传正数：本组件的规则排在 antd 之后注入 ⇒ 同特异性的冲突自然赢（理由见 `icon-select/style/index.ts`）。
+ *
+ * ⚠️ 本文件留下的三处 `!important` **仍然必要**（顺序救不了）—— 它们要压的 antd 规则**特异性更高**：
+ * `-tab-item` 的 padding / marginInlineStart 与 `-tab-header` 的 marginBottom（各自那条注释里有依据）。
+ */
+export default genStyleHooks('FileEditor', genFileEditorStyle, {order: 1})

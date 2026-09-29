@@ -10,6 +10,7 @@ import {isOperationTraceVisible, OperationTraceTable} from '../operation-trace'
 import {useStaleCheck} from '../../_util/crud/useStaleCheck'
 import type {DefaultCrudEntity} from '../../_util/crud/useCollectionData'
 import type {PageDictionaries} from '../../basic-crud-query/types'
+import {fetchDataDictionaries, fetchEnumBuckets} from '../../basic-crud-query'
 import {useLocale} from '../../_util/useLocale'
 import {usePageRegistry} from '../registry'
 import {buildDetailItems} from './items'
@@ -36,6 +37,8 @@ const DEFAULT_COLUMN = {xxxl: 2, xxl: 2, xl: 2, lg: 2, md: 2, sm: 1, xs: 1}
  * - 数据链：`id` → `page.detail.getDetail(id, ctx)`（缺省 `service.get(id)`）→ `postGetEntity` → 实体；
  * - **陈旧检查**：切回页签时重拉一遍 —— 默认 `'overwrite'`（详情没有"本地编辑"可言，变了就**静静覆盖**，
  *   被删才提示）；`page.staleCheck` / `CrudConfig.staleCheck` 可调（含 `false` 关掉）；
+ * - **来源**：只有 `detail.enums` / `detail.dictionaryCodes` **显式声明**的才拉（详情**不从字段推导** ——
+ *   详情的枚举显示靠值自带的元数据）⇒ 结果给 `afterDescriptions` 的槽作用域与 `CrudDetailPageExpose`；
  * - 插槽：`extra`（**卡片右上角**，与旧 `l-menu-title-card` 的 `#extra` 同位）、`afterDescriptions`、
  *   `afterOperationDataTrace`；事件：`stale`。
  *
@@ -66,9 +69,28 @@ const CrudDetailPage = defineComponent({
     const locale = useLocale('Crud')
     const {message} = App.useApp()
     const registry = usePageRegistry()
-    /** 系统字典：由基类统一拉，这里只消费（详情多数靠值自带的元数据，用不上桶） */
+    /**
+     * 系统字典：**只吃显式声明的来源**（`detail.enums` / `detail.dictionaryCodes`）——
+     * 详情**不从字段推导**（详情的枚举显示靠值自带的元数据，推导只会白发请求）；一个都没声明时
+     * `loadSources` 的两个 fetch 都会短路 ⇒ 一个请求都不发。
+     */
     const buckets = ref<EnumBucketsResponseBody>({})
     const dictionaries = ref<PageDictionaries>({})
+
+    const sources = computed(() => ({
+      enums: props.page.detail.enums ?? [],
+      dictionaryCodes: props.page.detail.dictionaryCodes ?? [],
+    }))
+
+    /** 拉来源（与表单壳同一个口径）：结果给 `afterDescriptions` 的槽作用域与 expose */
+    async function loadSources(): Promise<void> {
+      const [nextBuckets, nextDictionaries] = await Promise.all([
+        fetchEnumBuckets(sources.value.enums),
+        fetchDataDictionaries(sources.value.dictionaryCodes),
+      ])
+      buckets.value = nextBuckets
+      dictionaries.value = nextDictionaries
+    }
 
     // 初值来自声明（同表单形态的 `createEntity`）：取数前就用它渲染 —— 宿主插槽里的
     // `entity.metadata.xxx` 这类深层取值必须有个能站住的对象，否则一进页面就抛
@@ -132,6 +154,8 @@ const CrudDetailPage = defineComponent({
     /** 首屏取数：loading 交给 `DataLoadingCardPlan`（它 `try/finally` 包住，并做 in-flight 去重） */
     async function load(): Promise<void> {
       try {
+        // 先拉来源（声明了才有）：`afterDescriptions` 的附表要用它翻「是/否」这类显示
+        await loadSources()
         const value = await fetchRemote()
         if (value == null) {
           // 首次就取不到（记录已被删 / id 不对）：给一句"已失效"，不留一个空页面
@@ -156,8 +180,16 @@ const CrudDetailPage = defineComponent({
     }
 
     expose<CrudDetailPageExpose<TEntity>>({
+      // 同 `CrudFormPage`：expose 出去的一律是"值"（Vue 会解包 ref），用 getter 读 ref 保响应式
       get entity() {
         return entity.value
+      },
+      // 统一加载好的来源（只在声明过 `detail.enums` / `detail.dictionaryCodes` 时有值）
+      get buckets() {
+        return buckets.value
+      },
+      get dictionaries() {
+        return dictionaries.value
       },
     })
 
@@ -178,8 +210,14 @@ const CrudDetailPage = defineComponent({
                 column={props.page.detail.column ?? DEFAULT_COLUMN}
                 layout={antdv.state.detailLayout}
               />
-              {/* 描述列表之后、操作记录之前：宿主放附表 / 资源树这类内容（作用域给实体与 extra） */}
-              {slots.afterDescriptions?.({entity: entity.value, extra: props.contextExtra})}
+              {/* 描述列表之后、操作记录之前：宿主放附表 / 资源树这类内容（作用域给实体 / extra / 来源） */}
+              {slots.afterDescriptions?.({
+                entity: entity.value,
+                extra: props.contextExtra,
+                // 声明了 `detail.enums` / `detail.dictionaryCodes` 才有值（与表单壳的槽同一口径）
+                buckets: buckets.value,
+                dictionaries: dictionaries.value,
+              })}
               {/*
                 操作记录（审计）：与表单壳同款 —— **分割线由页面壳自己加**（表格组件只管表格），
                 条件用同一个判定函数（`target` + 实体 `id` / `creationTime` 三者齐），
