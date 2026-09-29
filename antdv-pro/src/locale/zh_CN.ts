@@ -61,7 +61,8 @@ const locale: Locale = {
     deleteConfirmBatch: '确定要删除选中的 {count} 条记录吗？',
     /**
      * 操作记录（审计）块的文案。
-     * ⚠️ 与宿主旧文案**逐条一致**（`form.operationDataTrace` / `operation.*` / `authServer.auditEvent.*` / `common.remark`）。
+     * ⚠️ 与宿主旧文案**逐条一致**（`form.operationDataTrace` / `operation.*` / `authServer.auditEvent.*` / `common.remark`）
+     * —— 那些旧 key **已删**，现在这里就是唯一来源 ✓（宿主声明层/工厂都写 `Crud.operationTrace.*` ✓）。
      */
     operationTrace: {
       title: '操作记录',
@@ -72,6 +73,7 @@ const locale: Locale = {
       type: '操作类型',
       traceId: '关联业务 id',
       remark: '备注',
+      data: '操作数据',
     },
   },
   ConfigProviderSetting: {

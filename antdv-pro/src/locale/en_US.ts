@@ -64,6 +64,7 @@ const locale: Locale = {
     deleteConfirmBatch: 'Are you sure to delete the {count} selected records?',
     /** Operation-trace (audit) block; wording copied 1:1 from the host's old copy. */
     operationTrace: {
+      data: 'Operation data',
       title: 'Operation history',
       auditType: 'Audit type',
       target: 'Audit target',

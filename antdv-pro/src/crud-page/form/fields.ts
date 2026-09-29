@@ -97,7 +97,10 @@ export function buildFormFields<TBody extends object, TEntity extends TBody & ob
       const componentSpec = field.render
         ? undefined
         : resolveFieldSpec(field.component ?? 'input', registry.fieldComponents)
-      if (enumRef && !componentSpec?.mapOptions) {
+      // ⚠️ `render` 逃生字段**自己画、不吃 options** ⇒ 没有组件可查，也就没有"options 会被丢掉"这回事
+      // （`componentSpec` 在 `field.render` 时是 undefined，早先漏了这个条件 ⇒ 只要核心字典里带了
+      // `enumRef`、表单又用 `render` 自绘就会在运行时报错。2026-09-28 修）
+      if (!field.render && enumRef && !componentSpec?.mapOptions) {
         throw new Error(
           `[crud-page] 字段 ${field.key} 声明了 enumRef，但组件 ${componentName(field.component)} 没有 mapOptions，`
             + 'options 会被丢掉：用 CrudConfig.fieldComponents 给它补 mapOptions，或者去掉 enumRef',

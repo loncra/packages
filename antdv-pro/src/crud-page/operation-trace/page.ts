@@ -41,11 +41,19 @@ const onlyFullPage = ({variant}: {variant?: string}) => variant !== OPERATION_TR
  * ⚠️ 列 key 与查询名是**从旧 `OperationDataTraceTable.vue` 逐条抄过来的**（含那条复合查询名），
  * 这里不做"重新设计"：它对着的是后端审计接口的字段契约，改动要跟后端一起动。
  * 显示侧的差异（旧表用 `#bodyCell` 拿别的字段）在这里用 `render` 表达，一一对应。
+ *
+ * ⚠️ **`labelKey` 用本包自己的语言包**：`Crud.operationTrace.*`（见 `src/locale/{zh_CN,en_US}.ts`）✓
+ * —— 早先写成 `operationTrace.xxx`（少了 `Crud.` 前缀 ✗）⇒ 表头直接显示 key 原文 ✗
+ * （2026-09-29 用户截图报）。
+ * 这些文案**就是**从宿主旧 key（`operation.*` / `authServer.auditEvent.*` / `common.remark`）搬过来的
+ * （本包 locale 里那条注释写着"与宿主旧文案逐条一致"✓），宿主那几份**已删** ✓。
+ * ⚠️ 前提：宿主把本包语言包并进了 vue-i18n（`vue-basic-admin/src/i18n/index.ts` ✓）——
+ * 声明层的 `labelKey` 走的是**宿主的 `i18nResolver`**（`i18n.global.t`），并进来才查得到 ✓。
  */
 const columns: PageListEntry<AuditEventEntity>[] = [
   {
     key: 'data.operationDataTrace.controllerAuditType',
-    labelKey: 'operationTrace.auditType',
+    labelKey: 'Crud.operationTrace.auditType',
     width: 200,
     visible: onlyFullPage,
     search: {component: 'input', expression: 'eq'},
@@ -53,22 +61,32 @@ const columns: PageListEntry<AuditEventEntity>[] = [
   },
   {
     key: 'data.operationTrace.target',
-    labelKey: 'operationTrace.target',
+    labelKey: 'Crud.operationTrace.target',
     width: 150,
     visible: onlyFullPage,
     search: {component: 'input', expression: 'eq'},
   },
   {
     key: 'timestamp',
-    labelKey: 'operationTrace.time',
+    labelKey: 'Crud.operationTrace.time',
     width: 210,
     // 旧表也是拿 `record.timestamp` 去格式化（列 key 与显示字段不同名），这里等价表达
     format: 'dateTime',
-    search: {component: 'date', queryName: 'after'},
+    /**
+     * ⚠️ `after` **不能为空**（后端会报错 / 查不出来）⇒ 不给清空图标。
+     * 默认值（"当天 0 点之后"）**不写在这里**：那是**整页形态**的行为，
+     * 嵌入态（表单 / 详情里那块操作记录）没有它 ⇒ 由工厂的 `options.afterDefault` 注入（见下）。
+     * （宽度这类**外观**类由宿主给 —— pro 不带 Tailwind，见 `registry.ts` 里同名约定）
+     */
+    search: {
+      component: 'date',
+      queryName: 'after',
+      props: {allowClear: false, showTime: true},
+    },
   },
   {
     key: 'principal',
-    labelKey: 'operationTrace.principal',
+    labelKey: 'Crud.operationTrace.principal',
     width: 150,
     search: {
       component: 'input',
@@ -78,7 +96,7 @@ const columns: PageListEntry<AuditEventEntity>[] = [
   },
   {
     key: 'data.operationTrace.type.value',
-    labelKey: 'operationTrace.type',
+    labelKey: 'Crud.operationTrace.type',
     width: 100,
     // 来源写在字段条目上：搜索下拉的 options 由它推导（旧表是手动 applyColumnOptions）
     enumRef: {module: SYSTEM_MODULE_NAME.RESOURCE_SERVER, id: SYSTEM_ENUM_TYPE.OPERATION_DATA_TYPE_ENUM},
@@ -87,25 +105,55 @@ const columns: PageListEntry<AuditEventEntity>[] = [
   },
   {
     key: 'data.operationTrace.id',
-    labelKey: 'operationTrace.traceId',
+    labelKey: 'Crud.operationTrace.traceId',
     width: 150,
     visible: onlyFullPage,
     search: {component: 'number', expression: 'eq'},
   },
   {
     key: 'data.operationTrace.remark',
-    labelKey: 'operationTrace.remark',
+    labelKey: 'Crud.operationTrace.remark',
     width: 400,
   },
 ]
 
 /**
+ * 把 `after` 的默认值送进 `timestamp` 列的搜索项（**只有整页形态才给**）。
+ *
+ * 为什么不直接写进共享的 `columns`：嵌入态（表单 / 详情里那块操作记录）**不应该**跟着变 ——
+ * 一写就会让它们也只查当天 ✗（旧表只在整页列表上给了这个默认）。
+ */
+function columnsWithAfterDefault(after: string | number): PageListEntry<AuditEventEntity>[] {
+  return columns.map((column) => {
+    // `PageListEntry` 是联合类型（裸 key 字符串也在其中）⇒ 先窄化
+    if (typeof column === 'string' || column.key !== 'timestamp') {
+      return column
+    }
+    // `PageSearchConfig.component` 是必填 ⇒ 兜底也得给一个（正常路径下这一列本来就有 `search`）
+    const search = column.search ?? {component: 'date' as const, queryName: 'after'}
+    return {
+      ...column,
+      search: {...search, defaultValue: after},
+    }
+  })
+}
+
+/**
  * 操作记录声明（只读表）：`recordActions: false` = 不要行内动作、也不补"操作"列；
  * `toolbarActions: false` = 连默认的"新增 / 删除选中"都不要（审计没有增删）。
+ *
+ * @param options `service` 一般不用给（默认 new 一个）；`afterDefault` = 整页形态"当天 0 点之后"
+ *   那个默认值 —— **声明层**给，别让宿主壳再去 `:query` 里塞。
+ *   ⚠️ 它会被**原样**塞进查询（`QueryTable` 的 `defaultValue` 就是这个语义）⇒ 给**要发出去的值**：
+ *   宿主的 `postTimestampFormat(dayjs().startOf('d'))`（字符串），**不是** Dayjs 对象 ✗。
  */
 export function createOperationTracePage(
-  service = new OperationDataTraceAuditEventService(),
+  options: {
+    service?: OperationDataTraceAuditEventService
+    afterDefault?: string | number
+  } = {},
 ) {
+  const {service = new OperationDataTraceAuditEventService(), afterDefault} = options
   return defineHomePage<AuditEventEntity>(
     {
       service,
@@ -119,7 +167,7 @@ export function createOperationTracePage(
           ids: [SYSTEM_ENUM_TYPE.OPERATION_DATA_TYPE_ENUM],
         },
       ],
-      columns,
+      columns: afterDefault == null ? columns : columnsWithAfterDefault(afterDefault),
       recordActions: false,
       toolbarActions: false,
     },

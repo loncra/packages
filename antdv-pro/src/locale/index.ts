@@ -36,7 +36,12 @@ export interface SystemUserPanelLocale {
   email: string
 }
 
-/** 操作记录（审计）块的文案（`Crud.operationTrace.*`，声明里写相对 key） */
+/**
+ * 操作记录（审计）块的文案（`Crud.operationTrace.*`）。
+ *
+ * 这里是**审计文案的唯一来源**：宿主旧 key（`operation.*` / `authServer.auditEvent.*` / `common.remark`）
+ * 已删 ✓ —— 宿主声明层与 pro 工厂都写 `Crud.operationTrace.*`（`data` = 旧 `operation.data` ✓）。
+ */
 export interface OperationTraceLocale {
   title: string
   auditType: string
@@ -46,6 +51,7 @@ export interface OperationTraceLocale {
   type: string
   traceId: string
   remark: string
+  data: string
 }
 
 export interface CrudLocale {

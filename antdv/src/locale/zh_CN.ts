@@ -10,6 +10,7 @@ const locale: Locale = {
     link: '链接地址',
     name: '名称',
     icon: '图标',
+    searchPlaceholder: '请输入图标名称进行搜索',
   },
   EmojiButton: {
     smileys_emotion: '笑脸与情感',

@@ -1,6 +1,6 @@
-export const MODEL_SETTING_MANUFACTURER_CODE_PREFIX = 'system.ai.model'
-export const MCP_GROUP_CODE_PREFIX = 'system.ai.mcp.group'
-export const SKILL_GROUP_CODE_PREFIX = 'system.ai.skill.group'
+export const MODEL_SETTING_MANUFACTURER_CODE_PREFIX = 'system.ai.model.*'
+export const MCP_GROUP_CODE_PREFIX = 'system.ai.mcp.group.*'
+export const SKILL_GROUP_CODE_PREFIX = 'system.ai.skill.group.*'
 
 export const MODEL_DEFAULT_OPTIONS_KEY = 'options'
 

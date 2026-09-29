@@ -10,6 +10,7 @@ const locale: Locale = {
     link: 'Link URL',
     name: 'Name',
     icon: 'Icon',
+    searchPlaceholder: 'Type an icon name to search',
   },
   EmojiButton: {
     smileys_emotion: 'Smileys & Emotion',
