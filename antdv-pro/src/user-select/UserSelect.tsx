@@ -15,7 +15,7 @@ import {
 import {fetchEnumBuckets} from '../basic-crud-query'
 import {useLocale} from '../_util/useLocale'
 
-interface UserSelectOption {
+export interface UserSelectOption {
   label?: string
   value?: string | number
   options?: UserSelectOption[]

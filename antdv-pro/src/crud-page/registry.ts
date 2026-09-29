@@ -1,11 +1,9 @@
 import {type Component, computed, type ComputedRef, markRaw} from 'vue'
 import {DatePicker, Input, InputNumber, Select} from 'antdv-next'
-import {
-  getEnumName,
-  isNameValueEnumMetadata,
-  type DataDictionaryMetadata,
-  type NameValueEnumMetadata,
-} from '@loncra/client/commons'
+import {type DataDictionaryMetadata, getEnumName, type NameValueEnumMetadata,} from '@loncra/client/commons'
+import {Editor, IconSelect, KeyValueTable, type KeyValueTableExpose} from '@loncra/antdv'
+import AttachmentUpload, {type AttachmentUploadExpose} from '../attachment-upload'
+import UserSelect from '../user-select'
 import {useCrudConfig} from '../crud-config-provider'
 import {byteFormat} from '../_util/format'
 import {useDateFormat} from '../_util/crud/useDateFormat'
@@ -137,6 +135,41 @@ export function usePageRegistry(): ComputedRef<PageRegistry> {
       select: {component: Select, defaults: {allowClear: true}, mapOptions: ENUM_OPTIONS},
       date: {component: DatePicker},
       dateRange: {component: DatePicker.RangePicker},
+      // ── 本仓自己的扩展控件（只登记"组件本体 + 提交前的机械准备"，不含任何业务） ──
+      /** 富文本：`v-model:value` 直通；图片/视频上传这类宿主行为走声明 `props` */
+      editor: {component: Editor},
+      /** 图标选择：`options`（iconfont.json）与 `iconRender` 由声明 `props` 给，或宿主覆盖本表 */
+      iconSelect: {component: IconSelect},
+      /** 选人：`mode` / `query` 走声明 `props`；选项行要定制就用字段的 `slots.optionRender` */
+      userSelect: {component: UserSelect},
+      /**
+       * 键值表：**自带标题栏 + 行内自带 `a-form-item`** ⇒ `ownFormItem`（外层不再包，包了双标题）。
+       *
+       * 提交前收尾还在编辑态的行（`confirmAllEditingRows()`）：它**不发 `update:value`**（行对象是
+       * 原地改的，值本来就在），要的是它**逐行 `emit('change')`** —— 声明侧靠这个把派生字段写下去
+       * （如 mcp 把 `envDataSource` 同步进 `metadata.client.env`），不收尾那一步就不会发生。
+       */
+      keyValueTable: {
+        component: KeyValueTable,
+        ownFormItem: true,
+        beforeSubmit: (instance) =>
+          (instance as KeyValueTableExpose | undefined)?.confirmAllEditingRows(),
+      },
+      /**
+       * 附件：本地文件要在 `save` 之前 `upload()` 成 `ObjectWriteResult`，
+       * 否则落库 `bucketName` / `objectName` 为空（列表与预览都出不来）。
+       *
+       * ⚠️ **回填不靠这里的返回值**：`upload()` 会把内部 `fileList` 换成 `ObjectWriteResult[]`
+       * （`AttachmentUpload.tsx` 的 `fileList.value = results` + `await nextTick()`）⇒ 组件自己的
+       * `watch(fileList)` 触发 `emit('update:value')` ⇒ 壳的 `onUpdate:value` 写回实体（`writePath`）。
+       * 所以 `beforeSubmit` 只负责"催一下"；组件"传完只返回、不 emit"才需要额外写回能力（现在没有这种组件）。
+       */
+      attachmentUpload: {
+        component: AttachmentUpload,
+        beforeSubmit: async (instance) => {
+          await (instance as AttachmentUploadExpose | undefined)?.upload()
+        },
+      },
       ...config.value.fieldComponents,
     },
     /**

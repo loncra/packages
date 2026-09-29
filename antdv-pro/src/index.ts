@@ -34,7 +34,7 @@ export { default as UserAvatar } from './user-avatar'
 export type { UserAvatarProps, UserAvatarSlots } from './user-avatar'
 
 export { default as UserSelect } from './user-select'
-export type { UserSelectEmits, UserSelectProps, UserSelectSlots } from './user-select'
+export type { UserSelectEmits, UserSelectOption, UserSelectProps, UserSelectSlots } from './user-select'
 
 export {default as SystemUserPanel} from './system-user-panel'
 export type {
@@ -205,6 +205,7 @@ export type {
   CrudDetailPageExpose,
   CrudDetailPageProps,
   CrudDetailPageSlots,
+  CrudFormCore,
   CrudFormDefinition,
   CrudFormPageConstructor,
   CrudFormPageExpose,
@@ -230,6 +231,8 @@ export type {
   PageFormContext,
   PageFormDefinition,
   PageFormField,
+  PageFormFieldKey,
+  PageFormFieldSlots,
   PageCardGridDefinition,
   PageCommonDefinition,
   PageTableColumn,

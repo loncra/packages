@@ -3,12 +3,14 @@ import type {ColProps, FormItemProps} from 'antdv-next'
 import type {EnumBucketsResponseBody} from '@loncra/client/resource'
 import type {PageDictionaries} from '../../basic-crud-query/types'
 import {componentName, dictOptions, resolveFieldSpec} from '../registry'
+import {pathSegments} from '../../_util/crud/readPath'
 import type {
-  PageDeclContext,
-  PageFieldRenderContext,
-  PageFieldsDictionary,
-  PageFormField,
-  PageRegistry,
+    PageDeclContext,
+    PageFieldRenderContext,
+    PageFieldsDictionary,
+    PageFormField,
+    PageFormFieldKey,
+    PageRegistry,
 } from '../types'
 
 /**
@@ -34,7 +36,9 @@ const FORM_FIELD_DEFAULT_COL: ColProps = {
  * （与列表的 `buildListColumns` 同一个思路：声明 → 组件能吃的形状）。
  */
 export interface BuiltFormField<TBody> {
-  key: keyof TBody & string
+  key: PageFormFieldKey<TBody>
+  /** `key` 拆出来的段：`a-form-item` 的 `name`（单段 key 就是 `[key]`，antd 两种写法等价） */
+  name: string[]
   label: string
   /** `<a-col>` 的 props（声明给了就用声明的，否则 pro 默认，见 `FORM_FIELD_DEFAULT_COL`） */
   col: ColProps
@@ -42,6 +46,12 @@ export interface BuiltFormField<TBody> {
   /** 注册表解析出来的组件；`render` 逃生时为空 */
   component?: Component
   props: Record<string, unknown>
+  /** 声明级插槽：壳原样交给组件（`h(component, props, slots)`）；形状见 `PageFormFieldSlots` */
+  slots?: PageFormField<TBody>['slots']
+  /** 组件自带 `a-form-item`（见 `FieldComponentSpec.ownFormItem`）：壳不再包一层 */
+  ownFormItem: boolean
+  /** 提交前的机械准备（见 `FieldComponentSpec.beforeSubmit`）；壳按字段顺序调用 */
+  beforeSubmit?: (expose: unknown) => void | Promise<void>
   /** 逃生：整块自绘（与 `component` 二选一），模板里用当前实体求值 */
   render?: (ctx: PageFieldRenderContext<TBody>) => unknown
 }
@@ -83,8 +93,10 @@ export function buildFormFields<TBody extends object, TEntity extends TBody & ob
   return declared
     .filter((field) => !field.visible || field.visible(ctx))
     .map((field) => {
-      // 与列表同一套合并：条目里写了就以条目为准（来源可以只写在字段字典里）
-      const spec = fields[field.key]
+      // 与列表同一套合并：条目里写了就以条目为准（来源可以只写在字段字典里）。
+      // ⚠️ 路径 key（`a.b.c`）**不查字典**（字典按顶层字段名索引）⇒ label / 来源要写在条目上；
+      // 一个 cast 收在这里（同列表列的 `fieldSpecOf`）
+      const spec = field.key.includes('.') ? undefined : fields[field.key as keyof TEntity & string]
       const merged: PageFormField<TBody> = {...spec, ...field}
       const enumRef = merged.enumRef
       const dictId = merged.dictId
@@ -128,11 +140,15 @@ export function buildFormFields<TBody extends object, TEntity extends TBody & ob
       }*/
       return {
         key: field.key,
+        name: pathSegments(field.key),
         label: t(merged.labelKey ?? `${i18nPrefix}.${field.key}`),
         col: field.col ?? FORM_FIELD_DEFAULT_COL,
         rules: typeof field.rules === 'function' ? field.rules(renderCtx) : field.rules,
         component: componentSpec?.component,
         props,
+        slots: field.slots,
+        ownFormItem: componentSpec?.ownFormItem ?? false,
+        beforeSubmit: componentSpec?.beforeSubmit,
         render: field.render,
       }
     })

@@ -1,10 +1,9 @@
-import {computed, defineComponent, nextTick, type PropType, ref, toRef, watch} from 'vue'
+import {computed, defineComponent, nextTick, type PropType, ref, toRaw, toRef, watch} from 'vue'
 import type {UploadChangeParam} from 'antdv-next'
 import {Upload} from 'antdv-next'
 import {useMergeSemantic, useToArr, useToProps,} from 'antdv-next/dist/_util/hooks/useMergeSemantic'
-import {useFormItemTrigger} from '@loncra/antdv'
+import {classNames, useFormItemTrigger} from '@loncra/antdv'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
-import {classNames} from '@loncra/antdv'
 import type {ObjectWriteResult} from '@loncra/client/resource'
 import type {UploadFile} from 'antdv-next/dist/upload/interface'
 import {
@@ -126,8 +125,16 @@ const AttachmentUpload = defineComponent({
     watch(
       () => props.value,
       (v) => {
-        // 自己刚 emit 出去又被回传回来的值，不需要再反向同步一次
-        if (v != null && v === lastEmitted) {
+        /**
+         * 自己刚 emit 出去又被回传回来的值，不需要再反向同步一次。
+         *
+         * ⚠️ **必须比 `toRaw(v)`**：父级常把值放进 **reactive 容器**（表单实体就是 `ref({...})`），
+         * 读回来的是**代理**，代理 `!==` 当初那个原始数组 ⇒ 守卫失效 ⇒
+         * `props.value → normalize(fileList) → watch(fileList) → emit → 父级写回 → props.value …`
+         * **每 tick 空转一轮**（多附件时整页卡死；单选那份因为 `normalize` 对非 OWR 单值返回 `[]`
+         * 意外刹住，所以只在"多个附件"上暴露）。2026-09-29 定位。
+         */
+        if (v != null && toRaw(v) === lastEmitted) {
           return
         }
         fileList.value = normalizeAttachmentToList(v ?? undefined)

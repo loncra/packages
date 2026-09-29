@@ -292,7 +292,7 @@ const AttachmentPreview = defineComponent({
               slots.itemRender ? (
                 slots.itemRender({file})
               ) : (
-                <Alert key={file.uid} type={getAlertType(file.status)}>
+                <Alert key={file.uid} type={props.preview ? "info" : getAlertType(file.status)}>
                   {{
                     title: () => (
                       <Flex
@@ -319,6 +319,7 @@ const AttachmentPreview = defineComponent({
                                 {!props.preview ? (
                                   <Button
                                     danger
+                                    size="small"
                                     type="text"
                                     disabled={file.status === 'uploading'}
                                     onClick={() => onRemove(file)}
@@ -329,6 +330,7 @@ const AttachmentPreview = defineComponent({
                                 {file.response ? (
                                   <Button
                                     type="text"
+                                    size="small"
                                     onClick={() => onDownload(file.response as ObjectWriteResult)}
                                   >
                                     {h(DownloadOutlined)}
@@ -337,9 +339,9 @@ const AttachmentPreview = defineComponent({
                               </Flex>
                             ) : null}
                           </Flex>
-                          {!file.response || !props.disabled ? (
+                          {!props.preview && (!file.response || !props.disabled) ? (
                             <Progress percent={file.percent} size="small" />
-                          ) : null}
+                          ) : <TypographyText type="secondary">{byteFormat(file.size || 0)}</TypographyText>}
                         </Flex>
                       </Flex>
                     ),

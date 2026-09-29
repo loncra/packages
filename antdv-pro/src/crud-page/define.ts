@@ -1,14 +1,15 @@
 import type {BasicIdMetadata, SYSTEM_CONSTANT} from '@loncra/client/commons'
 import type {
-  CrudCardGridDefinition,
-  CrudDetailDefinition,
-  CrudFormDefinition,
-  CrudTableDefinition,
-  CrudPageCore,
-  PageCardGridDefinition,
-  PageDetailDefinition,
-  PageFormDefinition,
-  PageTableDefinition,
+    CrudCardGridDefinition,
+    CrudDetailDefinition,
+    CrudFormCore,
+    CrudFormDefinition,
+    CrudPageCore,
+    CrudTableDefinition,
+    PageCardGridDefinition,
+    PageDetailDefinition,
+    PageFormDefinition,
+    PageTableDefinition,
 } from './types'
 
 /**
@@ -36,13 +37,18 @@ export function defineHomePage<
   return {...core, list}
 }
 
-/** 声明表单页（新增 / 编辑共用）：核心 + 表单形态 */
+/**
+ * 声明表单页（新增 / 编辑共用）：核心 + 表单形态。
+ *
+ * 核心参数收的是 `CrudFormCore` ⇒ **`service` 可省**：只提交（`form.submit`）、不取数不编辑的
+ * "发送"型页面不必硬造一个读侧服务。
+ */
 export function defineFormPage<
   TBody extends BasicIdMetadata<TId>,
   TEntity extends TBody = TBody,
   TId = TEntity[typeof SYSTEM_CONSTANT.ID_NAME],
 >(
-  core: CrudPageCore<TBody, TEntity, TId>,
+  core: CrudFormCore<TBody, TEntity, TId>,
   form: PageFormDefinition<TBody, TEntity>,
 ): CrudFormDefinition<TBody, TEntity, TId> {
   return {...core, form}

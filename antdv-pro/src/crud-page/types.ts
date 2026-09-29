@@ -1,4 +1,4 @@
-import type {Component, PublicProps, Ref, VNode} from 'vue'
+import type {Component, PublicProps, Ref, VNode, VNodeChild} from 'vue'
 import type {ColProps, FormItemProps, TableProps} from 'antdv-next'
 import type {
   BasicIdMetadata,
@@ -18,8 +18,6 @@ import type {CollectionService} from '../_util/crud/useCollectionData'
 import type {DragProp} from '../_util/crud/useDrag'
 import type {CrudNavigateTarget} from '../_util/crud/navigate'
 import type {StaleCheckMode} from '../_util/crud/useStaleCheck'
-
-export type {CrudStaleInfo, StaleCheckMode} from '../_util/crud/useStaleCheck'
 import type {ColumnSearchConfig, QueryTableProps, SearchableColumnType} from '../query-table/types'
 import type {
   CardGridDragProp,
@@ -29,6 +27,8 @@ import type {
 } from '../query-card-grid/types'
 import type {EnumBucketRequest, EnumRef, PageDictionaries} from '../basic-crud-query/types'
 import type {EnumBucketsResponseBody} from '@loncra/client/resource'
+
+export type {CrudStaleInfo, StaleCheckMode} from '../_util/crud/useStaleCheck'
 
 // #region 声明：核心（三种形态共用）
 
@@ -357,8 +357,36 @@ export interface CrudCardGridDefinition<
  * 所以"表单要用枚举 options"只需在字段上写 `enumRef` / `dictId` —— `collectFormSources`
  * 按形态收成加载清单，页面不必再写一份 `enums` / `dictionaryCodes`。
  */
+/**
+ * 表单字段 key：实体字段名，或**以实体字段名开头的点路径**（`a.b.c`）。
+ *
+ * 第一段仍受 `keyof TBody` 约束（`metadata.templateCode` ✓ / `metdata.templateCode` ✗ 报红），
+ * 之后的段不校验 —— 与列表列 / 详情项同一个口径（见 `readPath`）。
+ */
+export type PageFormFieldKey<TBody> = keyof TBody & string | `${keyof TBody & string}.${string}`
+
+/**
+ * 声明级**插槽**：控件内部有"一块内容"要宿主画时用它（选项行长什么样、附件项的标题与说明、
+ * 键值表的标题栏…）。
+ *
+ * 与 `PageFormField.render` 的分工 —— `render` = **控件整个由宿主实例化**（自己接 `value` /
+ * `update:value` / 来源 props）；`slots` = **控件仍由注册表实例化**（defaults / 来源 / 值绑定都归
+ * pro），宿主只交代"里面那一块长什么样" ⇒ 字段的 label / 栅格 / 校验 / form-item 名照旧由 DSL 管。
+ *
+ * 参数写成 `(...args: never[]) => …` 是**故意的**：宿主在声明里能自己标注真实形状
+ * （`({option}: {option: UserSelectOption}) => …` 可赋值给它），既拿回类型提示，
+ * 又不必在 pro 里为每个组件的插槽各写一套泛型。
+ */
+export type PageFormFieldSlots = Record<string, (...args: never[]) => VNodeChild>
+
 export interface PageFormField<TBody> extends PageLookupFieldSpec {
-  key: keyof TBody & string
+  /**
+   * 实体字段名，**支持 `a.b.c` 点路径**（数据不在顶层字段时用，同列表列 / 详情项，见 `readPath`）。
+   *
+   * ⚠️ 写路径的字段**不查字段字典**（`fields` 按顶层字段名索引）⇒ `labelKey` / `enumRef` / `dictId`
+   * 要在**这个条目上**写全；表单 `name` 由 pro 按 `.` 拆成数组交给 `a-form-item`，校验照常生效。
+   */
+  key: PageFormFieldKey<TBody>
   /** 注册表 key（内置 input / password / textarea / number / select / date / dateRange），或直接给组件 */
   component?: PageFieldComponent | Component
   /**
@@ -381,6 +409,11 @@ export interface PageFormField<TBody> extends PageLookupFieldSpec {
   props?:
     | Record<string, unknown>
     | ((ctx: PageFieldRenderContext<TBody>) => Record<string, unknown>)
+  /**
+   * 声明级插槽：控件内部"一块内容"交宿主画（见 `PageFormFieldSlots`）。
+   * 与 `render` 的分工看那边 —— 这里是"控件仍由注册表实例化，只把里面一块交出去"。
+   */
+  slots?: PageFormFieldSlots
   /** 逃生：完全自定义这个控件（与 `component` 二选一） */
   render?: (ctx: PageFieldRenderContext<TBody>) => unknown
   /** 该形态下是否显示；缺省显示（新增/编辑两态不一致时用它） */
@@ -416,6 +449,14 @@ export interface PageFormDefinition<TBody, TEntity> {
   postMounted?: () => void | Promise<void>
   preSubmit?: (ctx: PageFormContext<TBody>) => void | Promise<void>
   /**
+   * **自定义提交**：写了它，壳就**不调 `service.save`** —— "发送"这类页面的提交自成一件事，
+   * 与 CRUD 的"保存"不是同一个动作（也没有可保存的实体）。
+   *
+   * 返回值与 `save` 同形，走同一条链路（`isBusinessSuccess` → `postSubmit` → `emit('success')`）
+   * ⇒ 成功提示与跳转策略照旧写在 `postSubmit` 里。
+   */
+  submit?: (entity: TBody, ctx: PageFormContext<TBody>) => Promise<RestResult<unknown>>
+  /**
    * 提交之后（`save` 已成功）。**返回真值 = 调用方接管**：壳跳过自己的成功行为、只 emit `success`
    * —— 宿主"回列表 / 关 tab / 记住偏好"这类策略走这条路（与旧 `BasicForm` 的语义一致）。
    */
@@ -429,12 +470,27 @@ export interface PageFormDefinition<TBody, TEntity> {
   onReset?: (ctx: PageFormContext<TBody>) => void
 }
 
+/**
+ * 表单页的核心：与 `CrudPageCore` 只差一点 —— **`service` 可省**。
+ *
+ * "发送"这类提交型页面既不取数也不编辑（宿主不传 `id` ⇒ 壳里 `get` / 陈旧检查都不会跑），
+ * 提交自成一件事（`form.submit`）⇒ 强迫它给一个读侧服务只会逼出假方法。
+ * 缺 `service` 而壳真要取数 / 保存时**当场抛**（不静默）。
+ */
+export type CrudFormCore<
+  TBody extends BasicIdMetadata<TId>,
+  TEntity extends TBody = TBody,
+  TId = TEntity[typeof SYSTEM_CONSTANT.ID_NAME],
+> = Omit<CrudPageCore<TBody, TEntity, TId>, 'service'> & {
+  service?: CollectionService<TBody, TEntity, ScrollPageResult<TEntity>, TId>
+}
+
 /** `Form.vue` 的声明 = 核心 + 表单（`defineFormPage` 产出） */
 export interface CrudFormDefinition<
   TBody extends BasicIdMetadata<TId>,
   TEntity extends TBody = TBody,
   TId = TEntity[typeof SYSTEM_CONSTANT.ID_NAME],
-> extends CrudPageCore<TBody, TEntity, TId> {
+> extends CrudFormCore<TBody, TEntity, TId> {
   form: PageFormDefinition<TBody, TEntity>
 }
 
@@ -505,6 +561,20 @@ export interface FieldComponentSpec {
   defaults?: Record<string, unknown>
   /** 枚举桶 → 组件 props；默认 `{options, fieldNames: {label: 'name'}}` */
   mapOptions?: (options: NameValueEnumMetadata<number | string>[]) => Record<string, unknown>
+  /**
+   * 组件**自带 `a-form-item`**（自己画标题栏、内部行自己管校验，如 `keyValueTable`）⇒ 表单壳
+   * 不再包一层（包了就是双标题）。置 true 的字段**不吃声明里的 `rules`**：校验归组件自己。
+   */
+  ownFormItem?: boolean
+  /**
+   * 提交前的**机械准备**：壳在"校验通过之后、声明层 `preSubmit` 之前"**按字段顺序**调用，
+   * 参数是该字段的组件实例（壳用函数 ref 收的；字段没渲染时是 `undefined`，实现要容错）。
+   *
+   * 为什么要有它：这两件事"不做就丢数据"—— 附件的本地文件要先 `upload()` 成 `ObjectWriteResult`
+   * （否则落库 `bucketName` / `objectName` 为空），键值表的行要先 `confirmAllEditingRows()`
+   * （否则正在编辑的那行不进值）。pro 不认具体组件 ⇒ 由注册方（本 spec）自己收窄 `expose`。
+   */
+  beforeSubmit?: (expose: unknown) => void | Promise<void>
 }
 
 export interface FormatContext {
@@ -760,9 +830,26 @@ export interface CrudFormPageExpose<TBody> {
 export interface CrudFormPageSlots<TBody extends object> {
   /** 字段行之后、按钮之前（放操作轨迹块、子表这类宿主内容）；作用域给当前实体与 `extra` */
   default?: (arg: {entity: TBody; extra: Record<string, unknown>}) => unknown
-  /** 表单按钮区之前 / 之后（不传就用壳自己的按钮组） */
-  beforeButton?: () => unknown
-  afterButton?: () => unknown
+  /**
+   * 按钮区：**给了就整排用你的**（不给就是壳自己的「保存 / 重置」）。
+   *
+   * 参数里带着壳那两颗按钮的 VNode 与当前 `loading`（照 `a-modal` 的 `footer: ({extra}) => …`
+   * 那个路子）：想留哪颗就把哪颗放回去 —— 它的提交 / 重置 / loading 逻辑照旧，只是位置由你定。
+   * 例：只要「重置」、把「保存」换成自己的「发送」：
+   * `({resetButton, loading}) => [h(发送, {loading, htmlType: 'submit'}), resetButton]`
+   */
+  buttons?: (arg: {
+    entity: TBody
+    extra: Record<string, unknown>
+    loading: boolean
+    /**
+     * 壳那两颗按钮 —— 给的是**渲染函数**（不是 VNode）：模板里 `<component :is="resetButton" />`
+     * 就能直接放，不用再包一层；`h` / tsx 那边写 `h(resetButton)`。
+     * 它们的提交 / 重置 / loading 逻辑照旧，只有"放哪、留不留"由你定。
+     */
+    submitButton: () => VNodeChild
+    resetButton: () => VNodeChild
+  }) => unknown
 }
 
 export type CrudFormPageConstructor = new <

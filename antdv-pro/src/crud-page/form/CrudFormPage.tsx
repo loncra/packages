@@ -1,25 +1,5 @@
-import {
-  computed,
-  defineComponent,
-  h,
-  type PropType,
-  ref,
-  type Ref,
-  type SlotsType,
-  type VNodeChild,
-} from 'vue'
-import {
-  App,
-  Button,
-  Col,
-  Divider,
-  Form,
-  FormItem,
-  type FormInstance,
-  Row,
-  Space,
-  theme,
-} from 'antdv-next'
+import {computed, defineComponent, h, type PropType, ref, type Ref, type SlotsType, type VNodeChild,} from 'vue'
+import {App, Button, Col, Divider, Form, type FormInstance, FormItem, Row, Space, theme,} from 'antdv-next'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {HistoryOutlined, SaveOutlined, UndoOutlined} from '@antdv-next/icons'
 import {classNames} from '@loncra/antdv'
@@ -29,6 +9,7 @@ import {useAntdvConfig} from '../../config-provider/useAntdvConfig'
 import {useCrudConfig} from '../../crud-config-provider'
 import DataLoadingCardPlan from '../../data-loading-card-plan'
 import {useStaleCheck} from '../../_util/crud/useStaleCheck'
+import {readPath, writePath} from '../../_util/crud/readPath'
 import type {DefaultCrudEntity} from '../../_util/crud/useCollectionData'
 import type {PageDictionaries} from '../../basic-crud-query/types'
 import {useLocale} from '../../_util/useLocale'
@@ -38,14 +19,6 @@ import {collectFormSources, mergeSources} from '../../_util/crud/sources.ts'
 import {fetchDataDictionaries, fetchEnumBuckets} from '../../basic-crud-query'
 import {buildFormFields} from './fields'
 import useStyle from './style'
-
-/**
- * 壳自己要用、但**不一定在表单字段里**的实体键（见 `fetchEntity` 里的说明）。
- * - `id`：编辑态判定（禁用规则 / 标题 / 陈旧检查都要它）
- * - `version`：乐观锁版本戳（保留本地修改时要把服务端版本回写，见 `useStaleCheck`）
- * - `creationTime`：操作记录块的渲染条件 + 审计查询的 `after`
- */
-const SHELL_ENTITY_KEYS = ['id', 'version', 'creationTime'] as const
 import type {
   CrudFormPageConstructor,
   CrudFormPageExpose,
@@ -56,6 +29,14 @@ import type {
   PageDeclContext,
   PageFormContext,
 } from '../types'
+
+/**
+ * 壳自己要用、但**不一定在表单字段里**的实体键（见 `fetchEntity` 里的说明）。
+ * - `id`：编辑态判定（禁用规则 / 标题 / 陈旧检查都要它）
+ * - `version`：乐观锁版本戳（保留本地修改时要把服务端版本回写，见 `useStaleCheck`）
+ * - `creationTime`：操作记录块的渲染条件 + 审计查询的 `after`
+ */
+const SHELL_ENTITY_KEYS = ['id', 'version', 'creationTime'] as const
 
 /**
  * 表单页（新增 / 编辑）：**渲染 + 数据壳**一体，与 `CrudHomePage` 同构。
@@ -146,8 +127,30 @@ const CrudFormPage = defineComponent({
     const spinning = ref(false)
     /** 实体初值来自声明，随后与服务端数据合并 */
     const entity = ref(props.page.form.createEntity()) as Ref<TBody>
-    /** 表单壳要 `save` ⇒ 按**事实**窄化（声明层只保证"读得到数据"，不污染 `CrudPageCore`） */
+    /**
+     * 读侧服务：表单壳要 `get` / `save` ⇒ 按**事实**窄化（声明层只保证"读得到数据"，
+     * 不污染 `CrudPageCore`）。
+     *
+     * ⚠️ `CrudFormCore.service` 是**可选**的（"发送"这类只提交、不取数不编辑的页面不给它）：
+     * 那种情况这里其实是 `undefined` —— 只有**编辑态取数**会踩到它（而编辑页必然给了 `service`）；
+     * 提交那条路走下面的 `submitEntity()`，那里有明确的守卫。
+     */
     const service = computed(() => props.page.service as unknown as FormService<TBody, TBody>)
+
+    /**
+     * 提交：声明写了 `form.submit` 就用它（"发送"这类页面的提交自成一件事），否则走 `service.save`。
+     * 两者都没有 ⇒ **当场抛**（别等用户点了按钮才知道没接线）。
+     */
+    async function submitEntity(): Promise<RestResult<unknown>> {
+      const submit = props.page.form.submit
+      if (submit) {
+        return submit(entity.value, formCtx())
+      }
+      if (!props.page.service) {
+        throw new Error('[crud-page] 表单声明既没给 form.submit、也没给 service：提交无处可去')
+      }
+      return service.value.save(entity.value)
+    }
     /** 陈旧检查：默认 `'prompt'`（页级 / `CrudConfig` 可调；`false` 连请求都不发） */
     const stale = useStaleCheck({
       pageMode: props.page.staleCheck,
@@ -185,6 +188,31 @@ const CrudFormPage = defineComponent({
         dictionaries: dictionaries.value,
       }),
     )
+
+    /**
+     * 字段组件实例：按 key 收（`beforeSubmit` 要拿它调方法，如附件的 `upload()`）。
+     *
+     * 字段是 `v-for` 出来的 ⇒ 只能用函数 ref；**setter 缓存住**（同一 key 每轮渲染返回同一个函数，
+     * 否则 Vue 在 ref 身份变化时会先清一次，白抖一下）。`visible: false` 的字段根本没渲染 ⇒
+     * 表里没有它，`beforeSubmit` 收到 `undefined`，由 spec 实现自己容错。
+     */
+    const fieldInstances = new Map<string, unknown>()
+    const fieldRefSetters = new Map<string, (instance: unknown) => void>()
+    function fieldRef(key: string): (instance: unknown) => void {
+      const cached = fieldRefSetters.get(key)
+      if (cached) {
+        return cached
+      }
+      const setter = (instance: unknown) => {
+        if (instance == null) {
+          fieldInstances.delete(key)
+        } else {
+          fieldInstances.set(key, instance)
+        }
+      }
+      fieldRefSetters.set(key, setter)
+      return setter
+    }
 
     /** 服务端实体 → 与首屏同口径的实体（`createEntity` 的默认值打底 + `postGetEntity`） */
     async function mergeRemote(data?: TBody): Promise<TBody> {
@@ -255,11 +283,24 @@ const CrudFormPage = defineComponent({
       }
     }
 
+    /**
+     * 提交前的"组件准备"：**按声明顺序**把每个字段的 `beforeSubmit` 跑一遍
+     * （附件先把本地文件上传成 `ObjectWriteResult`、键值表先把正在编辑的行确认进值）。
+     *
+     * 排在声明层的 `preSubmit` 之前：那个钩子是"提交前最后一件事"，看到的应该是准备完的最终值。
+     */
+    async function runFieldsBeforeSubmit(): Promise<void> {
+      for (const field of fields.value) {
+        await field.beforeSubmit?.(fieldInstances.get(String(field.key)))
+      }
+    }
+
     async function doSubmit(): Promise<void> {
       spinning.value = true
       try {
+        await runFieldsBeforeSubmit()
         await props.page.form.preSubmit?.(formCtx())
-        const result = await service.value.save(entity.value)
+        const result = await submitEntity()
         if (!isBusinessSuccess(result)) {
           // 业务失败（含后端乐观锁拒绝）都走这里；文案在 `result.message` 里（宿主 http 层也会提示）
           message.warning(result.message)
@@ -297,6 +338,43 @@ const CrudFormPage = defineComponent({
       resetFields: doReset,
     })
 
+    /**
+     * 按钮区：**给了 `#buttons` 就整排用宿主的**（不给就是壳自己的「保存 / 重置」）。
+     *
+     * 参数里带着壳这两颗按钮的 VNode + 当前 `loading`（照 `a-modal` 的 `footer: ({extra}) => …`
+     * 那个路子）：想留哪颗就把哪颗放回去 —— 它的提交 / 重置 / loading 逻辑照旧，只是位置由宿主定。
+     * 例：只要「重置」、把「保存」换成自己的「发送」：
+     * `({resetButton, loading}) => [h(发送, {loading, htmlType: 'submit'}), resetButton]`
+     */
+    function renderButtons(): VNodeChild {
+      const submitButton = () => (
+        <Button type="primary" htmlType="submit" loading={spinning.value}>
+          {{
+            icon: () => h(SaveOutlined),
+            default: () => locale.value.save,
+          }}
+        </Button>
+      )
+      const resetButton = () => (
+        <Button htmlType="button" disabled={spinning.value} onClick={doReset}>
+          {{
+            icon: () => h(UndoOutlined),
+            default: () => locale.value.reset,
+          }}
+        </Button>
+      )
+      if (!slots.buttons) {
+        return [submitButton(), resetButton()]
+      }
+      return slots.buttons({
+        entity: entity.value,
+        extra: props.contextExtra,
+        loading: spinning.value,
+        submitButton,
+        resetButton,
+      }) as VNodeChild
+    }
+
     return () => (
       <DataLoadingCardPlan
         {...(attrs as Record<string, unknown>)}
@@ -313,28 +391,42 @@ const CrudFormPage = defineComponent({
           onFinish={() => doSubmit()}
         >
           <Row gutter={[token.value.sizeMD,0]}>
-            {fields.value.map((field) => (
-              // 栅格跨度**整包来自声明**（`field.col`；没写 `col` 时 `buildFormFields` 已补上
-              // pro 默认断点）—— pro 不在这里加工任何断点，官方 `Col` 的语义原样生效
-              <Col key={String(field.key)} {...field.col}>
-                <FormItem name={field.key} label={field.label} rules={field.rules}>
-                  {field.render
-                    ? (field.render({
-                        entity: entity.value,
-                        t,
-                        variant: props.variant,
-                        extra: props.contextExtra,
-                      }) as VNodeChild)
-                    : h(field.component as never, {
-                        value: entity.value[field.key],
-                        'onUpdate:value': (value: unknown) => {
-                          ;(entity.value as Record<string, unknown>)[field.key as string] = value
-                        },
-                        ...field.props,
-                      })}
-                </FormItem>
-              </Col>
-            ))}
+            {fields.value.map((field) => {
+              // 控件本体：注册表实例化（props + 声明级插槽），或 `render` 逃生整块自绘
+              const control = field.render
+                ? (field.render({
+                    entity: entity.value,
+                    t,
+                    variant: props.variant,
+                    extra: props.contextExtra,
+                  }) as VNodeChild)
+                : h(
+                    field.component as never,
+                    {
+                      ref: fieldRef(String(field.key)),
+                      // 取值 / 写回走同一个路径口径（`field.name` 是拆好的段数组，只给 `a-form-item` 校验用）
+                      value: readPath(entity.value, field.key),
+                      'onUpdate:value': (value: unknown) =>
+                        writePath(entity.value, field.key, value),
+                      ...field.props,
+                    },
+                    field.slots,
+                  )
+              return (
+                // 栅格跨度**整包来自声明**（`field.col`；没写 `col` 时 `buildFormFields` 已补上
+                // pro 默认断点）—— pro 不在这里加工任何断点，官方 `Col` 的语义原样生效
+                <Col key={String(field.key)} {...field.col}>
+                  {field.ownFormItem ? (
+                    // 组件自己画标题栏、行内自带 `a-form-item`（如 keyValueTable）⇒ 外层不再包（包了双标题）
+                    control
+                  ) : (
+                    <FormItem name={field.name} label={field.label} rules={field.rules}>
+                      {control}
+                    </FormItem>
+                  )}
+                </Col>
+              )
+            })}
           </Row>
           {/* 字段行之后：宿主内容（子表这类）；再下面是操作记录（pro 的能力，值不齐自动不渲染） */}
           {slots.default?.({entity: entity.value, extra: props.contextExtra})}
@@ -363,22 +455,7 @@ const CrudFormPage = defineComponent({
               />
             </div>
           )}
-          <Space>
-            {slots.beforeButton?.()}
-            <Button type="primary" htmlType="submit" loading={spinning.value}>
-              {{
-                icon: () => h(SaveOutlined),
-                default: () => locale.value.save,
-              }}
-            </Button>
-            <Button htmlType="button" disabled={spinning.value} onClick={doReset}>
-              {{
-                icon: () => h(UndoOutlined),
-                default: () => locale.value.reset,
-              }}
-            </Button>
-            {slots.afterButton?.()}
-          </Space>
+          <Space>{renderButtons()}</Space>
         </Form>
       </DataLoadingCardPlan>
     )

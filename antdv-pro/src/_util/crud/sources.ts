@@ -1,10 +1,5 @@
 import type {EnumBucketRequest, EnumRef} from '../../basic-crud-query/types.ts'
-import type {
-  PageFieldsDictionary,
-  PageFormField,
-  PageTableEntry,
-  PageLookupFieldSpec,
-} from '../../crud-page/types.ts'
+import type {PageFieldsDictionary, PageFormField, PageLookupFieldSpec, PageTableEntry,} from '../../crud-page/types.ts'
 import {toListColumn} from '../../crud-page/home/columns.ts'
 
 /** 一个页面要预载的来源（去掉重复、按 module 分组） */
@@ -70,8 +65,12 @@ export function collectFormSources<TEntity extends object>(
   dictionary: PageFieldsDictionary<TEntity>,
 ): PageSourceLoads {
   return groupSources(
-    // 与 `buildFormFields` 同一套合并：条目里写了就以条目为准
-    fields.map((field) => ({...dictionary[field.key], ...field})),
+    // 与 `buildFormFields` 同一套合并：条目里写了就以条目为准。
+    // 路径 key（`a.b.c`）**不从字典继承**（字典按顶层字段名索引），与 `buildFormFields` 同一口径。
+    fields.map((field) => ({
+      ...(field.key.includes('.') ? {} : dictionary[field.key as keyof TEntity & string]),
+      ...field,
+    })),
   )
 }
 
