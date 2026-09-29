@@ -109,7 +109,11 @@ const CrudFormPage = defineComponent({
     const dictionaries = ref<PageDictionaries>({})
 
     const sources = computed(() =>
-      mergeSources(collectFormSources(props.page.form.fields, props.page.fields ?? {})),
+      // 显式声明的来源（`form.enums` / `form.dictionaryCodes`）与推导结果合并 —— 与列表同一口径
+      mergeSources(collectFormSources(props.page.form.fields, props.page.fields ?? {}), {
+        enums: props.page.form.enums,
+        dictionaryCodes: props.page.form.dictionaryCodes,
+      }),
     )
 
     /** 拉来源（与列表同一个口径）：结果喂给 `buildFormFields` 的 options */
@@ -173,7 +177,14 @@ const CrudFormPage = defineComponent({
       props.page.i18nResolver?.(key, named) ?? config.value.i18nResolver?.(key, named) ?? key
 
     /** 页级钩子的上下文：与声明级只差 `entity` 是 **Ref**（钩子要写初值） */
-    const formCtx = (): PageFormContext<TBody> => ({...ctx.value, entity, t})
+    const formCtx = (): PageFormContext<TBody> => ({
+      ...ctx.value,
+      entity,
+      t,
+      // 统一加载好的来源也递进 ctx（`load()` 里 `loadSources()` 在前）⇒ 页级钩子别再自己拉一遍
+      buckets: buckets.value,
+      dictionaries: dictionaries.value,
+    })
 
     const fields = computed(() =>
       buildFormFields({
@@ -336,6 +347,13 @@ const CrudFormPage = defineComponent({
       },
       // 重置走同一条路（antd resetFields + 声明的 onReset + emit）—— 注意它清不到 `id` 之类的非表单键
       resetFields: doReset,
+      // 统一加载好的来源：壳的插槽逃生读它（声明已经拉了，别再发一次同样的请求）
+      get buckets() {
+        return buckets.value
+      },
+      get dictionaries() {
+        return dictionaries.value
+      },
     })
 
     /**
@@ -433,7 +451,13 @@ const CrudFormPage = defineComponent({
             })}
           </Row>
           {/* 字段行之后：宿主内容（子表这类）；再下面是操作记录（pro 的能力，值不齐自动不渲染） */}
-          {slots.default?.({entity: entity.value, extra: props.contextExtra})}
+          {slots.default?.({
+            entity: entity.value,
+            extra: props.contextExtra,
+            // 同一份 `loadSources` 结果交给宿主槽（喂下拉用）：壳里不必再发一次同样的请求
+            buckets: buckets.value,
+            dictionaries: dictionaries.value,
+          })}
           {/*
             操作记录：**分割线由这里（页面壳）自己加**，表格组件只管表格（这样只想要表格的场景
             —— 如审计列表页 —— 引表格时不会被带上一块标题）。条件用同一个判定函数，

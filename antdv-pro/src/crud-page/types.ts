@@ -1,18 +1,18 @@
 import type {Component, PublicProps, Ref, VNode, VNodeChild} from 'vue'
 import type {ColProps, FormItemProps, TableProps} from 'antdv-next'
 import type {
-  BasicIdMetadata,
-  NameValueEnumMetadata,
-  RestResult,
-  ScrollPageResult,
-  SYSTEM_CONSTANT,
-  TreeSortMetadata,
+    BasicIdMetadata,
+    NameValueEnumMetadata,
+    RestResult,
+    ScrollPageResult,
+    SYSTEM_CONSTANT,
+    TreeSortMetadata,
 } from '@loncra/client/commons'
 import type {
-  ActionAppApis,
-  AuthorityProps,
-  RecordActionDefinition,
-  ToolbarActionDefinition,
+    ActionAppApis,
+    AuthorityProps,
+    RecordActionDefinition,
+    ToolbarActionDefinition,
 } from '../_util/crud/actions'
 import type {CollectionService} from '../_util/crud/useCollectionData'
 import type {DragProp} from '../_util/crud/useDrag'
@@ -20,10 +20,10 @@ import type {CrudNavigateTarget} from '../_util/crud/navigate'
 import type {StaleCheckMode} from '../_util/crud/useStaleCheck'
 import type {ColumnSearchConfig, QueryTableProps, SearchableColumnType} from '../query-table/types'
 import type {
-  CardGridDragProp,
-  QueryCardGridItemActionsSlot,
-  QueryCardGridItemSlot,
-  QueryCardGridProps,
+    CardGridDragProp,
+    QueryCardGridItemActionsSlot,
+    QueryCardGridItemSlot,
+    QueryCardGridProps,
 } from '../query-card-grid/types'
 import type {EnumBucketRequest, EnumRef, PageDictionaries} from '../basic-crud-query/types'
 import type {EnumBucketsResponseBody} from '@loncra/client/resource'
@@ -449,6 +449,15 @@ export interface PageFormContext<TBody> extends PageDeclContext {
   entity: Ref<TBody>
   /** label 解析：与页面声明的 `i18nResolver` 同一份 */
   t: (key: string, named?: Record<string, unknown>) => string
+  /**
+   * 本页**已经加载好**的枚举桶 / 数据字典 —— 与字段级 ctx 那两个同源（见 `PageFieldRenderContext.buckets`）。
+   *
+   * 页级钩子（`preMounted` / `preSubmit` / `postSubmit` / `postGetEntity` / `onReset`）拿不到字段级 ctx
+   * ⇒ 需要"统一加载好的那份"时**从这里读**，别自己再发一遍同样的请求。可用性有保证：壳的 `load()`
+   * 是先 `loadSources()` 再 `preMounted()`。
+   */
+  buckets: EnumBucketsResponseBody
+  dictionaries: PageDictionaries
 }
 
 /**
@@ -462,6 +471,13 @@ export interface PageFormContext<TBody> extends PageDeclContext {
 export interface PageFormDefinition<TBody, TEntity> {
   /** 字段顺序 = 数组顺序；按形态显隐用字段自己的 `visible` */
   fields: PageFormField<TBody>[]
+  /**
+   * 显式声明的预载来源 —— **逃生口**，与列表的 `list.enums` / `list.dictionaryCodes` 同一用途：
+   * 给"**没有任何字段引用、但壳 / 页级钩子要用**"的桶与字典（常规情况一律写 `enumRef` / `dictId`，
+   * 由 `collectFormSources` 推导）。与推导结果合并去重，见 `mergeSources`。
+   */
+  enums?: EnumBucketRequest[]
+  dictionaryCodes?: string[]
   /** 实体初值：等价于页面原来手写的那坨 `ref({...})` */
   createEntity: () => TBody
   preMounted?: (ctx: PageFormContext<TBody>) => void | Promise<void>
@@ -524,8 +540,16 @@ export interface CrudFormDefinition<
 export interface PageDetailItem<TEntity> extends PageFieldSpec {
   /** 实体字段名；支持 `a.b` **嵌套路径**（如 `initialization.randomPassword`） */
   key: string
-  /** `a-descriptions` 的跨列数 */
-  span?: number
+  /**
+   * `a-descriptions` 的跨列数。允许 antdv-next 自带的两种形态：**数字**（跨 N 列）或
+   * **`'filled'`（独占整行）**。
+   *
+   * `'filled'` 是"这一项占满整行"的正解：它在**任何断点都成立**；而写数字时，若页面在窄断点把
+   * `column` 收到 1，`span: 2|3` 就超过列数 ⇒ antd 会**自己夹到剩余格**并在 dev 打
+   * `Sum of column 'span' in a line not match 'column' of Descriptions`（配置不自洽的提示）。
+   * pro 只是**原样透传**（`buildDetailItems` 里 `span: item.span`）—— 不判断、不修正、不吞错误。
+   */
+  span?: number | 'filled'
   /** 逃生：自定义这一项的内容（string / VNode）；返回 `undefined` 交回默认渲染 */
   render?: (value: unknown, record: TEntity) => unknown
 }
@@ -834,6 +858,12 @@ export interface CrudFormPageProps<
  * 标题不在这里：怎么写标题是宿主的事（见 `PageFormDefinition` 的说明）。
  */
 export interface CrudFormPageExpose<TBody> {
+  /**
+   * 本页**已经加载好**的枚举桶 / 数据字典 —— 与 `CrudHomePageExpose.buckets` 同一口径：
+   * 声明已经拉了，**别在壳里再发一次同样的请求**（壳的插槽逃生读它）。
+   */
+  buckets: EnumBucketsResponseBody
+  dictionaries: PageDictionaries
   /** 当前表单实体：宿主做标题、陈旧判断、子表联动时读它（写值走声明钩子） */
   entity: TBody
   /**
@@ -847,8 +877,20 @@ export interface CrudFormPageExpose<TBody> {
 }
 
 export interface CrudFormPageSlots<TBody extends object> {
-  /** 字段行之后、按钮之前（放操作轨迹块、子表这类宿主内容）；作用域给当前实体与 `extra` */
-  default?: (arg: {entity: TBody; extra: Record<string, unknown>}) => unknown
+  /**
+   * 字段行之后、按钮之前（放操作轨迹块、子表这类宿主内容）。
+   *
+   * 作用域 = 当前实体 + `extra` + **本页已经加载好的来源**（`buckets` / `dictionaries`，与字段级
+   * `PageFieldRenderContext`、`CrudFormPageExpose` 是**同一份**结果）⇒ 逃生块要喂枚举 / 字典下拉时
+   * **直接从这儿取**：既不用在壳里另发一次请求，也不用让声明导出模块级 ref 去"中转"
+   * （声明只管"来源清单"：`enums` / `dictionaryCodes`）。
+   */
+  default?: (arg: {
+    entity: TBody
+    extra: Record<string, unknown>
+    buckets: EnumBucketsResponseBody
+    dictionaries: PageDictionaries
+  }) => unknown
   /**
    * 按钮区：**给了就整排用你的**（不给就是壳自己的「保存 / 重置」）。
    *
