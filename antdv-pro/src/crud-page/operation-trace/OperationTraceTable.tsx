@@ -41,7 +41,7 @@ export interface OperationTraceTableSlots {
  * - **不含标题 / 分割线**（2026-09-23 拆出来）：分割线是页面层的排版，由用它的页面自己加 ——
  *   表单 / 详情壳里是那条「操作记录」分割线；`OperationDataTraceHome.vue` 这类只想要表格的场景，
  *   引进来就不会被强行带上一块标题；
- * - **表格本身走列表形态的 DSL**（`createOperationTracePage()`，见 `./page.ts`）——不手写表格；
+ * - **表格本身走表格形态的 DSL**（`createOperationTracePage()`，见 `./page.ts`）——不手写表格；
  * - **嵌入态用 `plain`**：审计表永远是嵌在别的页面里的，卡片边框与 body 内边距都不要
  *   （等价宿主以前复制的 `{root:'border-none', body:'p-0!'}`）；
  * - 声明是静态对象（拿不到 pro 的 locale），所以在这里把 `i18nResolver` 补进去 —— 与宿主声明的口一致；

@@ -2,7 +2,7 @@ import type {EnumBucketRequest, EnumRef} from '../../basic-crud-query/types.ts'
 import type {
   PageFieldsDictionary,
   PageFormField,
-  PageListEntry,
+  PageTableEntry,
   PageLookupFieldSpec,
 } from '../../crud-page/types.ts'
 import {toListColumn} from '../../crud-page/home/columns.ts'
@@ -43,7 +43,7 @@ function groupSources(specs: {enumRef?: EnumRef; dictId?: string}[]): PageSource
  *    如 `resource.fields.enabled`），所以不算进列表的加载清单。
  */
 export function collectListSources<TEntity extends object>(
-  columns: PageListEntry<TEntity>[],
+  columns: PageTableEntry<TEntity>[],
   fields: PageFieldsDictionary<TEntity>,
 ): PageSourceLoads {
   const specs: PageLookupFieldSpec[] = []

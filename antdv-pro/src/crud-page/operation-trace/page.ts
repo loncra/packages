@@ -2,10 +2,10 @@ import type {AuditEventEntity} from '@loncra/client/auth'
 import {OperationDataTraceAuditEventService} from '@loncra/client/auth'
 import {getEnumName, SYSTEM_ENUM_TYPE, SYSTEM_MODULE_NAME} from '@loncra/client/commons'
 import {defineHomePage} from '../define'
-import type {PageListEntry} from '../types'
+import type {PageTableEntry} from '../types'
 
 /**
- * 操作记录（审计）**声明**——不手写表格，走列表形态的 DSL（`defineHomePage` + `CrudHomePage`）：
+ * 操作记录（审计）**声明**——不手写表格，走表格形态的 DSL（`defineHomePage` + `CrudHomePage`）：
  * 列 / 来源 / 行内动作全用现成的能力表达，pro 这边一行"自造表格"的代码都没有。
  *
  * 两种形态（同一个声明）：
@@ -50,7 +50,7 @@ const onlyFullPage = ({variant}: {variant?: string}) => variant !== OPERATION_TR
  * ⚠️ 前提：宿主把本包语言包并进了 vue-i18n（`vue-basic-admin/src/i18n/index.ts` ✓）——
  * 声明层的 `labelKey` 走的是**宿主的 `i18nResolver`**（`i18n.global.t`），并进来才查得到 ✓。
  */
-const columns: PageListEntry<AuditEventEntity>[] = [
+const columns: PageTableEntry<AuditEventEntity>[] = [
   {
     key: 'data.operationDataTrace.controllerAuditType',
     labelKey: 'Crud.operationTrace.auditType',
@@ -123,9 +123,9 @@ const columns: PageListEntry<AuditEventEntity>[] = [
  * 为什么不直接写进共享的 `columns`：嵌入态（表单 / 详情里那块操作记录）**不应该**跟着变 ——
  * 一写就会让它们也只查当天 ✗（旧表只在整页列表上给了这个默认）。
  */
-function columnsWithAfterDefault(after: string | number): PageListEntry<AuditEventEntity>[] {
+function columnsWithAfterDefault(after: string | number): PageTableEntry<AuditEventEntity>[] {
   return columns.map((column) => {
-    // `PageListEntry` 是联合类型（裸 key 字符串也在其中）⇒ 先窄化
+    // `PageTableEntry` 是联合类型（裸 key 字符串也在其中）⇒ 先窄化
     if (typeof column === 'string' || column.key !== 'timestamp') {
       return column
     }

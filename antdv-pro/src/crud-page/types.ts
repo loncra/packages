@@ -6,8 +6,10 @@ import type {
   RestResult,
   ScrollPageResult,
   SYSTEM_CONSTANT,
+  TreeSortMetadata,
 } from '@loncra/client/commons'
 import type {
+  ActionAppApis,
   AuthorityProps,
   RecordActionDefinition,
   ToolbarActionDefinition,
@@ -19,6 +21,12 @@ import type {StaleCheckMode} from '../_util/crud/useStaleCheck'
 
 export type {CrudStaleInfo, StaleCheckMode} from '../_util/crud/useStaleCheck'
 import type {ColumnSearchConfig, QueryTableProps, SearchableColumnType} from '../query-table/types'
+import type {
+  CardGridDragProp,
+  QueryCardGridItemActionsSlot,
+  QueryCardGridItemSlot,
+  QueryCardGridProps,
+} from '../query-card-grid/types'
 import type {EnumBucketRequest, EnumRef, PageDictionaries} from '../basic-crud-query/types'
 import type {EnumBucketsResponseBody} from '@loncra/client/resource'
 
@@ -185,7 +193,7 @@ export interface PageFieldRenderContext<TBody> {
 
 // #endregion
 
-// #region 声明：列表形态
+// #region 声明：集合形态（表格 / 卡片网格）
 
 /**
  * 声明式搜索项：`QueryTable` 的 `ColumnSearchConfig` 再放宽两点 ——
@@ -199,10 +207,10 @@ export interface PageSearchConfig extends Omit<ColumnSearchConfig, 'component' |
 }
 
 /**
- * 列表列：**字段本体与来源**都从字段字典继承（`extends PageLookupFieldSpec`），条目里写了就以条目为准
+ * 表格列：**字段本体与来源**都从字段字典继承（`extends PageLookupFieldSpec`），条目里写了就以条目为准
  * （`buildListColumns` 用 `{...fields[key], ...column}` 合并）。
  */
-export interface PageListColumn<TEntity> extends PageLookupFieldSpec {
+export interface PageTableColumn<TEntity> extends PageLookupFieldSpec {
   /**
    * 列标识。**优先写实体字段名**（label 兜底用它；搜索项没给 `queryName` 时也按它拼查询名）。
    *
@@ -232,14 +240,22 @@ export interface PageListColumn<TEntity> extends PageLookupFieldSpec {
   visible?: (ctx: PageDeclContext) => boolean
 }
 
-/** 列表条目：裸 key 或完整列 */
-export type PageListEntry<TEntity> = (keyof TEntity & string) | PageListColumn<TEntity>
+/** 表格条目：裸 key 或完整列 */
+export type PageTableEntry<TEntity> = (keyof TEntity & string) | PageTableColumn<TEntity>
 
-export interface PageListDefinition<TEntity extends BasicIdMetadata<unknown>> {
+/**
+ * 表格与卡片网格**公共**的那部分声明：权限、预加载来源、动作 —— 两边**同名同义**、宿主写法一致。
+ *
+ * 不进来的两样正是两种形态的"分道处"：`columns`（表格必须有；卡片外观由壳的 `#item` 自己画）
+ * 与 `drag`（表格 `DragProp` / 卡片 `CardGridDragProp`，后者多"方向"）。
+ */
+export interface PageCommonDefinition<TEntity extends BasicIdMetadata<unknown>> {
   authority?: AuthorityProps
   /**
    * 需要预加载的枚举桶：**按模块分组**（桶 = 模块 + 枚举 id 索引，见 `EnumBucketRequest`）。
    * module 写 `SYSTEM_MODULE_NAME.*`、id 写 `SYSTEM_ENUM_TYPE.*`，别写字符串字面量。
+   *
+   * 表格那半能从"带搜索项的列"推（`collectListSources`）；**卡片没有列可推** ⇒ 卡片要用就显式写。
    */
   enums?: EnumBucketRequest[]
   /**
@@ -248,18 +264,10 @@ export interface PageListDefinition<TEntity extends BasicIdMetadata<unknown>> {
    * 字段上写 `dictId` 消费它。**名字与内容层/基类的 `dictionaryCodes` 一致**（加载结果叫 `dictionaries`）。
    */
   dictionaryCodes?: string[]
-  /** 列顺序 = 数组顺序；按形态显隐用列自己的 `visible` */
-  columns: PageListEntry<TEntity>[]
   /**
-   * 行拖拽排序 + 幽灵内容（一个口两件事）：
-   * `true` = 可拖（幽灵缺省是主键）；`(record) => 内容` = 可拖且它就是幽灵（推荐 `(record) => record.name`）。
-   */
-  drag?: DragProp<TEntity>
-  rowSelection?: TableProps['rowSelection'] | false
-  /**
-   * 行内动作（名字与内容层/基类的 `recordActions` 一致）：**`false` = 不要行内动作**
-   * （不给 `resolveRecordActions`，也不补"操作"列 —— 与 `CrudTable` 的语义一字不差）；
-   * 函数形态用于按 `variant` 裁剪动作集合（可以返回 `false`）。
+   * 项内动作（表格 = 行内、卡片 = 项内；名字与内容层/基类的 `recordActions` 一致）：
+   * **`false` = 不要**（表格那半就不给 `resolveRecordActions`、也不补"操作"列 ——
+   * 与 `CrudTable` 的语义一字不差）；函数形态用于按 `variant` 裁剪动作集合（可以返回 `false`）。
    */
   recordActions?:
     | RecordActionDefinition<TEntity>[]
@@ -268,18 +276,74 @@ export interface PageListDefinition<TEntity extends BasicIdMetadata<unknown>> {
   /**
    * 标题栏动作（名字与内容层/基类的 `toolbarActions` 一致）：与 pro 内置的新增按钮**合并**
    * （同 id 后者覆盖）。业务自己的导出、批量动作都写这里 —— pro 不预置任何业务动作；
-   * **`false` = 连默认的"新增 / 删除选中"都不要**（审计这类只读表用）。
+   * **`false` = 连默认的"新增 / 删除选中"都不要**（表格：审计这类只读表用；卡片：整排不出）。
    */
   toolbarActions?: ToolbarActionDefinition<TEntity>[] | false
 }
 
-/** `Home.vue` 的声明 = 核心 + 列表（`defineHomePage` 产出） */
-export interface CrudListPage<
+/** 表格形态的声明 = 公共那部分（`PageCommonDefinition`）+ **表格自己的三样** */
+export interface PageTableDefinition<TEntity extends BasicIdMetadata<unknown>>
+  extends PageCommonDefinition<TEntity> {
+  /** 列顺序 = 数组顺序；按形态显隐用列自己的 `visible` */
+  columns: PageTableEntry<TEntity>[]
+  /**
+   * 行拖拽排序 + 幽灵内容（一个口两件事）：
+   * `true` = 可拖（幽灵缺省是主键）；`(record) => 内容` = 可拖且它就是幽灵（推荐 `(record) => record.name`）。
+   */
+  drag?: DragProp<TEntity>
+  rowSelection?: TableProps['rowSelection'] | false
+}
+
+/** `Home.vue`（表格布局）的声明 = 核心 + 表格形态（`defineHomePage` 产出） */
+export interface CrudTableDefinition<
   TBody extends BasicIdMetadata<TId>,
   TEntity extends TBody = TBody,
   TId = TEntity[typeof SYSTEM_CONSTANT.ID_NAME],
 > extends CrudPageCore<TBody, TEntity, TId> {
-  list: PageListDefinition<TEntity>
+  list: PageTableDefinition<TEntity>
+}
+
+/**
+ * 卡片网格页的声明（`Home.vue` 的**卡片布局**）= 公共那部分（`PageCommonDefinition`）+ **卡片自己的两样**。
+ *
+ * 与 `PageTableDefinition` 不合成一份的两处分道：① 表格必须有 `columns`（卡片不需要：外观由壳的
+ * `#item` 插槽自己画）；② `drag` 的类型不同（`CardGridDragProp` 多一个"方向"）+ 卡片有落库口 `onDrop`。
+ */
+export interface PageCardGridDefinition<TEntity extends BasicIdMetadata<unknown>>
+  extends PageCommonDefinition<TEntity> {
+  /**
+   * 卡片拖拽排序 + 幽灵内容（与 `CrudCardGrid.drag` 同形，**方向也在这里**）：
+   * `true` = 可拖（幽灵缺省主键）；`(record) => 内容` = 可拖且它就是幽灵；
+   * 要给方向（缺省横向）才写对象形态 `{dragPreview, direction}`。
+   */
+  drag?: CardGridDragProp<TEntity>
+  /**
+   * 拖拽落库：`CrudCardGrid` 的 `drop` 事件原样交到这里（**pro 不替业务落库**）。
+   * 参数与 `useFlatDragDrop` 的 `onFlatDrop` 同形 —— "方向"归 `drag`，这里只管结果。
+   *
+   * 第二个参数与动作上下文里的 `app` **同一个形状**（动作有 `ctx.app`，落库口没有上下文
+   * ⇒ 直接给它一个）：落库完要提示、要刷新网格都靠它。
+   */
+  onDrop?: (
+    payload: {
+      /** ⚠️ `NonNullable`：实体主键是可选字段（`BasicIdMetadata.id?`），而真正拖动的记录一定有 id
+       *  —— 不这么写，动作里拿着 `sorts` 去调 `xxxService.sort(TreeSortMetadata<number>[])` 会差一个 `undefined` */
+      sorts: TreeSortMetadata<NonNullable<TEntity[typeof SYSTEM_CONSTANT.ID_NAME]>>[]
+      target: TEntity
+      fromIndex: number
+      toIndex: number
+    },
+    app: ActionAppApis<TEntity>,
+  ) => void | Promise<void>
+}
+
+/** `Home.vue`（卡片布局）的声明 = 核心 + 卡片网格（`defineCardGridPage` 产出） */
+export interface CrudCardGridDefinition<
+  TBody extends BasicIdMetadata<TId>,
+  TEntity extends TBody = TBody,
+  TId = TEntity[typeof SYSTEM_CONSTANT.ID_NAME],
+> extends CrudPageCore<TBody, TEntity, TId> {
+  list: PageCardGridDefinition<TEntity>
 }
 
 // #endregion
@@ -487,7 +551,7 @@ export interface CrudHomePageProps<
   TBody extends BasicIdMetadata<TId> = BasicIdMetadata<TId>,
   TEntity extends TBody = TBody,
 > {
-  page: CrudListPage<TBody, TEntity, TId>
+  page: CrudTableDefinition<TBody, TEntity, TId>
   /** 宿主形态名：宿主自己起名（如 `'picker'`）；不传 = 宿主没给形态名（整页） */
   variant?: string
   /** 宿主数据，透传给声明里的 `visible` / `recordActions`（见 `PageDeclContext.extra`） */
@@ -520,7 +584,7 @@ export interface CrudHomePageProps<
 }
 
 /**
- * 列表页壳暴露给宿主的能力。
+ * 表格页壳暴露给宿主的能力。
  *
  * ⚠️ **一律是"值"不是 ref**：Vue 对 `expose` 出来的 ref 会自动解包（`proxyRefs`）⇒ 宿主写
  * `table.value?.buckets` 就是当前值，写成 `table.value?.buckets.value` 只会得到 `undefined`。
@@ -568,10 +632,79 @@ export type CrudHomePageConstructor = new <
   $slots: CrudHomePageSlots<TEntity>
 } & CrudHomePageExpose<TEntity>
 
+export interface CrudCardGridPageProps<
+  TId = string | number,
+  TBody extends BasicIdMetadata<TId> = BasicIdMetadata<TId>,
+  TEntity extends TBody = TBody,
+> {
+  page: CrudCardGridDefinition<TBody, TEntity, TId>
+  /** 宿主形态名（同 `CrudHomePageProps.variant`） */
+  variant?: string
+  /** 宿主数据，透传给声明里的 `visible` / `recordActions`（见 `PageDeclContext.extra`） */
+  extra?: Record<string, unknown>
+  /** 卡片头标题（与 `CrudCardGrid.title` 同形）：`false` = 不渲染卡片头 */
+  title?: VNode | boolean
+  /**
+   * 预置查询条件（与 `CrudCardGrid.query` 同形）：同一份声明给多个实例时靠它区分
+   * —— 如"每种类型一个 tab，每个 tab 一个卡片网格"（carousel 就是这么用的）。
+   */
+  query?: QueryCardGridProps['query']
+  /** 内嵌形态（透传给基类）：不要卡片壳、也不要外层 `Spin` */
+  plain?: boolean
+}
+
+/**
+ * 卡片网格页壳暴露给宿主的能力。
+ *
+ * ⚠️ 与 `CrudHomePageExpose` 一样：**都是"值"不是 ref**（Vue 会 `proxyRefs` 解包）。
+ */
+export interface CrudCardGridPageExpose<TEntity> {
+  fetchDataSource: () => Promise<void | undefined> | undefined
+  clearDataSource: () => void
+  dataSource: TEntity[]
+  /**
+   * 声明里 `list.enums` 加载回来的枚举桶。
+   *
+   * ⚠️ **与表格页的来源不同**：表格那半由基类经 `CrudTable` 拉、再 `update:buckets` 回传；
+   * 卡片网格不上报桶（`CrudCardGrid` 没有这个 emit）⇒ 这份是**门面自己拉的**（见
+   * `CrudCardGridPage` 的注释）⇒ 壳直接读它，**不要另发一次同样的请求**。
+   */
+  buckets: EnumBucketsResponseBody
+  /** 同上：声明里 `list.dictionaryCodes` 加载回来的那份字典 */
+  dictionaries: PageDictionaries
+}
+
+export interface CrudCardGridPageSlots<TEntity extends object> {
+  title?: () => unknown
+  extra?: () => unknown
+  empty?: () => unknown
+  /**
+   * 卡片本体。
+   *
+   * ⚠️ 给了它，网格内置那张卡（含**动作行与拖拽柄**）就不会再渲染 ⇒ 这两样要自己画：
+   * `itemActions` / `dragEnabled` / `onDragStart` / `onDragEnd` 都在插槽参数里给好了
+   * （见 `QueryCardGrid` 的 `defaultItem` 与 `slots.itemActions` 分支）。
+   */
+  item?: (slot: QueryCardGridItemSlot<TEntity>) => unknown
+  /** 只想换动作行时用它（没给 `#item` 时 = 内置卡片 + 你的动作行） */
+  itemActions?: (slot: QueryCardGridItemActionsSlot<TEntity>) => unknown
+}
+
+export type CrudCardGridPageConstructor = new <
+  TBody extends BasicIdMetadata<TId>,
+  TEntity extends TBody = TBody,
+  TId = TEntity[typeof SYSTEM_CONSTANT.ID_NAME],
+>(
+  props: CrudCardGridPageProps<TId, TBody, TEntity> & PublicProps,
+) => {
+  $props: CrudCardGridPageProps<TId, TBody, TEntity> & PublicProps
+  $slots: CrudCardGridPageSlots<TEntity>
+} & CrudCardGridPageExpose<TEntity>
+
 /**
  * 表单壳要的服务：**取数 + 保存**。
  *
- * `CrudPageCore.service` 只保证"读得到数据"（列表形态共用，只读服务也能用）⇒ 表单壳按**事实**窄化：
+ * `CrudPageCore.service` 只保证"读得到数据"（表格形态共用，只读服务也能用）⇒ 表单壳按**事实**窄化：
  * 用这个类型收 props，别去污染 `CrudPageCore`。声明层给的服务满足它（`BasicCrudService`）时
  * 零成本；不满足也没关系 —— 报错点会落在"哪里用了 save"上。
  */

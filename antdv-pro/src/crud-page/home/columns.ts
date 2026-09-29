@@ -7,15 +7,15 @@ import {componentName, dictOptions, formatValue, resolveFieldSpec} from '../regi
 import type {
   PageDeclContext,
   PageFieldsDictionary,
-  PageListColumn,
-  PageListEntry,
+  PageTableColumn,
+  PageTableEntry,
   PageRegistry,
 } from '../types'
 
 /** 裸 key → 完整列 */
 export function toListColumn<TEntity extends object>(
-  entry: PageListEntry<TEntity>,
-): PageListColumn<TEntity> {
+  entry: PageTableEntry<TEntity>,
+): PageTableColumn<TEntity> {
   return typeof entry === 'string' ? {key: entry} : entry
 }
 
@@ -37,7 +37,7 @@ function fieldSpecOf<TEntity>(fields: PageFieldsDictionary<TEntity>, key: string
  * 单元格内容由 `#bodyCell` 插槽调 `renderCell()` 产出。
  */
 export function buildListColumns<TEntity extends object>(
-  declared: PageListEntry<TEntity>[],
+  declared: PageTableEntry<TEntity>[],
   fields: PageFieldsDictionary<TEntity>,
   t: (key: string) => string,
   i18nPrefix: string,
@@ -56,7 +56,7 @@ export function buildListColumns<TEntity extends object>(
     if (item.visible && !item.visible(ctx)) {
       continue
     }
-    const merged: PageListColumn<TEntity> = {...fieldSpecOf(fields, item.key), ...item}
+    const merged: PageTableColumn<TEntity> = {...fieldSpecOf(fields, item.key), ...item}
     const search = merged.search
     const column = {
       title: resolveLabel(merged.key, merged.labelKey, merged.title),
@@ -126,7 +126,7 @@ export function buildListColumns<TEntity extends object>(
  * 绝不能拿去当文本插值）。
  */
 export function renderCell<TEntity extends object>(
-  declared: PageListEntry<TEntity>[],
+  declared: PageTableEntry<TEntity>[],
   fields: PageFieldsDictionary<TEntity>,
   columnKey: unknown,
   record: TEntity,

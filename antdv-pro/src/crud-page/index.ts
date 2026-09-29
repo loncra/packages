@@ -1,4 +1,5 @@
 export {CrudHomePage} from './home'
+export {CrudCardGridPage} from './card-grid'
 export {CrudFormPage} from './form'
 export {CrudDetailPage} from './detail'
 export {
@@ -7,9 +8,14 @@ export {
   OPERATION_TRACE_VARIANT,
   OperationTraceTable,
 } from './operation-trace'
-export {defineDetailPage, defineFormPage, defineHomePage} from './define'
+export {defineCardGridPage, defineDetailPage, defineFormPage, defineHomePage} from './define'
 
 export type {
+  CrudCardGridDefinition,
+  CrudCardGridPageConstructor,
+  CrudCardGridPageExpose,
+  CrudCardGridPageProps,
+  CrudCardGridPageSlots,
   CrudDetailDefinition,
   CrudDetailPageConstructor,
   CrudDetailPageExpose,
@@ -24,7 +30,7 @@ export type {
   CrudHomePageExpose,
   CrudHomePageProps,
   CrudHomePageSlots,
-  CrudListPage,
+  CrudTableDefinition,
   CrudPageCore,
   CrudPageRoutes,
   CrudStaleInfo,
@@ -41,9 +47,11 @@ export type {
   PageFormContext,
   PageFormDefinition,
   PageFormField,
-  PageListColumn,
-  PageListDefinition,
-  PageListEntry,
+  PageCardGridDefinition,
+  PageCommonDefinition,
+  PageTableColumn,
+  PageTableDefinition,
+  PageTableEntry,
   PageLookupFieldSpec,
   PageRegistry,
   PageSearchConfig,

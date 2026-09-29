@@ -16,11 +16,11 @@ import type {
   CrudHomePageProps,
   CrudHomePageSlots,
   PageDeclContext,
-  PageListEntry,
+  PageTableEntry,
 } from '../types'
 
 /**
- * 列表页渲染器：把 `page.list` 的声明翻成 `CrudTable` 的 props。
+ * 表格页渲染器：把 `page.list` 的声明翻成 `CrudTable` 的 props。
  *
  * 它只做"声明 → pro 既有 props"的映射：不认路由、不认 i18n、不认弹层。
  * 跳转交给 `page.onNavigate`（页面自己实现）或 `CrudConfig.onNavigate`（app 级兜底），
@@ -73,7 +73,7 @@ const CrudHomePage = defineComponent({
     const t = (key: string) =>
       props.page.i18nResolver?.(key) ?? config.value.i18nResolver?.(key) ?? key
 
-    const columnDefs = computed<PageListEntry<TEntity>[]>(() => props.page.list?.columns ?? [])
+    const columnDefs = computed<PageTableEntry<TEntity>[]>(() => props.page.list?.columns ?? [])
 
     /**
      * 要预载的来源（枚举桶 + 数据字典）：**从字段字典 + 列上的搜索项推导**
