@@ -27,7 +27,9 @@ import type {
   CrudStaleInfo,
   FormService,
   PageDeclContext,
+  PageFieldRenderContext,
   PageFormContext,
+  PageFormFieldSlots,
 } from '../types'
 
 /**
@@ -37,6 +39,30 @@ import type {
  * - `creationTime`：操作记录块的渲染条件 + 审计查询的 `after`
  */
 const SHELL_ENTITY_KEYS = ['id', 'version', 'creationTime'] as const
+
+/**
+ * 声明级**插槽**的上下文投递：宿主写的每个插槽函数，参数**末尾**会多收一个字段 ctx
+ * （与 `render` 逃生那个 `PageFieldRenderContext` 是**同一份**：实体 / `buckets` / `dictionaries` /
+ * `t` / `extra`）⇒ 插槽里要读实体（典型是封面卡显示表单里的标题 / 正文）不必再自己"用模块级 ref
+ * 记住实体"那种补丁（2026-09-29 补）。
+ *
+ * 放**末尾**是为了不破坏控件自己的插槽参数（`{file}` / `{option}`…）：既有单参数写法一字不用改，
+ * 宿主按需多标一个参数即可。`ctx as never` 那处是 `PageFormFieldSlots` 的类型技巧（它的参数故意
+ * 写成 `never[]` 好让宿主自己标注真实形状）⇒ 壳这边只能按"任意参数"转发。
+ */
+function withFieldCtx(
+  slots: PageFormFieldSlots | undefined,
+  ctx: PageFieldRenderContext<DefaultCrudEntity>,
+): PageFormFieldSlots | undefined {
+  if (!slots) {
+    return undefined
+  }
+  const wrapped: PageFormFieldSlots = {}
+  for (const [name, fn] of Object.entries(slots)) {
+    wrapped[name] = (...args: never[]) => fn(...args, ctx as never)
+  }
+  return wrapped
+}
 
 /**
  * 表单页（新增 / 编辑）：**渲染 + 数据壳**一体，与 `CrudHomePage` 同构。
@@ -410,18 +436,20 @@ const CrudFormPage = defineComponent({
         >
           <Row gutter={[token.value.sizeMD,0]}>
             {fields.value.map((field) => {
-              // 控件本体：注册表实例化（props + 声明级插槽），或 `render` 逃生整块自绘
+              /** 字段上下文：`render` 逃生与**声明级插槽**共用同一份（实体 / 统一加载的来源 / `t` / `extra`） */
+              const fieldCtx: PageFieldRenderContext<DefaultCrudEntity> = {
+                entity: entity.value,
+                t,
+                // 与 `buildFormFields` 的 `renderCtx` 同一份来源：逃生字段自己取桶喂控件，
+                // 不必让宿主/壳再拉一次（同一份桶两处请求 = 不规范）
+                buckets: buckets.value,
+                dictionaries: dictionaries.value,
+                variant: props.variant,
+                extra: props.contextExtra,
+              }
+              // 控件本体：注册表实例化（props + 声明级插槽，插槽参数末尾带 `fieldCtx`），或 `render` 逃生整块自绘
               const control = field.render
-                ? (field.render({
-                    entity: entity.value,
-                    t,
-                    // 与 `buildFormFields` 的 `renderCtx` 同一份来源：逃生字段自己取桶喂控件，
-                    // 不必让宿主/壳再拉一次（同一份桶两处请求 = 不规范）
-                    buckets: buckets.value,
-                    dictionaries: dictionaries.value,
-                    variant: props.variant,
-                    extra: props.contextExtra,
-                  }) as VNodeChild)
+                ? (field.render(fieldCtx) as VNodeChild)
                 : h(
                     field.component as never,
                     {
@@ -432,7 +460,7 @@ const CrudFormPage = defineComponent({
                         writePath(entity.value, field.key, value),
                       ...field.props,
                     },
-                    field.slots,
+                    withFieldCtx(field.slots, fieldCtx),
                   )
               return (
                 // 栅格跨度**整包来自声明**（`field.col`；没写 `col` 时 `buildFormFields` 已补上

@@ -387,6 +387,12 @@ export type PageFormFieldKey<TBody> = keyof TBody & string | `${keyof TBody & st
  * 参数写成 `(...args: never[]) => …` 是**故意的**：宿主在声明里能自己标注真实形状
  * （`({option}: {option: UserSelectOption}) => …` 可赋值给它），既拿回类型提示，
  * 又不必在 pro 里为每个组件的插槽各写一套泛型。
+ *
+ * **参数末尾会多一个字段 ctx**（`PageFieldRenderContext`：实体 / `buckets` / `dictionaries` / `t` /
+ * `extra`，与 `render` 逃生、壳的 `#default` 槽作用域是**同一份**上下文）⇒ 插槽里要读实体（如封面卡
+ * 显示表单里的标题 / 正文）直接多标一个参数：
+ * `(_file: unknown, ctx: PageFieldRenderContext<TBody>) => …`；**只关心控件自己那个参数的写法一字不用改**
+ * （多收一个参数不影响既有标注）。
  */
 export type PageFormFieldSlots = Record<string, (...args: never[]) => VNodeChild>
 
