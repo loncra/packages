@@ -181,7 +181,22 @@ function genFileEditorStyle(token: LoncraStyleToken): CSSInterpolation {
       // `.ant-tabs-tab + .ant-tabs-tab`（0,3,0）都压在只写语义类的这条（0,1,0）上面
       padding: `${token.calc(paddingXS).add(1.5).equal()} ${unit(paddingSM)} !important`,
       // 逻辑属性（RTL 会跟着翻）—— 别写 `marginLeft`
-      marginInlineStart: `${unit(marginXS)} !important`,
+      //marginInlineStart: `${unit(marginXS)} !important`,
+    },
+    /**
+     * 选项卡之间的默认间距清零（antd 在 `.ant-tabs .ant-tabs-tab + .ant-tabs-tab` 上给了
+     * `margin: 0 0 0 var(--ant-tabs-horizontal-item-gutter)`）。
+     *
+     * ⚠️ 两点都不能省（2026-09-30 实测）：
+     * ① **必须写在顶层** —— 写在上面的 `-tab-item` 里会生成
+     *    `.loncra-file-editor-tab-item .ant-tabs .ant-tabs-tab + .ant-tabs-tab`：`-tab-item` 自己
+     *    **就是** `.ant-tabs-tab`，`.ant-tabs` 是它的**祖先** ⇒ 后代选择器永不匹配 ✗；
+     * ② **必须 `!important`** —— 与 antd 那条**同选择器、同特异性**，而本仓样式住在 `@layer antd`
+     *    ⇒ cssinjs 的 `prepend` 被关成 `false` ⇒ `order` 不参与插入排序，打平一律"后注册的赢"
+     *    （antd 组件是子组件、后注册）⇒ 只能 `!important`（依据详见 `basic-crud-query/style/index.ts`）。
+     */
+    [`${antCls}-tabs ${antCls}-tabs-tab + ${antCls}-tabs-tab`]: {
+      margin: '0 !important',
     },
     [`${componentCls}-tab-header`]: {
       paddingInlineEnd: paddingXS,
@@ -261,9 +276,9 @@ function genFileEditorStyle(token: LoncraStyleToken): CSSInterpolation {
 }
 
 /**
- * `order` 传正数：本组件的规则排在 antd 之后注入 ⇒ 同特异性的冲突自然赢（理由见 `icon-select/style/index.ts`）。
- *
- * ⚠️ 本文件留下的三处 `!important` **仍然必要**（顺序救不了）—— 它们要压的 antd 规则**特异性更高**：
- * `-tab-item` 的 padding / marginInlineStart 与 `-tab-header` 的 marginBottom（各自那条注释里有依据）。
+ * ⚠️ 本文件留下的三处 `!important` **必要**：`-tab-item` 的 padding / marginInlineStart 要压的
+ * `.ant-tabs-tab`(0,2,0) / `.ant-tabs-tab + .ant-tabs-tab`(0,3,0) **特异性比本选择器更高**，
+ * `-tab-header` 的 marginBottom 同理 —— 特异性与 `order`（本仓 layer 模式下 order 不参与排序，
+ * 见 `basic-crud-query/style/index.ts` 的说明）都救不了 ⇒ 只能 `!important`。
  */
 export default genStyleHooks('FileEditor', genFileEditorStyle, {order: 1})

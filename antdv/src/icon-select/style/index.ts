@@ -18,8 +18,9 @@ function genIconSelectStyle(token: LoncraStyleToken): CSSInterpolation {
         flex: 1,
       },
       [`&-select`]: {
-        // 与 antd `.ant-space-compact-item` 抢宽度：靠 `order`（见文件末）先占住注入顺序，
-        // 这里的 `!important` 是先前的权宜之计，试过能撤再撤
+        // 与 antd `.ant-space-compact-item` 抢宽度：特异性打平 ⇒ **必须 `!important`** ——
+        // `order` 在本仓救不了（本仓样式住在 `@layer antd` ⇒ cssinjs 的 `prepend` 被关成 `false`
+        // ⇒ `order` 不参与插入排序，打平一律"后注册的赢"，见文件末的说明）
         width: 'auto !important',
       },
       [`&-payload`]: {
@@ -65,13 +66,14 @@ function genIconSelectStyle(token: LoncraStyleToken): CSSInterpolation {
 
 /**
  * ⚠️ `order` 是**样式注入顺序**，不是"优先级开关的档位"：cssinjs 内部是
- * `order: options.order || -999`（`@antdv-next/cssinjs` 的 `genStyleUtils.js:105`）——
- * **`0` 是 falsy** ⇒ 传 `{order: 0}` 与不传完全一样，都落进 `-999` 那个"前置队列"，
- * 而 antd 自己的组件样式（Button / Select / Tabs / Space…）默认也是 `-999` ⇒ **打平**，
- * 打平就看**谁先注册**：我们是在自己的 setup 里注册、比子组件（antd 那些）早 ⇒ 同特异性时
- * **antd 后写的赢** ⇒ 只能靠 `!important` 硬顶（本文件那两处、以及 `instruction-sender` 那四处的由来）。
+ * `order: options.order || -999`（`@antdv-next/cssinjs` 的 `genStyleUtils.js`）——
+ * **`0` 是 falsy** ⇒ 传 `{order: 0}` 与不传完全一样。
  *
- * 传一个**正数**（> -999 即可）⇒ 本组件的规则排在 antd 之后注入 ⇒ 同特异性的冲突自然赢，
- * 不需要 `!important`。以后本仓组件要覆盖 antd 内部类时，都该走这条路。
+ * ⚠️⚠️ **但 2026-09-30 实测：`order` 在本仓救不了与 antd 的同特异性打平** ——
+ * 本仓样式整体住在 `@layer antd`（`genStyleUtils.js` 的 `layer` 配置）⇒ cssinjs 把
+ * `prepend` 从 'queue' 关成 `false`（`useStyleRegister.js`）⇒ `dynamicCSS.js` 的 priority
+ * **只在 queue 模式下参与插入排序** ⇒ 打平一律"后注册的赢"，而 antd 组件是**我们的子组件、
+ * 后注册** ⇒ **永远压过我们**。⇒ 与 antd 同特异性竞争时，**唯一稳定手段是 `!important`**
+ * （如上面 `&-select` 的 width）；`order: 1` 留着无害，但**别把它当保障**。
  */
 export default genStyleHooks('IconSelect', genIconSelectStyle, {order: 1})

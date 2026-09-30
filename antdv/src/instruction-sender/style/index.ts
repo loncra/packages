@@ -20,29 +20,31 @@ function genInstructionSenderStyle(token: LoncraStyleToken): CSSInterpolation {
 
   return {
     /**
-     * ⚠️ 这里原来是靠 `!important` 硬顶 antd 的（`order` 传 `0` = falsy ⇒ 与 antd 同队列 ⇒
-     * 同特异性时 antd 后写赢，来龙去脉见 `@loncra/antdv` 的 `icon-select/style/index.ts` 那段说明）。
-     * 顺序已改成 `{order: 1}`（排在 antd 之后注入）⇒ **同特异性的冲突自然赢，`!important` 全撤**。
+     * ⚠️ 下面这几条 **必须 `!important`**（2026-09-30 恢复）：它们与 antd `Sender` 自己的样式
+     * **同特异性打平**，而本仓样式整体住在 `@layer antd` ⇒ cssinjs 把 `prepend` 从 'queue' 关成
+     * `false` ⇒ **`order` 不参与插入排序**（`useStyleRegister.js` / `dynamicCSS.js`），打平一律
+     * "后注册的赢" ⇒ antd（子组件、后注册）永远压过我们 ⇒ `!important` 是唯一稳定手段
+     * （`order: 1` 不是保障；详见 `basic-crud-query/style/index.ts` 的说明）。
      */
     [componentCls]: {
       [`${componentCls}-footer`]: {
-        padding: unit(paddingXS),
+        padding: `${unit(paddingXS)} !important`,
         borderTop: `${unit(lineWidth)} ${lineType} ${colorBorderSecondary}`,
       },
       [`.antd-sender-input.antd-sender-input-slot`]: {
         [`> .antd-sender-slot:not(.antd-sender-slot-content)`]: {
-          height: 'auto',
+          height: 'auto !important',
           verticalAlign: 'bottom',
-          marginBlock: '0',
+          marginBlock: '0 !important',
         },
         [`&[contenteditable="false"]`]: {
           opacity: 0.5,
-          cursor: 'not-allowed',
+          cursor: 'not-allowed !important',
         },
       },
     },
     [`${componentCls}-footer`]: {
-      padding: unit(paddingXS),
+      padding: `${unit(paddingXS)} !important`,
       borderTop: `${unit(lineWidth)} ${lineType} ${colorBorderSecondary}`,
     },
     [`${componentCls}-panel`]: {

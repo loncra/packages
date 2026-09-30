@@ -32,24 +32,25 @@ function genSystemUserPanelStyle(token: LoncraStyleToken): CSSInterpolation {
       color: colorTextQuaternary,
     },
     /**
-     * 下面这几处原来是靠 `!important` 压 `Conversations` / `Divider` 自己的默认样式 —— 那几个类是挂在
-     * **antd 自己的元素**上的（`class` / `classes.item`），与 antd 的规则**同特异性打平** ⇒ 谁后注入谁赢
-     * （来龙去脉见 `@loncra/antdv` 的 `icon-select/style/index.ts` 那段说明）。顺序已改成 `{order: 1}`
-     * （排在 antd 之后注入）⇒ **同特异性的冲突自然赢，`!important` 全撤**。
+     * ⚠️ 下面这几处 **必须 `!important`**（2026-09-30 恢复）：那些类挂在 **antd 自己的元素**上
+     * （`<Conversations>` 的 `class` / `classes.item` / `<Divider>` 的 `class`），与 antd 的样式
+     * **同特异性打平**；而本仓样式整体住在 `@layer antd` ⇒ cssinjs 把 `prepend` 从 'queue' 关成
+     * `false` ⇒ **`order` 不参与插入排序**，打平一律"后注册的赢" ⇒ antd 永远压过我们 ⇒
+     * `!important` 是唯一稳定手段（依据详见 `basic-crud-query/style/index.ts` 的说明）。
      */
     [`${componentCls}-conversations`]: {
       minHeight: 0,
       width: '100%',
       flex: '1 1 0',
-      padding: '0',
-      gap: '0',
+      padding: '0 !important',
+      gap: '0 !important',
     },
     // 覆盖 Conversations 行默认的高度 / 圆角 / 内边距
     [`${componentCls}-item`]: {
-      height: 'auto',
-      minHeight: 'auto',
-      borderRadius: '0',
-      padding: unit(paddingXS),
+      height: 'auto !important',
+      minHeight: 'auto !important',
+      borderRadius: '0 !important',
+      padding: `${unit(paddingXS)} !important`,
     },
     [`${componentCls}-label`]: {
       flex: 1,
@@ -63,7 +64,7 @@ function genSystemUserPanelStyle(token: LoncraStyleToken): CSSInterpolation {
       width: '70%',
     },
     [`${componentCls}-selected-divider`]: {
-      marginTop: '0',
+      marginTop: '0 !important',
     },
     [`${componentCls}-selected-item`]: {
       width: 50,
@@ -76,5 +77,9 @@ function genSystemUserPanelStyle(token: LoncraStyleToken): CSSInterpolation {
   }
 }
 
-/** `order` 传正数：本组件的规则排在 antd 之后注入 ⇒ 同特异性的冲突自然赢（理由同 `icon-select`） */
+/**
+ * ⚠️ `order: 1` 在本仓**不是样式覆盖的保障**：本仓样式整体住在 `@layer antd` ⇒ cssinjs 的
+ * `prepend` 被关成 `false` ⇒ `order` 不参与插入排序（见 `basic-crud-query/style/index.ts` 的说明）。
+ * 留着无害；与 antd 同特异性竞争时用 `!important` 并写明依据。
+ */
 export default genStyleHooks('SystemUserPanel', genSystemUserPanelStyle, {order: 1})
