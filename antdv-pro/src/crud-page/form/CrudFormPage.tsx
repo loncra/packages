@@ -1,13 +1,13 @@
 import {computed, defineComponent, h, type PropType, ref, type Ref, type SlotsType, type VNodeChild,} from 'vue'
-import {App, Button, Col, Divider, Flex, Form, type FormInstance, FormItem, Row, Space, theme,} from 'antdv-next'
+import {App, Button, Col, Divider, Flex, type FormInstance, FormItem, Row, Space, theme,} from 'antdv-next'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {HistoryOutlined, SaveOutlined, UndoOutlined} from '@antdv-next/icons'
 import {classNames} from '@loncra/antdv'
 import {isBusinessSuccess, type RestResult} from '@loncra/client/commons'
 import type {EnumBucketsResponseBody} from '@loncra/client/resource'
-import {useAntdvConfig} from '../../config-provider/useAntdvConfig'
 import {useCrudConfig} from '../../crud-config-provider'
 import DataLoadingCardPlan from '../../data-loading-card-plan'
+import Form from '../../form'
 import {useStaleCheck} from '../../_util/crud/useStaleCheck'
 import {readPath, writePath} from '../../_util/crud/readPath'
 import type {DefaultCrudEntity} from '../../_util/crud/useCollectionData'
@@ -123,7 +123,6 @@ const CrudFormPage = defineComponent({
   setup(props, {attrs, emit, expose, slots}) {
     type TBody = DefaultCrudEntity
     const config = useCrudConfig()
-    const antdv = useAntdvConfig()
     const locale = useLocale('Crud')
     const {message} = App.useApp()
     const {token} = theme.useToken()
@@ -444,9 +443,9 @@ const CrudFormPage = defineComponent({
         onMounted={load}
         onActivated={checkStale}
       >
+        {/* 表单容器：布局默认跟随 `antdvConfig.state.formLayout`（见 `form/Form.tsx`） */}
         <Form
           ref={formRef}
-          layout={antdv.state.formLayout}
           model={entity.value}
           onFinish={() => doSubmit()}
         >

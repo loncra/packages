@@ -24,6 +24,8 @@ export type {
   ConfigProviderSettingProps,
   ConfigProviderSettingSlots,
 } from './config-provider-setting'
+
+export { default as Form } from './form'
 export type { Locale } from './locale'
 export { useLocale } from './_util/useLocale'
 export type { LocaleComponentName } from './_util/useLocale'

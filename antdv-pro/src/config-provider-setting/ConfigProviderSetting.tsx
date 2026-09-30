@@ -5,7 +5,6 @@ import {
   CollapsePanel,
   ColorPicker,
   Flex,
-  Form,
   FormItem,
   Input,
   InputNumber,
@@ -37,6 +36,7 @@ import {classNames} from '@loncra/antdv'
 import {useLocale} from '../_util/useLocale'
 import {useAntdvConfig} from '../config-provider/useAntdvConfig'
 import type {AntdvThemeMode} from '../config-provider'
+import Form from '../form'
 import type {ConfigProviderSettingProps} from './types'
 import useStyle from './style'
 
@@ -382,7 +382,8 @@ const ConfigProviderSetting = defineComponent({
 
     return () => (
       <>
-        <Form layout={config.state.formLayout}>
+        {/* 布局默认跟随 `config.state.formLayout`（见 `form/Form.tsx`） */}
+        <Form>
           <Row gutter={[Number(token.value.marginMD), Number(token.value.marginMD)]}>
             {props.locales?.length ? (
               <Col xs={24} sm={24} md={12} lg={12} xl={12} xxl={12}>

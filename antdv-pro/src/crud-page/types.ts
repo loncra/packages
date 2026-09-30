@@ -969,7 +969,7 @@ export type CrudFormPageConstructor = new <
  * ⇒ 同一份 `.form.page.ts` 既能给路由 Form 页用、也能给弹层用。所以本类型的两个别名
  * （`CrudFormModalSlots` / `CrudFormModalExpose`）直接等于表单壳那两个。
  *
- * 弹层壳只负责四件事：开关（`v-model:open`）、标题、`:footer="null"` + `maskClosable: false`
+ * 弹层壳只负责四件事：开关（`v-model:open`）、标题、`:footer="null"` + `mask={{closable: false}}`
  * （与旧 `ModalForm` 一致）、关闭时 `emit('cancel')`；**取数 / 提交 / 按钮 / 操作记录块全归表单壳**。
  */
 export interface CrudFormModalProps<

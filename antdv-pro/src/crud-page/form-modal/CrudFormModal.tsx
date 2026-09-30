@@ -18,7 +18,7 @@ import type {
  * `.form.page.ts` 既能给路由 Form 页用、也能给弹层用。取数 / 提交 / 校验 / 按钮 / 操作记录块
  * **全部由表单壳负责**（按钮就是它那一套，只是位置用 `buttonAlign: 'end'` 贴右下）—— 本壳只管四件
  * 弹层的事：① 开关（`v-model:open`）；② 标题；③ **宽度（默认 520，可传 `:width` 覆盖）**；
- * ④ `:footer="null"` + `maskClosable: false`（与旧 `ModalForm` 一致）；⑤ 关闭时 `emit('cancel')`。
+ * ④ `:footer="null"` + `mask={{closable: false}}`（与旧 `ModalForm` 一致）；⑤ 关闭时 `emit('cancel')`。
  *
  * 两处**故意**的写法（都为了等价旧壳的行为，别"顺手优化"）：
  * - **内容 `v-if="open"` 重挂载**（不是常挂 + 复位实体）：每次打开都是全新实例 ⇒ `onMounted` 里
@@ -94,8 +94,11 @@ const CrudFormModal = defineComponent({
         width={props.width}
         // 底部不放按钮：按钮归表单壳那一套（见 `buttonAlign`）
         footer={null}
-        // 与旧 `ModalForm` 一致：点遮罩不关（防误关丢输入）
-        maskClosable={false}
+        // 与旧 `ModalForm` 一致：点遮罩不关（防误关丢输入）。
+        // ⚠️ 用 `mask.closable`，**不要**再用 `maskClosable` —— 它在 antdv-next 已标
+        // `@deprecated Please use 'mask.closable' instead`（`modal/interface.d.ts:165`），
+        // 两者严格等价（`MaskConfig = {enabled?, blur?, closable?}`）。
+        mask={{closable: false}}
         onCancel={onCancel}
         onUpdate:open={(value: boolean) => emit('update:open', value)}
         v-slots={{
