@@ -12,12 +12,12 @@ export class AuditEventService extends DetailSearchRestfulService<AuditEventEnti
   }
 
   constructor() {
-    super(AuditEventService.SERVICE_URL)
+    super(() => AuditEventService.SERVICE_URL)
   }
 
   detail(id: string, after: string): Promise<RestResult<AuditEventEntity>> {
     return http().request({
-      url: this.baseUrl + '/' + id + '?after=' + after,
+      url: this.resolvedBaseUrl + '/' + id + '?after=' + after,
       method: 'GET',
     })
   }

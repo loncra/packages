@@ -27,7 +27,7 @@ export class EnterpriseMemberService extends PageRestfulCrudService<
   }
 
   constructor() {
-    super(EnterpriseMemberService.SERVICE_URL)
+    super(() => EnterpriseMemberService.SERVICE_URL)
   }
 
   audit(ids: number[], auditMetadata: AuditMetadata): Promise<RestResult<void>> {

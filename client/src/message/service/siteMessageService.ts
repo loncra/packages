@@ -43,12 +43,12 @@ export class SiteMessageService extends PageSearchRestfulService<
   }
 
   constructor() {
-    super(SiteMessageService.SERVICE_URL)
+    super(() => SiteMessageService.SERVICE_URL)
   }
 
   delete(ids: number[]): Promise<RestResult<void>> {
     return http().request({
-      url: this.baseUrl,
+      url: this.resolvedBaseUrl,
       method: 'DELETE',
       params: formUrlEncoded({ids}),
     })

@@ -15,6 +15,6 @@ export class OperationDataTraceAuditEventService extends PageSearchRestfulServic
   }
 
   constructor() {
-    super(OperationDataTraceAuditEventService.SERVICE_URL)
+    super(() => OperationDataTraceAuditEventService.SERVICE_URL)
   }
 }

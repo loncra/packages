@@ -15,6 +15,6 @@ export class EnterpriseRoleService extends FindRestfulCrudService<
   }
 
   constructor() {
-    super(EnterpriseRoleService.SERVICE_URL)
+    super(() => EnterpriseRoleService.SERVICE_URL)
   }
 }

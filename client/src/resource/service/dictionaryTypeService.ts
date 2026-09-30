@@ -15,6 +15,6 @@ export class DictionaryTypeService extends FindRestfulCrudService<
   }
 
   constructor() {
-    super(DictionaryTypeService.SERVICE_URL)
+    super(() => DictionaryTypeService.SERVICE_URL)
   }
 }

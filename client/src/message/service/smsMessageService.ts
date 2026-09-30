@@ -22,12 +22,12 @@ export class SmsMessageService extends PageSearchRestfulService<
   }
 
   constructor() {
-    super(SmsMessageService.SERVICE_URL)
+    super(() => SmsMessageService.SERVICE_URL)
   }
 
   delete(ids: number[]): Promise<RestResult<void>> {
     return http().request({
-      url: this.baseUrl,
+      url: this.resolvedBaseUrl,
       method: 'DELETE',
       params: formUrlEncoded({ids}),
     })

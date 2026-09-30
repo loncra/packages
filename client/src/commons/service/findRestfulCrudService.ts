@@ -15,7 +15,7 @@ export class FindRestfulCrudService<
 
   find(request: FilterRequest): Promise<RestResult<TEntity[]>> {
     return http().request({
-      url: this.baseUrl + FindRestfulCrudService.FIND_URL,
+      url: this.resolvedBaseUrl + FindRestfulCrudService.FIND_URL,
       method: 'POST',
       data: formUrlEncoded(request as Record<string, unknown>),
       bodyType: 'form',

@@ -7,6 +7,6 @@ export class MyResourceService extends FindRestfulCrudService<ObjectItemInfo, Ob
   }
 
   constructor() {
-    super(AttachmentService.BASE_URL)
+    super(() => AttachmentService.BASE_URL)
   }
 }

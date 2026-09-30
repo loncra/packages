@@ -12,6 +12,6 @@ export class RoleService extends FindRestfulCrudService<RoleSavePayload, RoleEnt
   }
 
   constructor() {
-    super(RoleService.SERVICE_URL)
+    super(() => RoleService.SERVICE_URL)
   }
 }

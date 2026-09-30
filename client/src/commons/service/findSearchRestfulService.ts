@@ -14,7 +14,7 @@ export class FindSearchRestfulService<
 
   find(request: FilterRequest): Promise<RestResult<TEntity[]>> {
     return http().request({
-      url: this.baseUrl + FindSearchRestfulService.FIND_URL,
+      url: this.resolvedBaseUrl + FindSearchRestfulService.FIND_URL,
       method: 'POST',
       data: formUrlEncoded(request as Record<string, unknown>),
       bodyType: 'form',

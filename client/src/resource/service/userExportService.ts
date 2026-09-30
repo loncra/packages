@@ -10,6 +10,6 @@ export class UserExportService extends FindRestfulCrudService<
   }
 
   constructor() {
-    super(UserExportService.SERVICE_URL)
+    super(() => UserExportService.SERVICE_URL)
   }
 }

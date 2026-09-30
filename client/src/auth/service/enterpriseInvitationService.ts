@@ -20,6 +20,6 @@ export class EnterpriseInvitationService extends PageRestfulCrudService<
   }
 
   constructor() {
-    super(EnterpriseInvitationService.SERVICE_URL)
+    super(() => EnterpriseInvitationService.SERVICE_URL)
   }
 }

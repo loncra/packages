@@ -24,12 +24,12 @@ export class SmsSignService extends PageSearchRestfulService<
   static readonly FIND_URL = '/find'
 
   constructor(channel: string) {
-    super(SmsSignService.SERVICE_URL + '/' + channel)
+    super(() => SmsSignService.SERVICE_URL + '/' + channel)
   }
 
   find(filter: FilterRequest = {}): Promise<RestResult<SmsTemplateEntity[]>> {
     return http().request({
-      url: this.baseUrl + SmsSignService.FIND_URL,
+      url: this.resolvedBaseUrl + SmsSignService.FIND_URL,
       method: 'POST',
       data: formUrlEncoded(filter as Record<string, unknown>),
       bodyType: 'form',

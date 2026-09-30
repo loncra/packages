@@ -13,7 +13,7 @@ export class BasicRestfulCrudService<
 {
   save(entity: TBody): Promise<RestResult<TId>> {
     return http().request({
-      url: this.baseUrl,
+      url: this.resolvedBaseUrl,
       method: 'PUT',
       data: entity,
       bodyType: 'json',
@@ -22,7 +22,7 @@ export class BasicRestfulCrudService<
 
   delete(ids: TId[]): Promise<RestResult<void>> {
     return http().request({
-      url: this.baseUrl,
+      url: this.resolvedBaseUrl,
       method: 'DELETE',
       params: formUrlEncoded({ids}),
     })

@@ -16,7 +16,7 @@ export class PageRestfulCrudService<
 
   page(request: PageRequest): Promise<RestResult<TPage>> {
     return http().request({
-      url: this.baseUrl + PageRestfulCrudService.PAGE_URL,
+      url: this.resolvedBaseUrl + PageRestfulCrudService.PAGE_URL,
       method: 'POST',
       data: formUrlEncoded(request as Record<string, unknown>),
       bodyType: 'form',

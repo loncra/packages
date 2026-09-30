@@ -3,6 +3,6 @@ import {AttachmentService, FindRestfulCrudService} from '../../commons'
 
 export class FileManagerService extends FindRestfulCrudService<ObjectItemInfo, ObjectItemInfo> {
   constructor() {
-    super(AttachmentService.BASE_URL)
+    super(() => AttachmentService.BASE_URL)
   }
 }

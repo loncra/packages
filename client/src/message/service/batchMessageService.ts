@@ -21,12 +21,12 @@ export class BatchMessageService extends PageSearchRestfulService<
   }
 
   constructor() {
-    super(BatchMessageService.SERVICE_URL)
+    super(() => BatchMessageService.SERVICE_URL)
   }
 
   delete(ids: number[]): Promise<RestResult<void>> {
     return http().request({
-      url: this.baseUrl,
+      url: this.resolvedBaseUrl,
       method: 'DELETE',
       params: formUrlEncoded({ids}),
     })

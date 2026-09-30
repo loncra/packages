@@ -31,7 +31,7 @@ export class ModelSettingService extends FindRestfulCrudService<
   }
 
   constructor() {
-    super(ModelSettingService.SERVICE_URL)
+    super(() => ModelSettingService.SERVICE_URL)
   }
 
   find(request: FilterRequest = {}): Promise<RestResult<ModelSettingEntity[]>> {

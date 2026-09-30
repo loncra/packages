@@ -15,7 +15,7 @@ export class PageSearchRestfulService<
 
   page(request: PageRequest): Promise<RestResult<TPage>> {
     return http().request({
-      url: this.baseUrl + PageSearchRestfulService.PAGE_URL,
+      url: this.resolvedBaseUrl + PageSearchRestfulService.PAGE_URL,
       method: 'POST',
       data: formUrlEncoded(request as Record<string, unknown>),
       bodyType: 'form',

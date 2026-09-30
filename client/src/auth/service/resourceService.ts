@@ -28,7 +28,7 @@ export class ResourceService extends FindRestfulCrudService<ResourceSavePayload,
   }
 
   constructor() {
-    super(ResourceService.SERVICE_URL)
+    super(() => ResourceService.SERVICE_URL)
   }
 
   sort(

@@ -15,6 +15,6 @@ export class PersonalUserService extends PageSearchRestfulService<
   }
 
   constructor() {
-    super(PersonalUserService.SERVICE_URL)
+    super(() => PersonalUserService.SERVICE_URL)
   }
 }

@@ -16,6 +16,6 @@ export class ConsoleUserService extends PageRestfulCrudService<
   }
 
   constructor() {
-    super(ConsoleUserService.SERVICE_URL)
+    super(() => ConsoleUserService.SERVICE_URL)
   }
 }

@@ -15,6 +15,6 @@ export class AuthenticationAuditEventService extends PageSearchRestfulService<
   }
 
   constructor() {
-    super(AuthenticationAuditEventService.SERVICE_URL)
+    super(() => AuthenticationAuditEventService.SERVICE_URL)
   }
 }

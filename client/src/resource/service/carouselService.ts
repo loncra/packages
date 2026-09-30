@@ -1,10 +1,10 @@
 import {
-  formUrlEncoded,
-  PageRestfulCrudService,
-  type RestResult,
-  SYSTEM_MODULE_NAME,
-  type TotalPage,
-  type TreeSortMetadata,
+    formUrlEncoded,
+    PageRestfulCrudService,
+    type RestResult,
+    SYSTEM_MODULE_NAME,
+    type TotalPage,
+    type TreeSortMetadata,
 } from '../../commons'
 import {http, modulePrefix} from '../../http'
 import type {CarouselEntity, CarouselSavePayload} from '../domain/carousel.ts'
@@ -35,7 +35,7 @@ export class CarouselService extends PageRestfulCrudService<
   }
 
   constructor() {
-    super(CarouselService.SERVICE_URL)
+    super(() => CarouselService.SERVICE_URL)
   }
 
   sort(sorts: TreeSortMetadata<number>[]): Promise<RestResult<void>> {

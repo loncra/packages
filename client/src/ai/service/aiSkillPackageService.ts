@@ -44,12 +44,12 @@ export class AiSkillPackageService extends PageRestfulCrudService<
   }
 
   constructor() {
-    super(AiSkillPackageService.SERVICE_URL)
+    super(() => AiSkillPackageService.SERVICE_URL)
   }
 
   page(request: PageRequest): Promise<RestResult<TotalPage<SkillPackageEntity>>> {
     return http().request({
-      url: this.baseUrl,
+      url: this.resolvedBaseUrl,
       method: 'POST',
       data: formUrlEncoded(request as Record<string, unknown>),
       bodyType: 'form',

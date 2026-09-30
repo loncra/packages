@@ -1,17 +1,17 @@
 import {
-  formUrlEncoded,
-  type PageRequest,
-  PageRestfulCrudService,
-  type RestResult,
-  SYSTEM_MODULE_NAME,
-  type TotalPage,
+    formUrlEncoded,
+    type PageRequest,
+    PageRestfulCrudService,
+    type RestResult,
+    SYSTEM_MODULE_NAME,
+    type TotalPage,
 } from '../../commons'
 import {http, modulePrefix} from '../../http'
 import type {
-  McpClientTransportMetadata,
-  McpPackageEntity,
-  McpPackageSavePayload,
-  McpToolMetadata,
+    McpClientTransportMetadata,
+    McpPackageEntity,
+    McpPackageSavePayload,
+    McpToolMetadata,
 } from '../domain/mcp.ts'
 
 export class AiMcpPackageService extends PageRestfulCrudService<
@@ -44,12 +44,12 @@ export class AiMcpPackageService extends PageRestfulCrudService<
   }
 
   constructor() {
-    super(AiMcpPackageService.SERVICE_URL)
+    super(() => AiMcpPackageService.SERVICE_URL)
   }
 
   page(request: PageRequest): Promise<RestResult<TotalPage<McpPackageEntity>>> {
     return http().request({
-      url: this.baseUrl,
+      url: this.resolvedBaseUrl,
       method: 'POST',
       data: formUrlEncoded(request as Record<string, unknown>),
       bodyType: 'form',

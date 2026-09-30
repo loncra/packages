@@ -22,12 +22,12 @@ export class EmailMessageService extends PageSearchRestfulService<
   }
 
   constructor() {
-    super(EmailMessageService.SERVICE_URL)
+    super(() => EmailMessageService.SERVICE_URL)
   }
 
   delete(ids: number[]): Promise<RestResult<void>> {
     return http().request({
-      url: this.baseUrl,
+      url: this.resolvedBaseUrl,
       method: 'DELETE',
       params: formUrlEncoded({ids}),
     })

@@ -43,7 +43,7 @@ export class EnterpriseService extends PageRestfulCrudService<
   }
 
   constructor() {
-    super(EnterpriseService.SERVICE_URL)
+    super(() => EnterpriseService.SERVICE_URL)
   }
 
   my(): Promise<RestResult<PersonalEnterprise[]>> {

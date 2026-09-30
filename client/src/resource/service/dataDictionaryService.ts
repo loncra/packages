@@ -1,10 +1,10 @@
 import {
-  PageRestfulCrudService,
-  type RestResult,
-  SYSTEM_CONSTANT,
-  SYSTEM_MODULE_NAME,
-  type TotalPage,
-  type TreeSortMetadata,
+    PageRestfulCrudService,
+    type RestResult,
+    SYSTEM_CONSTANT,
+    SYSTEM_MODULE_NAME,
+    type TotalPage,
+    type TreeSortMetadata,
 } from '../../commons'
 import {http, modulePrefix} from '../../http'
 import type {DataDictionaryEntity, DataDictionarySavePayload} from '../domain/dictionary.ts'
@@ -27,7 +27,7 @@ export class DataDictionaryService extends PageRestfulCrudService<
   }
 
   constructor() {
-    super(DataDictionaryService.SERVICE_URL)
+    super(() => DataDictionaryService.SERVICE_URL)
   }
 
   sort(
