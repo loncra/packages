@@ -33,7 +33,7 @@ const FORM_FIELD_DEFAULT_COL: ColProps = {
 
 /**
  * 建好的表单控件描述：标签 / 组件 / props / 校验规则一次算好，模板保持"笨"
- * （与列表的 `buildListColumns` 同一个思路：声明 → 组件能吃的形状）。
+ * （与列表的 `buildTableColumns` 同一个思路：声明 → 组件能吃的形状）。
  */
 export interface BuiltFormField<TBody> {
   key: PageFormFieldKey<TBody>

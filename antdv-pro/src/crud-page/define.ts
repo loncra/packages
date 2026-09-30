@@ -32,9 +32,9 @@ export function defineHomePage<
   TId = TEntity[typeof SYSTEM_CONSTANT.ID_NAME],
 >(
   core: CrudPageCore<TBody, TEntity, TId>,
-  list: PageTableDefinition<TEntity>,
+  table: PageTableDefinition<TEntity>,
 ): CrudTableDefinition<TBody, TEntity, TId> {
-  return {...core, list}
+  return {...core, table}
 }
 
 /**
@@ -80,7 +80,7 @@ export function defineCardGridPage<
   TId = TEntity[typeof SYSTEM_CONSTANT.ID_NAME],
 >(
   core: CrudPageCore<TBody, TEntity, TId>,
-  list: PageCardGridDefinition<TEntity>,
+  cardGrid: PageCardGridDefinition<TEntity>,
 ): CrudCardGridDefinition<TBody, TEntity, TId> {
-  return {...core, list}
+  return {...core, cardGrid}
 }

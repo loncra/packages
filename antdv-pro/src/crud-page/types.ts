@@ -71,7 +71,7 @@ export interface CrudPageCore<
   staleCheck?: StaleCheckMode
   /**
    * 字段字典：`labelKey` / `format`（本体）与 `enumRef` / `dictId`（来源）的唯一事实来源。
-   * 来源的**加载清单按形态从这里推导**（列表只收"列上有搜索项"的那些，见 `collectListSources`）
+   * 来源的**加载清单按形态从这里推导**（列表只收"列上有搜索项"的那些，见 `collectTableSources`）
    * ⇒ 页面不必再写一份 `enums` / `dictionaryCodes`。
    */
   fields?: PageFieldsDictionary<TEntity>
@@ -132,7 +132,7 @@ export type PageFieldComponent = BuiltinKey<
 
 /**
  * 字段**本体**：叫什么（i18n）+ 值是什么形状 / 怎么显示。三种形态共用。
- * 形态条目里写了就以条目为准（`buildListColumns` 用 `{...fields[key], ...column}` 合并）。
+ * 形态条目里写了就以条目为准（`buildTableColumns` 用 `{...fields[key], ...column}` 合并）。
  */
 export interface PageFieldSpec {
   labelKey?: string
@@ -151,7 +151,7 @@ export interface PageFieldSpec {
  * ① 给搜索下拉 / 表单选择组件喂 options（桶 → 组件 `mapOptions`、字典 → `dictOptions`）；
  * ② 值是裸 code 时按它查名（字典会回查；枚举的裸值格式以后再加，见 `PageValueFormat`）。
  *
- * 加载清单**按形态从字段推导**（列表见 `collectListSources`），页面不必再抄一份 `enums` /
+ * 加载清单**按形态从字段推导**（列表见 `collectTableSources`），页面不必再抄一份 `enums` /
  * `dictionaryCodes`。只有"详情"不吃来源：它的值自带 `{name, value}`，显示不需要桶。
  */
 export interface PageLookupFieldSpec extends PageFieldSpec {
@@ -219,7 +219,7 @@ export interface PageSearchConfig extends Omit<ColumnSearchConfig, 'component' |
 
 /**
  * 表格列：**字段本体与来源**都从字段字典继承（`extends PageLookupFieldSpec`），条目里写了就以条目为准
- * （`buildListColumns` 用 `{...fields[key], ...column}` 合并）。
+ * （`buildTableColumns` 用 `{...fields[key], ...column}` 合并）。
  */
 export interface PageTableColumn<TEntity> extends PageLookupFieldSpec {
   /**
@@ -266,7 +266,7 @@ export interface PageCommonDefinition<TEntity extends BasicIdMetadata<unknown>> 
    * 需要预加载的枚举桶：**按模块分组**（桶 = 模块 + 枚举 id 索引，见 `EnumBucketRequest`）。
    * module 写 `SYSTEM_MODULE_NAME.*`、id 写 `SYSTEM_ENUM_TYPE.*`，别写字符串字面量。
    *
-   * 表格那半能从"带搜索项的列"推（`collectListSources`）；**卡片没有列可推** ⇒ 卡片要用就显式写。
+   * 表格那半能从"带搜索项的列"推（`collectTableSources`）；**卡片没有列可推** ⇒ 卡片要用就显式写。
    */
   enums?: EnumBucketRequest[]
   /**
@@ -311,7 +311,8 @@ export interface CrudTableDefinition<
   TEntity extends TBody = TBody,
   TId = TEntity[typeof SYSTEM_CONSTANT.ID_NAME],
 > extends CrudPageCore<TBody, TEntity, TId> {
-  list: PageTableDefinition<TEntity>
+  /** 表格形态块。key 与类型同名（原名 `list` 太宽 —— 卡片网格也是列表，2026-09-30 改） */
+  table: PageTableDefinition<TEntity>
 }
 
 /**
@@ -354,7 +355,8 @@ export interface CrudCardGridDefinition<
   TEntity extends TBody = TBody,
   TId = TEntity[typeof SYSTEM_CONSTANT.ID_NAME],
 > extends CrudPageCore<TBody, TEntity, TId> {
-  list: PageCardGridDefinition<TEntity>
+  /** 卡片网格形态块。key 与类型同名（原名 `list`，2026-09-30 与表格形态一起改成精确名） */
+  cardGrid: PageCardGridDefinition<TEntity>
 }
 
 // #endregion

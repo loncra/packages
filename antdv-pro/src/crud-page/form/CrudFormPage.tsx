@@ -128,7 +128,7 @@ const CrudFormPage = defineComponent({
     /**
      * 系统字典（枚举桶 + 数据字典）：**form 不走 `BasicCrudQuery`（那是列表的基类）⇒ 由本壳自己拉**。
      * 加载清单从**字段字典 + 表单条目**推导（`collectFormSources`）—— 声明里写 `enumRef` / `dictId`
-     * 就够，页面不必再抄一份 `enums` / `dictionaryCodes`。列表那半是自己的 `collectListSources`
+     * 就够，页面不必再抄一份 `enums` / `dictionaryCodes`。列表那半是自己的 `collectTableSources`
      * （只收"列上有搜索项"的），两边各算各的。
      */
     const buckets = ref<EnumBucketsResponseBody>({})

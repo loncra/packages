@@ -13,7 +13,7 @@ import type {
 } from '../types'
 
 /** 裸 key → 完整列 */
-export function toListColumn<TEntity extends object>(
+export function toTableColumn<TEntity extends object>(
   entry: PageTableEntry<TEntity>,
 ): PageTableColumn<TEntity> {
   return typeof entry === 'string' ? {key: entry} : entry
@@ -36,7 +36,7 @@ function fieldSpecOf<TEntity>(fields: PageFieldsDictionary<TEntity>, key: string
  * 注意：antdv-next 的 Table **没有** `column.customRender`（写了会被静默忽略），
  * 单元格内容由 `#bodyCell` 插槽调 `renderCell()` 产出。
  */
-export function buildListColumns<TEntity extends object>(
+export function buildTableColumns<TEntity extends object>(
   declared: PageTableEntry<TEntity>[],
   fields: PageFieldsDictionary<TEntity>,
   t: (key: string) => string,
@@ -52,7 +52,7 @@ export function buildListColumns<TEntity extends object>(
   const columns: SearchableColumnType<TEntity>[] = []
 
   for (const entry of declared) {
-    const item = toListColumn(entry)
+    const item = toTableColumn(entry)
     if (item.visible && !item.visible(ctx)) {
       continue
     }
@@ -140,7 +140,7 @@ export function renderCell<TEntity extends object>(
   if (!entry) {
     return undefined
   }
-  const item = toListColumn(entry)
+  const item = toTableColumn(entry)
   // 取原始值只信 record：插槽给的 text 可能已经被表格包装过。
   // key 允许写 `a.b.c` 路径（数据不在顶层字段时），顶层字段是退化的单段路径 ⇒ 同一条路。
   const value = readPath(record, item.key)

@@ -20,7 +20,7 @@ import type {
 } from '../types'
 
 /**
- * 卡片网格页渲染器：把 `page.list` 的声明翻成 `CrudCardGrid` 的 props。
+ * 卡片网格页渲染器：把 `page.cardGrid` 的声明翻成 `CrudCardGrid` 的 props。
  *
  * 与 `CrudHomePage` **同一条纪律**（不认路由、不认 i18n、不认弹层；跳转交给 `page.onNavigate` /
  * `CrudConfig.onNavigate`；文案交给 `page.i18nResolver`），差别只有三点：
@@ -68,7 +68,7 @@ const CrudCardGridPage = defineComponent({
 
     const ctx = computed<PageDeclContext>(() => ({variant: props.variant, extra: props.extra}))
 
-    const sources = computed(() => mergeSources({enums: [], dictionaryCodes: []}, props.page.list))
+    const sources = computed(() => mergeSources({enums: [], dictionaryCodes: []}, props.page.cardGrid))
 
     async function loadSources(): Promise<void> {
       const [nextBuckets, nextDictionaries] = await Promise.all([
@@ -82,7 +82,7 @@ const CrudCardGridPage = defineComponent({
     onMounted(() => void loadSources())
 
     const recordActions = computed(() => {
-      const declared = props.page.list?.recordActions
+      const declared = props.page.cardGrid?.recordActions
       return typeof declared === 'function' ? declared(ctx.value) : declared ?? []
     })
 
@@ -126,17 +126,17 @@ const CrudCardGridPage = defineComponent({
           query={props.query}
           plain={props.plain}
           rowKey={props.page.rowKey}
-          authority={props.page.list?.authority}
-          toolbarActions={props.page.list?.toolbarActions}
+          authority={props.page.cardGrid?.authority}
+          toolbarActions={props.page.cardGrid?.toolbarActions}
           recordActions={recordActions.value}
-          drag={props.page.list?.drag}
+          drag={props.page.cardGrid?.drag}
           dataSource={dataSource.value}
           onUpdate:dataSource={(value: TEntity[]) => {
             dataSource.value = value
           }}
           // 拖拽落库归**声明**（`list.onDrop`）：门面只做转发，pro 不替业务落库
           onDrop={(sorts, target, fromIndex, toIndex) =>
-            props.page.list?.onDrop?.({sorts, target, fromIndex, toIndex}, app)
+            props.page.cardGrid?.onDrop?.({sorts, target, fromIndex, toIndex}, app)
           }
           onAdd={() => go('add')}
           onEdit={(record: TEntity) => go('edit', record)}

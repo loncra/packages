@@ -7,8 +7,8 @@ import type {CollectionExpose} from '../../_util/crud/collectionExpose'
 import type {DefaultCrudEntity} from '../../_util/crud/useCollectionData'
 import type {SearchableColumnType} from '../../query-table/types'
 import {usePageRegistry} from '../registry'
-import {buildListColumns, renderCell, toCellVNode} from './columns'
-import {collectListSources, mergeSources} from '../../_util/crud/sources.ts'
+import {buildTableColumns, renderCell, toCellVNode} from './columns'
+import {collectTableSources, mergeSources} from '../../_util/crud/sources.ts'
 import type {PageDictionaries} from '../../basic-crud-query/types'
 import type {
   CrudHomePageConstructor,
@@ -20,7 +20,7 @@ import type {
 } from '../types'
 
 /**
- * 表格页渲染器：把 `page.list` 的声明翻成 `CrudTable` 的 props。
+ * 表格页渲染器：把 `page.table` 的声明翻成 `CrudTable` 的 props。
  *
  * 它只做"声明 → pro 既有 props"的映射：不认路由、不认 i18n、不认弹层。
  * 跳转交给 `page.onNavigate`（页面自己实现）或 `CrudConfig.onNavigate`（app 级兜底），
@@ -68,12 +68,12 @@ const CrudHomePage = defineComponent({
     /**
      * i18n key → 文案。三级兜底，谁都没有才原样返回 key（可见、可调试，不静默变空）：
      * 页面声明的 `i18nResolver` > `CrudConfig.i18nResolver`（app 级默认 i18n）> key 本身。
-     * 列自己写了 `title` 的话，连这里都不走（见 `buildListColumns`）。
+     * 列自己写了 `title` 的话，连这里都不走（见 `buildTableColumns`）。
      */
     const t = (key: string) =>
       props.page.i18nResolver?.(key) ?? config.value.i18nResolver?.(key) ?? key
 
-    const columnDefs = computed<PageTableEntry<TEntity>[]>(() => props.page.list?.columns ?? [])
+    const columnDefs = computed<PageTableEntry<TEntity>[]>(() => props.page.table?.columns ?? [])
 
     /**
      * 要预载的来源（枚举桶 + 数据字典）：**从字段字典 + 列上的搜索项推导**
@@ -81,11 +81,11 @@ const CrudHomePage = defineComponent({
      * 只作逃生口合并进来（如 `enterprise-invitation` 的壳要从 `buckets` 取选项）。
      */
     const sources = computed(() =>
-      mergeSources(collectListSources(columnDefs.value, props.page.fields ?? {}), props.page.list),
+      mergeSources(collectTableSources(columnDefs.value, props.page.fields ?? {}), props.page.table),
     )
 
     const columns = computed(() =>
-      buildListColumns(
+      buildTableColumns(
         columnDefs.value,
         props.page.fields ?? {},
         t,
@@ -98,7 +98,7 @@ const CrudHomePage = defineComponent({
     )
 
     const recordActions = computed(() => {
-      const declared = props.page.list?.recordActions
+      const declared = props.page.table?.recordActions
       return typeof declared === 'function' ? declared(ctx.value) : declared ?? []
     })
 
@@ -167,12 +167,12 @@ const CrudHomePage = defineComponent({
           query={props.query}
           plain={props.plain}
           columns={columns.value}
-          drag={props.page.list?.drag}
-          authority={props.page.list?.authority}
-          toolbarActions={props.page.list?.toolbarActions}
+          drag={props.page.table?.drag}
+          authority={props.page.table?.authority}
+          toolbarActions={props.page.table?.toolbarActions}
           recordActions={recordActions.value}
           rowKey={props.page.rowKey}
-          rowSelection={props.page.list?.rowSelection}
+          rowSelection={props.page.table?.rowSelection}
           enums={sources.value.enums}
           dictionaryCodes={sources.value.dictionaryCodes}
           dataSource={dataSource.value}

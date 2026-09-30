@@ -1,6 +1,6 @@
 import type {EnumBucketRequest, EnumRef} from '../../basic-crud-query/types.ts'
 import type {PageFieldsDictionary, PageFormField, PageLookupFieldSpec, PageTableEntry,} from '../../crud-page/types.ts'
-import {toListColumn} from '../../crud-page/home/columns.ts'
+import {toTableColumn} from '../../crud-page/home/columns.ts'
 
 /** 一个页面要预载的来源（去掉重复、按 module 分组） */
 export interface PageSourceLoads {
@@ -37,17 +37,17 @@ function groupSources(specs: {enumRef?: EnumRef; dictId?: string}[]): PageSource
  * 2. **不多拉** —— 没搜索项的列不喂 options（那个字段的来源可能是**只为表单**写的，
  *    如 `resource.fields.enabled`），所以不算进列表的加载清单。
  */
-export function collectListSources<TEntity extends object>(
+export function collectTableSources<TEntity extends object>(
   columns: PageTableEntry<TEntity>[],
   fields: PageFieldsDictionary<TEntity>,
 ): PageSourceLoads {
   const specs: PageLookupFieldSpec[] = []
   for (const entry of columns) {
-    const item = toListColumn(entry)
+    const item = toTableColumn(entry)
     if (!item.search) {
       continue
     }
-    // 与 `buildListColumns` 同一套合并：条目里写了就以条目为准
+    // 与 `buildTableColumns` 同一套合并：条目里写了就以条目为准
     specs.push({...fields[item.key as keyof TEntity & string], ...item})
   }
   return groupSources(specs)
