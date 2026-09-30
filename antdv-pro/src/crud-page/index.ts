@@ -1,6 +1,7 @@
 export {CrudHomePage} from './home'
 export {CrudCardGridPage} from './card-grid'
 export {CrudFormPage} from './form'
+export {CrudFormModal} from './form-modal'
 export {CrudDetailPage} from './detail'
 export {
   createOperationTracePage,
@@ -27,6 +28,10 @@ export type {
   CrudFormPageExpose,
   CrudFormPageProps,
   CrudFormPageSlots,
+  CrudFormModalConstructor,
+  CrudFormModalExpose,
+  CrudFormModalProps,
+  CrudFormModalSlots,
   CrudHomePageConstructor,
   CrudHomePageExpose,
   CrudHomePageProps,

@@ -188,6 +188,7 @@ export type {CrudCardGridConstructor} from './crud-card-grid'
 export {
   CrudCardGridPage,
   CrudDetailPage,
+  CrudFormModal,
   CrudFormPage,
   CrudHomePage,
   OPERATION_TRACE_VARIANT,
@@ -211,6 +212,10 @@ export type {
   CrudFormPageExpose,
   CrudFormPageProps,
   CrudFormPageSlots,
+  CrudFormModalConstructor,
+  CrudFormModalExpose,
+  CrudFormModalProps,
+  CrudFormModalSlots,
   CrudHomePageConstructor,
   CrudHomePageExpose,
   CrudHomePageProps,

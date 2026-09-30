@@ -38,7 +38,11 @@ const DataLoadingCardPlan = defineComponent({
      * `false` ⇒ 被当成"不要卡片头"，`CrudConfig.resolveDefaultTitle` 永远不执行。
      */
     title: {type: [Object, Boolean] as PropType<VNode | boolean>, default: undefined},
-    /** 内嵌形态：不渲染卡片壳；也不出 `Spin`、不消费 `title` / `#extra`（见 `types.ts` 的说明） */
+    /**
+     * 内嵌形态：不渲染卡片壳；不消费 `title` / `#extra`。
+     * **默认也不出 `Spin`**（嵌表自带 `loading`）—— 显式 `spin: true` 时才出
+     * （弹层表单没有卡片壳、编辑态取数要转圈，2026-09-30 为 `CrudFormModal` 补）。
+     */
     plain: {type: Boolean, default: false},
     /** 内容区是否套 `Spin`（默认 `true`；CRUD 列表传 `false`，内容自带 `loading`） */
     spin: {type: Boolean, default: true},
@@ -96,9 +100,15 @@ const DataLoadingCardPlan = defineComponent({
 
     return () => {
       // 内嵌形态：不套卡片，只留一个裸容器（`attrs` 照旧落上去）——
-      // 标题与工具栏由上层交给内容自己（表格落到 `Table.title`），加载态也归内容。
+      // 标题与工具栏由上层交给内容自己（表格落到 `Table.title`），加载态默认也归内容
+      // （`spin: true` 时才由这里套 `Spin`，见 props 里 `plain` / `spin` 的说明）。
       if (props.plain) {
-        return <div {...(attrs as Record<string, unknown>)}>{slots.default?.()}</div>
+        const content = slots.default?.()
+        return (
+          <div {...(attrs as Record<string, unknown>)}>
+            {props.spin ? <Spin spinning={loading.value}>{content}</Spin> : content}
+          </div>
+        )
       }
 
       const titleSlot =

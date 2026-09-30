@@ -1,5 +1,5 @@
 import {computed, defineComponent, h, type PropType, ref, type Ref, type SlotsType, type VNodeChild,} from 'vue'
-import {App, Button, Col, Divider, Form, type FormInstance, FormItem, Row, Space, theme,} from 'antdv-next'
+import {App, Button, Col, Divider, Flex, Form, type FormInstance, FormItem, Row, Space, theme,} from 'antdv-next'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {HistoryOutlined, SaveOutlined, UndoOutlined} from '@antdv-next/icons'
 import {classNames} from '@loncra/antdv'
@@ -79,7 +79,10 @@ function withFieldCtx(
  * - **陈旧检查**：切回页签（卡片壳的 `onActivated`）时重拉一遍，跟基线比 —— 见 `useStaleCheck`
  *   （默认 `'prompt'`：本地没动就静默覆盖、动过才问；`page.staleCheck` / `CrudConfig.staleCheck` 可调）；
  * - 操作记录：`page.operationDataTraceTarget` + 实体的 `id` / `creationTime` 齐了才渲染（见 `OperationTrace`）；
- * - 插槽：`default`（字段行之后）、`beforeButton` / `afterButton`；事件：`success` / `resetFields` / `stale`。
+ * - 插槽：`default`（字段行之后）、`buttons`（整排按钮交宿主）；事件：`success` / `resetFields` / `stale`；
+ * - 按钮区：**这里一套标准**（「保存 / 重置」，提交走 `htmlType="submit"` ⇒ 过校验），
+ *   位置由 `buttonAlign`（`start` 默认 / `center` / `end`）定 —— 弹层壳（`CrudFormModal`）用 `end`，
+ *   **不为弹层另写一套按钮**。
  *
  * **不出什么**（宿主的事，pro 零新增配置）
  * - 不认路由 / 不认 i18n / 不认宿主布局：`id` 由宿主页壳从路由取出来传进来，文案走 `page.i18nResolver`
@@ -95,6 +98,16 @@ const CrudFormPage = defineComponent({
   props: {
     page: {type: Object as PropType<CrudFormPageProps['page']>, required: true},
     id: {type: [String, Number] as PropType<CrudFormPageProps['id']>, default: undefined},
+    /**
+     * 按钮区对齐（`start` 默认 = 现状 / `center` / `end`）。
+     * 值就是 antd `Flex` 的 `justify` 语义 ⇒ 弹层壳传 `end`（贴右下，与旧 `ModalForm` 的
+     * footer 位置一致）；**弹层不为按钮另写一套**，按钮始终是这里这一套。
+     */
+    buttonAlign: {type: String as PropType<CrudFormPageProps['buttonAlign']>, default: undefined},
+    /** ⚠️ `default: undefined` 不能删（带 `Boolean` 的 props 不传会被转成 `false` ⇒ 卡片头没了） */
+    title: {type: [Object, Boolean] as PropType<CrudFormPageProps['title']>, default: undefined},
+    /** 内嵌形态（弹层）：不要卡片壳；`Spin` 仍保留（见 `CrudFormPageProps.plain` 的说明） */
+    plain: {type: Boolean, default: false},
     contextExtra: {type: Object as PropType<Record<string, unknown>>, default: () => ({})},
     variant: String,
   },
@@ -422,6 +435,9 @@ const CrudFormPage = defineComponent({
     return () => (
       <DataLoadingCardPlan
         {...(attrs as Record<string, unknown>)}
+        // 内嵌形态（弹层）：不要卡片壳 —— `Spin` 不跟着关（表单没有"自带 loading"的内容）
+        plain={props.plain}
+        title={props.title}
         // 表单体转圈要同时覆盖"初始加载"与"提交" ⇒ 自己持 `spinning`，提交时也点亮它
         loading={spinning.value}
         onUpdate:loading={(value: boolean) => (spinning.value = value)}
@@ -511,7 +527,10 @@ const CrudFormPage = defineComponent({
               />
             </div>
           )}
-          <Space>{renderButtons()}</Space>
+          {/* 按钮区：位置由 `buttonAlign` 定（`start` 默认 = 现状；弹层壳传 `end` 贴右下） */}
+          <Flex justify={props.buttonAlign ?? 'start'}>
+            <Space>{renderButtons()}</Space>
+          </Flex>
         </Form>
       </DataLoadingCardPlan>
     )

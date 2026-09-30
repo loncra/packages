@@ -867,6 +867,26 @@ export interface CrudFormPageProps<
   contextExtra?: Record<string, unknown>
   /** 宿主形态名：宿主自己起名（如 `'picker'`）；不传 = 宿主没给形态名（整页） */
   variant?: string
+  /**
+   * 按钮区对齐：`start`（默认 = 现状）/ `center` / `end`。**值就是 antd `Flex` 的 `justify` 语义**。
+   *
+   * 页面形态不传即保持现状（左对齐）；**弹层形态（`CrudFormModal`）传 `end`** —— 旧的
+   * `ModalForm` 把「保存 / 重置」放在 `a-modal` 的 footer（右下角），弹层里没有 footer 栏，
+   * 就靠这个把**同一套按钮**贴到右下 ⇒ 不为弹层另写一套按钮（2026-09-30 用户定的口径）。
+   */
+  buttonAlign?: 'start' | 'center' | 'end'
+  /**
+   * 卡片头标题（透传 `DataLoadingCardPlan.title`）：**`false` = 不渲染卡片头**。
+   * 弹层壳（`CrudFormModal`）传 `false` —— 标题归弹层自己（与 `CrudHomePageProps.title` 同形）。
+   */
+  title?: VNode | boolean
+  /**
+   * **内嵌形态**（透传 `DataLoadingCardPlan.plain`）：不要卡片壳（弹层里不该再套一张卡）。
+   *
+   * 与列表那份的差别：列表内嵌时**连 `Spin` 一起关**（`BasicCrudQuery` 传 `spin: false` —— 表格
+   * 自带 `loading`），表单没有"自带 loading"的内容 ⇒ 这里**保留 `Spin`**（取数 / 提交仍要转圈）。
+   */
+  plain?: boolean
 }
 
 /**
@@ -941,6 +961,58 @@ export type CrudFormPageConstructor = new <
   $props: CrudFormPageProps<TId, TBody, TEntity> & PublicProps
   $slots: CrudFormPageSlots<TBody>
 } & CrudFormPageExpose<TBody>
+
+/**
+ * 弹层表单壳（`CrudFormModal`）的 props = **表单壳的全套** + 弹层的两样。
+ *
+ * ⚠️ **这里没有"新形态"**：弹层吃的就是 `CrudFormDefinition`（`defineFormPage` 的产物）
+ * ⇒ 同一份 `.form.page.ts` 既能给路由 Form 页用、也能给弹层用。所以本类型的两个别名
+ * （`CrudFormModalSlots` / `CrudFormModalExpose`）直接等于表单壳那两个。
+ *
+ * 弹层壳只负责四件事：开关（`v-model:open`）、标题、`:footer="null"` + `maskClosable: false`
+ * （与旧 `ModalForm` 一致）、关闭时 `emit('cancel')`；**取数 / 提交 / 按钮 / 操作记录块全归表单壳**。
+ */
+export interface CrudFormModalProps<
+  TId = string | number,
+  TBody extends BasicIdMetadata<TId> = BasicIdMetadata<TId>,
+  TEntity extends TBody = TBody,
+> extends Omit<CrudFormPageProps<TId, TBody, TEntity>, 'title'> {
+  /**
+   * 开关（`v-model:open`）。**弹层控件常挂、内容 `v-if` 重挂载**：每次打开都是全新的表单实例
+   * ⇒ `onMounted` 里 `load()` 自然重跑、实体从 `createEntity()` 重新来（等价旧壳
+   * `watch(open) → mounted()`）⇒ 关掉再开不会有上一次的脏数据，**宿主不必复位实体**。
+   */
+  open?: boolean
+  /**
+   * 弹层标题（同 `a-modal`；`false` / 不给 = **连标题栏一起不出**）。标题是宿主的策略，pro 不拼。
+   *
+   * ⚠️ 比 `CrudFormPageProps.title` 宽：收 `VNodeChild` —— 弹层标题常是 i18n 出来的**字符串**
+   * （旧 `ModalForm` 的 `:title` 就是字符串），所以这里 `Omit` 掉表单壳那个再声明一次。
+   */
+  title?: VNodeChild
+  /**
+   * 弹层宽度（透传 `a-modal` 的 `width`）。**默认 520**（= antd 自己的默认值，写在这儿是为了
+   * "弹层壳有一份自己的口径"，宿主不用去记 antd 的默认）；要改就传 `:width`（数字 = px）。
+   */
+  width?: string | number
+}
+
+/** 槽与表单壳**同一套**（`default` / `buttons` 原样转发给内层表单壳） */
+export type CrudFormModalSlots<TBody extends object> = CrudFormPageSlots<TBody>
+
+/** expose 与表单壳**同一套**（转发内层表单壳的 `entity` / `buckets` / `dictionaries` / `resetFields`） */
+export type CrudFormModalExpose<TBody> = CrudFormPageExpose<TBody>
+
+export type CrudFormModalConstructor = new <
+  TId = string | number,
+  TBody extends BasicIdMetadata<TId> = BasicIdMetadata<TId>,
+  TEntity extends TBody = TBody,
+>(
+  props: CrudFormModalProps<TId, TBody, TEntity> & PublicProps,
+) => {
+  $props: CrudFormModalProps<TId, TBody, TEntity> & PublicProps
+  $slots: CrudFormModalSlots<TBody>
+} & CrudFormModalExpose<TBody>
 
 export interface CrudDetailPageProps<
   TId = string | number,
