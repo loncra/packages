@@ -160,7 +160,7 @@ const FileEditor = defineComponent({
                   </Flex>
                   <SpaceCompact size="small">
                     <Tooltip title={locale.value.refresh}>
-                      <Button size="small" onClick={onRefresh}>
+                      <Button size="small" onClick={onRefresh} loading={state.value.loading}>
                         {{icon: () => h(ReloadOutlined)}}
                       </Button>
                     </Tooltip>

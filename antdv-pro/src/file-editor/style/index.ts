@@ -1,10 +1,11 @@
 import type {CSSInterpolation} from '@antdv-next/cssinjs'
-import {unit} from '@antdv-next/cssinjs'
+import {Keyframes, unit} from '@antdv-next/cssinjs'
 import {genStyleHooks, type LoncraStyleToken} from '@loncra/antdv'
 
 function genFileEditorStyle(token: LoncraStyleToken): CSSInterpolation {
   const {
     componentCls,
+    prefixCls,
     colorBorderSecondary,
     colorBgContainer,
     colorBgLayout,
@@ -19,6 +20,25 @@ function genFileEditorStyle(token: LoncraStyleToken): CSSInterpolation {
     antCls,
     motionDurationMid,
   } = token
+
+  /**
+   * 树节点「加载中」图标的旋转动画。
+   *
+   * ⚠️ **必须用 `Keyframes` 类，不能写成普通对象的 `'@keyframes xxx'`**（2026-09-30 读 cssinjs 源码确认）：
+   * `parseStyle` 只把带 `_keyframe` 的 `Keyframes` **实例**交给 `parseKeyframes`
+   * （`@antdv-next/cssinjs` 的 `useStyleRegister.js:45-54`）⇒ `to` / `from` 保持原样；
+   * 而普通对象那条路会给**子选择器注入 hashId**（同文件 `:74-76` 的 `injectSelectorHash`）⇒
+   * 生成 `to:where(.css-xxx)` —— **不是合法的 keyframe 选择器** ⇒ 关键帧被浏览器整段丢掉、
+   * **动画静默失效**（不报错，只是不转）。这与有没有 tailwindcss 无关（产物是纯 CSS）。
+   *
+   * 名字用 `token.prefixCls`（**不带点的那个前缀**）—— antd 自己的 `carousel/style` 就是
+   * `new Keyframes(\`${token.prefixCls}-dot-animation\`, …)` ⇒ 照抄这个口径：跟随 `getPrefixCls`
+   * （ConfigProvider / `prefixCls` prop 换前缀时名字跟着变），也不再硬编码 `loncra-file-editor`。
+   * 放在**函数内**同样是跟 antd 一致：模块级拿不到 token（那时 `prefixCls` 还不存在）。
+   */
+  const spinKeyframes = new Keyframes(`${prefixCls}-spin`, {
+    to: {transform: 'rotate(360deg)'},
+  })
 
   return {
     [componentCls]: {
@@ -180,8 +200,6 @@ function genFileEditorStyle(token: LoncraStyleToken): CSSInterpolation {
       // 下面两个 `!important` 是**必要**的：antd 的 `.ant-tabs-tab`（0,2,0）与
       // `.ant-tabs-tab + .ant-tabs-tab`（0,3,0）都压在只写语义类的这条（0,1,0）上面
       padding: `${token.calc(paddingXS).add(1.5).equal()} ${unit(paddingSM)} !important`,
-      // 逻辑属性（RTL 会跟着翻）—— 别写 `marginLeft`
-      //marginInlineStart: `${unit(marginXS)} !important`,
     },
     /**
      * 选项卡之间的默认间距清零（antd 在 `.ant-tabs .ant-tabs-tab + .ant-tabs-tab` 上给了
@@ -230,15 +248,11 @@ function genFileEditorStyle(token: LoncraStyleToken): CSSInterpolation {
     },
     [`${componentCls}-icon-spin`]: {
       marginBottom: 3,
-      animationName: 'loncra-file-editor-spin',
+      // 给 `Keyframes` **实例**（不是字符串）：cssinjs 会换成 `getName(hashId)`（带 hashId，不撞车）
+      animationName: spinKeyframes,
       animationDuration: token.motionDurationSlow,
       animationTimingFunction: 'linear',
       animationIterationCount: 'infinite',
-    },
-    '@keyframes loncra-file-editor-spin': {
-      to: {
-        transform: 'rotate(360deg)',
-      },
     },
     [`${componentCls}-pane`]: {
       width: '100%',
