@@ -24,12 +24,20 @@ export type {
   MarkdownTheme,
 } from './markdown'
 
-// ── 气泡容器内核（2026-10-01 S2a 从宿主迁入）
-//    宿主暂时从这里 import；S2a-4 把 `BubbleList` 组件也搬进来后，这些可以收成"内部件"（仅包内用）
-//    ⚠️ **不含默认外观**（`DEFAULT_BUBBLE_LIST_ROLE` 是宿主的 Tailwind 定制 ⇒ 留宿主 `@/constants`）
+// ── 气泡容器（2026-10-01 S2a 从宿主迁入：内核 → 组件）
+//    ⚠️ **不含默认外观**（`DEFAULT_BUBBLE_LIST_ROLE` 是宿主的 Tailwind 定制 ⇒ 留宿主 `@/constants`）；
+//    容器自己的结构/默认样式在 `bubble-list/style`（token 化），宿主可用语义 `classNames`/`styles` 覆盖。
 export { useBubbleList } from './_util/useBubbleList'
 export type { BubbleListApi } from './_util/useBubbleList'
-export type { BubbleListCallbacks, BubbleListProps } from './bubble-list/types'
+export { BubbleList } from './bubble-list'
+export type { BubbleListInstance } from './bubble-list'
+export type {
+  BubbleListCallbacks,
+  BubbleListExpose,
+  BubbleListProps,
+  BubbleListSemanticName,
+  BubbleListSemanticProps,
+} from './bubble-list'
 
 // ── 草稿（本机持久化：Dexie 库 + 仓库 + 槽转换；2026-10-01 S2a-B 从宿主迁入）
 //    ⚠️ 契约在 `@loncra/chat-core`（`DraftRecordBase` / `DraftCodec` / `Persistable*`）；
@@ -48,6 +56,10 @@ export {
   slotConfigToPersistable,
 } from './_util/draft'
 export type { RestoreDraftSlotFactories, RestoreInstructionBlock } from './_util/draft'
+
+// ── 发送器外壳件（2026-10-01 S2a-4 从宿主迁入）
+export { SenderSlotBubbleContent } from './sender-shell'
+export type { SlotBubbleBlock } from './sender-shell'
 
 export { default as zhCN } from './locale/zh_CN'
 export { default as enUS } from './locale/en_US'

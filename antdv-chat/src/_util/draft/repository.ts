@@ -27,8 +27,13 @@ export class DraftBlobTooLargeError extends Error {
   }
 }
 
-/** IM 记录带的额外载荷（引用条）；Agent 无此字段 ⇒ 结构探测，不引域类型。 */
-type MaybeImExtras = {refMessages?: unknown[]}
+/**
+ * IM 记录带的额外载荷（引用条）。
+ * ⚠️ 用**结构类型 + scope 判**（不引域类型）：共享层不认识 `ImDraftRecord`，
+ * 所以按 `record.scope === 'im'` 判完再取 —— 与宿主原实现（`isImRecord(record) && record.refMessages.length > 0`）
+ * **同一个判法**，不要在这里再加 `Array.isArray` 之类的多余防御。
+ */
+type ImExtras = {refMessages?: unknown[]}
 
 function collectFileUids(slots: PersistableSlot[]): string[] {
   const uids: string[] = []
@@ -55,8 +60,9 @@ function isEmptyDraft(record: DraftRecordBase): boolean {
       return false
     }
   }
-  const refMessages = (record as MaybeImExtras).refMessages
-  return !(Array.isArray(refMessages) && refMessages.length > 0)
+  // IM 记录**必带** `refMessages`（由 `ImDraftRecord` 保证）⇒ 这里的 `!` 只作用在**类型层**，
+  // 运行期与宿主原实现（`isImRecord(record) && record.refMessages.length > 0`）同一个判法。
+  return !(record.scope === 'im' && (record as ImExtras).refMessages!.length > 0)
 }
 
 function assertBlobSizes(blobs: Map<string, File>): void {

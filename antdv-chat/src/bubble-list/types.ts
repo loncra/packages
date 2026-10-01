@@ -1,5 +1,58 @@
+import type {CSSProperties} from 'vue'
 import type {BubbleItemType} from '@antdv-next/x/dist/bubble/interface'
 import type {ChatBubbleItem} from '@loncra/chat-core'
+
+/**
+ * 本容器**自己渲染**的语义节点（`x` 的 `ListSemanticType` 管它内部；这里管"壳"）。
+ *
+ * 用途：宿主按语义**覆盖或扩展**默认样式（包只出默认，不封死）。
+ * 默认样式见 `./style/index.ts`；某个语义没覆盖就用包的默认。
+ *
+ * - `root`：外壳（Flex，承载 hashId）—— 结构：撑满 / 相对定位 / overflow hidden
+ * - `list`：`ax-bubble-list` 根（结构：flex + 高度）
+ * - `scroll`：滚动区（默认左右 `paddingXS`）—— 会传给 x 的 `classes.scroll`
+ * - `scrollToBottom`：回到底部的容器（绝对定位 + 居中 + 弹跳）
+ * - `scrollToBottomButton`：该按钮（默认 `boxShadowCard`）
+ */
+export type BubbleListSemanticName =
+  | 'root'
+  | 'list'
+  | 'scroll'
+  | 'scrollToBottom'
+  | 'scrollToBottomButton'
+
+/** 语义覆盖：`classNames` 加类（叠加在默认类之后 ⇒ 你写的优先）；`styles` 加内联样式（同优先级靠后者胜）。 */
+export interface BubbleListSemanticProps {
+  classNames?: Partial<Record<BubbleListSemanticName, string>>
+  styles?: Partial<Record<BubbleListSemanticName, CSSProperties>>
+}
+
+/**
+ * 容器对宿主暴露的实例 API。
+ *
+ * ⚠️ 宿主 `ref` **用这个类型**，不要 `InstanceType<typeof BubbleList>`：
+ * `setup()` + `expose()` 的自动推导在 vue-tsc 里不稳（实测 `TS2339`：暴露的方法不在实例类型上）。
+ */
+export interface BubbleListExpose {
+  getScrollBox(): HTMLElement | undefined
+  getVisibleItems(
+    scrollBox: HTMLElement,
+    filter?: (item: ChatBubbleItem) => boolean | undefined,
+  ): ChatBubbleItem[]
+  jumpToMessage(
+    key: string,
+    flashPending?: boolean,
+    block?: ScrollLogicalPosition,
+    behavior?: ScrollBehavior,
+  ): void
+  jumpToBottom(type?: 'reloadLastPage' | 'bottom'): void
+  scrollTo(options: {
+    key?: string | number
+    top?: number | 'bottom' | 'top'
+    behavior?: ScrollBehavior
+    block?: ScrollLogicalPosition
+  }): void
+}
 
 /**
  * 气泡容器的滚动/分页参数（原宿主 `types/composables/chat.ts:116-122`）。
