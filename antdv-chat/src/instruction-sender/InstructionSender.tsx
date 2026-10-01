@@ -11,7 +11,7 @@ import {
 } from 'vue'
 import {Flex, Popover, Space} from 'antdv-next'
 import {Sender} from '@antdv-next/x'
-import type {ActionsComponents, SenderRef, SlotConfigType} from '@antdv-next/x/dist/sender/interface'
+import type {ActionsComponents, SenderRef, SemanticType, SlotConfigType} from '@antdv-next/x/dist/sender/interface'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {classNames} from '@loncra/antdv'
 import type {InstructionItem, InstructionMeasure, InstructionSenderHandle} from './types'
@@ -49,12 +49,12 @@ export interface InstructionSenderProps {
   ) => void
   /** 选中后造一个「指令芯片」塞进 slotConfig：形状 / 渲染 / metadata 全归宿主 */
   createInstructionSlot: (option: InstructionItem, measure: InstructionMeasure) => object
-  inputClass?: string
   prefixCls?: string
   class?: unknown
   rootClass?: string
   style?: unknown
-  classNames?: Record<string, string>
+  /** 语义化类名：键用官方 `Sender` 的 `SemanticType`（`root` / `prefix` / `input` / `suffix` / `footer` / `switch` / `content`） */
+  classes?: Partial<Record<SemanticType, string>>
   styles?: Record<string, unknown>
 }
 
@@ -127,13 +127,9 @@ const InstructionSender = defineComponent({
       type: Function as PropType<InstructionSenderProps['createInstructionSlot']>,
       required: true,
     },
-    inputClass: {
-      type: String,
-      default: 'chat-sender-input',
-    },
     prefixCls: String,
     rootClass: String,
-    classNames: Object as PropType<Record<string, string>>,
+    classes: Object as PropType<Partial<Record<SemanticType, string>>>,
     styles: Object as PropType<Record<string, unknown>>,
   },
   emits: ['submit', 'cancel', 'change', 'pasteFile'],
@@ -216,25 +212,22 @@ const InstructionSender = defineComponent({
             class={classNames(hashedClass, props.rootClass, attrClass)}
             style={attrStyle as never}
             /**
-             * ⚠️ 传给 `@antdv-next/x` 的 `Sender` 时**必须用 `classes`**：x **1.2.5 起**把 `classNames` 标为
-             * `@deprecated Use \`classes\` instead`（`dist/sender/interface.d.ts` 里两者并存，`classes` 是新增的正名）。
-             * 注意别与我们组件**自己的**公开 prop 混：本组件的 prop 仍叫 `classNames`（= 下面 `props.classNames`，宿主入参），
-             * 语义化键名（`input` / `footer` …）两版一致，只是属性改名。
+             * 语义化类名一律走官方正名 **`classes`**（`@antdv-next/x` 1.2.5 起 `classNames` 已 `@deprecated`）。
+             * 本组件的同名 prop `classes` 就是这套键（官方 `SemanticType`）⇒ 宿主传什么，并上我们的样式作用域类后原样透传。
              */
             classes={{
-              ...props.classNames,
+              ...props.classes,
               input: classNames(
                 hashId.value,
                 cssVarCls.value,
                 `${prefixCls.value}-input`,
-                props.inputClass,
-                props.classNames?.input,
+                props.classes?.input,
               ),
               footer: classNames(
                 hashId.value,
                 cssVarCls.value,
                 `${prefixCls.value}-footer`,
-                props.classNames?.footer,
+                props.classes?.footer,
               ),
             }}
             styles={props.styles as never}
