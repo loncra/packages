@@ -29,6 +29,17 @@ export type {
 //    容器自己的结构/默认样式在 `bubble-list/style`（token 化），宿主可用语义 `classNames`/`styles` 覆盖。
 export { useBubbleList } from './_util/useBubbleList'
 export type { BubbleListApi } from './_util/useBubbleList'
+
+// ── 消息列表的分页/锚点/合入（2026-10-01 S2b-1 从宿主两个 loader 抽出）
+//    ⚠️ 抽的是"骨架"，**两域差异走 `ChatMessageListAdapter` 回调**（含 2 处疑似 Agent 侧 bug，
+//    原样保留、未归一）—— 详见该文件头部与各成员注释。
+export { useChatMessageList } from './_util/useChatMessageList'
+export type {
+  ChatMessageListAdapter,
+  ChatMessageListApi,
+  ChatMessagePageLoad,
+  ChatMessagePageTag,
+} from './_util/useChatMessageList'
 export { BubbleList } from './bubble-list'
 export type { BubbleListInstance } from './bubble-list'
 export type {

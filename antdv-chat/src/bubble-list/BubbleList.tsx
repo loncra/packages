@@ -6,6 +6,7 @@ import type {RoleType} from '@antdv-next/x/dist/bubble/interface'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {classNames} from '@loncra/antdv'
 import type {ActiveChatSession, ChatBubbleItem} from '@loncra/chat-core'
+import {toBubbleContent} from '@loncra/chat-core'
 import {useBubbleList} from '../_util/useBubbleList'
 import type {
   BubbleListCallbacks,
@@ -79,14 +80,21 @@ export const BubbleList = defineComponent({
       onVisibleItems: props.collectVisible
         ? (items, scrollBox) => emit('visibleItems', items, scrollBox)
         : undefined,
+      /**
+       * 默认渲染：**从 `data` 现算内容**（2026-10-01 S2b-2 落地 A1）。
+       *
+       * 存储条目里**没有 `content`**（唯一真相是 `data`）⇒ 这里用 `toBubbleContent` 派生并展开
+       * （system 消息一片业务体可以派生出多条渲染项）。宿主给了 `renderItem` 就完全交给宿主
+       * （如 IM 要插时间分隔条）。
+       */
       renderItem: (items) =>
         props.renderItem
           ? props.renderItem(items)
-          : // ⚠️ **A1 过渡期**：规范的条目已删 `content`，但宿主条目**运行时仍带**（宿主 item 是"规范 + content"）。
-            // A1 的 `toBubbleContent(data, role)`（S2b）落地后，这里改成从 `data` 派生 ⇒ 这行 cast 一并删掉。
-            ([...items.filter((item) => !item.hide)] as unknown as ReturnType<
-              BubbleListCallbacks['renderItem']
-            >),
+          : items
+              .filter((item) => !item.hide)
+              .flatMap((item) =>
+                toBubbleContent(item).map((entry) => ({...item, ...entry})),
+              ),
     }
 
     const {

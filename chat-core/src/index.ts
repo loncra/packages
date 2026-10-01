@@ -14,6 +14,10 @@ export type {ChatBlockBase, CustomChatBlock, TextBlock} from './block'
 
 export type {ChatBubbleItem, ChatMessageBase} from './message'
 
+// A1（2026-10-01 S2b-2）：`content` 移出条目、渲染时现算。`toBubbleContent` 是**唯一**的派生口。
+export type {ChatBubbleContentEntry} from './bubble'
+export {addBubbleListMessage, toBubbleContent} from './bubble'
+
 export type {
   ActiveChatSession,
   ChatConversationBase,
