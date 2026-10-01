@@ -8,8 +8,9 @@
 | [`antdv`](./antdv)（`@loncra/antdv`） | 扩展 antdv-next：TSX 控件 + ConfigProvider locale，不调后端 |
 | [`antdv-pro`](./antdv-pro)（`@loncra/antdv-pro`） | 调 `@loncra/client` 的通用 antdv 控件，依赖 client + antdv |
 | [`antdv-chat`](./antdv-chat)（`@loncra/antdv-chat`） | 聊天 / AI 专用件与内核（IM 与 Agent 共用），依赖 antdv；**允许**依赖 `@loncra/client` 的类型 |
+| [`chat-core`](./chat-core)（`@loncra/chat-core`） | **聊天规范**（形状 + 纯判定 + 纯变换）：无 Vue / 无 x / 无 pinia / 无宿主，只许 `import type` `@loncra/client` |
 
-管理端：`"@loncra/client": "file:../packages/client"`、`"@loncra/antdv": "file:../packages/antdv"`、`"@loncra/antdv-pro": "file:../packages/antdv-pro"`、`"@loncra/antdv-chat": "file:../packages/antdv-chat"`。
+管理端：`"@loncra/client": "file:../packages/client"`、`"@loncra/antdv": "file:../packages/antdv"`、`"@loncra/antdv-pro": "file:../packages/antdv-pro"`、`"@loncra/antdv-chat": "file:../packages/antdv-chat"`、`"@loncra/chat-core": "file:../packages/chat-core"`。
 
 > **`vue` 版本必须与管理端一致（当前 `3.5.42`，钉死不用 `^`）**。两边是**各自独立的安装**（本目录 `node_modules` + 管理端 `node_modules`），
 > 管理端 `vue-tsc` 会把包源码一起编译 ⇒ 两处 vue 版本不同就会出现"两份 d.ts"：`VNode` / `Component` 判不等，
@@ -46,6 +47,25 @@
 当前内容（`packages/antdv` 迁入）：`EmojiButton`、`InstructionSender`（+ `useInstructionSender`）、`Markdown` / `MarkdownCodeRenderer`。
 
 **后续按归属分区**（设计稿 `docs/plans/2026-09-30-antdv-chat-design.md`；实施计划 `docs/plans/2026-10-01-antdv-chat-step1-move-kit.md`）：`core/`（IM 与 Agent 真共性：块协议、气泡容器、分页、草稿层）+ `im/`（只 IM 用，含已读上报）+ `agent/`（只 Agent 用，含流式）；AI 管理端页面 `views/ai-server/**` 与 hub 插件市场、通话、路由、store 留宿主。
+
+## `@loncra/chat-core`
+
+**聊天规范**（不是实现），**2026-10-01 建包**（设计稿 `docs/plans/2026-09-30-antdv-chat-design.md` v2.1、草案 `docs/plans/2026-10-01-antdv-chat-core-types.md`）。
+
+定位：**这个接口是一套规范，`@loncra/antdv-chat` 是实现这套规范的标准**。依赖方向**单向**：`antdv-chat` → `chat-core`；宿主 → 两者（宿主按规范实现 adapter）。
+
+**硬纪律（破一条就该合并回去）**：本包**永不许**出现 `vue` / `@antdv-next/x` / `antdv-next` / pinia / vue-router / vue-i18n / `@/`（宿主）/ `import.meta.env`；只许 **`import type`** `@loncra/client`（零运行期依赖；`AttachmentService` / `getClient` / `SYSTEM_CONSTANT` / `getEnumValue` 这类**值**一律不进 —— 需要枚举判定就**自写纯判定**）。
+校验：`node .codebuddy/check-chat-core-discipline.cjs`。
+
+| 路径 | 内容 |
+|---|---|
+| `@loncra/chat-core` | 形状类型 + `ChatRole`/`CHAT_ROLE`（唯一入口） |
+
+当前内容（T1，**只新增、无人消费**）：`role.ts`（`ChatRole` + `CHAT_ROLE`）、`block.ts`（块信封）、`message.ts`（`ChatMessageBase` / `ChatBubbleItem`）、`conversation.ts`（`ActiveChatSession` / `ChatConversationBase` / `ChatViewControllerBase`）、`draft.ts`（草稿契约）。
+
+**待落（S2）**：`paging.ts`（分页纯函数）、`slot.ts`（`isInstructionSlot`）、`bubble.ts`（`addBubbleListMessage` + `toBubbleContent` —— 从 `data` 派生渲染内容）、`adapter.ts`（`ImChatAdapter` / `AgentChatAdapter` 接口类型）。
+
+**关键约定**（详见草案）：`data` 是**唯一可写真相**（`ChatBubbleItem.content` **不是字段**，渲染时由 `toBubbleContent` 现算）；列表里那份会话实体是**唯一真相**，`active` 只持 `conversationKey`；字段归谁看"**谁读它**"。
 
 ## `@loncra/antdv-pro`
 

@@ -5,6 +5,7 @@
     "client",
     "antdv",
     "antdv-pro",
-    "antdv-chat"
+    "antdv-chat",
+    "chat-core"
   ]
 }
