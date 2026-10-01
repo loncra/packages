@@ -27,6 +27,7 @@ export type {
   PersistableSlot,
   PersistableUploadFile,
 } from './draft'
+export {draftBlobId, draftRecordId} from './draft'
 
 export type {InstructionSlotProps} from './slot'
 export {isInstructionSlot} from './slot'

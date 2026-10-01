@@ -31,6 +31,24 @@ export { useBubbleList } from './_util/useBubbleList'
 export type { BubbleListApi } from './_util/useBubbleList'
 export type { BubbleListCallbacks, BubbleListProps } from './bubble-list/types'
 
+// ── 草稿（本机持久化：Dexie 库 + 仓库 + 槽转换；2026-10-01 S2a-B 从宿主迁入）
+//    ⚠️ 契约在 `@loncra/chat-core`（`DraftRecordBase` / `DraftCodec` / `Persistable*`）；
+//    **域记录与 codec 仍住宿主**（S3/S4 随域迁入）⇒ 本层只认基座，`getDraft<TR>()` 由调用方给出记录类型。
+export { DraftDatabase, draftDatabase } from './_util/draft'
+export {
+  DraftBlobTooLargeError,
+  clearDraft,
+  clearPrincipal,
+  getDraft,
+  putDraft,
+} from './_util/draft'
+export {
+  collectBlobsFromSlotConfig,
+  persistableToSlotConfig,
+  slotConfigToPersistable,
+} from './_util/draft'
+export type { RestoreDraftSlotFactories, RestoreInstructionBlock } from './_util/draft'
+
 export { default as zhCN } from './locale/zh_CN'
 export { default as enUS } from './locale/en_US'
 export type { Locale } from './locale'

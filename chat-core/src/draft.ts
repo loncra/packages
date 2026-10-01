@@ -68,3 +68,16 @@ export interface DraftCodec<TLive, TRecord extends DraftRecordBase> {
   collectBlobs(live: TLive): Map<string, File>
   fromRecord(record: TRecord, blobs: Map<string, File>): TLive
 }
+
+/** 记录主键 —— `principal + ':' + targetId`（纯函数；同一浏览器多账号互不覆盖）。 */
+export function draftRecordId(principal: string, targetId: string): string {
+  return `${principal}:${targetId}`
+}
+
+/**
+ * Blob 主键 —— `principal + ':' + fileUid`。
+ * ⚠️ 与 `draftRecordId` 同源（都带 principal）：`id` 不能反解出 `targetId`（principal 可能含 `:`，如邮箱）。
+ */
+export function draftBlobId(principal: string, fileUid: string): string {
+  return `${principal}:${fileUid}`
+}
