@@ -148,6 +148,6 @@ export class AuthServerService {
     if (!details) {
       return ''
     }
-    return String(details.realName || details.nickname || details.username || defaultValue)
+    return String(details.realName || details.nickname || details.username || defaultValue).toUpperCase()
   }
 }

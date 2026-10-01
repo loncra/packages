@@ -215,7 +215,13 @@ const InstructionSender = defineComponent({
             readOnly={sending || props.disabled}
             class={classNames(hashedClass, props.rootClass, attrClass)}
             style={attrStyle as never}
-            classNames={{
+            /**
+             * ⚠️ 传给 `@antdv-next/x` 的 `Sender` 时**必须用 `classes`**：x **1.2.5 起**把 `classNames` 标为
+             * `@deprecated Use \`classes\` instead`（`dist/sender/interface.d.ts` 里两者并存，`classes` 是新增的正名）。
+             * 注意别与我们组件**自己的**公开 prop 混：本组件的 prop 仍叫 `classNames`（= 下面 `props.classNames`，宿主入参），
+             * 语义化键名（`input` / `footer` …）两版一致，只是属性改名。
+             */
+            classes={{
               ...props.classNames,
               input: classNames(
                 hashId.value,
