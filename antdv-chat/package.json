@@ -8,6 +8,7 @@
     "./locale/en_US": "./src/locale/en_US.ts"
   },
   "dependencies": {
+    "lodash-es": "^4.17.21",
     "unicode-emoji-json": "^0.9.0"
   },
   "peerDependencies": {
@@ -19,6 +20,7 @@
     "vue": "^3.5.0"
   },
   "devDependencies": {
+    "@types/lodash-es": "^4.17.12",
     "@antdv-next/icons": "^1.1.2",
     "@antdv-next/x": "^1.2.5",
     "@antdv-next/x-markdown": "^0.2.0",

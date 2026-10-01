@@ -20,7 +20,7 @@ export interface ChatConversationBase extends VersionEntityMetadata {
  * 容器一个都不读** ⇒ 不进这里。域要实体就**持有引用**（IM：`item` → `item.data` 才是实体），
  * **不要 `{...conversation}` 展开副本**（Agent 现状是展开，会要求"手动同步三处"）。
  */
-export interface ActiveChatSession {
+export interface ActiveChatSession<I extends ChatBubbleItem = ChatBubbleItem> {
   /**
    * 当前会话身份（**中性表达**；共享 loader 用它判断"是不是同一个会话"、写回旧草稿）。
    *
@@ -36,7 +36,11 @@ export interface ActiveChatSession {
   loading: boolean
   isOnFirstPage?: boolean
   isOnLastPage?: boolean
-  dataSource: PageResult<ChatBubbleItem>
+  /**
+   * 消息列表。泛型 `I` 让**实现层**能把条目收窄成自己的形状（宿主 item 在 A1 之前还多一个 `content`）
+   * —— 默认 `ChatBubbleItem` ⇒ 不传参数时行为与从前一致（T3 的宿主用法不变）。
+   */
+  dataSource: PageResult<I>
 }
 
 /**

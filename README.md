@@ -46,7 +46,9 @@
 
 当前内容（`packages/antdv` 迁入）：`EmojiButton`、`InstructionSender`（+ `useInstructionSender`）、`Markdown` / `MarkdownCodeRenderer`。
 
-**后续按归属分区**（设计稿 `docs/plans/2026-09-30-antdv-chat-design.md`；实施计划 `docs/plans/2026-10-01-antdv-chat-step1-move-kit.md`）：`core/`（IM 与 Agent 真共性：块协议、气泡容器、分页、草稿层）+ `im/`（只 IM 用，含已读上报）+ `agent/`（只 Agent 用，含流式）；AI 管理端页面 `views/ai-server/**` 与 hub 插件市场、通话、路由、store 留宿主。
+⚠️ **不写宿主的 Tailwind 类**（2026-10-01 踩过）：本包不带 Tailwind；默认外观必须由宿主给（如气泡列表的 `DEFAULT_BUBBLE_LIST_ROLE` 现在住宿主 `vue-basic-admin/src/constants/chatConstant.ts`，包内**不提供默认 role**）。纪律脚本第 ③ 条会拦。
+
+**后续按归属分区**（设计稿 `docs/plans/2026-09-30-antdv-chat-design.md`；实施计划 `docs/plans/2026-10-01-antdv-chat-s2-plan.md`）：规范在 `@loncra/chat-core`（形状 + 纯算法）；本包 `_util/`（跨域共享实现件）+ `bubble-list/` `sender-shell/`（共享组件）+ `im/`（只 IM 用，含已读上报）+ `agent/`（只 Agent 用，含流式）；AI 管理端页面 `views/ai-server/**` 与 hub 插件市场、通话、路由、store 留宿主。
 
 ## `@loncra/chat-core`
 
@@ -55,7 +57,7 @@
 定位：**这个接口是一套规范，`@loncra/antdv-chat` 是实现这套规范的标准**。依赖方向**单向**：`antdv-chat` → `chat-core`；宿主 → 两者（宿主按规范实现 adapter）。
 
 **硬纪律（破一条就该合并回去）**：本包**永不许**出现 `vue` / `@antdv-next/x` / `antdv-next` / pinia / vue-router / vue-i18n / `@/`（宿主）/ `import.meta.env`；只许 **`import type`** `@loncra/client`（零运行期依赖；`AttachmentService` / `getClient` / `SYSTEM_CONSTANT` / `getEnumValue` 这类**值**一律不进 —— 需要枚举判定就**自写纯判定**）。
-校验：`node .codebuddy/check-chat-core-discipline.cjs`。
+校验：`node .codebuddy/check-package-discipline.cjs`（① chat-core 禁框架依赖 ② chat-core 只许 `import type` `@loncra/client` ③ **任何包内不许出现宿主的 Tailwind 类**）。
 
 | 路径 | 内容 |
 |---|---|

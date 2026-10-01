@@ -27,3 +27,9 @@ export type {
   PersistableSlot,
   PersistableUploadFile,
 } from './draft'
+
+export type {InstructionSlotProps} from './slot'
+export {isInstructionSlot} from './slot'
+
+export type {ScrollMetrics} from './paging'
+export {isNearNewest, isNearOldest, shouldShowScrollToBottom} from './paging'
