@@ -1,6 +1,6 @@
 import type {CSSInterpolation} from '@antdv-next/cssinjs'
-import type {LoncraStyleToken} from '../../_util/genStyle'
-import {genStyleHooks} from '../../_util/genStyle'
+import type {LoncraStyleToken} from '@loncra/antdv'
+import {genStyleHooks} from '@loncra/antdv'
 
 function genEmojiButtonStyle(token: LoncraStyleToken): CSSInterpolation {
   const {componentCls, controlHeightLG, fontSizeXL, paddingXS, calc} = token

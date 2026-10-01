@@ -2,8 +2,8 @@
 import {computed, defineComponent, nextTick, ref, watch} from 'vue'
 import {type StreamingOption, XMarkdown, type XMarkdownProps} from '@antdv-next/x-markdown'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
-import {classNames} from '../_util/classNames'
-import {useIsDark} from '../_util/useIsDark'
+import {classNames} from '@loncra/antdv'
+import {useIsDark} from '@loncra/antdv'
 import useStyle from './style'
 
 import '@antdv-next/x-markdown/themes/index.css'

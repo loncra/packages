@@ -13,15 +13,6 @@ export interface IconSelectLocale {
   searchPlaceholder: string
 }
 
-export interface EmojiButtonLocale {
-  smileys_emotion: string
-  animals_nature: string
-  food_drink: string
-  travel_places: string
-  activities: string
-  objects: string
-}
-
 export interface KeyValueTableLocale {
   name: string
   value: string
@@ -33,6 +24,5 @@ export interface Locale {
   TooltipValidationFormItem?: TooltipValidationFormItemLocale
   QrCodeModal?: QrCodeModalLocale
   IconSelect?: IconSelectLocale
-  EmojiButton?: EmojiButtonLocale
   KeyValueTable?: KeyValueTableLocale
 }

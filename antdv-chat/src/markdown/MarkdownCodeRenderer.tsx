@@ -1,6 +1,6 @@
 import {computed, defineComponent, isVNode, Text, type VNode} from 'vue'
 import {CodeHighlighter, Mermaid} from '@antdv-next/x'
-import {useIsDark} from '../_util/useIsDark'
+import {useIsDark} from '@loncra/antdv'
 
 export interface MarkdownCodeRendererProps {
   class?: unknown

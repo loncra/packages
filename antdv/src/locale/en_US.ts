@@ -12,14 +12,6 @@ const locale: Locale = {
     icon: 'Icon',
     searchPlaceholder: 'Type an icon name to search',
   },
-  EmojiButton: {
-    smileys_emotion: 'Smileys & Emotion',
-    animals_nature: 'Animals & Nature',
-    food_drink: 'Food & Drink',
-    travel_places: 'Travel & Places',
-    activities: 'Activities',
-    objects: 'Objects',
-  },
   KeyValueTable: {
     name: 'Name',
     value: 'Value',

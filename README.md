@@ -7,8 +7,9 @@
 | [`client`](./client)（`@loncra/client`） | 后端 TypeScript HTTP 契约与 Service，不依赖 Vue / axios / `import.meta.env` |
 | [`antdv`](./antdv)（`@loncra/antdv`） | 扩展 antdv-next：TSX 控件 + ConfigProvider locale，不调后端 |
 | [`antdv-pro`](./antdv-pro)（`@loncra/antdv-pro`） | 调 `@loncra/client` 的通用 antdv 控件，依赖 client + antdv |
+| [`antdv-chat`](./antdv-chat)（`@loncra/antdv-chat`） | 聊天 / AI 专用件与内核（IM 与 Agent 共用），依赖 antdv；**允许**依赖 `@loncra/client` 的类型 |
 
-管理端：`"@loncra/client": "file:../packages/client"`、`"@loncra/antdv": "file:../packages/antdv"`、`"@loncra/antdv-pro": "file:../packages/antdv-pro"`。
+管理端：`"@loncra/client": "file:../packages/client"`、`"@loncra/antdv": "file:../packages/antdv"`、`"@loncra/antdv-pro": "file:../packages/antdv-pro"`、`"@loncra/antdv-chat": "file:../packages/antdv-chat"`。
 
 > **`vue` 版本必须与管理端一致（当前 `3.5.42`，钉死不用 `^`）**。两边是**各自独立的安装**（本目录 `node_modules` + 管理端 `node_modules`），
 > 管理端 `vue-tsc` 会把包源码一起编译 ⇒ 两处 vue 版本不同就会出现"两份 d.ts"：`VNode` / `Component` 判不等，
@@ -25,16 +26,30 @@
 | `@loncra/antdv/locale/zh_CN` | 简体中文，与 `antdv-next/locale` 合并后交给 `ConfigProvider` |
 | `@loncra/antdv/locale/en_US` | 英文 |
 
-当前控件：`TooltipValidationFormItem`、`QrCodeModal`、`BasicImage`、`IconSelect`、`EmojiButton`、`Markdown` / `MarkdownCodeRenderer`、`KeyValueTable`、`Editor`（`antdv-next-tiptap`）、`InstructionSender`。要对 API 的上传 / IM / Agent 进以后的业务包，不进本包。调 client 的通用控件进 `@loncra/antdv-pro`。
+当前控件：`TooltipValidationFormItem`、`QrCodeModal`、`BasicImage`、`IconSelect`、`KeyValueTable`、`Editor`（`antdv-next-tiptap`）。要对 API 的上传 / IM / Agent 进业务包（已定：`@loncra/antdv-chat`），不进本包。调 client 的通用控件进 `@loncra/antdv-pro`。
 
 **图标渲染归宿主**：包内**不解析宿主的全局 `IconFont`，也不渲染宿主的图标字体**（`_util/iconFont.ts` 已删）。
 需要画图标的地方一律由宿主注入：`IconSelect` 的 `iconRender` 属性、`KeyValueTable` 的 `#title` 插槽、
-`FileEditor` 的 `getIcon`（返回 VNode）、`InstructionSender` 的 `createInstructionSlot` 等。
+`FileEditor` 的 `getIcon`（返回 VNode）、`@loncra/antdv-chat` 的 `InstructionSender` 的 `createInstructionSlot` 等。
 包内自带外观只用官方 `@antdv-next/icons`。
+
+## `@loncra/antdv-chat`
+
+聊天 / AI 专用件与内核（IM 与 Agent 共用），**2026-10-01 建包**。peer：`vue`、`antdv-next`、`@antdv-next/icons`、`@antdv-next/x`、`@antdv-next/x-markdown`、`@loncra/antdv`。基础件（`classNames` / `genStyleHooks` / `useIsDark` / `createUseLocale`）**复用 `@loncra/antdv`，不复制**；只有 `locale` 与 `Locale` 类型是本包自己的。禁止 Pinia、vue-router、vue-i18n、管理端 `@/apis`、`import.meta.env`、业务名词；允许依赖 `@loncra/client` 的类型与枚举（消息/会话形状在那里）。
+
+| 路径 | 内容 |
+|---|---|
+| `@loncra/antdv-chat` | 控件 + `useLocale` |
+| `@loncra/antdv-chat/locale/zh_CN` | 简体中文，与 antdv-next / antdv / antdv-pro locale 合并后交给 `ConfigProvider` |
+| `@loncra/antdv-chat/locale/en_US` | 英文 |
+
+当前内容（`packages/antdv` 迁入）：`EmojiButton`、`InstructionSender`（+ `useInstructionSender`）、`Markdown` / `MarkdownCodeRenderer`。
+
+**后续按归属分区**（设计稿 `docs/plans/2026-09-30-antdv-chat-design.md`；实施计划 `docs/plans/2026-10-01-antdv-chat-step1-move-kit.md`）：`core/`（IM 与 Agent 真共性：块协议、气泡容器、分页、草稿层）+ `im/`（只 IM 用，含已读上报）+ `agent/`（只 Agent 用，含流式）；AI 管理端页面 `views/ai-server/**` 与 hub 插件市场、通话、路由、store 留宿主。
 
 ## `@loncra/antdv-pro`
 
-对标 `@loncra/antdv` 的 TSX 写法，直接调 `@loncra/client` Service。宿主（管理端）负责 `createClient()`。peer：`vue`、`antdv-next`、`@loncra/antdv`、`@loncra/client`；相对时间再 peer `dayjs`；上传分片再 peer `p-limit`；FileEditor 文本 pane 再 peer `@codemirror/*`；SystemUserPanel 列表再 peer `@antdv-next/x`。禁止 axios、`createClient`、Pinia、vue-i18n、路由、管理端 `@/apis`。CRUD 第二批。IM / Agent 以后另包。
+对标 `@loncra/antdv` 的 TSX 写法，直接调 `@loncra/client` Service。宿主（管理端）负责 `createClient()`。peer：`vue`、`antdv-next`、`@loncra/antdv`、`@loncra/client`；相对时间再 peer `dayjs`；上传分片再 peer `p-limit`；FileEditor 文本 pane 再 peer `@codemirror/*`；SystemUserPanel 列表再 peer `@antdv-next/x`。禁止 axios、`createClient`、Pinia、vue-i18n、路由、管理端 `@/apis`。CRUD 第二批。IM / Agent 已另包（`@loncra/antdv-chat`）。
 
 | 路径 | 内容 |
 |---|---|

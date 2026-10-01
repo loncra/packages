@@ -4,7 +4,7 @@ import {SmileOutlined} from '@antdv-next/icons'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import emojiGroups from 'unicode-emoji-json/data-by-group.json'
 import type {EmojiButtonLocale} from '../locale'
-import {classNames} from '../_util/classNames'
+import {classNames} from '@loncra/antdv'
 import {useLocale} from '../_util/useLocale'
 import useStyle from './style'
 

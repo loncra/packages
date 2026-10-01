@@ -1,5 +1,5 @@
 {
-  "name": "@loncra/antdv",
+  "name": "@loncra/antdv-chat",
   "version": "0.0.1",
   "type": "module",
   "exports": {
@@ -7,16 +7,22 @@
     "./locale/zh_CN": "./src/locale/zh_CN.ts",
     "./locale/en_US": "./src/locale/en_US.ts"
   },
+  "dependencies": {
+    "unicode-emoji-json": "^0.9.0"
+  },
   "peerDependencies": {
     "@antdv-next/icons": "^1.1.0",
+    "@antdv-next/x": "^1.2.0",
+    "@antdv-next/x-markdown": "^0.2.0",
+    "@loncra/antdv": ">=0.0.1",
     "antdv-next": "^1.5.0",
-    "antdv-next-tiptap": "^1.0.5",
     "vue": "^3.5.0"
   },
   "devDependencies": {
     "@antdv-next/icons": "^1.1.2",
+    "@antdv-next/x": "^1.2.5",
+    "@antdv-next/x-markdown": "^0.2.0",
     "antdv-next": "^1.5.6",
-    "antdv-next-tiptap": "^1.0.5",
     "vue": "3.5.43"
   }
 }

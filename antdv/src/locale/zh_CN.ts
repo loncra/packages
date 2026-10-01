@@ -12,14 +12,6 @@ const locale: Locale = {
     icon: '图标',
     searchPlaceholder: '请输入图标名称进行搜索',
   },
-  EmojiButton: {
-    smileys_emotion: '笑脸与情感',
-    animals_nature: '动物与自然',
-    food_drink: '食物与饮品',
-    travel_places: '旅行与地点',
-    activities: '活动',
-    objects: '物品',
-  },
   KeyValueTable: {
     name: '名称',
     value: '值',
