@@ -19,11 +19,11 @@ import useStyle from './style'
 /**
  * `l-im` —— IM 模块入口（宿主只跟它打交道，三条通道：props / slots / emits）。
  *
- * 迁自宿主 `views/common/my/MyChatMessage.vue`（页面壳那部分）：两栏布局 + 左栏（会话列表 / 联系人 +
- * 切换条）+ 右栏（消息区），以及"挂载时拉会话、按 `activeKey` 激活"。
+ * 迁自宿主 `views/common/my/MyChatMessage.vue`（页面壳那部分）：`Splitter` 两栏 + 左栏（会话列表 /
+ * 联系人 + 切换条）+ 右栏（消息区），以及"挂载时拉会话、按 `activeKey` 激活"。
  *
- * **本片（3-B）范围**：壳 + 左栏（真的会话列表 / 联系人）；**右栏先占位**。
- * 下一片（3-C）接右栏：气泡列表（复用包内 `bubble-list` + `useBubbleList`）+ 发送器。
+ * **范围**：3-B（壳 + 左栏）✓；3-C（右栏：气泡列表 + 发送器 + 引用/撤回菜单）✓。
+ * 右栏里**还没做**的逐条列在 `components/chat-view/ChatView.tsx` 的文件头台账。
  *
  * ⚠️ 宿主在页面里**不再需要** `refreshActiveHeader` 那套同步（模块里"实体是唯一真相"，
  * 头部/左侧都是派生态）—— 宿主改成听 `@message` 的 `conversation.activated` 自己刷它的页面标题。

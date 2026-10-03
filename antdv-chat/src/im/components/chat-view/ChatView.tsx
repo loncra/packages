@@ -1,19 +1,34 @@
 import {computed, defineComponent, onUnmounted, type PropType, ref, type VNodeChild, watch} from 'vue'
-import {Empty, Flex, Tag, Typography} from 'antdv-next'
+import {Dropdown, Empty, Flex, Space, Tooltip, Typography} from 'antdv-next'
 import type {RoleType} from '@antdv-next/x/dist/bubble/interface'
 import type {SlotConfigType} from '@antdv-next/x/dist/sender/interface'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {classNames} from '@loncra/antdv'
 import {AttachmentUpload} from '@loncra/antdv-pro'
 import {isEnumValue} from '@loncra/client/commons'
-import type {UserChatMessageResponseBody} from '@loncra/client/message'
-import {MESSAGE_SERVER_USER_CHAT_CONVERSATION_STATUS} from '@loncra/client/message'
-import type {ChatBubbleItem, ChatViewControllerBase} from '@loncra/chat-core'
+import {AuthServerService} from '@loncra/client/auth'
+import type {UserChatMessageResponseBody, UserChatParticipantEntity} from '@loncra/client/message'
+import {
+  CHAT_EVERYONE_ID,
+  MESSAGE_SERVER_USER_CHAT_CONVERSATION_STATUS,
+} from '@loncra/client/message'
+import {
+  CHAT_ROLE,
+  isInstructionSlot,
+  type ChatBubbleItem,
+  type ChatViewControllerBase,
+} from '@loncra/chat-core'
 import {BubbleList, type BubbleListExpose} from '../../../bubble-list'
 import {type RestoreInstructionBlock} from '../../../_util/draft'
+import {SLOT_PLACEHOLDER} from '../../../_util/draft/slots'
 import {useLocale} from '../../../_util/useLocale'
 import EmojiButton from '../../../emoji-button'
-import InstructionSender, {type InstructionSenderExpose} from '../../../instruction-sender'
+import InstructionSender, {
+  type InstructionItem,
+  type InstructionMeasure,
+  type InstructionSenderExpose,
+  type InstructionSenderHandle,
+} from '../../../instruction-sender'
 import {SenderSlotBubbleContent} from '../../../sender-shell'
 import {MessageReference} from '../reference/MessageReference'
 import {useImBubbleList} from '../../useImBubbleList'
@@ -21,7 +36,9 @@ import {useImChat} from '../../useImChatContext'
 import type {ImConversationsApi} from '../../useImConversations'
 import {type ImDraftSenderExpose, useImDraft} from '../../useImDraft'
 import type {ImMessageListApi} from '../../useImMessageList'
-import {useImSender} from '../../useImSender'
+import {renderInstructionChip} from '../../instructionChip'
+import {focusAfterSlot, useImSender} from '../../useImSender'
+import {useImBubbleMenu} from './useImBubbleMenu'
 import useStyle from './style'
 
 /**
@@ -35,16 +52,32 @@ import useStyle from './style'
  *   "模块不碰 `PlatformUser`" ⇒ 宿主不给插槽就**不出**头像/表头（模块不猜名字）；
  * - `#bubbleListAfter` 透传给宿主（"跳到最早未读"按钮的外观在宿主、能力在模块 expose）。
  *
- * ⚠️ **台账（本片未做，逐条有去处）**：
- * 1. **`@` 提名**（`instructionMap` + `filterInstruction` + 候选行渲染 + 选"所有人"时清个人提名）
- *    ⇒ 下一片；现在传空 map（打了 `@` 不出候选）；
- * 2. **`/` 指令**（同上，宿主今天也只有 `@`）；
- * 3. **气泡右键菜单**（引用 / 撤回 + 倒计时）与"撤回后重编辑"入口 ⇒ 下一片（`useImSender`
- *    的 `convertContentBlockToSlotConfig` + `useImDraft.schedulePersist` 已就位，差菜单本身）；
+ * ⚠️ **台账（未做，逐条有去处）**：
+ * 1. ~~`@` 提名~~ ⇒ **2026-10-03 已接**（`instructionMap` + `onFilterDataSource` +
+ *    `onSenderInsertInstruction` + `stripIndividualMentions` / `removeTrailingTrigger`，
+ *    逐行对应宿主 `ChatView.vue:56-64 / 107-202`）；
+ * 2. **`/` 指令**：⚠️ **宿主今天只有 `@`**（`instructionMap` 只给了 `'@'` 一个键）⇒
+ *    按"移植期不加自造物"的规矩，**先不做**，要不要做等你定（设计稿里有 `/`）；
+ * 3. ~~气泡右键菜单（引用 / 撤回 + 倒计时）与"撤回后重编辑"~~ ⇒ **2026-10-03 已接**（3-C3：
+ *    `useImBubbleMenu` + 本文件 `Dropdown` 包裹 + 撤回块里的"重新编辑" → `useImSender.reedit`）；
  * 4. **`extra` 插槽**（私聊"已读眼睛" / 群聊已读表）⇒ 依赖宿主 icon-font 与 `ChatMessageReadTable`；
  * 5. **`call` / `reference` 块中的 `call`** ⇒ Step 4（通话）；`reference` 块已接（本片）；
  * 6. **跳转闪烁高亮**（宿主 `rootClass: 'bg-flash'`）⇒ 待确认 x 的渲染项类型是否吃 `rootClass`。
  */
+/**
+ * 指令芯片后面**必须跟一个"末尾仍是文本"的尾巴**（和文件芯片用 `SLOT_PLACEHOLDER` 是同一件事）。
+ *
+ * 机制：`prosemirror-view` 的 `addTextblockHacks` 判定"文本块最后一个子节点**不是文本节点**"就补
+ * 一个 `<br class="ProseMirror-trailingBreak">` ⇒ **光标被顶到下一行**。芯片是行内原子 ⇒ 必须有它。
+ *
+ * ⚠️ 尾巴**只放零宽空格，不带普通空格**：插完芯片会把光标放回**芯片之后、尾巴之前**
+ * （见 `focusAfterSlot`）⇒ 用户接着打字是插在**尾巴前面**的 ⇒ 尾巴会留在消息末尾 ⇒
+ * 若这里带普通空格，就会把那个空格**发给后端**（零宽空格在落盘 / `submit` 时会被摘掉，不留脏数据）。
+ *
+ * ⚠️ 与宿主 `ChatView.vue:167/172` 的差异：宿主只插了 `{type:'text', value:' '}`（普通空格）。
+ */
+const INSTRUCTION_TAIL = SLOT_PLACEHOLDER
+
 /**
  * 两个槽"内容等价"吗 —— 只比会影响编辑器 DOM 的部分：文本比 `value`，附件/指令比 `key`
  * （key 变了就说明换了个芯片）。用途见 `draftSlots`：**别把内容没变的数组变成新身份**
@@ -163,6 +196,13 @@ export const ChatView = defineComponent({
       draft,
       senderRef,
       refMessages,
+      /**
+       * 发送成功后**强制**把 `slot-config` 换成新数组（身份变化 ⇒ x 重建空文档）——
+       * 这是"一定能清空"的那一路；`clear()` 那条受 x 的锁影响，只当补充。
+       */
+      onSent: () => {
+        draftSlots.value = []
+      },
     })
     draftSenderRef.value = {
       createFilesSlot: sender.createFilesSlot,
@@ -223,6 +263,163 @@ export const ChatView = defineComponent({
     )
 
     /**
+     * 气泡右键菜单（引用 / 撤回 + 倒计时）。逻辑在 hook 里，这里只把"引用条状态 + 样式类"给它。
+     */
+    const bubbleMenu = useImBubbleMenu({
+      runtime,
+      refMessages,
+      countdownClass: subClass('menu-countdown'),
+    })
+
+    /**
+     * `@` 候选数据（**逐行对应宿主 `ChatView.vue:56-64**）：房间成员（**排除自己**）
+     * + 末尾那条"所有人"。
+     *
+     * ⚠️ 与宿主的差异（唯一一处）：宿主用 `principalStore.isCurrentPrincipal(d.principal)`，
+     * 模块用 `port.getPrincipal()`（模块不碰宿主 store，见契约）。
+     * `CHAT_EVERYONE_ID` **不在模块里另定义** —— client 已经导出（`@loncra/client/message`，
+     * 宿主 `@/constants` 就是 re-export 它）。
+     */
+    const instructionMap = computed(() => ({
+      '@': [
+        ...(session.value.participants ?? [])
+          .filter((participant) => participant.principal !== port.getPrincipal())
+          .map((participant) => ({
+            id: participant.principal,
+            value: AuthServerService.getPrincipalNameByUserDetails(participant.metadata?.details),
+            metadata: participant as unknown as Record<string, unknown>,
+          })),
+        {id: CHAT_EVERYONE_ID, value: locale.value.everyone},
+      ],
+    }))
+
+    /** 选"所有人"时：去掉所有单人 `@` 芯片，保留文本/附件等（宿主 `ChatView.vue:107-116` 逐行对应） */
+    function stripIndividualMentions(slots: SlotConfigType[]): SlotConfigType[] {
+      return slots.filter((slot) => !isInstructionSlot(slot))
+    }
+
+    /**
+     * 抹掉末尾那个触发词（如 `@张`）；抹成空就整块删掉（宿主 `ChatView.vue:118-142` 逐行对应）。
+     * 只从**最后一个 text 槽**往前找一次。
+     */
+    function removeTrailingTrigger(slots: SlotConfigType[], trigger: string): SlotConfigType[] {
+      if (!trigger) {
+        return slots
+      }
+      const result = slots.map((slot) => ({...slot}))
+      for (let i = result.length - 1; i >= 0; i--) {
+        const slot = result[i] as unknown as {type?: string; value?: unknown}
+        if (slot?.type !== 'text' || typeof slot.value !== 'string') {
+          continue
+        }
+        if (!slot.value.endsWith(trigger)) {
+          break
+        }
+        const next = slot.value.slice(0, -trigger.length)
+        if (next === '') {
+          result.splice(i, 1)
+        } else {
+          result[i] = {...slot, value: next} as unknown as SlotConfigType
+        }
+        break
+      }
+      return result
+    }
+
+    /**
+     * 选中候选后怎么插（宿主 `ChatView.vue:144-173` 逐行对应）。
+     * "所有人"那条特殊：先摘掉已有单人提名、抹掉触发词、清空编辑器，再**一次性**写
+     * `[所有人, ' ', ...其余]` 到行首（不传 `replaceCharacters`）；其余候选是普通插入。
+     */
+    function onSenderInsertInstruction(
+      handle: InstructionSenderHandle,
+      block: object,
+      measure: InstructionMeasure,
+    ): void {
+      const slot = block as unknown as {
+        type: 'custom'
+        key: string
+        props: {
+          slotKind: 'instruction'
+          defaultValue: {id?: string; value?: string}
+          prefix: string
+        }
+      }
+      if (slot.props.prefix === '@' && slot.props.defaultValue.id === CHAT_EVERYONE_ID) {
+        const trigger = measure.prefix + measure.keyword
+        const kept = stripIndividualMentions(sender.getSlotConfigValue())
+        const cleaned = removeTrailingTrigger(kept, trigger)
+        handle.clear()
+        handle.insert(
+          [block as SlotConfigType, {type: 'text', value: INSTRUCTION_TAIL}, ...cleaned],
+          'start',
+        )
+        return
+      }
+      handle.insert(
+        [block as SlotConfigType, {type: 'text', value: INSTRUCTION_TAIL}],
+        'cursor',
+        measure.prefix + measure.keyword,
+      )
+      // 光标放回芯片之后（占位符之前）⇒ 一次 Backspace 就是"取消这个 @"（见 `focusAfterSlot`）
+      focusAfterSlot((slot as {key?: string}).key)
+    }
+
+    /**
+     * `@` 候选过滤（宿主 `ChatView.vue:175-202` 逐行对应）：
+     * 已经提名过的不再出现；已经提名了"所有人"就整个收起来；
+     * "所有人"永远排第一，其余按**显示名**匹配关键字。
+     *
+     * ⚠️ 与宿主的差异：宿主读 `senderRef.value.getSlotConfigValue()`（组件 expose），
+     * 模块读 `useImSender` 的同名 API —— 同一个值（模块的发送器逻辑在 hook 里）。
+     */
+    function onFilterDataSource(
+      keyword: string,
+      dataSource: InstructionItem[],
+      prefix: string,
+    ): InstructionItem[] {
+      if (prefix !== '@') {
+        return dataSource
+      }
+      const existIds = sender
+        .getSlotConfigValue()
+        .filter((slot) => slot.type === 'custom')
+        .filter(
+          (slot) =>
+            (slot as unknown as {props?: {slotKind?: string}}).props?.slotKind === 'instruction',
+        )
+        .map(
+          (slot) =>
+            (slot as unknown as {props?: {defaultValue?: {id?: string}}}).props?.defaultValue?.id,
+        )
+      if (existIds.includes(CHAT_EVERYONE_ID)) {
+        return []
+      }
+      const notExist = dataSource.filter((item) => !existIds.includes(item.id))
+      if (notExist.length === 1 && notExist.at(-1)?.id === CHAT_EVERYONE_ID) {
+        return []
+      }
+      return [
+        ...notExist
+          .filter((item) => item.id === CHAT_EVERYONE_ID)
+          .filter((item) => (keyword === '' ? item : item.value.includes(keyword))),
+        ...notExist
+          .filter(
+            (item) =>
+              (item.metadata as unknown as UserChatParticipantEntity | undefined)?.metadata
+                ?.details,
+          )
+          .filter((item) =>
+            keyword === ''
+              ? item
+              : AuthServerService.getPrincipalNameByUserDetails(
+                  (item.metadata as unknown as UserChatParticipantEntity).metadata.details,
+                ).includes(keyword),
+          ),
+      ]
+    }
+
+    /**
      * 视图控制器（core `ChatViewControllerBase`）：`l-im` 的分页/激活路径通过它滚动、写回草稿。
      * 草稿三项**已经是真实现**（`useImDraft` 建好之后才能建它）。
      */
@@ -242,22 +439,53 @@ export const ChatView = defineComponent({
     })
 
     /** 内容块（宿主 `ChatMessageBubbleContent.vue` 的 TSX 版；文字块由外壳直接出） */
-    function renderBlock(block: Record<string, unknown>): VNodeChild {
+    function renderBlock(block: Record<string, unknown>, item?: ChatBubbleItem): VNodeChild {
       const slotKind = block.slotKind as string | undefined
       if (block.type === 'custom' && slotKind === 'files') {
         return <AttachmentUpload preview value={block.files as never} />
       }
       if (block.type === 'custom' && slotKind === 'instruction') {
-        const value = block.value as {value?: string} | undefined
-        return (
-          <Tag>
-            {block.prefix === '@' ? (hostSlots.icon?.({type: 'instruction'}) ?? null) : null}
-            {value?.value}
-          </Tag>
+        const value = block.value as {id?: string; value?: string} | undefined
+        /**
+         * 与编辑器里的芯片**共用**同一处渲染（`renderInstructionChip`，
+         * 宿主原话："芯片形状只有这一处定义"）；宿主想整块换 ⇒ `#instructionChip`。
+         */
+        return renderInstructionChip(
+          {key: String(block.id ?? ''), prefix: String(block.prefix ?? ''), value: value ?? {}},
+          hostSlots.instructionChip,
         )
       }
       if (block.type === 'custom' && slotKind === 'undo') {
-        return <Typography.Text delete type="secondary">{String(block.value ?? '')}</Typography.Text>
+        /**
+         * 撤回块（宿主 `ChatBubbleList.vue:185-204` 的 `#undo` 槽，逐条对应）：
+         * **我撤回的** ⇒ "您已撤回此消息" + **"重新编辑"**（把撤回前的内容拿回草稿）；
+         * 别人撤回的 ⇒ 原样文案（`block.value` = "该消息已撤销"）。
+         */
+        const data = item?.data as UserChatMessageResponseBody | undefined
+        const mine = !!data && data.principal === port.getPrincipal()
+        return (
+          <Tooltip title={block.tooltip as string | undefined}>
+            {mine ? (
+              <Space>
+                <Typography.Text delete type="secondary">{locale.value.selfUndo}</Typography.Text>
+                <Typography.Link
+                  onClick={() => {
+                    // 撤回时写进 `metadata.oldContent` 的那份旧内容（`useImMessageList.markUndone`）
+                    const old = (data.metadata as {oldContent?: Record<string, unknown>[]} | undefined)
+                      ?.oldContent
+                    if (old?.length) {
+                      sender.reedit(old)
+                    }
+                  }}
+                >
+                  {locale.value.reedit}
+                </Typography.Link>
+              </Space>
+            ) : (
+              <Typography.Text delete type="secondary">{String(block.value ?? '')}</Typography.Text>
+            )}
+          </Tooltip>
+        )
       }
       if (block.type === 'custom' && slotKind === 'reference') {
         return (
@@ -323,15 +551,43 @@ export const ChatView = defineComponent({
                     hostSlots.avatar?.({item: item as never, conversation}) ?? null,
                   header: ({item}: {item: ChatBubbleItem}) =>
                     hostSlots.senderName?.({item: item as never, conversation}) ?? null,
-                  contentRender: ({content}: {content: unknown}) => (
-                    <SenderSlotBubbleContent
-                      content={content as never[]}
-                      v-slots={{
-                        renderBlock: ({block}: {block: Record<string, unknown>}) =>
-                          renderBlock(block),
-                      }}
-                    />
-                  ),
+                  contentRender: ({
+                    item,
+                    role,
+                    content,
+                  }: {
+                    item?: ChatBubbleItem
+                    role?: string
+                    content: unknown
+                  }) => {
+                    const body = (
+                      <SenderSlotBubbleContent
+                        content={content as never[]}
+                        v-slots={{
+                          renderBlock: ({block}: {block: Record<string, unknown>}) =>
+                            renderBlock(block, item),
+                        }}
+                      />
+                    )
+                    /**
+                     * 右键菜单只在**真人 / AI 的、带实体的**气泡上出
+                     * （宿主 `ChatBubbleList.vue:173-208`：`v-if="item.data && [USER, AI].includes(role)"`）。
+                     */
+                    if (!item?.data || (role !== CHAT_ROLE.USER && role !== CHAT_ROLE.AI)) {
+                      return body
+                    }
+                    return (
+                      <Dropdown
+                        menu={{items: bubbleMenu.createMessageMenu(item, role)}}
+                        trigger={['contextmenu']}
+                        onMenuClick={(event: {key: string | number}) =>
+                          bubbleMenu.onMessageMenuClick(event, item)
+                        }
+                      >
+                        <div class={subClass('menu-anchor')}>{body}</div>
+                      </Dropdown>
+                    )
+                  },
                 }}
               />
               <Flex vertical class={subClass('sender')}>
@@ -341,16 +597,13 @@ export const ChatView = defineComponent({
                   placeholder={placeholder.value}
                   sending={sender.isSending.value}
                   disabled={senderDisabled.value}
-                  // ⚠️ `@` 提名：候选数据 + 过滤 + 选中后的插入/芯片归**模块**（下一片）；
-                  //    这里先给空 map ⇒ 打 `@` 不出候选（见文件头台账 ①）
-                  instructionMap={{}}
-                  onFilterDataSource={(_keyword, dataSource) => dataSource}
+                  // `@` 提名：候选数据 + 过滤 + 选中后的插入（宿主 `ChatView.vue:56-64 / 107-202`）
+                  instructionMap={instructionMap.value}
+                  onFilterDataSource={(keyword, dataSource, prefix) =>
+                    onFilterDataSource(keyword, dataSource, prefix)
+                  }
                   senderInsertInstruction={(handle, block, measure) =>
-                    handle.insert(
-                      [block, {type: 'text', value: ' '}],
-                      'cursor',
-                      measure.prefix + measure.keyword,
-                    )
+                    onSenderInsertInstruction(handle, block, measure)
                   }
                   createInstructionSlot={(option, measure) =>
                     sender.createInstructionSlot(option, measure)

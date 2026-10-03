@@ -67,7 +67,7 @@ function unixSeconds(): number {
  * ⇒ 只有**子组件**里才能用 `useImChat()`。2026-10-03 实测踩过这个坑。
  */
 export function useImMessageList(runtime: ImRuntime) {
-  const {session, view, activeConversation, port} = runtime
+  const {session, view, activeConversation, port, formatRelativeTime} = runtime
   const locale = useLocale('BubbleList')
 
   /** 房间 id（**从当前会话实体取**，不在 `session` 里存副本） */
@@ -168,11 +168,16 @@ export function useImMessageList(runtime: ImRuntime) {
   }
 
   /**
-   * 标记"已撤回"：只写**事实**（`undo` / `undoTime` / `metadata.oldContent`）。
+   * 标记"已撤回"：写**事实**（`undo` / `undoTime` / `metadata.oldContent`）**并把 `content` 换成撤回块**
+   * （宿主 `ChatView.vue:238-246` 同款，2026-10-03 补：原先只写事实 ⇒ 气泡永远不变、渲染侧的撤回块
+   * 成了死代码）。
    *
-   * ⚠️ **不在这里拼"消息已撤回"那句文案**（宿主 `ChatView.vue:238-246` 会拼一个 `slotKind: 'undo'` 的块，
-   * 里面还有 `$dayjs().fromNow()` 的相对时间）—— 文案与相对时间属**渲染层**，Step 3 写撤销块渲染时再定
-   * （走包 locale 还是宿主插槽）。在那之前宿主自己的实现照旧 ⇒ **没有任何在线行为变化**。
+   * 三处口径：
+   * 1. 块的 `value` 写的是**别人看到的那句**（`BubbleList.undoMessageValue`）；"我撤回的"由渲染侧
+   *    现换成 `ChatView.selfUndo` ⇒ 不写进 `value`；
+   * 2. `tooltip` 里的**相对时间必须现算**（模块不引 dayjs）⇒ 在这里用 `formatRelativeTime` 算好塞进去
+   *    （宿主也是把 `$dayjs().fromNow()` 的结果塞进去的）；
+   * 3. 旧内容留在 `metadata.oldContent` ⇒ "重新编辑"要用（`useImSender.reedit`）。
    */
   function markUndone(undo: UserChatMessageEntity): void {
     const item = findItem(undo.id)
@@ -180,12 +185,21 @@ export function useImMessageList(runtime: ImRuntime) {
       return
     }
     const data = item.data as UserChatMessageResponseBody
+    const undoTime = Number(undo.undoTime ?? Date.now())
     // 先建成 client 类型（`metadata` / `undo` 不在规范的松信封上，字面量直接赋会被判多余属性）
     const patched: UserChatMessageResponseBody = {
       ...data,
       undo: undo.undo,
       undoTime: undo.undoTime,
       metadata: {...data.metadata, oldContent: data.content},
+      content: [
+        {
+          type: 'custom',
+          slotKind: 'undo',
+          value: locale.value.undoMessageValue,
+          tooltip: locale.value.undoTime.replace('{time}', `:${formatRelativeTime(undoTime)}`),
+        },
+      ],
     }
     item.data = patched
   }

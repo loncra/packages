@@ -26,6 +26,14 @@ import type {SystemUserContactItem} from '@loncra/antdv-pro'
  * ⇒ 放 `im/` 会让 Agent 再抄一份）。下面插槽里的 `item` 就是它。
  */
 
+/** 指令芯片的数据（`ImSlots.instructionChip` 的入参、也是模块默认渲染的输入） */
+export interface InstructionChipData {
+  key?: string
+  /** 触发前缀（IM 目前只有 `'@'`；Agent 侧另有 `/skill` `/mcp`） */
+  prefix: string
+  value: {id?: string; value?: string}
+}
+
 /** 插槽（宿主在模板里写 `<template #avatar="{item}">…`） */
 export interface ImSlots {
   /** 头像：气泡 / 会话列表 / 通话共用；`size` 是模块给的建议值 */
@@ -48,10 +56,16 @@ export interface ImSlots {
   participantBadge(props: {participant: UserChatParticipantEntity}): VNodeChild
   /** 图标（**可选覆盖**）：模块默认用 `antdv-next` 自带图标；宿主想接自己的 icon-font 时才用 */
   icon(props: {type: string}): VNodeChild
-  /** 指令芯片（发送器里的 `@某人` / `/skill` 芯片） */
-  instructionChip(props: {
-    slot: {key?: string; prefix: string; value: {id: string; value: string}}
-  }): VNodeChild
+  /**
+   * 指令芯片（发送器与气泡里的 `@某人` / `/skill` 芯片）—— **可选覆盖，宿主想让某些业务内容
+   * 用自己的一套图标/样式时才给**。
+   *
+   * 不传 ⇒ 模块自己用 `antdv-next` 渲染（`im/instructionChip.tsx` 是**唯一一处**芯片形状定义）；
+   * 传了 ⇒ 整块交给宿主（模块连 `Tag` 都不渲染）。
+   *
+   * ⚠️ 2026-10-03 用户拍定：**"点名"是 IM 自己的能力，包内必须能独立渲染**，不把图标选择推给宿主。
+   */
+  instructionChip(props: {slot: InstructionChipData}): VNodeChild
   /** 气泡列表下方（宿主放"跳到未读锚点"这类按钮；配合 expose 的 `showReadableAnchor` / `toReadableAnchor()`） */
   bubbleListAfter(): VNodeChild
   /** 替换模块自带的"房间设置"（不传 ⇒ 用模块自带的抽屉方案） */

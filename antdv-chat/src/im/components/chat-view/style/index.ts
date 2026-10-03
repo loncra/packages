@@ -14,6 +14,7 @@ function genImChatViewStyle(token: LoncraStyleToken): CSSInterpolation {
   const {
     componentCls,
     marginXS,
+    fontSize,
     fontSizeSM,
     paddingSM,
     paddingXS,
@@ -64,6 +65,11 @@ function genImChatViewStyle(token: LoncraStyleToken): CSSInterpolation {
         borderStartEndRadius: borderRadiusLG,
       },
 
+      // 右键菜单的锚点壳（宿主 `<div class="cursor-default">`）
+      [`${componentCls}-menu-anchor`]: {
+        cursor: 'default',
+      },
+
       // ── 气泡外观（宿主 `DEFAULT_BUBBLE_LIST_ROLE` → token） ──
       //
       // ⚠️ 每个值**都必须 `!important`**：宿主那三个 `classes` 里的 Tailwind 值**全都带 `!`**
@@ -85,6 +91,25 @@ function genImChatViewStyle(token: LoncraStyleToken): CSSInterpolation {
         fontWeight: 'normal !important',
         marginBlock: `${marginXS} !important`,
       },
+    },
+
+    /**
+     * 菜单里撤回倒计时（宿主 `StatisticTimer` 的 `classes.content = 'text-DEFAULT text-text-secondary'`）。
+     *
+     * ⚠️ **必须写在顶层，不能塞进上面那个 `[componentCls]` 块里**：嵌套会生成**后代选择器**
+     * `.loncra-im-chat-view .loncra-im-chat-view-menu-countdown`，而 **Dropdown 的浮层走 portal
+     * （渲染在 `body` 下）、根本不在 ChatView 子树里** ⇒ 规则一次都不生效
+     * （2026-10-03 用户实拍：类名在 DOM 里、Styles 面板却搜不到 ⇒ 就是这个原因；宿主那边没这问题，
+     * 是因为 Tailwind 工具类是**全局**的、不带作用域）。
+     *
+     * ⚠️ 四个值都要 `!important`：`Statistic` 自带 `.ant-statistic-content { font-size: 24px }`
+     * ⇒ 不压它就是"一行巨大红字 + 撑高变形"。字号跟**菜单文字**齐（`fontSize`），不照搬 24px。
+     */
+    [`${componentCls}-menu-countdown`]: {
+      fontSize: `${fontSize} !important`,
+      lineHeight: '1.4 !important',
+      color: `${colorTextSecondary} !important`,
+      whiteSpace: 'nowrap !important',
     },
   }
 }

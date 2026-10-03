@@ -1,5 +1,4 @@
 import {computed, h, markRaw, nextTick, ref, type Ref} from 'vue'
-import {Tag} from 'antdv-next'
 import type {SlotConfigType} from '@antdv-next/x/dist/sender/interface'
 import type {UploadFile} from 'antdv-next/dist/upload/interface'
 import {
@@ -17,6 +16,7 @@ import {ChatMessageService, type UserChatMessageResponseBody} from '@loncra/clie
 import type {ObjectWriteResult} from '@loncra/client/resource'
 import type {InstructionItem, InstructionMeasure, InstructionSenderExpose} from '../instruction-sender'
 import {SLOT_PLACEHOLDER} from '../_util/draft/slots'
+import {renderInstructionChip} from './instructionChip'
 import type {ImConversationsApi} from './useImConversations'
 import type {ImRuntime} from './useImChatContext'
 import type {ImDraftApi} from './useImDraft'
@@ -37,6 +37,38 @@ import type {ImMessageListApi} from './useImMessageList'
  * 宿主那几处踩坑注释原样保留（它们是"刷新还原后芯片能显示、点发送却不 upload"的真根因）：
  * 提交时先补 `originFileObj`、ref 缺失或 `upload()` 为空就再走 `uploadFilesDirect`。
  */
+/**
+ * 把光标放到"芯片之后、占位符之前"。
+ *
+ * ⚠️ 为什么需要这一步（2026-10-03 用户："我 '@' 选完人再按 Backspace，我的目的是什么？"
+ * ⇒ **取消这个 @**，也就是**一次就把芯片删掉**）：
+ * 1. 芯片是行内原子，PM 的 `addTextblockHacks` 见文本块**末尾不是文本节点**就补
+ *    `<br class="ProseMirror-trailingBreak">` ⇒ 光标掉下一行 ⇒ 芯片后面**必须留占位符**；
+ * 2. 占位符若在光标之前，Backspace 先删的就是那个**看不见**的字符 ⇒ 用户意图落空 ✗；
+ * 3. 而 x **没有**"把光标放在芯片之后"的能力：`insert()` 只把选区放到所有插入节点的最后
+ *    （`TextSelection.near(doc.resolve(from + ΣnodeSize))`），`focus({cursor:'slot'})` 对**没有
+ *    `<input>` 的芯片**又会退化 `setCursor('end')`（`SlotTextAreaProseMirror.js:43644` 起、44604 行）。
+ * ⇒ 只能在这里用**浏览器选区 API** 放一下 —— PM 会通过 `selectionchange` 把 DOM 选区同步回文档，
+ *   与"用户手点编辑器"走的是**同一条路**（不是绕过它）。
+ */
+export function focusAfterSlot(key?: string | number): void {
+  if (key == null || key === '') {
+    return
+  }
+  void nextTick(() => {
+    const slot = document.querySelector(`[data-slot-key="${CSS.escape(String(key))}"]`)
+    if (!slot) {
+      return
+    }
+    const range = document.createRange()
+    range.setStartAfter(slot)
+    range.collapse(true)
+    const selection = window.getSelection()
+    selection?.removeAllRanges()
+    selection?.addRange(range)
+  })
+}
+
 export interface UseImSenderOptions {
   runtime: ImRuntime
   /** 消息列表（唯一入口 `mergeMessage`） */
@@ -49,10 +81,16 @@ export interface UseImSenderOptions {
   senderRef: Ref<InstructionSenderExpose | undefined>
   /** 引用条（会话级状态；由草稿持久化） */
   refMessages: Ref<UserChatMessageResponseBody[]>
+  /**
+   * 发送**成功**后的收尾（由 `ChatView` 传）：把 `slot-config` 受控值换成**新数组** ⇒ x 重建空文档。
+   * 这是"**确定能清空**"的那一路 —— `clear()` 受 x 的 `isLocked()`（`readOnly || disabled`）约束，
+   * 时序不巧就会静默 return（2026-10-03 踩过），所以两条都留着。
+   */
+  onSent?: () => void
 }
 
 export function useImSender(options: UseImSenderOptions) {
-  const {runtime, list, conversations, draft, senderRef, refMessages} = options
+  const {runtime, list, conversations, draft, senderRef, refMessages, onSent} = options
   const {activeConversation, emit, slots} = runtime
 
   const uploadRefMap = new Map<string, AttachmentUploadExpose>()
@@ -304,6 +342,9 @@ export function useImSender(options: UseImSenderOptions) {
    * ⇒ `prosemirror-view` 的 `addTextblockHacks` 会补 `<br class="ProseMirror-trailingBreak">`
    * ⇒ **光标被挤到下一行**（2026-10-03 用户报障；宿主旧版靠这个占位符规避，我漏了）。
    * 机理与选型（零宽空格）见 `SLOT_PLACEHOLDER`。
+   *
+   * ⚠️ 插完还要把光标**放回芯片之后**（`focusAfterSlot`）：否则按 Backspace 先删的是那个看不见的
+   * 占位符，而用户的意图是**一次删掉附件**（2026-10-03 用户："我按下 backspace 的目的是什么？"）。
    */
   function onPasteFiles(fileList: FileList): void {
     const files = Array.from(fileList) as File[]
@@ -312,20 +353,11 @@ export function useImSender(options: UseImSenderOptions) {
     }
     const slot = createFilesSlot(files.map(toUploadFile))
     getSender()?.insert([slot, {type: 'text', value: SLOT_PLACEHOLDER}], 'cursor')
+    focusAfterSlot((slot as {key?: string}).key)
   }
 
   function onSelectedEmoji(emoji: string): void {
     getSender()?.insert([{type: 'text', value: emoji}], 'cursor')
-  }
-
-  function clear(): void {
-    const sender = getSender()
-    if (!sender) {
-      return
-    }
-    sender.clear()
-    lastPushedFiles.clear()
-    sender.focus({cursor: 'end'})
   }
 
   function getSlotConfigValue(): SlotConfigType[] {
@@ -358,14 +390,17 @@ export function useImSender(options: UseImSenderOptions) {
         _props: {disabled?: boolean; readOnly?: boolean},
         item: SlotConfigType,
       ) => {
-        const icon = slots.icon?.({type: 'instruction'})
-        return h(
-          Tag,
-          {key: 'key' in item && item.key ? item.key : undefined},
+        /**
+         * 芯片形状**只在这一处**（`renderInstructionChip`，编辑器与气泡共用）。
+         * 宿主想让某些业务内容换成自己的图标/整块内容 ⇒ `ImSlots.instructionChip`（可选覆盖）。
+         */
+        return renderInstructionChip(
           {
-            icon: icon ? () => icon : undefined,
-            default: () => value.value,
+            key: 'key' in item && item.key ? item.key : undefined,
+            prefix,
+            value: {id: value.id, value: value.value},
           },
+          slots.instructionChip,
         )
       },
     }
@@ -402,6 +437,22 @@ export function useImSender(options: UseImSenderOptions) {
   }
 
   /**
+   * 撤回后"重新编辑"：把旧消息的内容块转成词槽、写回**会话草稿**（宿主 `ChatView.vue:249-255` 同款）。
+   *
+   * ⚠️ 这里**故意**写回草稿源（`slot-config` 会整表重建编辑器）—— 与 `@change` 那条
+   * "别把 `getSlotConfigValue()` 写回绑定中的 `slot-config`"不冲突：那条说的是**每敲一个字**都重建；
+   * "重新编辑"是**一次性整体替换**，重建正是要的效果（宿主当年也是这么写的）。
+   */
+  function reedit(content: Record<string, unknown>[]): void {
+    const conversation = activeConversation.value
+    if (!conversation) {
+      return
+    }
+    conversation.draft = convertContentBlockToSlotConfig(content)
+    draft.schedulePersist()
+  }
+
+  /**
    * 提交：**词槽 → 内容块**（附件先上传、指令/引用各归各位），再交给 `send`。
    * 宿主 `handleSubmit` 逐条对应；`refMessages` 有内容时补一个 `reference` 块。
    */
@@ -410,6 +461,7 @@ export function useImSender(options: UseImSenderOptions) {
       return
     }
     uploading.value = true
+    let sent = false
     try {
       const blocks: Record<string, unknown>[] = []
       // 不能只信 `uploadRefMap`：刷新后芯片能显示、ref 却可能未绑上 ⇒ 点发送会只出文字、不 upload
@@ -456,37 +508,52 @@ export function useImSender(options: UseImSenderOptions) {
       if (refMessages.value.length > 0) {
         blocks.push({type: 'custom', slotKind: 'reference', value: [...refMessages.value]})
       }
-      await send(blocks)
+      sent = await send(blocks)
       refMessages.value = []
     } finally {
       uploading.value = false
+    }
+    if (sent) {
+      /**
+       * 清空走**宿主那条路**：宿主 `ChatView.vue:97-99` 在发送成功后写 `data.draft = []`，
+       * `:slot-config` 因此拿到**新数组** ⇒ x 的 `applyControlledState`（**它没有锁判断**）看到身份
+       * 变化 ⇒ **重建一个空文档** ✓ —— 宿主从来不靠 `senderRef.value?.clear()`（那行在 `sending`
+       * 期间是空操作，本身就无效）。
+       *
+       * ⚠️ 本模块中间加了一层 `draftSlots`（为修"光标换行"做的"内容等价就不换身份"闸门）⇒ 会把
+       * 宿主的这行**吃掉**（空数组对比空数组 ⇒ 不换身份 ⇒ 不重建）⇒ 所以由 `onSent` 在发送成功后
+       * **强制**把受控值换成新数组，把宿主的效果补回来（2026-10-03 用户指出："旧的不会出这问题"）。
+       */
+      onSent?.()
     }
   }
 
   /**
    * 发送（宿主 `ChatView.vue:78-105` 的 `onSendMessage`）：调接口 → **本地入列表走唯一入口** →
-   * 清 IDB → 清编辑器 → 会话置顶 + 更新预览 → 清实体草稿 → 滚到底。
+   * 清 IDB → 会话置顶 + 更新预览 → 清实体草稿 → 滚到底。
    *
    * ⚠️ 两处与宿主的差异：① 入列表走 `list.mergeMessage`（唯一入口，不再直接 `addBubbleListMessage`）；
    * ② 失败时**抛 `send.failed`**（宿主只 `finally` 复位 sending）。
+   *
+   * 返回值 = "发成功没有"：**清空编辑器**由调用方 `submit` 在收尾时走 `onSent` 触发
+   * （= 宿主 `ChatView.vue:97-99` 那行 `data.draft = []` 的效果，见 `submit` 的说明）。
    */
-  async function send(blocks: Record<string, unknown>[]): Promise<void> {
+  async function send(blocks: Record<string, unknown>[]): Promise<boolean> {
     const roomId = activeConversation.value?.room?.id
     if (roomId == null) {
-      return
+      return false
     }
     sending.value = true
     try {
       const result = await ChatMessageService.send(blocks as never, String(roomId))
       const message = result?.data as UserChatMessageResponseBody | undefined
       if (!message) {
-        return
+        return false
       }
       // 插尾（最新一条在底部）；走唯一入口
       list.mergeMessage(message, true)
       // 发送成功再清 IDB：失败保留 ⇒ 刷新后还能重试（宿主原话）
       await draft.clearPersistedDraft()
-      clear()
       conversations.moveToTopByRoomId(message.userChatRoomId, (conversation) => {
         conversation.lastUserMessage = message
       })
@@ -496,8 +563,10 @@ export function useImSender(options: UseImSenderOptions) {
       }
       await nextTick()
       runtime.view.value?.scrollTo({top: 'bottom', behavior: 'smooth'})
+      return true
     } catch (error) {
       emit({type: 'send.failed', error})
+      return false
     } finally {
       sending.value = false
     }
@@ -509,9 +578,9 @@ export function useImSender(options: UseImSenderOptions) {
     onPasteFiles,
     submit,
     onSelectedEmoji,
-    clear,
     getSlotConfigValue,
     convertContentBlockToSlotConfig,
+    reedit,
     createFilesSlot,
     createInstructionSlot,
   }

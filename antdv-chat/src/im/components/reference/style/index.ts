@@ -14,14 +14,22 @@ function genImMessageReferenceStyle(token: LoncraStyleToken): CSSInterpolation {
   return {
     [componentCls]: {
       cursor: 'pointer',
-      display: 'inline-flex',
+      /**
+       * ⚠️ **两个 `!important` 必须有**：`Tag` 自带 `.ant-tag { display: inline-block }`
+       * （与我们的选择器**同特异性**，且它**后注册** ⇒ 它赢）⇒ 里面那个 `Flex`（块级 flex）
+       * 会把 `closable` 的**关闭叉挤到下一行**（2026-10-03 用户报障："关闭的 X 换行了"）。
+       * `inline-flex` 让叉与文字回到同一行（宿主 Tailwind 的 `inline-flex` 就是干这个的）。
+       */
+      display: 'inline-flex !important',
+      alignItems: 'center !important',
       maxWidth: 320,
-      alignItems: 'center',
     },
     [`${componentCls}-body`]: {
       minWidth: 0,
       maxWidth: '100%',
       flex: '1 1 0',
+      // 宿主 `overflow-hidden`（原先漏了：内容长到顶时会把关闭叉顶出可视区）
+      overflow: 'hidden',
     },
     [`${componentCls}-author`]: {
       flex: '0 0 auto',
