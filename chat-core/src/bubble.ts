@@ -1,4 +1,4 @@
-import type {ChatBlockBase, TextBlock} from './block'
+import type {ChatBlockBase} from './block'
 import type {ChatBubbleItem, ChatMessageBase} from './message'
 import {CHAT_ROLE} from './role'
 
@@ -47,13 +47,37 @@ export function addBubbleListMessage(
 }
 
 /** `toBubbleContent` 的产物：一条**渲染项**的键与内容 */
-export interface ChatBubbleContentEntry {
+export interface ChatBubbleContentEntry<C extends ChatBlockBase = ChatBlockBase> {
   key: string | number
   /**
    * `string` 这一档是**诚实**的：system 消息按 block 拆条后，每片的 `content` 本来就是块的文本值
    * （宿主原版把它 `as unknown as ChatContentBlock` 硬塞进块字段 —— §五-13 的"三态联合"就死在这里）。
    */
-  content: ChatBlockBase[] | string
+  content: C[] | string
+}
+
+/**
+ * **渲染项**：喂气泡列表的那一份，也是插槽里拿到的 `item`
+ * = 存储条目（`ChatBubbleItem`）+ `toBubbleContent` 派生出的 `content`。
+ *
+ * ⚠️ **两域同形**（宿主 Agent 侧的 `types/composables/chat.ts` 一直用的就是这个名字）⇒ **放规范里**，
+ * 别在域里各写一份（2026-10-03 从 `antdv-chat/im/types.ts` 的 `ImBubbleItem` 上提）。
+ *
+ * 块泛型 `C`：域想收窄自己的块联合时（如 `ChatContentBlock`）传进来，默认放开成 `ChatBlockBase`
+ * —— 与 `toBubbleContent` / `ChatBubbleContentEntry` 同一个参数，四处一致。
+ */
+export type ChatBubbleRenderItem<C extends ChatBlockBase = ChatBlockBase> = ChatBubbleItem<C> & {
+  content: C[] | string
+}
+
+/**
+ * SYSTEM 消息拆条时取一片的文字：块的 `value`（`TextBlock`）。
+ *
+ * ⚠️ 这里**不用 `as TextBlock` 强转**：`blocks` 的静态类型是 `C extends ChatBlockBase`（信封只有 `type`），
+ * 走 `in` + `typeof` 收窄是诚实的；不是文本块（理论上不会有）就退化成空串。
+ */
+function blockText(block: ChatBlockBase): string {
+  return 'value' in block && typeof block.value === 'string' ? block.value : ''
 }
 
 /**
@@ -67,9 +91,9 @@ export interface ChatBubbleContentEntry {
  *   都从存储条目上取 `key`）⇒ 第一片用主键，跳转/闪烁照旧命中；
  * - 其余片必须独立键，否则 Vue 列表复用错乱（这就是 §五-16 的真 bug）。
  */
-export function toBubbleContent(
-  item: Pick<ChatBubbleItem, 'data' | 'role' | 'key'>,
-): ChatBubbleContentEntry[] {
+export function toBubbleContent<C extends ChatBlockBase = ChatBlockBase>(
+  item: Pick<ChatBubbleItem<C>, 'data' | 'role' | 'key'>,
+): ChatBubbleContentEntry<C>[] {
   const blocks = item.data?.content ?? []
   const baseKey = String(item.key ?? item.data?.id ?? '')
   if (item.role === CHAT_ROLE.SYSTEM) {
@@ -78,7 +102,7 @@ export function toBubbleContent(
     }
     return blocks.map((block, index) => ({
       key: index === 0 ? baseKey : `${baseKey}#${index}`,
-      content: (block as TextBlock).value ?? '',
+      content: blockText(block),
     }))
   }
   return [{key: baseKey, content: blocks}]

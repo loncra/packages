@@ -65,14 +65,42 @@ function toPersistableFile(file: UploadFile<ObjectWriteResult>): PersistableUplo
 }
 
 /**
+ * 行内原子节点（附件 / 指令芯片）**后面必须跟一个文本节点**。
+ *
+ * 否则 ProseMirror 会在文本块末尾补一个 `<br class="ProseMirror-trailingBreak">`
+ * —— `prosemirror-view` 的 `addTextblockHacks` 判定：
+ *
+ * ```js
+ * if (!lastChild || !(lastChild instanceof TextViewDesc) || /\n$/.test(...)) {
+ *   if ((safari || chrome) && lastChild && lastChild.dom.contentEditable == "false")
+ *     this.addHackNode("IMG", parent);
+ *   this.addHackNode("BR", this.top);
+ * }
+ * ```
+ *
+ * 芯片恰好是"最后一个子节点、且不是文本节点" ⇒ 那个 `<br>` 就是**换行本身** ⇒
+ * **光标被挤到下一行**（2026-10-03 用户报障；宿主旧版正是靠这个占位符规避的）。
+ *
+ * 用**零宽空格**而不是普通空格：`\u200B` **不匹配** `\s` ⇒ 连 Gecko 那条 `/\s$/` 分支也不会触发；
+ * 入库/发送前会被 `slotConfigToPersistable` 摘掉，不会把隐形字符带给后端。
+ */
+export const SLOT_PLACEHOLDER = '\u200B'
+
+/**
  * 活槽 → 可入库槽。丢掉 customRender（函数不能进 IDB）。
  * 文件只序列化 uid/name/size/type/response，File 走 collectBlobs。
+ * 文本槽里的编辑器占位符（`SLOT_PLACEHOLDER`）在这里摘掉。
  */
 export function slotConfigToPersistable(slots: SlotConfigType[]): PersistableSlot[] {
   const result: PersistableSlot[] = []
   for (const slot of slots) {
     if (slot.type === 'text') {
-      result.push({type: 'text', value: slot.value ?? ''})
+      // 摘掉编辑器占位符（`SLOT_PLACEHOLDER`，只服务于 ProseMirror）；摘完为空就整块丢掉。
+      const value = (slot.value ?? '').replaceAll(SLOT_PLACEHOLDER, '')
+      if (!value) {
+        continue
+      }
+      result.push({type: 'text', value})
       continue
     }
     if (isFilesSlot(slot)) {
@@ -184,6 +212,10 @@ export function persistableToSlotConfig(
         value: slot.value,
       }),
     )
+  }
+  // 末尾是芯片 ⇒ 补回占位符，否则 PM 又会补那个会换行的 `<br>`（见 `SLOT_PLACEHOLDER`）
+  if (result.length > 0 && result[result.length - 1]?.type === 'custom') {
+    result.push({type: 'text', value: SLOT_PLACEHOLDER})
   }
   return result
 }

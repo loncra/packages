@@ -43,6 +43,39 @@ export interface ActiveChatSession<I extends ChatBubbleItem = ChatBubbleItem> {
   dataSource: PageResult<I>
 }
 
+/** 一页的默认大小（与宿主 `DEFAULT_PAGE_RESULT_VALUE.size` 同口径） */
+export const DEFAULT_PAGE_SIZE = 10
+
+/**
+ * **空页 / 兜底页**（两域共用：IM 拿不到数据时兜底，Agent 复位列表时用它起头）。
+ *
+ * `first` / `last` 皆 true ⇒ 两端都锁住，不显示任何"可加载"信号。
+ * `metadata: {}` 是**照抄宿主**的（拿不到数据时把旧的列表元数据一起清掉 —— IM 的未读锚点就挂在里面）。
+ */
+export function createEmptyPage<I extends ChatBubbleItem = ChatBubbleItem>(
+  size: number = DEFAULT_PAGE_SIZE,
+): PageResult<I> {
+  return {elements: [], first: true, last: true, number: 1, size, metadata: {}}
+}
+
+/**
+ * **空会话容器**（两域共用）。
+ *
+ * 域自己 `extends ActiveChatSession` 加运行态（IM：`participants` / `readableAnchorLoading`）
+ * ⇒ 这里的返回类型是基座，域那份是**结构上兼容**的扩展（可选字段）。
+ */
+export function createEmptySession<I extends ChatBubbleItem = ChatBubbleItem>(
+  size: number = DEFAULT_PAGE_SIZE,
+): ActiveChatSession<I> {
+  return {
+    conversationKey: undefined,
+    loading: false,
+    isOnFirstPage: true,
+    isOnLastPage: true,
+    dataSource: createEmptyPage<I>(size),
+  }
+}
+
 /**
  * 视图控制器（两侧同形；Agent 多一个 `getScrollBox`）。
  * ⚠️ `ScrollLogicalPosition` / `ScrollBehavior` 是 **web 平台类型**（`lib.dom`），不是框架类型 ⇒ 规范可用。

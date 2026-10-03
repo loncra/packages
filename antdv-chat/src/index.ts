@@ -40,6 +40,11 @@ export type {
   ChatMessagePageLoad,
   ChatMessagePageTag,
 } from './_util/useChatMessageList'
+// ── 共用判定（2026-10-03 用户拍定 A+：归包内 `_util`，**不进 core**）
+//    `resolveRole`（气泡靠哪侧）/ `compareConversations`（会话顺序）—— IM、Agent 共用这一份。
+//    ⚠️ 不进 core 的原因：判定要读 client 的**枚举值**，而 core 只许 `import type` client。
+export { compareConversations, resolveRole } from './_util/chatRules'
+
 export { BubbleList } from './bubble-list'
 export type { BubbleListInstance } from './bubble-list'
 export type {
@@ -67,6 +72,11 @@ export {
   slotConfigToPersistable,
 } from './_util/draft'
 export type { RestoreDraftSlotFactories, RestoreInstructionBlock } from './_util/draft'
+
+// ── IM 模块（2026-10-03 Step 1：契约层；Step 2：状态层；**Step 3：`l-im` 入口 + 左栏**）
+//    标准（模块↔宿主的约定）在 `@loncra/chat-core`。
+export {ImChat} from './im/ImChat'
+export type {ImEmits, ImExpose, ImProps, ImSlots} from './im/types'
 
 // ── 发送器外壳件（2026-10-01 S2a-4 从宿主迁入）
 export { SenderSlotBubbleContent } from './sender-shell'

@@ -32,10 +32,31 @@ function genInstructionSenderStyle(token: LoncraStyleToken): CSSInterpolation {
         borderTop: `${unit(lineWidth)} ${lineType} ${colorBorderSecondary}`,
       },
       [`.antd-sender-input.antd-sender-input-slot`]: {
+        /**
+         * ⚠️ 三个值**都必须 `!important`** —— 对应宿主 `.chat-sender-input` 那条 Tailwind
+         * `@apply h-auto! align-bottom! my-0!`（**每个值都带 `!`**）。
+         * 2026-10-03 移植时漏了 `vertical-align` 的 `!` ⇒ x 自己的对齐压过来 ⇒
+         * **粘贴附件后光标跑到下一行**（用户报障的真根因）。同一条规则对"附件槽高度/外边距"也一样。
+         */
         [`> .antd-sender-slot:not(.antd-sender-slot-content)`]: {
           height: 'auto !important',
-          verticalAlign: 'bottom',
+          verticalAlign: 'bottom !important',
           marginBlock: '0 !important',
+          /**
+           * ⚠️ **芯片根节点必须回到"行内块"，否则必然断行。**
+           *
+           * 芯片内部是 pro 的 `.loncra-attachment-upload-list-cards { display: flex }`
+           * 与 `-list { width: 100% }` ⇒ 芯片根一渲染就是**块级 + 撑满整行**，
+           * 而它外面只是个行内 `<span class="antd-sender-slot">` ⇒ 浏览器只能把它**单独放到一行**，
+           * 后面的文字/光标被挤到下一行（2026-10-03 用户报障："输入 → 粘贴 → 光标换行"，
+           * **一个文件也复现** —— 正是"块级 + 100%"的特征）。
+           *
+           * `> *` 就是芯片根节点（`h(AttachmentUpload, …)` 的根 div）。`inline-block` 让宽度**收缩到内容**，
+           * 附件于是与前后文字同处一行。作用域只在这个槽里 ⇒ **完全不影响气泡里的同一组件**。
+           */
+          ['> *']: {
+            display: 'inline-block !important',
+          },
         },
         [`&[contenteditable="false"]`]: {
           opacity: 0.5,
