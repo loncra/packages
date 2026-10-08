@@ -373,8 +373,54 @@ export function useInstructionSender(params: UseInstructionSenderParams) {
     closeInstruction()
   }
 
+  /** 光标紧贴芯片时，把选区扩到整颗芯片（含插入时垫的那一个空格）。返回 undefined，交给 Sender 一次删掉。 */
+  function selectChipBeforeCaret(editor: HTMLElement): void {
+    const sel = window.getSelection()
+    if (!sel?.rangeCount || !sel.isCollapsed) {
+      return
+    }
+    const range = sel.getRangeAt(0)
+    if (!editor.contains(range.startContainer)) {
+      return
+    }
+    let node: Node | null = range.startContainer
+    let offset = range.startOffset
+    if (node.nodeType === Node.TEXT_NODE) {
+      const before = (node.textContent ?? '').slice(0, offset)
+      if (before !== '' && before !== ' ' && before !== '\u00A0') {
+        return
+      }
+      node = node.previousSibling
+    } else if (node instanceof HTMLElement) {
+      node = node.childNodes[offset - 1] ?? null
+      if (node?.nodeType === Node.TEXT_NODE) {
+        const text = node.textContent ?? ''
+        if (text !== '' && text !== ' ' && text !== '\u00A0') {
+          return
+        }
+        node = node.previousSibling
+      }
+    } else {
+      return
+    }
+    if (!(node instanceof HTMLElement) || node.dataset.nodeType !== 'slot' || node.isContentEditable) {
+      return
+    }
+    const next = document.createRange()
+    next.setStartBefore(node)
+    next.setEnd(range.startContainer, range.startOffset)
+    sel.removeAllRanges()
+    sel.addRange(next)
+  }
+
   function handleSenderKeyDown(e: KeyboardEvent) {
     if (!instructionOption.value.open) {
+      if (e.key === 'Backspace' && !e.isComposing && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        const editor = getEditableRoot()
+        if (editor) {
+          selectChipBeforeCaret(editor)
+        }
+      }
       return
     }
     const options = instructionOption.value.displayDataSource
