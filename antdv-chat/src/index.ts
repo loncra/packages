@@ -24,6 +24,20 @@ export type {
   MarkdownTheme,
 } from './markdown'
 
+export { default as BubbleList } from './bubble-list'
+export { DEFAULT_BUBBLE_LIST_ROLE, toAxBubbleItem, useBubbleList } from './bubble-list'
+export type {
+  BubbleListApi,
+  BubbleListCallbacks,
+  BubbleListExpose,
+  BubbleListItem,
+  BubbleListProps,
+  BubbleRenderRow,
+  BubbleSession,
+} from './bubble-list'
+
+export { default as SenderSlotBubbleContent } from './sender-slot-bubble-content'
+
 export { default as zhCN } from './locale/zh_CN'
 export { default as enUS } from './locale/en_US'
 export type { Locale } from './locale'
