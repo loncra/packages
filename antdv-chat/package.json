@@ -15,7 +15,6 @@
     "@antdv-next/x": "^1.2.0",
     "@antdv-next/x-markdown": "^0.2.0",
     "@loncra/antdv": ">=0.0.1",
-    "@loncra/chat-core": ">=0.0.1",
     "antdv-next": "^1.5.0",
     "vue": "^3.5.0"
   },

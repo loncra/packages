@@ -6,9 +6,7 @@ import {classNames} from '@loncra/antdv'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import DraftSender, {type DraftSenderExpose} from '../../draft-sender/DraftSender'
 import type {DraftBinding} from '../../draft-sender/useDraftSender'
-import EmojiButton from '../../emoji-button/EmojiButton'
-import type {InstructionSenderProps} from '../../instruction-sender/InstructionSender'
-import type {InstructionSenderHandle} from '../../instruction-sender/types'
+import {EmojiButton, type InstructionSenderHandle, type InstructionSenderProps} from '@loncra/antdv-chat'
 import useStyle from './style'
 
 /** 引用条只认 id，芯片内容由宿主插槽画。 */

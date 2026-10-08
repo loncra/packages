@@ -9,8 +9,11 @@ import {classNames} from '@loncra/antdv'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import DraftSender, {type DraftSenderExpose} from '../../draft-sender/DraftSender'
 import type {DraftBinding} from '../../draft-sender/useDraftSender'
-import type {InstructionSenderProps} from '../../instruction-sender/InstructionSender'
-import type {InstructionItem, InstructionSenderHandle} from '../../instruction-sender/types'
+import {
+  type InstructionItem,
+  type InstructionSenderHandle,
+  type InstructionSenderProps,
+} from '@loncra/antdv-chat'
 import useStyle from './style'
 
 export interface AgentSenderWorkspace {

@@ -1,11 +1,12 @@
 import {defineComponent, type PropType, ref, shallowRef, watch} from 'vue'
 import type {SlotConfigType} from '@antdv-next/x/dist/sender/interface'
 import type {DraftRestoreResult} from '@loncra/chat-core'
-import InstructionSender, {
+import {
+  InstructionSender,
   type InstructionSenderExpose,
+  type InstructionSenderHandle,
   type InstructionSenderProps,
-} from '../instruction-sender/InstructionSender'
-import type {InstructionSenderHandle} from '../instruction-sender/types'
+} from '@loncra/antdv-chat'
 import {type DraftBinding, useDraftSender} from './useDraftSender'
 
 export interface DraftSenderExpose {

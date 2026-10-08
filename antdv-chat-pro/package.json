@@ -1,0 +1,25 @@
+{
+  "name": "@loncra/antdv-chat-pro",
+  "version": "0.0.1",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "peerDependencies": {
+    "@antdv-next/icons": "^1.1.0",
+    "@antdv-next/x": "^1.2.0",
+    "@loncra/antdv": ">=0.0.1",
+    "@loncra/antdv-chat": ">=0.0.1",
+    "@loncra/antdv-pro": ">=0.0.1",
+    "@loncra/chat-core": ">=0.0.1",
+    "@loncra/client": ">=0.0.1",
+    "antdv-next": "^1.5.0",
+    "dexie": "^4.4.6",
+    "vue": "^3.5.0"
+  },
+  "peerDependenciesMeta": {
+    "dexie": {
+      "optional": true
+    }
+  }
+}
