@@ -1,6 +1,9 @@
 export { default as EmojiButton } from './emoji-button'
 export type { EmojiButtonEmits, EmojiButtonProps, EmojiButtonSlots } from './emoji-button'
 
+export { default as DraftSender } from './draft-sender'
+export type { DraftBinding, DraftSenderExpose } from './draft-sender'
+
 export { default as InstructionSender } from './instruction-sender'
 export type {
   InstructionItem,

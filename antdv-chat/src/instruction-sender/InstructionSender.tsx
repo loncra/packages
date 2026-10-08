@@ -29,7 +29,7 @@ export type {
 } from './types'
 
 export interface InstructionSenderProps {
-  slotConfig?: object[]
+  slotConfig?: SlotConfigType[]
   placeholder?: string
   sending?: boolean
   disabled?: boolean
@@ -59,9 +59,9 @@ export interface InstructionSenderProps {
 }
 
 export interface InstructionSenderEmits {
-  submit: (value: string, slotConfig?: object[]) => void
+  submit: (value: string, slotConfig?: SlotConfigType[]) => void
   cancel: () => void
-  change: (value: string, event?: Event, slotConfig?: object[]) => void
+  change: (value: string, event?: Event, slotConfig?: SlotConfigType[]) => void
   pasteFile: (fileList: FileList) => void
 }
 
@@ -85,7 +85,7 @@ export interface InstructionSenderSlots {
 
 export interface InstructionSenderExpose {
   clear: () => void
-  getSlotConfigValue: () => any[]
+  getSlotConfigValue: () => SlotConfigType[]
   getSender: () => InstructionSenderHandle | undefined
   senderRef: Ref<InstructionSenderHandle | undefined>
 }
@@ -94,7 +94,7 @@ const InstructionSender = defineComponent({
   name: 'LInstructionSender',
   inheritAttrs: false,
   props: {
-    slotConfig: Array as PropType<object[]>,
+    slotConfig: Array as PropType<SlotConfigType[]>,
     placeholder: {
       type: String,
       default: '',
@@ -173,7 +173,7 @@ const InstructionSender = defineComponent({
       sender.focus({cursor: 'end'})
     }
 
-    function getSlotConfigValue(): any[] {
+    function getSlotConfigValue(): SlotConfigType[] {
       return senderRef.value?.getValue()?.slotConfig || []
     }
 
@@ -181,7 +181,7 @@ const InstructionSender = defineComponent({
       return senderRef.value as InstructionSenderHandle | undefined
     }
 
-    async function onChange(value: string, event?: Event, slotConfig?: object[]) {
+    async function onChange(value: string, event?: Event, slotConfig?: SlotConfigType[]) {
       await handleSenderChange(value, event, slotConfig)
       emit('change', value, event, slotConfig)
     }
@@ -207,7 +207,7 @@ const InstructionSender = defineComponent({
             slotConfig={
               props.disabled
                 ? undefined
-                : ((props.slotConfig ?? EMPTY_SLOT_CONFIG) as SlotConfigType[])
+                : (props.slotConfig ?? EMPTY_SLOT_CONFIG)
             }
             suffix={false}
             placeholder={props.placeholder}
@@ -266,7 +266,7 @@ const InstructionSender = defineComponent({
             onPasteFile={(fileList: FileList) => emit('pasteFile', fileList)}
             onKeyDown={handleSenderKeyDown}
             onSubmit={(value: string, slotConfig?: SlotConfigType[]) =>
-              emit('submit', value, slotConfig as object[] | undefined)
+              emit('submit', value, slotConfig)
             }
           />
           <Teleport to="body">

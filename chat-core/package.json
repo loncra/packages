@@ -3,9 +3,16 @@
   "version": "0.0.1",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./dexie": "./src/dexie/index.ts"
   },
   "peerDependencies": {
-    "@loncra/client": ">=0.0.1"
+    "@loncra/client": ">=0.0.1",
+    "dexie": "^4.4.6"
+  },
+  "peerDependenciesMeta": {
+    "dexie": {
+      "optional": true
+    }
   }
 }

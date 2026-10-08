@@ -6,7 +6,8 @@
  * agent.ts：思考、工具、回答、错误、Agent 草稿。
  * session.ts：气泡与会话。TBlock 约束为 TextBlock。
  * page.ts：历史分页的合并、端页判断、锚点定位。
- * draft.ts：两边共用的草稿信封。
+ * draft.ts：草稿信封、DraftStore、还原决策。主入口不依赖 Dexie。
+ * Dexie 实现从 `@loncra/chat-core/dexie` 单独引入。
  *
  * 不在包内：Vue、Pinia、路由、i18n、Dexie、antdv-next、气泡列表 DOM 回调、
  * ImHost / AgentHost、角色判定、时间分隔、通话媒体、Hub。
@@ -66,11 +67,15 @@ export type {
 export type DraftRecord = ImDraftRecord | AgentDraftRecord
 export type DraftScope = DraftRecord['scope']
 
-export {draftBlobId, draftRecordId} from './draft.ts'
+export {decideDraftRestore, draftBlobId, draftRecordId, isPlaceholderDraft} from './draft.ts'
 export type {
   DraftBlobRow,
   DraftCodec,
   DraftRecordBase,
+  DraftRestoreDecision,
+  DraftRestoreResult,
+  DraftStore,
+  DraftStored,
   PersistableSlot,
   PersistableUploadFile,
 } from './draft.ts'

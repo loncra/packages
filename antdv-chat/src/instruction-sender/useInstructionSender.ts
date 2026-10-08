@@ -1,4 +1,5 @@
 import {nextTick, onUnmounted, ref} from 'vue'
+import type {SlotConfigType} from '@antdv-next/x/dist/sender/interface'
 import type {InstructionItem, InstructionMeasure, InstructionPopoverState, UseInstructionSenderParams,} from './types'
 
 const ZERO_WIDTH_SPACE = '\u200B'
@@ -356,7 +357,7 @@ export function useInstructionSender(params: UseInstructionSenderParams) {
     editor.addEventListener('compositionend', onCompositionEnd)
   }
 
-  async function handleSenderChange(_value: string, _event?: Event, _slotConfigType?: object[]) {
+  async function handleSenderChange(_value: string, _event?: Event, _slotConfigType?: SlotConfigType[]) {
     bindCompositionEvents()
     await nextTick(syncInstruction)
   }
