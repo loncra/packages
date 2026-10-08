@@ -5,6 +5,7 @@
  * im.ts：引用、撤回、通话、IM 草稿。
  * agent.ts：思考、工具、回答、错误、Agent 草稿。
  * session.ts：气泡与会话。TBlock 约束为 TextBlock。
+ * page.ts：历史分页的合并、端页判断、锚点定位。
  * draft.ts：两边共用的草稿信封。
  *
  * 不在包内：Vue、Pinia、路由、i18n、Dexie、antdv-next、气泡列表 DOM 回调、
@@ -45,6 +46,16 @@ export type {
 } from './agent.ts'
 
 export {appendMessages, bubbleListContent, textBubble} from './session.ts'
+export {
+  applyHistoryPage,
+  canLoadHistory,
+  locateAnchor,
+  openPageEdges,
+  pageEdgeBubble,
+  prependNoMoreIfLast,
+  stepPageNumber,
+} from './page.ts'
+export type {PageDirection} from './page.ts'
 export type {
   ActiveChatSession,
   ChatBubbleBody,
