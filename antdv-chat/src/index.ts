@@ -4,6 +4,12 @@ export type { EmojiButtonEmits, EmojiButtonProps, EmojiButtonSlots } from './emo
 export { default as DraftSender } from './draft-sender'
 export type { DraftBinding, DraftSenderExpose } from './draft-sender'
 
+export { default as ImSender } from './im/sender'
+export type { ImSenderExpose, ImSenderReferenceItem } from './im/sender'
+
+export { default as AgentSender } from './agent/sender'
+export type { AgentSenderChoice, AgentSenderExpose, AgentSenderWorkspace } from './agent/sender'
+
 export { default as InstructionSender } from './instruction-sender'
 export type {
   InstructionItem,

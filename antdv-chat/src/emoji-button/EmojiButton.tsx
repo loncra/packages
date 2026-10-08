@@ -1,4 +1,4 @@
-import {computed, defineComponent, h, ref} from 'vue'
+import {computed, defineComponent, h, type PropType, ref} from 'vue'
 import {Button, Card, CardGrid, Popover, Tabs} from 'antdv-next'
 import {SmileOutlined} from '@antdv-next/icons'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
@@ -13,6 +13,10 @@ export interface EmojiButtonProps {
   rootClass?: string
   style?: unknown
   prefixCls?: string
+  type?: 'default' | 'primary' | 'dashed' | 'link' | 'text'
+  disabled?: boolean
+  /** 不展示的 emoji 分组 slug。 */
+  hiddenSlugs?: string[]
 }
 
 export interface EmojiButtonEmits {
@@ -23,14 +27,18 @@ export interface EmojiButtonSlots {
   icon?: () => unknown
 }
 
-const hiddenSlugs = new Set(['people_body', 'symbols', 'flags'])
-
 const EmojiButton = defineComponent({
   name: 'LEmojiButton',
   inheritAttrs: false,
   props: {
     prefixCls: String,
     rootClass: String,
+    type: String as PropType<EmojiButtonProps['type']>,
+    disabled: Boolean,
+    hiddenSlugs: {
+      type: Array as PropType<string[]>,
+      default: () => ['people_body', 'symbols', 'flags'],
+    },
   },
   emits: ['selected'],
   setup(props, { emit, slots, attrs }) {
@@ -46,9 +54,11 @@ const EmojiButton = defineComponent({
       open: false,
     })
 
+    const hiddenSlugSet = computed(() => new Set(props.hiddenSlugs))
+
     const tabItems = computed(() =>
       emojiGroups
-        .filter((group) => !hiddenSlugs.has(group.slug))
+        .filter((group) => !hiddenSlugSet.value.has(group.slug))
         .map((group) => ({
           key: group.slug,
           label: locale.value[group.slug as keyof EmojiButtonLocale] ?? group.name,
@@ -122,6 +132,8 @@ const EmojiButton = defineComponent({
         >
           <Button
             {...rest}
+            type={props.type}
+            disabled={props.disabled}
             class={classNames(hashedClass, props.rootClass, attrClass)}
             style={attrStyle as never}
             v-slots={{ icon: () => renderTriggerIcon() }}
