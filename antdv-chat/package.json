@@ -22,7 +22,7 @@
     "@antdv-next/icons": "^1.1.2",
     "@antdv-next/x": "^1.2.5",
     "@antdv-next/x-markdown": "^0.2.0",
-    "antdv-next": "^1.5.6",
+    "antdv-next": "^1.6.0",
     "vue": "3.5.43"
   }
 }

@@ -15,7 +15,7 @@
   },
   "devDependencies": {
     "@antdv-next/icons": "^1.1.2",
-    "antdv-next": "^1.5.6",
+    "antdv-next": "^1.6.0",
     "antdv-next-tiptap": "^1.0.5",
     "vue": "3.5.43"
   }
