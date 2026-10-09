@@ -3,7 +3,9 @@
   "version": "0.0.1",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./locale/zh_CN": "./src/locale/zh_CN.ts",
+    "./locale/en_US": "./src/locale/en_US.ts"
   },
   "peerDependencies": {
     "@antdv-next/icons": "^1.1.0",

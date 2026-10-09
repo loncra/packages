@@ -19,6 +19,8 @@ function genFileEditorStyle(token: LoncraStyleToken): CSSInterpolation {
     lineType,
     antCls,
     motionDurationMid,
+    motionDurationSlow,
+    calc,
   } = token
 
   /**
@@ -199,7 +201,7 @@ function genFileEditorStyle(token: LoncraStyleToken): CSSInterpolation {
       position: 'relative',
       // 下面两个 `!important` 是**必要**的：antd 的 `.ant-tabs-tab`（0,2,0）与
       // `.ant-tabs-tab + .ant-tabs-tab`（0,3,0）都压在只写语义类的这条（0,1,0）上面
-      padding: `${token.calc(paddingXS).add(1.5).equal()} ${unit(paddingSM)} !important`,
+      padding: `${calc(paddingXS).add(1.5).equal()} ${unit(paddingSM)} !important`,
     },
     /**
      * 选项卡之间的默认间距清零（antd 在 `.ant-tabs .ant-tabs-tab + .ant-tabs-tab` 上给了
@@ -250,7 +252,7 @@ function genFileEditorStyle(token: LoncraStyleToken): CSSInterpolation {
       marginBottom: 3,
       // 给 `Keyframes` **实例**（不是字符串）：cssinjs 会换成 `getName(hashId)`（带 hashId，不撞车）
       animationName: spinKeyframes,
-      animationDuration: token.motionDurationSlow,
+      animationDuration: motionDurationSlow,
       animationTimingFunction: 'linear',
       animationIterationCount: 'infinite',
     },

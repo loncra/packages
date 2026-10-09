@@ -9,7 +9,7 @@ export * from './domain/enterprise.ts'
 export * from './domain/resource.ts'
 export * from './domain/auth.ts'
 export {formUrlEncoded} from './utils/formUrlEncoded.ts'
-export {getEnumValue, isNameValueEnumMetadata, getEnumName} from './utils/enum.ts'
+export {getEnumValue, isEnumValue, isNameValueEnumMetadata, getEnumName} from './utils/enum.ts'
 export {isBusinessSuccess, isResultSuccess} from './utils/result.ts'
 export {
   buildFlatPlacementMap,

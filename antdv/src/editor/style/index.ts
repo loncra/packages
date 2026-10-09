@@ -3,7 +3,7 @@ import type {LoncraStyleToken} from '../../_util/genStyle'
 import {genStyleHooks} from '../../_util/genStyle'
 
 function genEditorStyle(token: LoncraStyleToken): CSSInterpolation {
-  const { componentCls, antCls } = token
+  const {componentCls, antCls, colorError} = token
   return {
     [componentCls]: {
       // AEditor 根上又包了一层 App；官方 .ant-app 默认 min-height:100vh，嵌套时会撑出整屏空白。
@@ -25,7 +25,7 @@ function genEditorStyle(token: LoncraStyleToken): CSSInterpolation {
        *    ⇒ 只能 `!important`（重要声明的层序是反的：分层里的 important 反而更强）。
        */
       [`&-status-error .editor`]: {
-        borderColor: `${token.colorError} !important`,
+        borderColor: `${colorError} !important`,
       },
     },
   } as CSSInterpolation

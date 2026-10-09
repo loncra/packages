@@ -2,7 +2,7 @@ import type {CSSInterpolation} from '@antdv-next/cssinjs'
 import {genStyleHooks, type LoncraStyleToken} from '@loncra/antdv'
 
 function genAttachmentMasonryStyle(token: LoncraStyleToken): CSSInterpolation {
-  const {componentCls, colorFillTertiary} = token
+  const {componentCls, colorFillTertiary, fontSizeHeading2} = token
   return {
     [`${componentCls}-cover`]: {
       width: '100%',
@@ -16,7 +16,7 @@ function genAttachmentMasonryStyle(token: LoncraStyleToken): CSSInterpolation {
       background: colorFillTertiary,
     },
     [`${componentCls}-file-icon`]: {
-      fontSize: token.fontSizeHeading2,
+      fontSize: fontSizeHeading2,
     },
   }
 }

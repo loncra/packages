@@ -19,6 +19,13 @@ export function getEnumValue<TValue>(value: NameValueEnumMetadata<TValue> | TVal
   return value as TValue
 }
 
+export function isEnumValue<TValue>(
+  value: NameValueEnumMetadata<TValue> | TValue,
+  expected: TValue,
+): boolean {
+  return getEnumValue(value) === expected
+}
+
 export function getEnumName<TValue>(value: NameValueEnumMetadata<TValue> | TValue): string {
   if (isNameValueEnumMetadata(value)) {
     return value.name

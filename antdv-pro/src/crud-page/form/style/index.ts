@@ -12,14 +12,14 @@ import {genStyleHooks, type LoncraStyleToken} from '@loncra/antdv'
  * —— 规则只有带了 hash 类才会被生成并命中（`data-loading-card-plan/style/index.ts:120` 那段注释记过这个坑）。
  */
 function genCrudFormPageStyle(token: LoncraStyleToken): CSSInterpolation {
-  const {componentCls} = token
+  const {componentCls, marginMD} = token
 
   return [
     {
       // 操作记录那一块（分隔线 + 轨迹表）：它不在 `FormItem` 里、没有现成的行距 ⇒ 自己给一段，
       // 免得轨迹表与下面的按钮贴在一起。
       [`${componentCls}-operation-trace`]: {
-        marginBottom: token.marginMD,
+        marginBottom: marginMD,
       },
     },
   ]
