@@ -29,3 +29,7 @@ export function createUseLocale<L extends object>(fallback: L) {
 }
 
 export const useLocale = createUseLocale(defaultLocale)
+
+export function fillLocale(template: string, params: Record<string, string | number>): string {
+  return template.replace(/\{(\w+)}/g, (_match, key: string) => String(params[key] ?? ''))
+}

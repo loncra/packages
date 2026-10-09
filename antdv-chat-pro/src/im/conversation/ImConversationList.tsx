@@ -22,7 +22,7 @@ import {
 } from '@antdv-next/icons'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import useApp from 'antdv-next/dist/app/useApp'
-import {classNames} from '@loncra/antdv'
+import {classNames, fillLocale} from '@loncra/antdv'
 import {useLocale} from '../../_util/useLocale.ts'
 import {isEnumValue, YES_OR_NO_TYPE} from '@loncra/client/commons'
 import {AttachmentService} from '@loncra/client/resource'
@@ -44,10 +44,6 @@ export interface ImConversationHost {
     conversation: UserChatConversationResponseBody,
   ) => string
   draftPreview: (draft: UserChatConversationResponseBody['draft']) => string
-}
-
-function fill(template: string, params: Record<string, string | number>): string {
-  return template.replace(/\{(\w+)}/g, (_match, key: string) => String(params[key] ?? ''))
 }
 
 function confirmDelete(
@@ -197,7 +193,7 @@ const ImConversationList = defineComponent({
                         {props.host.timeText(mention.creationTime)}
                       </Typography.Text>
                       <span>
-                        {fill(locale.value.mentionLine, {
+                        {fillLocale(locale.value.mentionLine, {
                           principal: props.host.principalName(mention.participant),
                         })}
                       </span>
@@ -218,7 +214,7 @@ const ImConversationList = defineComponent({
               default: () => (
                 <Typography.Text ellipsis type="secondary">
                   <Typography.Text type="danger">
-                    {`[${fill(locale.value.mention, {count: mentions.length})}]`}
+                    {`[${fillLocale(locale.value.mention, {count: mentions.length})}]`}
                   </Typography.Text>
                   {preview}
                 </Typography.Text>

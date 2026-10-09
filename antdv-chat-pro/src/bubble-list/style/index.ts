@@ -5,6 +5,15 @@ import {genStyleHooks} from '@loncra/antdv'
 
 export const BUBBLE_LIST_PREFIX = 'loncra-bubble-list'
 
+const bubbleFlash = new Keyframes('loncraBubbleListFlash', {
+  '0%, 100%': {
+    opacity: 1,
+  },
+  '50%': {
+    opacity: 0,
+  },
+})
+
 const jumpBounce = new Keyframes('loncraBubbleListJump', {
   '0%, 100%': {
     transform: 'translateX(-50%) translateY(-25%)',
@@ -33,6 +42,7 @@ function genBubbleListStyle(token: LoncraStyleToken): CSSInterpolation {
   }
 
   return [
+    bubbleFlash,
     jumpBounce,
     {
       [componentCls]: {
@@ -59,6 +69,13 @@ function genBubbleListStyle(token: LoncraStyleToken): CSSInterpolation {
           animationName: jumpBounce,
           animationDuration: '1s',
           animationIterationCount: 'infinite',
+        },
+        [`${componentCls}-flash`]: {
+          borderRadius: 'inherit',
+          animationName: bubbleFlash,
+          animationDuration: '0.9s',
+          animationTimingFunction: 'ease-in-out',
+          animationIterationCount: 2,
         },
         [`${componentCls}-user`]: {
           background: colorPrimaryBg,

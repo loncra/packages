@@ -43,6 +43,11 @@ export type {ImConversationsApi} from './im/conversation'
 export {deleteImConversations, muteImConversations, pinImConversations} from './im/conversation'
 export {default as ImConversationList} from './im/conversation/ImConversationList.tsx'
 export type {ImConversationHost} from './im/conversation'
+export {default as ImBubbleFooter} from './im/bubble/ImBubbleFooter.tsx'
+export {undoImMessage} from './im/bubble/undoImMessage.ts'
+export {default as ImBubbleContent} from './im/bubble/ImBubbleContent.tsx'
+export {default as ImBubbleList} from './im/bubble/ImBubbleList.tsx'
+export type {ImBubbleHost} from './im/bubble/types.ts'
 export {useAgentConversations, agentMenuKeys} from './agent/conversation'
 export type {
   AgentConversationActions,
@@ -50,3 +55,7 @@ export type {
   AgentConversationRecord,
 } from './agent/conversation'
 export {default as AgentConversationList} from './agent/conversation/AgentConversationList.tsx'
+export {default as AgentBubbleFooter} from './agent/bubble/AgentBubbleFooter.tsx'
+export {default as AgentAssistantContent} from './agent/bubble/AgentAssistantContent.tsx'
+export {default as AgentUserContent} from './agent/bubble/AgentUserContent.tsx'
+export {default as AgentBubbleList} from './agent/bubble/AgentBubbleList.tsx'

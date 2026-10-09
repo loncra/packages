@@ -134,11 +134,15 @@ export function useBubbleList<T extends BubbleListItem>(
 
   const rows = computed(() => callbacks.renderItem(getItems()))
   const domainItems = computed(() => rows.value.map((row) => row.bubble))
-  const bubbleListItems = computed(() => rows.value.map((row) => toAxBubbleItem(
-    row.bubble,
-    row.rootClass ? {rootClass: row.rootClass} : undefined,
-    toValue(isLoading),
-  )))
+  const bubbleListItems = computed(() => rows.value.map((row) => {
+    const flash = row.bubble.flashPending ? `${BUBBLE_LIST_PREFIX}-flash` : undefined
+    const rootClass = [row.rootClass, flash].filter(Boolean).join(' ')
+    return toAxBubbleItem(
+      row.bubble,
+      rootClass ? {rootClass} : undefined,
+      toValue(isLoading),
+    )
+  }))
 
   const handleThrottleBubbleScroll = throttle(
     throttleBubbleScroll,
@@ -186,7 +190,7 @@ export function useBubbleList<T extends BubbleListItem>(
     if (current.loading) {
       return
     }
-    const scrollBox = event.target as HTMLElement
+    const scrollBox = scrollBoxOf(event)
     if (callbacks.onVisibleItems) {
       handleCollectVisible(scrollBox)
     }
@@ -197,15 +201,27 @@ export function useBubbleList<T extends BubbleListItem>(
     }
   }
 
+  /** 到最旧、最新两端的距离。column-reverse 时 0 贴着最新消息，离开后 scrollTop 可能为负或为正。 */
+  function distanceToEnds(scrollBox: HTMLElement): {oldest: number; newest: number} {
+    const max = Math.max(0, scrollBox.scrollHeight - scrollBox.clientHeight)
+    const reverse = getComputedStyle(scrollBox).flexDirection === 'column-reverse'
+    if (!reverse) {
+      return {oldest: scrollBox.scrollTop, newest: max - scrollBox.scrollTop}
+    }
+    const fromNewest = Math.abs(scrollBox.scrollTop)
+    return {oldest: Math.max(0, max - fromNewest), newest: fromNewest}
+  }
+
   function isNearOldest(scrollBox: HTMLElement): boolean {
-    return (
-      scrollBox.scrollHeight + scrollBox.scrollTop <=
-      scrollBox.clientHeight + getProps().topThreshold
-    )
+    return distanceToEnds(scrollBox).oldest <= getProps().topThreshold
   }
 
   function isNearNewest(scrollBox: HTMLElement): boolean {
-    return scrollBox.scrollTop >= -getProps().topThreshold
+    return distanceToEnds(scrollBox).newest <= getProps().topThreshold
+  }
+
+  function scrollBoxOf(event: Event): HTMLElement {
+    return (event.currentTarget ?? event.target) as HTMLElement
   }
 
   function emitVisibleItems(scrollBox: HTMLElement): void {
@@ -216,8 +232,8 @@ export function useBubbleList<T extends BubbleListItem>(
   }
 
   function onBubbleScroll(event: Event): void {
-    const scrollBox = event.target as HTMLElement
-    showScrollToBottom.value = scrollBox.scrollTop <= -getProps().scrollToBottomThreshold
+    const scrollBox = scrollBoxOf(event)
+    showScrollToBottom.value = distanceToEnds(scrollBox).newest > getProps().scrollToBottomThreshold
     tryFlashPendingItems(scrollBox)
     handleThrottleBubbleScroll(event)
   }

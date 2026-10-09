@@ -1,4 +1,4 @@
-import {nextTick, type Ref} from 'vue'
+import {nextTick, provide, type InjectionKey, type Ref} from 'vue'
 import {revealAnchor} from '../../history/revealAnchor'
 import type {PageRequest, PageResult, RestResult} from '@loncra/client/commons'
 import {
@@ -62,9 +62,16 @@ function emptyPage<TBubble>(): PageResult<TBubble> {
   }
 }
 
+export interface ImHistoryApi {
+  loadMore: (tag: 'next' | 'previous') => Promise<void>
+}
+
+export const IM_HISTORY_KEY: InjectionKey<ImHistoryApi> = Symbol('im-history')
+
 /**
  * IM 历史分页、锚点跳转、切换会话。
  * 文案、角色、滚到哪、切走前落草稿由 host 提供。
+ * 气泡列表通过 inject 调用 loadMore，页面不再转发滚动翻页。
  */
 export function useImHistory<TSession extends ImHistorySession>(
   session: Ref<TSession>,
@@ -262,6 +269,9 @@ export function useImHistory<TSession extends ImHistorySession>(
       current.loading = false
     }
   }
+
+  const api: ImHistoryApi = {loadMore}
+  provide(IM_HISTORY_KEY, api)
 
   return {
     loadPage,
