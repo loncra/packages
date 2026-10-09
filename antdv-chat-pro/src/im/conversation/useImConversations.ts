@@ -1,5 +1,5 @@
 import {computed, type ComputedRef, type Ref, ref} from 'vue'
-import type {UserChatConversationResponseBody} from '@loncra/client/message'
+import {ChatMessageService, type UserChatConversationResponseBody} from '@loncra/client/message'
 import {isEnumValue, YES_OR_NO_TYPE} from '@loncra/client/commons'
 
 export interface ImConversationsApi<T extends UserChatConversationResponseBody> {
@@ -14,6 +14,8 @@ export interface ImConversationsApi<T extends UserChatConversationResponseBody> 
   moveToTopByRoomId: (roomId: number | undefined, mutate?: (conversation: T) => void) => void
   unshiftIfAbsent: (body: T) => void
   replaceByRoomId: (roomId: number, body: T) => T | undefined
+  load: () => Promise<void>
+  refreshByRoomId: (roomId: number) => Promise<T | undefined>
   remove: (id: number | undefined) => void
   patchFlags: (items: Array<{id?: number; pinned?: unknown; muted?: unknown}>) => void
 }
@@ -107,6 +109,21 @@ export function useImConversations<T extends UserChatConversationResponseBody>()
     return dataSource.value[index]
   }
 
+  async function load(): Promise<void> {
+    const result = await ChatMessageService.my()
+    if (result.data) {
+      setAll(result.data as T[])
+    }
+  }
+
+  async function refreshByRoomId(roomId: number): Promise<T | undefined> {
+    const result = await ChatMessageService.getConversation(roomId, true)
+    if (!result.data) {
+      return undefined
+    }
+    return replaceByRoomId(roomId, result.data as T)
+  }
+
   function remove(id: number | undefined): void {
     dataSource.value = dataSource.value.filter((d) => d.id !== id)
   }
@@ -140,6 +157,8 @@ export function useImConversations<T extends UserChatConversationResponseBody>()
     moveToTopByRoomId,
     unshiftIfAbsent,
     replaceByRoomId,
+    load,
+    refreshByRoomId,
     remove,
     patchFlags,
   }

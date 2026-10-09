@@ -24,6 +24,7 @@ function genImConversationStyle(token: LoncraStyleToken): CSSInterpolation {
       [`${componentCls}-search`]: {
         flexShrink: 0,
         padding: paddingSM,
+        borderBlockEnd: `1px solid ${colorBorder}`,
       },
       [`${componentCls}-icon`]: {
         display: 'flex',
