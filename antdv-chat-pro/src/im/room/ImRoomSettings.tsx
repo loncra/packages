@@ -45,7 +45,7 @@ import {
   type UserChatConversationResponseBody,
   type UserChatParticipantEntity,
 } from '@loncra/client/message'
-import type {ImHost} from '../host.ts'
+import type {ImChatHost} from '../host.ts'
 import {deleteImConversations, muteImConversations, pinImConversations} from '../conversation/conversationActions.ts'
 import ImHistoriesModal from '../history/ImHistoriesModal.tsx'
 import ImRoomMemberModal, {type ImRoomMemberModalMode} from './ImRoomMemberModal.tsx'
@@ -71,7 +71,7 @@ const ImRoomSettings = defineComponent({
       type: Array as PropType<SystemUserContactItem[]>,
       default: () => [],
     },
-    host: {type: Object as PropType<ImHost>, required: true},
+    host: {type: Object as PropType<ImChatHost>, required: true},
   },
   emits: {
     added: (_result: RestResult<UserChatConversationResponseBody>) => true,

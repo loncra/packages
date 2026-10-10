@@ -47,7 +47,7 @@ export {default as ImBubbleFooter} from './im/bubble/ImBubbleFooter.tsx'
 export {undoImMessage} from './im/bubble/undoImMessage.ts'
 export {default as ImBubbleContent} from './im/bubble/ImBubbleContent.tsx'
 export {default as ImBubbleList} from './im/bubble/ImBubbleList.tsx'
-export type {ImHost} from './im/host.ts'
+export type {ImChatCallHost, ImChatHost, ImHost} from './im/host.ts'
 export {ImRoomSettings} from './im/room'
 export {useAgentConversations, agentMenuKeys} from './agent/conversation'
 export type {

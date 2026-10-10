@@ -11,13 +11,13 @@ import {
 import {useDateFormat, UserAvatar} from '@loncra/antdv-pro'
 import {useLocale} from '../../_util/useLocale.ts'
 import useStyle, {IM_BUBBLE_PREFIX} from './style/index.ts'
-import type {ImHost} from '../host.ts'
+import type {ImChatHost} from '../host.ts'
 
 const ImMessageReadTable = defineComponent({
   name: 'LImMessageReadTable',
   props: {
     messageId: {type: Number, required: true},
-    host: {type: Object as PropType<ImHost>, required: true},
+    host: {type: Object as PropType<ImChatHost>, required: true},
   },
   setup(props) {
     const locale = useLocale('ImBubble')

@@ -12,7 +12,7 @@ import {
 import type {TextBlock} from '@loncra/chat-core'
 import {getEnumName} from '@loncra/client/commons'
 import SenderSlotBubbleContent from '../../sender-slot-bubble-content/SenderSlotBubbleContent.tsx'
-import type {ImHost} from '../host.ts'
+import type {ImChatHost} from '../host.ts'
 import {useLocale} from '../../_util/useLocale.ts'
 import useStyle, {IM_BUBBLE_PREFIX} from './style/index.ts'
 
@@ -32,7 +32,7 @@ const ImBubbleContent = defineComponent({
   props: {
     content: {type: Array as PropType<readonly TextBlock<string, unknown>[]>, required: true},
     principal: {type: String, required: true},
-    host: {type: Object as PropType<ImHost>, required: true},
+    host: {type: Object as PropType<ImChatHost>, required: true},
     onJump: {type: Function as PropType<(message: UserChatMessageResponseBody) => void>, required: true},
     onReedit: {type: Function as PropType<() => void>, required: true},
   },

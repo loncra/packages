@@ -38,7 +38,7 @@ import {
 } from '@loncra/client/message'
 import type {TextBlock} from '@loncra/chat-core'
 import ImBubbleContent from '../bubble/ImBubbleContent.tsx'
-import type {ImHost} from '../host.ts'
+import type {ImChatHost} from '../host.ts'
 import {IM_HISTORY_KEY} from './useImHistory.ts'
 import {useLocale} from '../../_util/useLocale.ts'
 import useStyle, {IM_HISTORY_PREFIX} from './style/index.ts'
@@ -100,7 +100,7 @@ const ImHistoriesModal = defineComponent({
     open: {type: Boolean, required: true},
     roomId: {type: Number, required: true},
     roomName: {type: String, required: true},
-    host: {type: Object as PropType<ImHost>, required: true},
+    host: {type: Object as PropType<ImChatHost>, required: true},
   },
   emits: ['update:open'],
   setup(props, {emit, slots}) {
