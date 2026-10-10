@@ -3,7 +3,7 @@ import {unit} from '@antdv-next/cssinjs'
 import {genStyleHooks, type LoncraStyleToken} from '@loncra/antdv'
 
 function genSystemUserPanelStyle(token: LoncraStyleToken): CSSInterpolation {
-  const {componentCls, paddingSM, paddingXS, colorTextQuaternary} = token
+  const {componentCls, paddingSM, paddingXS, colorTextQuaternary, lineWidth, lineType, colorBorderSecondary} = token
   return {
     [componentCls]: {
       display: 'flex',
@@ -27,6 +27,7 @@ function genSystemUserPanelStyle(token: LoncraStyleToken): CSSInterpolation {
     [`${componentCls}-search`]: {
       flexShrink: 0,
       padding: paddingSM,
+      borderBottom: `${lineWidth} ${lineType} ${colorBorderSecondary}`,
     },
     [`${componentCls}-search-icon`]: {
       color: colorTextQuaternary,

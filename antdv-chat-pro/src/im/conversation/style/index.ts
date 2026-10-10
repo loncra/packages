@@ -18,6 +18,7 @@ function genImConversationStyle(token: LoncraStyleToken): CSSInterpolation {
     paddingSM,
     marginXL,
     marginSM,
+    colorTextQuaternary
   } = token
   return {
     [componentCls]: {
@@ -25,6 +26,9 @@ function genImConversationStyle(token: LoncraStyleToken): CSSInterpolation {
         flexShrink: 0,
         padding: paddingSM,
         borderBlockEnd: `1px solid ${colorBorder}`,
+        [`.anticon-search`]: {
+          color: colorTextQuaternary,
+        },
       },
       [`${componentCls}-icon`]: {
         display: 'flex',
