@@ -64,6 +64,8 @@ function emptyPage<TBubble>(): PageResult<TBubble> {
 
 export interface ImHistoryApi {
   loadMore: (tag: 'next' | 'previous') => Promise<void>
+  jumpToHistoryMessage: (data: UserChatMessageResponseBody) => Promise<void>
+  loadParticipant: (roomId: number) => Promise<void>
 }
 
 export const IM_HISTORY_KEY: InjectionKey<ImHistoryApi> = Symbol('im-history')
@@ -270,7 +272,7 @@ export function useImHistory<TSession extends ImHistorySession>(
     }
   }
 
-  const api: ImHistoryApi = {loadMore}
+  const api: ImHistoryApi = {loadMore, jumpToHistoryMessage, loadParticipant}
   provide(IM_HISTORY_KEY, api)
 
   return {

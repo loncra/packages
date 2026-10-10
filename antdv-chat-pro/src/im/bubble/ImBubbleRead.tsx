@@ -9,7 +9,7 @@ import type {ImChatBubble} from '@loncra/chat-core'
 import {useLocale} from '../../_util/useLocale.ts'
 import ImMessageReadTable from './ImMessageReadTable.tsx'
 import useStyle, {IM_BUBBLE_PREFIX} from './style/index.ts'
-import type {ImBubbleHost} from './types.ts'
+import type {ImHost} from '../host.ts'
 
 const ImBubbleRead = defineComponent({
   name: 'LImBubbleRead',
@@ -19,7 +19,7 @@ const ImBubbleRead = defineComponent({
       type: [Number, Object] as PropType<number | NameValueEnumMetadata<number>>,
       default: undefined,
     },
-    host: {type: Object as PropType<ImBubbleHost>, required: true},
+    host: {type: Object as PropType<ImHost>, required: true},
   },
   setup(props) {
     const locale = useLocale('ImBubble')

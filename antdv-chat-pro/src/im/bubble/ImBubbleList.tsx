@@ -8,7 +8,7 @@ import ImBubbleContent from './ImBubbleContent.tsx'
 import ImBubbleFooter from './ImBubbleFooter.tsx'
 import ImBubbleHeader from './ImBubbleHeader.tsx'
 import ImBubbleRead from './ImBubbleRead.tsx'
-import type {ImBubbleHost} from './types.ts'
+import type {ImHost} from '../host.ts'
 import {IM_HISTORY_KEY} from '../history/useImHistory.ts'
 
 const TIME_DIVIDER_GAP_MS = 5 * 60 * 1000
@@ -21,7 +21,7 @@ const ImBubbleList = defineComponent({
   name: 'LImBubbleList',
   props: {
     session: {type: Object as PropType<BubbleSession>, required: true},
-    host: {type: Object as PropType<ImBubbleHost>, required: true},
+    host: {type: Object as PropType<ImHost>, required: true},
     roomType: {
       type: [Number, Object] as PropType<number | NameValueEnumMetadata<number>>,
       default: undefined,
