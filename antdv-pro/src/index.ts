@@ -251,3 +251,5 @@ export type {
   PageValueFormat,
   ValueFormatter,
 } from './crud-page'
+
+export {useAppNotification} from './notification/useAppNotification'

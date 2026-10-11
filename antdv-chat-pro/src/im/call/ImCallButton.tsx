@@ -64,8 +64,10 @@ const ImCallButton = defineComponent({
         placement="topRight"
         onMenuClick={(info: MenuInfo) => {
           const type = Number(info.key)
-          if (isEnumValue(type, MESSAGE_SERVER_CHAT_CALL_TYPE.VIDEO) || isEnumValue(type, MESSAGE_SERVER_CHAT_CALL_TYPE.VOICE)) {
-            void start(type)
+          if (isEnumValue(type, MESSAGE_SERVER_CHAT_CALL_TYPE.VIDEO)) {
+            void start(MESSAGE_SERVER_CHAT_CALL_TYPE.VIDEO)
+          } else if (isEnumValue(type, MESSAGE_SERVER_CHAT_CALL_TYPE.VOICE)) {
+            void start(MESSAGE_SERVER_CHAT_CALL_TYPE.VOICE)
           }
         }}
       >
