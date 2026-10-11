@@ -2,6 +2,7 @@ import {computed, defineComponent, nextTick, onMounted, onUnmounted, ref, watch,
 import {Badge, Button, Flex, Statistic} from 'antdv-next'
 import {BlockOutlined, SplitCellsOutlined} from '@antdv-next/icons'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
+import useApp from 'antdv-next/dist/app/useApp'
 import {UserAvatar} from '@loncra/antdv-pro'
 import {classNames, fillLocale} from '@loncra/antdv'
 import {getEnumName, isEnumValue, type NameValueEnumMetadata} from '@loncra/client/commons'
@@ -54,6 +55,7 @@ const ImCallPrivateLayout = defineComponent({
   setup() {
     const session = useImChatCall()
     const locale = useLocale('ImCall')
+    const {message} = useApp()
     const config = useConfig()
     const prefixCls = computed(() => config.value.getPrefixCls('im-call', IM_CALL_PREFIX))
     const [hashId, cssVarCls] = useStyle(prefixCls)
@@ -227,7 +229,7 @@ const ImCallPrivateLayout = defineComponent({
           style={shellStyle(role) as CSSProperties}
           autoplay
           playsinline
-          muted={role === 'local'}
+          muted
           onClick={role === 'local' ? onLocalClick : onRemoteClick}
         />
       )
@@ -294,7 +296,17 @@ const ImCallPrivateLayout = defineComponent({
       } else {
         session.state.title = locale.value.unnamed
       }
-      void session.media?.previewLocal(call).then(() => session.setFrame(spec.value.modalWidth, spec.value.modalHeight))
+      void session.media?.previewLocal(call).then(() => {
+        session.setFrame(spec.value.modalWidth, spec.value.modalHeight)
+        const mediaState = session.state.mediaState
+        const videoCall = isEnumValue(call.type, MESSAGE_SERVER_CHAT_CALL_TYPE.VIDEO)
+        const denied = videoCall
+          ? !mediaState.localMicrophone || !mediaState.localCamera
+          : !mediaState.localMicrophone
+        if (denied) {
+          message.error(locale.value.captureDenied)
+        }
+      })
     })
 
     onUnmounted(() => {

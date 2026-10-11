@@ -88,6 +88,7 @@ const locale: Locale = {
     closeCountdown: '通话已结束 s 秒后自动关闭',
     reconnectTimeCountdown: '(s 秒后将自动结束通话)',
     unsupported: '当前浏览器不支持音视频采集',
+    captureDenied: '麦克风或摄像头未授权，通话将继续',
     unnamed: '未命名',
     ignore: '忽略',
     accept: '接受',

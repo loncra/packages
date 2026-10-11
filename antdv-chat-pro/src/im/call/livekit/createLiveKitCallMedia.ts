@@ -68,9 +68,12 @@ export const createLiveKitCallMedia: ImCallMediaCreate = (call, selfName) => {
   let videoTrack: LocalVideoTrack | undefined
   let remoteVideoTrack: RemoteTrack | undefined
   let previewed = false
+  let captureSettled = false
   let remoteBound = false
+  let publishReady = false
   let published = false
   let closed = false
+  const consumedRemote = new WeakSet<RemoteTrack>()
   const view: ImCallMediaState = {
     localMicrophone: true,
     localCamera: isEnumValue(call.type, MESSAGE_SERVER_CHAT_CALL_TYPE.VIDEO),
@@ -160,6 +163,25 @@ export const createLiveKitCallMedia: ImCallMediaCreate = (call, selfName) => {
     return room
   }
 
+  function takeRemoteTrack(track: RemoteTrack, participant: {isLocal: boolean; isMicrophoneEnabled: boolean; isCameraEnabled: boolean}) {
+    if (participant.isLocal || closed) {
+      return
+    }
+    if (!consumedRemote.has(track)) {
+      consumedRemote.add(track)
+      if (track.kind === Track.Kind.Audio) {
+        track.attach()
+      }
+    }
+    if (track.kind === Track.Kind.Video) {
+      remoteVideoTrack = track
+      void attachCurrent('remote')
+    }
+    view.remoteMicrophone = participant.isMicrophoneEnabled
+    view.remoteCamera = participant.isCameraEnabled
+    emit()
+  }
+
   function bindRemote(current: Room) {
     if (remoteBound) {
       return
@@ -173,6 +195,9 @@ export const createLiveKitCallMedia: ImCallMediaCreate = (call, selfName) => {
       view.remoteCamera = participant.isCameraEnabled
       emit()
     }
+    current.on(RoomEvent.TrackSubscribed, (track, _publication, participant) => {
+      takeRemoteTrack(track, participant)
+    })
     current.on(RoomEvent.TrackMuted, (_publication, participant) => sync(participant))
     current.on(RoomEvent.TrackUnmuted, (_publication, participant) => sync(participant))
     current.on(RoomEvent.TrackPublished, (_publication, participant) => sync(participant))
@@ -180,45 +205,41 @@ export const createLiveKitCallMedia: ImCallMediaCreate = (call, selfName) => {
     current.on(RoomEvent.ParticipantConnected, (participant) => sync(participant))
   }
 
+  function adoptExistingRemoteTracks(current: Room) {
+    current.remoteParticipants.forEach((participant) => {
+      participant.trackPublications.forEach((publication) => {
+        if (publication.track) {
+          takeRemoteTrack(publication.track, participant)
+        }
+      })
+    })
+  }
+
+  // 采集没结束就先不发。结束之后缺哪一路，就明确关掉哪一路，对方不会一直当成开着。
   async function publishBoth(current: Room) {
-    if (published) {
+    if (published || closed || !captureSettled) {
       return
     }
     published = true
-    current.on(RoomEvent.TrackSubscribed, (track, _publication, participant) => {
-      if (participant.isLocal) {
-        return
-      }
-      if (track.kind === Track.Kind.Video) {
-        remoteVideoTrack = track
-        void attachCurrent('remote')
-      } else if (track.kind === Track.Kind.Audio) {
-        track.attach()
-      }
-      view.remoteMicrophone = participant.isMicrophoneEnabled
-      view.remoteCamera = participant.isCameraEnabled
-      emit()
-    })
-
     if (videoTrack) {
       await current.localParticipant.publishTrack(videoTrack, {source: Track.Source.Camera})
     } else {
+      view.localCamera = false
       await current.localParticipant.setCameraEnabled(false)
     }
     if (audioTrack) {
       await current.localParticipant.publishTrack(audioTrack, {source: Track.Source.Microphone})
     } else {
-      await current.localParticipant.setMicrophoneEnabled(true)
+      view.localMicrophone = false
+      await current.localParticipant.setMicrophoneEnabled(false)
     }
-    const remote = Array.from(current.remoteParticipants.values())[0]
-    if (remote) {
-      view.remoteMicrophone = remote.isMicrophoneEnabled
-      view.remoteCamera = remote.isCameraEnabled
-      emit()
-    }
+    emit()
+    adoptExistingRemoteTracks(current)
   }
 
   const media: ImCallMedia = {
+    // 麦克风和摄像头共用一次授权。无痕模式第一次会停在授权框，进房可以先发生。
+    // 授权成功就发布；拒绝或没有设备则关掉对应开关，通话继续。两路互不影响。
     async previewLocal(current) {
       if (closed || previewed) {
         return
@@ -227,14 +248,24 @@ export const createLiveKitCallMedia: ImCallMediaCreate = (call, selfName) => {
       const videoCall = isEnumValue(current.type, MESSAGE_SERVER_CHAT_CALL_TYPE.VIDEO)
       view.localCamera = videoCall
       const capture = captureOf(current)
-      audioTrack = await createLocalAudioTrack(capture.audio as AudioCaptureOptions)
-      if (!videoCall) {
-        emit()
-        return
+      try {
+        audioTrack = await createLocalAudioTrack(capture.audio as AudioCaptureOptions)
+      } catch {
+        view.localMicrophone = false
       }
-      videoTrack = await createLocalVideoTrack(capture.video as VideoCaptureOptions)
-      await attachCurrent('local')
+      if (videoCall) {
+        try {
+          videoTrack = await createLocalVideoTrack(capture.video as VideoCaptureOptions)
+          await attachCurrent('local')
+        } catch {
+          view.localCamera = false
+        }
+      }
+      captureSettled = true
       emit()
+      if (publishReady && room?.state === ConnectionState.Connected) {
+        await publishBoth(room)
+      }
     },
     async confirmParticipant(current, participant) {
       if (closed || !isEnumValue(participant.status, MESSAGE_SERVER_USER_CHAT_CALL_PARTICIPANT_STATUS.ACTIVE)) {
@@ -246,8 +277,10 @@ export const createLiveKitCallMedia: ImCallMediaCreate = (call, selfName) => {
           return
         }
         const currentRoom = ensureRoom()
-        await currentRoom.connect(String(liveKit.id), String(liveKit.value))
+        // 先监听再连接。对方要是已经发布，connect 期间就会订阅，漏掉这次就没有画面和声音。
         bindRemote(currentRoom)
+        await currentRoom.connect(String(liveKit.id), String(liveKit.value))
+        adoptExistingRemoteTracks(currentRoom)
       }
       const everyoneActive = (current.participants ?? []).every((item) =>
         isEnumValue(item.status, MESSAGE_SERVER_USER_CHAT_CALL_PARTICIPANT_STATUS.ACTIVE),
@@ -255,39 +288,62 @@ export const createLiveKitCallMedia: ImCallMediaCreate = (call, selfName) => {
       if (!everyoneActive || !room || room.state !== ConnectionState.Connected) {
         return
       }
+      publishReady = true
       await publishBoth(room)
     },
     async attach(role, element) {
       elements[role] = element
       await attachCurrent(role)
     },
+    // 拒绝之后再点开，会重新向浏览器要授权。再次拒绝就把开关拨回去。
     async setMicrophoneEnabled(enabled) {
-      view.localMicrophone = enabled
-      if (audioTrack) {
-        enabled ? await audioTrack.unmute() : await audioTrack.mute()
-      } else if (room) {
-        await room.localParticipant.setMicrophoneEnabled(enabled)
-      }
-      emit()
-    },
-    async setCameraEnabled(enabled) {
-      view.localCamera = enabled
-      if (enabled && !videoTrack) {
-        videoTrack = await createLocalVideoTrack(captureOf(call).video as VideoCaptureOptions)
-        await attachCurrent('local')
-        if (room?.state === ConnectionState.Connected) {
-          await room.localParticipant.publishTrack(videoTrack, {source: Track.Source.Camera})
+      if (!enabled) {
+        view.localMicrophone = false
+        if (audioTrack) {
+          await audioTrack.mute()
+        } else if (room?.state === ConnectionState.Connected) {
+          await room.localParticipant.setMicrophoneEnabled(false)
         }
         emit()
         return
       }
-      if (videoTrack) {
-        enabled ? await videoTrack.unmute() : await videoTrack.mute()
-        if (enabled) {
-          await attachCurrent('local')
+      try {
+        if (!audioTrack) {
+          audioTrack = await createLocalAudioTrack(captureOf(call).audio as AudioCaptureOptions)
         }
-      } else if (room) {
-        await room.localParticipant.setCameraEnabled(enabled)
+        await audioTrack.unmute()
+        if (room?.state === ConnectionState.Connected && !room.localParticipant.getTrackPublication(Track.Source.Microphone)) {
+          await room.localParticipant.publishTrack(audioTrack, {source: Track.Source.Microphone})
+        }
+        view.localMicrophone = true
+      } catch {
+        view.localMicrophone = false
+      }
+      emit()
+    },
+    async setCameraEnabled(enabled) {
+      if (!enabled) {
+        view.localCamera = false
+        if (videoTrack) {
+          await videoTrack.mute()
+        } else if (room?.state === ConnectionState.Connected) {
+          await room.localParticipant.setCameraEnabled(false)
+        }
+        emit()
+        return
+      }
+      try {
+        if (!videoTrack) {
+          videoTrack = await createLocalVideoTrack(captureOf(call).video as VideoCaptureOptions)
+        }
+        await videoTrack.unmute()
+        await attachCurrent('local')
+        if (room?.state === ConnectionState.Connected && !room.localParticipant.getTrackPublication(Track.Source.Camera)) {
+          await room.localParticipant.publishTrack(videoTrack, {source: Track.Source.Camera})
+        }
+        view.localCamera = true
+      } catch {
+        view.localCamera = false
       }
       emit()
     },

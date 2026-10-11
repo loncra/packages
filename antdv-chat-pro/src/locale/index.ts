@@ -89,6 +89,7 @@ export interface ImCallLocale {
   closeCountdown: string
   reconnectTimeCountdown: string
   unsupported: string
+  captureDenied: string
   unnamed: string
   ignore: string
   accept: string

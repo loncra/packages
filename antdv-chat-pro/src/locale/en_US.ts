@@ -88,6 +88,7 @@ const locale: Locale = {
     closeCountdown: 'The call has ended and will automatically close after s seconds',
     reconnectTimeCountdown: '(The call will automatically end after s seconds)',
     unsupported: 'This browser cannot capture audio or video',
+    captureDenied: 'Microphone or camera permission was denied. The call will continue',
     unnamed: 'Unnamed',
     ignore: 'Ignore',
     accept: 'Accept',
