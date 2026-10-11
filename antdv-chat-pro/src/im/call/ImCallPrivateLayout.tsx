@@ -41,10 +41,10 @@ function participantBadge(status: NameValueEnumMetadata<number> | number): Badge
   if (USER_CHAT_CALL_PARTICIPANT_PROCESSING_STATUS_VALUE.includes(value)) {
     return 'processing'
   }
-  if (value === MESSAGE_SERVER_USER_CHAT_CALL_PARTICIPANT_STATUS.ACTIVE) {
+  if (isEnumValue(status, MESSAGE_SERVER_USER_CHAT_CALL_PARTICIPANT_STATUS.ACTIVE)) {
     return 'success'
   }
-  if (value === MESSAGE_SERVER_USER_CHAT_CALL_PARTICIPANT_STATUS.NO_ANSWER) {
+  if (isEnumValue(status, MESSAGE_SERVER_USER_CHAT_CALL_PARTICIPANT_STATUS.NO_ANSWER)) {
     return 'default'
   }
   return 'warning'

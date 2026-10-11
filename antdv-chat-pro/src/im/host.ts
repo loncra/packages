@@ -1,7 +1,7 @@
 import type {Ref} from 'vue'
 import type {PlatformUser, UserMetadata} from '@loncra/client/auth'
 import type {IdValueMetadata, TimeProperties} from '@loncra/client/commons'
-import type {UserChatMessageResponseBody} from '@loncra/client/message'
+import type {UserChatConversationResponseBody} from '@loncra/client/message'
 
 export interface ImHost {
   selfName: string
@@ -9,8 +9,11 @@ export interface ImHost {
 }
 
 export interface ImChatHost extends ImHost {
-  timeText: (time: number) => string
-  messagePreview: (message: UserChatMessageResponseBody) => string
+  timeText: (unix?: number) => string
+  messagePreview: (
+    message: UserChatConversationResponseBody['lastUserMessage'] | undefined,
+    conversation?: UserChatConversationResponseBody,
+  ) => string
   subscribeReadUpdate: (
     handler: (rows: Array<IdValueMetadata<number, number>>) => void,
   ) => () => void
@@ -18,4 +21,10 @@ export interface ImChatHost extends ImHost {
 
 export interface ImChatCallHost extends ImHost {
   closeTimeValue: Ref<TimeProperties>
+}
+
+export interface ImPageHost extends ImChatHost {
+  draftPreview: (draft: UserChatConversationResponseBody['draft']) => string
+  unreadCount: (id: string) => number
+  refreshUnread: () => Promise<void>
 }

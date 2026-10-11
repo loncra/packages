@@ -79,6 +79,18 @@ const locale: Locale = {
     audio: 'Audio',
     unknown: 'File',
   },
+  ImChat: {
+    everyone: 'Everyone',
+    undoMessage: 'This message has been undone',
+    undoTime: 'Undone at {time}',
+    exitRoom: 'You have left this group',
+    roomRemove: 'You were removed from this group',
+    disbandRoom: 'This group has been disbanded',
+    inputPlaceholder: 'Type a message; paste files here to send attachments',
+    jumpToUnread: 'Jump to the earliest unread message',
+    unreadSystem: 'The following are the earliest unread messages',
+    noMore: 'No more data available',
+  },
   ImCall: {
     videoAction: 'Video call',
     voiceAction: 'Voice call',

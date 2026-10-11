@@ -79,6 +79,18 @@ const locale: Locale = {
     audio: '音频',
     unknown: '文件',
   },
+  ImChat: {
+    everyone: '所有人',
+    undoMessage: '该消息已撤销',
+    undoTime: '撤销时间{time}',
+    exitRoom: '您已退出本群',
+    roomRemove: '您已被本群移除',
+    disbandRoom: '本群已解散',
+    inputPlaceholder: '输入消息，可粘贴文件到此处发送文件内容',
+    jumpToUnread: '跳转至最早未读消息',
+    unreadSystem: '以下为最早未读消息',
+    noMore: '没有更多的数据了',
+  },
   ImCall: {
     videoAction: '视频通话',
     voiceAction: '语音通话',

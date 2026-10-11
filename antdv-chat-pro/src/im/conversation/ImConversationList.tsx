@@ -31,6 +31,7 @@ import {
   type MessageContentMentionMetadata,
   type UserChatConversationResponseBody,
 } from '@loncra/client/message'
+import type {SlotConfigType} from '@antdv-next/x/dist/sender/interface'
 import ConversationList from '../../conversation/ConversationList.tsx'
 import type {ConversationNode} from '../../conversation/types.ts'
 import useStyle, {IM_CONVERSATION_PREFIX} from './style/index.ts'
@@ -67,6 +68,7 @@ const ImConversationList = defineComponent({
     selectedKeys: {type: Array as PropType<string[]>, required: true},
     openKeys: {type: Array as PropType<string[]>, required: true},
     host: {type: Object as PropType<ImConversationHost>, required: true},
+    storedDrafts: {type: Object as PropType<Record<string, SlotConfigType[]>>, required: true},
   },
   emits: ['active', 'flags', 'delete', 'update:selectedKeys', 'update:openKeys'],
   setup(props, {emit}) {
@@ -225,7 +227,9 @@ const ImConversationList = defineComponent({
           />
         )
       }
-      const draft = item.draft
+      const roomId = item.room?.id
+      const stored = roomId == null ? undefined : props.storedDrafts[String(roomId)]
+      const draft = item.draft && item.draft.length > 0 ? item.draft : stored
       if (draft && draft.length > 0) {
         return (
           <Typography.Text ellipsis type="danger">

@@ -21,10 +21,10 @@ function badgeStatus(status: CallBlock['status']) {
   if (USER_CHAT_CALL_PARTICIPANT_PROCESSING_STATUS_VALUE.includes(value)) {
     return 'processing' as const
   }
-  if (value === MESSAGE_SERVER_USER_CHAT_CALL_PARTICIPANT_STATUS.ACTIVE) {
+  if (isEnumValue(status, MESSAGE_SERVER_USER_CHAT_CALL_PARTICIPANT_STATUS.ACTIVE)) {
     return 'success' as const
   }
-  if (value === MESSAGE_SERVER_USER_CHAT_CALL_PARTICIPANT_STATUS.NO_ANSWER) {
+  if (isEnumValue(status, MESSAGE_SERVER_USER_CHAT_CALL_PARTICIPANT_STATUS.NO_ANSWER)) {
     return 'default' as const
   }
   return 'warning' as const
@@ -42,7 +42,7 @@ const ImCallBlock = defineComponent({
       const TypeIcon = isEnumValue(block.value, MESSAGE_SERVER_CHAT_CALL_TYPE.VIDEO)
         ? VideoCameraOutlined
         : AudioOutlined
-      const incoming = getEnumValue(block.status) === MESSAGE_SERVER_USER_CHAT_CALL_PARTICIPANT_STATUS.INITIATING
+      const incoming = isEnumValue(block.status, MESSAGE_SERVER_USER_CHAT_CALL_PARTICIPANT_STATUS.INITIATING)
         && block.caller !== props.host.selfName
         && isEnumValue(block.scene, MESSAGE_SERVER_CHAT_CALL_SCENE.PRIVATE)
       return (

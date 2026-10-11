@@ -80,6 +80,19 @@ export interface ImHistoryLocale {
   unknown: string
 }
 
+export interface ImChatLocale {
+  everyone: string
+  undoMessage: string
+  undoTime: string
+  exitRoom: string
+  roomRemove: string
+  disbandRoom: string
+  inputPlaceholder: string
+  jumpToUnread: string
+  unreadSystem: string
+  noMore: string
+}
+
 export interface ImCallLocale {
   videoAction: string
   voiceAction: string
@@ -118,6 +131,7 @@ export interface Locale {
   ImBubble?: ImBubbleLocale
   ImRoom?: ImRoomLocale
   ImHistory?: ImHistoryLocale
+  ImChat?: ImChatLocale
   ImCall?: ImCallLocale
   AgentBubble?: AgentBubbleLocale
 }

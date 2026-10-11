@@ -1,18 +1,46 @@
-import {computed, defineComponent, type PropType, ref} from 'vue'
-import {Flex} from 'antdv-next'
-import type {SlotConfigType} from '@antdv-next/x/dist/sender/interface'
-import type {DraftRestoreResult} from '@loncra/chat-core'
-import {classNames} from '@loncra/antdv'
+import {
+  computed,
+  defineComponent,
+  getCurrentInstance,
+  h,
+  markRaw,
+  type PropType,
+  ref,
+  unref,
+} from 'vue'
+import {Flex, Tag, Typography} from 'antdv-next'
+import type {UploadFile} from 'antdv-next/dist/upload/interface'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
+import {UserOutlined} from '@antdv-next/icons'
+import {XProvider} from '@antdv-next/x'
+import type {SlotConfigType} from '@antdv-next/x/dist/sender/interface'
+import type {InstructionItem, InstructionMeasure, InstructionSenderHandle, InstructionSenderProps} from '@loncra/antdv-chat'
+import {EmojiButton} from '@loncra/antdv-chat'
+import {classNames} from '@loncra/antdv'
+import {
+  AttachmentUpload,
+  type AttachmentUploadExecutorOptions,
+  type AttachmentUploadExpose,
+  type AttachmentValue,
+  convertUploadFiles,
+  isObjectWriteResult,
+  isUploadFile,
+  uploadFile,
+  useAntdvConfig,
+} from '@loncra/antdv-pro'
+import {getEnumName, type IdValueMetadata, isEnumValue} from '@loncra/client/commons'
+import type {ObjectWriteResult} from '@loncra/client/resource'
+import {
+  MESSAGE_SERVER_USER_CHAT_PARTICIPANT_TYPE,
+  type UserChatMessageResponseBody,
+} from '@loncra/client/message'
+import type {DraftRestoreResult, ImContentBlock, InstructionBlock, ReferenceBlock} from '@loncra/chat-core'
 import DraftSender, {type DraftSenderExpose} from '../../draft-sender/DraftSender'
-import type {DraftBinding} from '../../draft-sender/useDraftSender'
-import {EmojiButton, type InstructionSenderHandle, type InstructionSenderProps} from '@loncra/antdv-chat'
+import {createImDraftBinding} from '../draft/createImDraftBinding'
+import type {ImDraftLive} from '../draft/imDraftCodec'
+import type {ImPageHost} from '../host'
+import {useLocale} from '../../_util/useLocale'
 import useStyle from './style'
-
-/** 引用条只认 id，芯片内容由宿主插槽画。 */
-export interface ImSenderReferenceItem {
-  id?: string | number
-}
 
 export interface ImSenderExpose {
   flush: () => Promise<void>
@@ -20,59 +48,500 @@ export interface ImSenderExpose {
   clear: () => void
   getSlotConfigValue: () => SlotConfigType[]
   getSender: () => InstructionSenderHandle | undefined
+  convertContentBlockToSlotConfig: (content: ImContentBlock[]) => SlotConfigType[]
+  createFilesSlot: (files: UploadFile<ObjectWriteResult>[], key?: string) => SlotConfigType
 }
 
 const ImSender = defineComponent({
   name: 'LImSender',
   inheritAttrs: false,
   props: {
-    binding: {type: Object as PropType<DraftBinding<any>>, required: true},
-    readLive: {type: Function as PropType<() => unknown>, required: true},
-    slotsOf: {type: Function as PropType<(live: unknown) => SlotConfigType[]>, required: true},
-    onRestore: {
-      type: Function as PropType<(result: DraftRestoreResult<unknown, SlotConfigType[]>) => void>,
-      required: true,
-    },
-    saveSource: {default: undefined as unknown},
+    host: {type: Object as PropType<ImPageHost>, required: true},
+    targetId: {type: String, required: true},
     refMessages: {
-      type: Array as PropType<ImSenderReferenceItem[]>,
+      type: Array as PropType<UserChatMessageResponseBody[]>,
       default: () => [],
     },
-    onFilterDataSource: {
-      type: Function as PropType<InstructionSenderProps['onFilterDataSource']>,
-      required: true,
-    },
-    senderInsertInstruction: {
-      type: Function as PropType<InstructionSenderProps['senderInsertInstruction']>,
-      required: true,
-    },
-    createInstructionSlot: {
-      type: Function as PropType<InstructionSenderProps['createInstructionSlot']>,
-      required: true,
-    },
     slotConfig: Array as PropType<SlotConfigType[]>,
+    placeholder: {type: String, default: ''},
+    sending: {type: Boolean, default: false},
+    uploadOptions: Object as PropType<Record<string, unknown>>,
+    disabled: {type: Boolean, default: false},
+    instructionContextVisibleMargin: {type: Number, default: 8},
+    instructionMap: Object as PropType<Record<string, IdValueMetadata<string, string>[]>>,
+    onFilterDataSource: Function as PropType<InstructionSenderProps['onFilterDataSource']>,
+    senderInsertInstruction: Function as PropType<InstructionSenderProps['senderInsertInstruction']>,
     prefixCls: String,
     rootClass: String,
   },
-  emits: ['pasteFile', 'submit', 'change', 'cancel'],
-  setup(props, {attrs, slots, emit, expose}) {
+  emits: ['submit', 'change', 'cancel', 'jumpToReference', 'update:refMessages', 'appliedSlots'],
+  setup(props, {slots, emit, expose}) {
+    const instance = getCurrentInstance()
     const draftRef = ref<DraftSenderExpose>()
-    const config = useConfig()
+    const antdConfig = useConfig()
+    const antdvConfig = useAntdvConfig()
+    const bubbleLocale = useLocale('ImBubble')
     const prefixCls = computed(() =>
-      config.value.getPrefixCls('im-sender', props.prefixCls ?? 'loncra-im-sender'),
+      antdConfig.value.getPrefixCls('im-sender', props.prefixCls ?? 'loncra-im-sender'),
     )
     const [hashId, cssVarCls] = useStyle(prefixCls)
+    const uploadRefMap = new Map<string, AttachmentUploadExpose>()
+    const uploading = ref(false)
+    const isSending = computed(() => unref(props.sending) || uploading.value)
+
+    function setRefMessages(next: UserChatMessageResponseBody[]) {
+      emit('update:refMessages', next)
+    }
+
+    function bindUploadRef(slotKey: string, inst: unknown): void {
+      if (!slotKey) {
+        return
+      }
+      const exposed = (inst as AttachmentUploadExpose | null)?.upload
+        ? (inst as AttachmentUploadExpose)
+        : (inst as {exposed?: AttachmentUploadExpose} | null)?.exposed
+      if (exposed?.upload) {
+        uploadRefMap.set(slotKey, exposed)
+      } else {
+        uploadRefMap.delete(slotKey)
+      }
+    }
+
+    function isFilesSlot(
+      slot: SlotConfigType,
+    ): slot is SlotConfigType & {key: string; props: {slotKind: 'files'; defaultValue?: UploadFile<ObjectWriteResult>[]}} {
+      return slot.type === 'custom' && slot.props?.slotKind === 'files'
+    }
+
+    function isInstructionSlot(
+      slot: SlotConfigType,
+    ): slot is SlotConfigType & {
+      key: string
+      props: {slotKind: 'instruction'; prefix: string; defaultValue: IdValueMetadata<string, string>}
+    } {
+      return slot.type === 'custom' && slot.props?.slotKind === 'instruction'
+    }
+
+    function toUploadFile(file: File): UploadFile<ObjectWriteResult> {
+      return markRaw({
+        uid: crypto.randomUUID(),
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        originFileObj: markRaw(file) as UploadFile<ObjectWriteResult>['originFileObj'],
+      })
+    }
+
+    function originBlob(file: UploadFile<ObjectWriteResult>): Blob | undefined {
+      const origin = file.originFileObj
+      return origin instanceof Blob ? origin : undefined
+    }
+
+    function filesFromSlot(
+      slot: SlotConfigType & {props: {defaultValue?: UploadFile<ObjectWriteResult>[]}},
+    ): UploadFile<ObjectWriteResult>[] {
+      const fromProps = (slot.props.defaultValue ?? []).filter(isUploadFile)
+      const extra = (slot as {value?: unknown}).value
+      const fromValue = Array.isArray(extra) ? extra.filter(isUploadFile) : []
+      const merged = new Map<string, UploadFile<ObjectWriteResult>>()
+      for (const file of [...fromValue, ...fromProps]) {
+        const uid = String(file.uid)
+        const prev = merged.get(uid)
+        if (!prev || (!originBlob(prev) && originBlob(file))) {
+          merged.set(uid, file)
+        }
+      }
+      return [...merged.values()]
+    }
+
+    function repairOrigin(
+      files: UploadFile<ObjectWriteResult>[],
+      source: UploadFile<ObjectWriteResult>[],
+    ): void {
+      const byUid = new Map(source.map((file) => [String(file.uid), file]))
+      for (const file of files) {
+        if (originBlob(file)) {
+          continue
+        }
+        const src = byUid.get(String(file.uid))
+        const origin = src ? originBlob(src) : undefined
+        if (origin) {
+          file.originFileObj = origin as UploadFile<ObjectWriteResult>['originFileObj']
+        }
+      }
+    }
+
+    function buildChatUploadOptions(): AttachmentUploadExecutorOptions {
+      const raw = props.uploadOptions ?? {}
+      return {
+        postFilename: 'file',
+        promiseLimit: 3,
+        param: (raw.param ?? {}) as Record<string, unknown>,
+        headers: (raw.headers ?? {}) as Record<string, string>,
+      }
+    }
+
+    async function uploadFilesDirect(files: UploadFile<ObjectWriteResult>[]): Promise<ObjectWriteResult[]> {
+      const options = buildChatUploadOptions()
+      const results: ObjectWriteResult[] = []
+      for (const file of files) {
+        if (isObjectWriteResult(file.response) && file.status === 'done') {
+          results.push(file.response)
+          continue
+        }
+        if (!originBlob(file)) {
+          continue
+        }
+        results.push(await uploadFile(file, 'temp', options))
+      }
+      return results
+    }
+
+    function asWriteResults(uploaded: ObjectWriteResult | ObjectWriteResult[] | undefined): ObjectWriteResult[] {
+      return (Array.isArray(uploaded) ? uploaded : uploaded ? [uploaded] : []).filter(
+        (file): file is ObjectWriteResult => isObjectWriteResult(file),
+      )
+    }
+
+    function resolveFilesValue(value: unknown, item: SlotConfigType): UploadFile<ObjectWriteResult>[] {
+      if (Array.isArray(value) && value.some(isUploadFile)) {
+        return value.filter(isUploadFile)
+      }
+      if (item.type === 'custom' && Array.isArray(item.props?.defaultValue)) {
+        return item.props.defaultValue.filter(isUploadFile)
+      }
+      return []
+    }
+
+    const fileChipViews = new Map<string, {
+      files: UploadFile<ObjectWriteResult>[]
+      disabled: boolean
+      locale: object | undefined
+      theme: object | undefined
+      componentSize: string
+      onUpdate: (next: AttachmentValue) => void
+      bindRef: (inst: unknown) => void
+    }>()
+
+    function sameFileRefs(left: UploadFile<ObjectWriteResult>[], right: UploadFile<ObjectWriteResult>[]): boolean {
+      return left.length === right.length && left.every((file, index) => file === right[index])
+    }
+
+    function filesValueOf(value: unknown, item: SlotConfigType): UploadFile<ObjectWriteResult>[] {
+      if (Array.isArray(value) && value.every(isUploadFile)) {
+        return value
+      }
+      return resolveFilesValue(value, item)
+    }
+
+    function handleFilesSlotChange(
+      item: SlotConfigType,
+      next: AttachmentValue,
+      senderOnChange: (value: AttachmentValue) => void,
+    ): void {
+      const files = Array.isArray(next) ? next : next ? [next] : []
+      const sender = draftRef.value?.getSender()
+      if (!sender || !('key' in item) || !item.key) {
+        return
+      }
+      senderOnChange(files)
+    }
+
+    function fileCustomRender(
+      value: UploadFile<ObjectWriteResult>[],
+      onChange: (value: AttachmentValue) => void,
+      _props: {disabled?: boolean; readOnly?: boolean},
+      item: SlotConfigType,
+    ) {
+      const slotKey = 'key' in item && item.key ? item.key : ''
+      const files = filesValueOf(value, item)
+      const disabled = isSending.value
+      const locale = antdConfig.value.locale
+      const theme = antdConfig.value.theme
+      const componentSize = antdvConfig.state.componentSize
+      let view = fileChipViews.get(slotKey)
+      if (
+        !view
+        || view.disabled !== disabled
+        || view.locale !== locale
+        || view.theme !== theme
+        || view.componentSize !== componentSize
+        || !sameFileRefs(view.files, files)
+      ) {
+        view = {
+          files,
+          disabled,
+          locale,
+          theme,
+          componentSize,
+          onUpdate: (next: AttachmentValue) => handleFilesSlotChange(item, next, onChange),
+          bindRef: (inst: unknown) => bindUploadRef(slotKey, inst),
+        }
+        fileChipViews.set(slotKey, view)
+      }
+      const chip = view
+      const node = h(
+        XProvider,
+        {
+          locale: chip.locale,
+          componentSize: chip.componentSize,
+          theme: chip.theme,
+        },
+        {
+          default: () =>
+            h(AttachmentUpload, {
+              bucket: 'temp',
+              disabled: chip.disabled,
+              uploadOptions: props.uploadOptions,
+              ref: chip.bindRef,
+              value: chip.files,
+              multiple: true,
+              maxCount: chip.files.length,
+              'onUpdate:value': chip.onUpdate,
+            }),
+          $stable: true,
+        },
+      )
+      if (instance) {
+        node.appContext = instance.appContext
+      }
+      return node
+    }
+
+    function createFilesSlot(
+      files: UploadFile<ObjectWriteResult>[],
+      key: string = crypto.randomUUID(),
+    ): SlotConfigType {
+      return markRaw({
+        type: 'custom',
+        key,
+        props: {slotKind: 'files', defaultValue: files.map((file) => markRaw(file))},
+        customRender: fileCustomRender,
+      })
+    }
+
+    function instructionSlot(block: InstructionBlock): SlotConfigType {
+      return {
+        type: 'custom',
+        key: block.id,
+        props: {slotKind: 'instruction', defaultValue: block.value, prefix: block.prefix},
+        customRender: (
+          value: IdValueMetadata<string, string>,
+          _onChange: (next: IdValueMetadata<string, string>) => void,
+          _slotProps: {disabled?: boolean; readOnly?: boolean},
+          item: SlotConfigType,
+        ) => {
+          const slotKey = 'key' in item && item.key ? item.key : ''
+          const prefix = item.type === 'custom'
+            ? (item.props as {prefix?: string} | undefined)?.prefix ?? ''
+            : ''
+          const node = h(
+            XProvider,
+            {
+              locale: antdConfig.value.locale,
+              theme: antdConfig.value.theme,
+            },
+            {
+              default: () =>
+                h(
+                  Tag,
+                  {key: slotKey, variant: 'outlined'},
+                  {
+                    icon: prefix === '@' ? () => h(UserOutlined) : undefined,
+                    default: () => value.value,
+                  },
+                ),
+            },
+          )
+          if (instance) {
+            node.appContext = instance.appContext
+          }
+          return node
+        },
+      }
+    }
+
+    function createInstructionSlot(option: InstructionItem, measure: InstructionMeasure): object {
+      return instructionSlot({
+        id: crypto.randomUUID(),
+        type: 'custom',
+        slotKind: 'instruction',
+        value: option as unknown as IdValueMetadata<string, string>,
+        prefix: String(option.metadata?.slotPrefix ?? measure.prefix),
+      })
+    }
+
+    function onPasteFiles(fileList: FileList): void {
+      const files = Array.from(fileList)
+      if (files.length === 0) {
+        return
+      }
+      const slot = createFilesSlot(files.map(toUploadFile))
+      const sender = draftRef.value?.getSender()
+      if (!sender) {
+        return
+      }
+      sender.insert([slot, {type: 'text', value: ' '}], 'cursor')
+    }
+
+    async function handleSubmit(_value: string, slotConfig?: SlotConfigType[]): Promise<void> {
+      if (!slotConfig?.length) {
+        return
+      }
+      uploading.value = true
+      try {
+        const blocks: ImContentBlock[] = []
+        for (const slot of slotConfig) {
+          if (isFilesSlot(slot) && slot.key) {
+            const slotFiles = filesFromSlot(slot)
+            const inst = uploadRefMap.get(slot.key)
+            const live = inst?.getFiles?.()?.filter(isUploadFile)
+            let files: ObjectWriteResult[] = []
+            if (inst && live) {
+              if (live.length > 0) {
+                repairOrigin(live, slotFiles)
+                files = asWriteResults(await inst.upload())
+                if (files.length === 0) {
+                  files = await uploadFilesDirect(live)
+                }
+              }
+            } else {
+              files = asWriteResults(await inst?.upload())
+              if (files.length === 0) {
+                files = await uploadFilesDirect(slotFiles)
+              }
+            }
+            blocks.push({
+              id: slot.key,
+              value: files,
+              type: 'custom',
+              slotKind: 'files',
+            })
+          } else if (isInstructionSlot(slot) && slot.key) {
+            blocks.push({
+              id: slot.key,
+              value: {id: slot.props.defaultValue.id, value: slot.props.defaultValue.value},
+              type: 'custom',
+              prefix: slot.props.prefix,
+              slotKind: 'instruction',
+            })
+          } else {
+            blocks.push(slot as ImContentBlock)
+          }
+        }
+        const quoted = props.refMessages ?? []
+        if (quoted.length > 0) {
+          const referenceBlock: ReferenceBlock = {
+            type: 'custom',
+            slotKind: 'reference',
+            value: quoted,
+          }
+          blocks.push(referenceBlock)
+        }
+        emit('submit', blocks)
+        setRefMessages([])
+      } finally {
+        uploading.value = false
+      }
+    }
+
+    function clear(): void {
+      const sender = draftRef.value?.getSender()
+      if (!sender) {
+        return
+      }
+      sender.clear()
+      sender.focus({cursor: 'end'})
+    }
+
+    function convertContentBlockToSlotConfig(content: ImContentBlock[]): SlotConfigType[] {
+      const result: SlotConfigType[] = []
+      let quoted: UserChatMessageResponseBody[] = []
+      for (const slot of content) {
+        if (slot.type === 'text') {
+          result.push({type: 'text', value: slot.value})
+        } else if (slot.type === 'custom' && slot.slotKind === 'files') {
+          result.push(createFilesSlot(convertUploadFiles(slot.value)))
+        } else if (slot.type === 'custom' && slot.slotKind === 'reference') {
+          quoted = (slot as ReferenceBlock).value
+        } else if (slot.type === 'custom' && slot.slotKind === 'instruction') {
+          result.push(instructionSlot(slot))
+        }
+      }
+      setRefMessages(quoted)
+      return result
+    }
+
+    function readLive(): ImDraftLive {
+      return {
+        slots: draftRef.value?.getSlotConfigValue() ?? props.slotConfig ?? [],
+        refMessages: [...(props.refMessages ?? [])],
+      }
+    }
+
+    function slotsOf(live: unknown): SlotConfigType[] {
+      return (live as ImDraftLive).slots
+    }
+
+    function onRestore(result: DraftRestoreResult<unknown, SlotConfigType[]>): void {
+      const live = result.live as ImDraftLive | null
+      if (!result.found || !live) {
+        setRefMessages([])
+        return
+      }
+      setRefMessages([...live.refMessages])
+      if (result.applySlots && result.slots) {
+        emit('appliedSlots', result.slots)
+      }
+    }
+
+    const binding = createImDraftBinding({
+      principal: () => props.host.selfName,
+      targetId: () => props.targetId,
+      factories: {
+        restoreFilesSlot: (files, key) => createFilesSlot(files, key),
+        restoreInstructionSlot: (block) => instructionSlot(block),
+      },
+    })
+
+    function insertInstruction(
+      sender: InstructionSenderHandle,
+      block: object,
+      measure: InstructionMeasure,
+    ) {
+      if (props.senderInsertInstruction) {
+        props.senderInsertInstruction(sender, block, measure)
+        return
+      }
+      sender.insert([block, {type: 'text', value: ' '}], 'cursor', measure.prefix + measure.keyword)
+    }
+
+    function filterInstruction(
+      keyword: string,
+      dataSource: IdValueMetadata<string, string>[],
+      prefix: string,
+    ) {
+      return props.onFilterDataSource
+        ? props.onFilterDataSource(keyword, dataSource, prefix)
+        : dataSource
+    }
 
     function onEmoji(emoji: string) {
       draftRef.value?.getSender()?.insert([{type: 'text', value: emoji}], 'cursor')
     }
 
+    function closeReference(message: UserChatMessageResponseBody) {
+      setRefMessages((props.refMessages ?? []).filter((item) => item.id !== message.id))
+    }
+
     expose({
       flush: () => draftRef.value?.flush() ?? Promise.resolve(),
       clearStored: () => draftRef.value?.clearStored() ?? Promise.resolve(),
-      clear: () => draftRef.value?.clear(),
+      clear,
       getSlotConfigValue: () => draftRef.value?.getSlotConfigValue() ?? [],
       getSender: () => draftRef.value?.getSender(),
+      convertContentBlockToSlotConfig,
+      createFilesSlot,
     })
 
     return () => {
@@ -86,19 +555,23 @@ const ImSender = defineComponent({
       )
       return (
         <DraftSender
-          {...attrs}
           ref={draftRef}
-          binding={props.binding}
-          readLive={props.readLive}
-          slotsOf={props.slotsOf}
-          onRestore={props.onRestore}
-          saveSource={props.saveSource}
+          binding={binding}
+          readLive={readLive}
+          slotsOf={slotsOf}
+          onRestore={onRestore}
+          saveSource={messages}
           slotConfig={props.slotConfig}
-          onFilterDataSource={props.onFilterDataSource}
-          senderInsertInstruction={props.senderInsertInstruction}
-          createInstructionSlot={props.createInstructionSlot}
-          onPasteFile={(fileList: FileList) => emit('pasteFile', fileList)}
-          onSubmit={(value: string, slotConfig?: SlotConfigType[]) => emit('submit', value, slotConfig)}
+          placeholder={props.placeholder}
+          sending={isSending.value}
+          disabled={props.disabled}
+          instructionContextVisibleMargin={props.instructionContextVisibleMargin}
+          instructionMap={props.instructionMap}
+          onFilterDataSource={filterInstruction}
+          senderInsertInstruction={insertInstruction}
+          createInstructionSlot={createInstructionSlot}
+          onPasteFile={onPasteFiles}
+          onSubmit={(value: string, slotConfig?: SlotConfigType[]) => handleSubmit(value, slotConfig)}
           onChange={(value: string, event?: Event, slotConfig?: SlotConfigType[]) =>
             emit('change', value, event, slotConfig)
           }
@@ -108,16 +581,46 @@ const ImSender = defineComponent({
               messages.length > 0
                 ? () => (
                     <Flex class={barClass} gap="small" wrap="wrap">
-                      {messages.map((message) => (
-                        <span key={String(message.id)} class={`${prefixCls.value}-reference`}>
-                          {slots.reference?.({message})}
-                        </span>
-                      ))}
+                      {messages.map((message) => {
+                        const owner = message.participant?.type
+                        const notMember = owner != null
+                          && !isEnumValue(owner, MESSAGE_SERVER_USER_CHAT_PARTICIPANT_TYPE.MEMBER)
+                        const mine = message.principal === props.host.selfName
+                        return (
+                          <span key={String(message.id)} class={`${prefixCls.value}-reference`}>
+                            <Tag
+                              variant="outlined"
+                              closable
+                              class={`${prefixCls.value}-chip`}
+                              color={notMember ? 'gold' : undefined}
+                              onClick={() => emit('jumpToReference', message)}
+                              onClose={() => closeReference(message)}
+                            >
+                              <Flex class={`${prefixCls.value}-chip-body`} align="center" gap={0}>
+                                <Typography.Text class={`${prefixCls.value}-chip-name`}>
+                                  {notMember ? `[${getEnumName(owner)}]` : ''}
+                                  {mine
+                                    ? bubbleLocale.value.me
+                                    : `[${props.host.principalName(message.participant?.metadata?.details)}]`}
+                                  :
+                                </Typography.Text>
+                                <Typography.Text
+                                  class={`${prefixCls.value}-chip-preview`}
+                                  type="secondary"
+                                  ellipsis
+                                >
+                                  {props.host.messagePreview(message)}
+                                </Typography.Text>
+                              </Flex>
+                            </Tag>
+                          </span>
+                        )
+                      })}
                     </Flex>
                   )
                 : undefined,
             leftExtra: () => [
-              <EmojiButton type="text" disabled={Boolean(attrs.sending)} onSelected={onEmoji} />,
+              <EmojiButton type="text" disabled={isSending.value} onSelected={onEmoji} />,
               slots.leftExtra?.(),
             ],
             rightExtra: slots.rightExtra ? () => slots.rightExtra?.() : undefined,

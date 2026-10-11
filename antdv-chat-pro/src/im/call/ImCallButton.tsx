@@ -1,9 +1,10 @@
 import {computed, defineComponent, useAttrs, type PropType} from 'vue'
-import {Button, Dropdown, type MenuItemType} from 'antdv-next'
+import {Button, Dropdown, type ButtonProps, type MenuItemType} from 'antdv-next'
 import type {MenuInfo} from 'antdv-next'
 import {AudioOutlined, PhoneOutlined, VideoCameraOutlined} from '@antdv-next/icons'
 import useApp from 'antdv-next/dist/app/useApp'
 import {fillLocale} from '@loncra/antdv'
+import {isEnumValue} from '@loncra/client/commons'
 import {ChatCallService, MESSAGE_SERVER_CHAT_CALL_TYPE, type ChatCallType} from '@loncra/client/message'
 import {useLocale} from '../../_util/useLocale.ts'
 import {useImChatCall} from './useImChatCall.ts'
@@ -15,6 +16,7 @@ const ImCallButton = defineComponent({
     roomId: {type: Number, required: true},
     peerName: {type: String, required: true},
     principals: {type: Array as PropType<string[]>, required: true},
+    type: String as PropType<ButtonProps['type']>,
   },
   setup(props) {
     const attrs = useAttrs()
@@ -45,7 +47,7 @@ const ImCallButton = defineComponent({
         if (!created.data) {
           return
         }
-        const template = type === MESSAGE_SERVER_CHAT_CALL_TYPE.VIDEO
+        const template = isEnumValue(type, MESSAGE_SERVER_CHAT_CALL_TYPE.VIDEO)
           ? locale.value.videoTitle
           : locale.value.voiceTitle
         await session.open(fillLocale(template, {user: props.peerName}), created.data)
@@ -62,12 +64,12 @@ const ImCallButton = defineComponent({
         placement="topRight"
         onMenuClick={(info: MenuInfo) => {
           const type = Number(info.key)
-          if (type === MESSAGE_SERVER_CHAT_CALL_TYPE.VIDEO || type === MESSAGE_SERVER_CHAT_CALL_TYPE.VOICE) {
+          if (isEnumValue(type, MESSAGE_SERVER_CHAT_CALL_TYPE.VIDEO) || isEnumValue(type, MESSAGE_SERVER_CHAT_CALL_TYPE.VOICE)) {
             void start(type)
           }
         }}
       >
-        <Button {...attrs} v-slots={{icon: () => <PhoneOutlined />}} />
+        <Button {...attrs} type={props.type} v-slots={{icon: () => <PhoneOutlined />}} />
       </Dropdown>
     )
   },

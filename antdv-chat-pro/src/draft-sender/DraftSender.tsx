@@ -3,6 +3,7 @@ import type {SlotConfigType} from '@antdv-next/x/dist/sender/interface'
 import type {DraftRestoreResult} from '@loncra/chat-core'
 import {
   InstructionSender,
+  type InstructionItem,
   type InstructionSenderExpose,
   type InstructionSenderHandle,
   type InstructionSenderProps,
@@ -42,6 +43,11 @@ const DraftSender = defineComponent({
       required: true,
     },
     slotConfig: Array as PropType<SlotConfigType[]>,
+    placeholder: String,
+    sending: Boolean,
+    disabled: Boolean,
+    instructionContextVisibleMargin: Number,
+    instructionMap: Object as PropType<Record<string, InstructionItem[]>>,
   },
   emits: ['change', 'pasteFile', 'submit', 'cancel'],
   setup(props, {attrs, slots, emit, expose}) {
@@ -83,6 +89,11 @@ const DraftSender = defineComponent({
           {...rest}
           ref={innerRef}
           slotConfig={slotsState.value}
+          placeholder={props.placeholder}
+          sending={props.sending}
+          disabled={props.disabled}
+          instructionContextVisibleMargin={props.instructionContextVisibleMargin}
+          instructionMap={props.instructionMap}
           onFilterDataSource={props.onFilterDataSource}
           senderInsertInstruction={props.senderInsertInstruction}
           createInstructionSlot={props.createInstructionSlot}
