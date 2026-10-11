@@ -12,6 +12,7 @@ function genImConversationStyle(token: LoncraStyleToken): CSSInterpolation {
     colorError,
     colorBgElevated,
     colorBorder,
+    colorBorderSecondary,
     colorWhite,
     fontSizeSM,
     sizeXXS,
@@ -25,7 +26,7 @@ function genImConversationStyle(token: LoncraStyleToken): CSSInterpolation {
       [`${componentCls}-search`]: {
         flexShrink: 0,
         padding: paddingSM,
-        borderBlockEnd: `1px solid ${colorBorder}`,
+        borderBlockEnd: `1px solid ${colorBorderSecondary}`,
         [`.anticon-search`]: {
           color: colorTextQuaternary,
         },

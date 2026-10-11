@@ -46,7 +46,6 @@ import {
   type UserChatParticipantEntity,
 } from '@loncra/client/message'
 import type {ImChatHost} from '../host.ts'
-import {deleteImConversations, muteImConversations, pinImConversations} from '../conversation/conversationActions.ts'
 import ImHistoriesModal from '../history/ImHistoriesModal.tsx'
 import ImRoomMemberModal, {type ImRoomMemberModalMode} from './ImRoomMemberModal.tsx'
 import {useLocale} from '../../_util/useLocale.ts'
@@ -78,7 +77,7 @@ const ImRoomSettings = defineComponent({
     muted: (_conversation: BasicUserChatConversation) => true,
     delete: (_conversation: UserChatConversationResponseBody) => true,
   },
-  setup(props, {emit, slots}) {
+  setup(props, {emit}) {
     const locale = useLocale('ImRoom')
     const {message, modal} = useApp()
     const config = useConfig()
@@ -181,7 +180,7 @@ const ImRoomSettings = defineComponent({
       }
       try {
         busy.value = true
-        const returned = (await pinImConversations([Number(conversation.id)])).at(0)
+        const returned = (await ChatMessageService.pinnedConversation([Number(conversation.id)])).data?.at(0)
         if (returned) {
           conversation.pinned = returned.pinned
         }
@@ -199,7 +198,7 @@ const ImRoomSettings = defineComponent({
       }
       try {
         busy.value = true
-        const returned = (await muteImConversations([Number(conversation.id)])).at(0)
+        const returned = (await ChatMessageService.mutedConversation([Number(conversation.id)])).data?.at(0)
         if (returned) {
           conversation.muted = returned.muted
           emit('muted', returned)
@@ -218,7 +217,7 @@ const ImRoomSettings = defineComponent({
       }
       try {
         busy.value = true
-        const result = await deleteImConversations([Number(conversation.id)])
+        const result = await ChatMessageService.deleteConversation([Number(conversation.id)])
         message.success(result.message)
         emit('delete', conversation)
       } catch (error) {
@@ -530,7 +529,6 @@ const ImRoomSettings = defineComponent({
                 onUpdate:open={(open: boolean) => {
                   historiesOpen.value = open
                 }}
-                v-slots={{call: slots.call}}
               />
             )
             : null}

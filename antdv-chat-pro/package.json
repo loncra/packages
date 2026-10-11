@@ -4,6 +4,8 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./im/call": "./src/im/call/index.ts",
+    "./im/call/livekit": "./src/im/call/livekit/index.ts",
     "./locale/zh_CN": "./src/locale/zh_CN.ts",
     "./locale/en_US": "./src/locale/en_US.ts"
   },
@@ -17,10 +19,14 @@
     "@loncra/client": ">=0.0.1",
     "antdv-next": "^1.5.0",
     "dexie": "^4.4.6",
+    "livekit-client": "^2.22.3",
     "vue": "^3.5.0"
   },
   "peerDependenciesMeta": {
     "dexie": {
+      "optional": true
+    },
+    "livekit-client": {
       "optional": true
     }
   }

@@ -80,6 +80,21 @@ export interface ImHistoryLocale {
   unknown: string
 }
 
+export interface ImCallLocale {
+  videoAction: string
+  voiceAction: string
+  videoTitle: string
+  voiceTitle: string
+  invitation: string
+  closeCountdown: string
+  reconnectTimeCountdown: string
+  unsupported: string
+  unnamed: string
+  ignore: string
+  accept: string
+  rejected: string
+}
+
 export interface AgentBubbleLocale {
   think: string
   toolCall: string
@@ -102,5 +117,6 @@ export interface Locale {
   ImBubble?: ImBubbleLocale
   ImRoom?: ImRoomLocale
   ImHistory?: ImHistoryLocale
+  ImCall?: ImCallLocale
   AgentBubble?: AgentBubbleLocale
 }

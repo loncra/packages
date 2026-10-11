@@ -26,13 +26,13 @@ import {classNames, fillLocale} from '@loncra/antdv'
 import {useLocale} from '../../_util/useLocale.ts'
 import {isEnumValue, YES_OR_NO_TYPE} from '@loncra/client/commons'
 import {AttachmentService} from '@loncra/client/resource'
-import type {
-  MessageContentMentionMetadata,
-  UserChatConversationResponseBody,
+import {
+  ChatMessageService,
+  type MessageContentMentionMetadata,
+  type UserChatConversationResponseBody,
 } from '@loncra/client/message'
 import ConversationList from '../../conversation/ConversationList.tsx'
 import type {ConversationNode} from '../../conversation/types.ts'
-import {deleteImConversations, muteImConversations, pinImConversations} from './conversationActions.ts'
 import useStyle, {IM_CONVERSATION_PREFIX} from './style/index.ts'
 
 export interface ImConversationHost {
@@ -88,7 +88,7 @@ const ImConversationList = defineComponent({
           return
         }
         try {
-          const result = await deleteImConversations([id])
+          const result = await ChatMessageService.deleteConversation([id])
           message.success(result.message ?? '')
           emit('delete', item)
         } catch (e) {
@@ -97,11 +97,13 @@ const ImConversationList = defineComponent({
         return
       }
       if (key === 'pinned') {
-        emit('flags', await pinImConversations([id]))
+        const result = await ChatMessageService.pinnedConversation([id])
+        emit('flags', result.data ?? [])
         return
       }
       if (key === 'muted') {
-        emit('flags', await muteImConversations([id]))
+        const result = await ChatMessageService.mutedConversation([id])
+        emit('flags', result.data ?? [])
       }
     }
 

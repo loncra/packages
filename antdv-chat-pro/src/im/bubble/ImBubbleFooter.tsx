@@ -5,9 +5,9 @@ import {useConfig} from 'antdv-next/dist/config-provider/context'
 import useApp from 'antdv-next/dist/app/useApp'
 import {classNames, fillLocale} from '@loncra/antdv'
 import {isEnumValue, type NameValueEnumMetadata, YES_OR_NO_TYPE} from '@loncra/client/commons'
+import {ChatMessageService} from '@loncra/client/message'
 import {useLocale} from '../../_util/useLocale.ts'
 import useStyle, {IM_BUBBLE_PREFIX} from './style/index.ts'
-import {undoImMessage} from './undoImMessage.ts'
 
 const ImBubbleFooter = defineComponent({
   name: 'LImBubbleFooter',
@@ -48,11 +48,21 @@ const ImBubbleFooter = defineComponent({
       onUnmounted(() => window.clearInterval(timer))
     })
 
+    async function undo() {
+      try {
+        const result = await ChatMessageService.undoMessage([props.messageId])
+        message.success(result.message)
+      } catch (error) {
+        message.error(error instanceof Error ? error.message : String(error))
+        throw error
+      }
+    }
+
     function confirmUndo() {
       modal.confirm({
         title: locale.value.undoConfirmTitle,
         content: locale.value.undoConfirmContent,
-        onOk: () => undoImMessage(props.messageId, message),
+        onOk: () => undo(),
       })
     }
 

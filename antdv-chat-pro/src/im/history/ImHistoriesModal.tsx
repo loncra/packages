@@ -103,7 +103,7 @@ const ImHistoriesModal = defineComponent({
     host: {type: Object as PropType<ImChatHost>, required: true},
   },
   emits: ['update:open'],
-  setup(props, {emit, slots}) {
+  setup(props, {emit}) {
     const locale = useLocale('ImHistory')
     const history = inject(IM_HISTORY_KEY, null)
     const {dateFormat} = useDateFormat()
@@ -330,7 +330,6 @@ const ImHistoriesModal = defineComponent({
                                 host={props.host}
                                 onJump={() => undefined}
                                 onReedit={() => undefined}
-                                v-slots={{call: slots.call}}
                               />
                             </div>
                           </div>

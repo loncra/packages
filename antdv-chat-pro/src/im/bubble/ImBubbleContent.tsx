@@ -9,10 +9,11 @@ import {
   MESSAGE_SERVER_USER_CHAT_PARTICIPANT_TYPE,
   type UserChatMessageResponseBody,
 } from '@loncra/client/message'
-import type {TextBlock} from '@loncra/chat-core'
+import type {CallBlock, TextBlock} from '@loncra/chat-core'
 import {getEnumName} from '@loncra/client/commons'
 import SenderSlotBubbleContent from '../../sender-slot-bubble-content/SenderSlotBubbleContent.tsx'
 import type {ImChatHost} from '../host.ts'
+import ImCallBlock from '../call/ImCallBlock.tsx'
 import {useLocale} from '../../_util/useLocale.ts'
 import useStyle, {IM_BUBBLE_PREFIX} from './style/index.ts'
 
@@ -36,7 +37,7 @@ const ImBubbleContent = defineComponent({
     onJump: {type: Function as PropType<(message: UserChatMessageResponseBody) => void>, required: true},
     onReedit: {type: Function as PropType<() => void>, required: true},
   },
-  setup(props, {slots}) {
+  setup(props) {
     const locale = useLocale('ImBubble')
     const config = useConfig()
     const prefixCls = computed(() => config.value.getPrefixCls('im-bubble', IM_BUBBLE_PREFIX))
@@ -106,7 +107,7 @@ const ImBubbleContent = defineComponent({
               )
             }
             if (piece.type === 'custom' && piece.slotKind === 'call') {
-              return slots.call?.({block: piece}) ?? null
+              return <ImCallBlock block={piece as CallBlock} host={props.host} />
             }
             if (piece.type === 'custom' && piece.slotKind === 'undo') {
               const mine = props.principal === props.host.selfName

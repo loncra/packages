@@ -1,4 +1,5 @@
-import type {NameValueEnumMetadata} from '../domain/common.ts'
+import {TIME_UNIT_TYPE} from '../enumerate.ts'
+import type {NameValueEnumMetadata, TimeProperties} from '../domain/common.ts'
 
 export function isNameValueEnumMetadata<TValue>(
   value: NameValueEnumMetadata<TValue> | TValue,
@@ -31,4 +32,24 @@ export function getEnumName<TValue>(value: NameValueEnumMetadata<TValue> | TValu
     return value.name
   }
   return String(value)
+}
+
+export function timeToMs(time: TimeProperties): number {
+  const value = time.value
+  switch (time.unit) {
+    case TIME_UNIT_TYPE.NANOSECONDS:
+      return value / 1e6
+    case TIME_UNIT_TYPE.MICROSECONDS:
+      return value / 1e3
+    case TIME_UNIT_TYPE.MILLISECONDS:
+      return value
+    case TIME_UNIT_TYPE.MINUTES:
+      return value * 60_000
+    case TIME_UNIT_TYPE.HOURS:
+      return value * 3_600_000
+    case TIME_UNIT_TYPE.DAYS:
+      return value * 86_400_000
+    default:
+      return value * 1000
+  }
 }

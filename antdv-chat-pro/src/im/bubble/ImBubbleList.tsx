@@ -131,13 +131,15 @@ const ImBubbleList = defineComponent({
                   )
                   emit('reedit', (bubble.metadata as {oldContent?: unknown} | undefined)?.oldContent)
                 }}
-                v-slots={{call: slots.call}}
               />
             )
           },
           footer: ({item}: {item: BubbleListItem}) => {
             const bubble = asBubble(item)
-            if (!bubble || bubble.id == null || (bubble.role !== 'user' && bubble.role !== 'ai')) {
+            const callMessage = bubble?.content?.some(
+              (block) => block.type === 'custom' && 'slotKind' in block && block.slotKind === 'call',
+            )
+            if (!bubble || bubble.id == null || callMessage || (bubble.role !== 'user' && bubble.role !== 'ai')) {
               return null
             }
             return (

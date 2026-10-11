@@ -1,5 +1,4 @@
 export {useImConversations} from './useImConversations.ts'
 export type {ImConversationsApi} from './useImConversations.ts'
-export {deleteImConversations, muteImConversations, pinImConversations} from './conversationActions.ts'
 export {default as ImConversationList} from './ImConversationList.tsx'
 export type {ImConversationHost} from './ImConversationList.tsx'

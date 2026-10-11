@@ -34,7 +34,7 @@ const ImBubbleRead = defineComponent({
           <div class={classNames(prefixCls.value, hashId.value, cssVarCls.value)}>
             <div class={`${prefixCls.value}-read`}>
               <Tooltip title={unread ? locale.value.unread : locale.value.read}>
-                <Typography.Text type={unread ? 'success' : 'secondary'}>
+                <Typography.Text type={unread ? 'secondary' : 'success'}>
                   {unread ? <EyeInvisibleOutlined /> : <EyeOutlined />}
                 </Typography.Text>
               </Tooltip>
@@ -51,28 +51,28 @@ const ImBubbleRead = defineComponent({
         <div class={classNames(prefixCls.value, hashId.value, cssVarCls.value)}>
           <div class={`${prefixCls.value}-read`}>
             <Popover
-            placement={item.role === 'user' ? 'left' : 'right'}
-            trigger="click"
-            v-slots={{
-              content: () => <ImMessageReadTable messageId={Number(item.id)} host={props.host} />,
-            }}
-          >
-            <Button
-              color={done ? 'lime' : undefined}
-              size="small"
-              variant={done ? 'filled' : undefined}
-              type="dashed"
-              v-slots={done ? {icon: () => <CheckOutlined />} : undefined}
+              placement={item.role === 'user' ? 'left' : 'right'}
+              trigger="click"
+              v-slots={{
+                content: () => <ImMessageReadTable messageId={Number(item.id)} host={props.host} />,
+              }}
             >
-              {done
-                ? null
-                : (
-                  <Flex align="center" gap="small">
-                    <Badge status="processing" />
-                    {pending} / {item.readCount}
-                  </Flex>
-                )}
-            </Button>
+              <Button
+                color={done ? 'lime' : undefined}
+                size="small"
+                variant={done ? 'filled' : undefined}
+                type="dashed"
+                v-slots={done ? {icon: () => <CheckOutlined />} : undefined}
+              >
+                {done
+                  ? null
+                  : (
+                    <Flex align="center" gap="small">
+                      <Badge status="processing" />
+                      {pending} / {item.readCount}
+                    </Flex>
+                  )}
+              </Button>
             </Popover>
           </div>
         </div>
