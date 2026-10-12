@@ -216,8 +216,12 @@ const AgentSender = defineComponent({
                   }}
                   onMenuClick={(info: MenuInfo) => props.onModelClick?.(info.key)}
                 >
-                  <Button color="primary" variant="outlined" size="small">
-                    {{icon: () => slots.modelIcon?.()}}
+                  <Button
+                    color="primary"
+                    variant="outlined"
+                    size="small"
+                    v-slots={{icon: () => slots.modelIcon?.()}}
+                  >
                     {props.model.label}
                   </Button>
                 </Dropdown>
@@ -236,8 +240,8 @@ const AgentSender = defineComponent({
                     variant="dashed"
                     type="text"
                     size="small"
+                    v-slots={{icon: () => slots.typeIcon?.()}}
                   >
-                    {{icon: () => slots.typeIcon?.()}}
                     {props.typeChoice.label}
                   </Button>
                 </Dropdown>

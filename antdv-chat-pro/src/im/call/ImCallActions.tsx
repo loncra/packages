@@ -1,18 +1,19 @@
-import {defineComponent, ref} from 'vue'
+import {defineComponent, ref, type PropType} from 'vue'
 import {Button, Space} from 'antdv-next'
 import {CheckOutlined, CloseOutlined, StopOutlined} from '@antdv-next/icons'
 import useApp from 'antdv-next/dist/app/useApp'
 import {MESSAGE_SERVER_MESSAGE_GROUP} from '@loncra/client/message'
 import {useLocale} from '../../_util/useLocale.ts'
-import {useImChatCall} from './useImChatCall.ts'
+import {useImChatCall, type ImChatCallSession} from './useImChatCall.ts'
 
 const ImCallActions = defineComponent({
   name: 'LImCallActions',
   props: {
     callId: {type: Number, required: true},
+    session: {type: Object as PropType<ImChatCallSession>},
   },
   setup(props) {
-    const session = useImChatCall()
+    const session = props.session ?? useImChatCall()
     const locale = useLocale('ImCall')
     const {notification} = useApp()
     const loading = ref(false)

@@ -10,13 +10,16 @@ const runningSpin = new Keyframes('loncraAgentConversationSpin', {
 })
 
 function genAgentConversationStyle(token: LoncraStyleToken): CSSInterpolation {
-  const {componentCls, colorPrimary, colorSuccess, colorWarning, colorError, colorTextSecondary, padding} = token
+  const {componentCls, colorPrimary, colorSuccess, colorWarning, colorError, colorTextSecondary, padding, antCls} = token
   return [
     runningSpin,
     {
       [componentCls]: {
         [`${componentCls}-header`]: {
           padding,
+        },
+        [`${antCls}-divider`]: {
+          marginTop:`0 !important`
         },
         [`${componentCls}-primary`]: {color: colorPrimary},
         [`${componentCls}-success`]: {color: colorSuccess},

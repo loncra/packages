@@ -1,10 +1,11 @@
-import {computed, defineComponent, type PropType} from 'vue'
+import {computed, defineComponent, nextTick, type PropType, type VNode} from 'vue'
 import {
   Button,
   Divider,
   Flex,
   Input,
   Menu,
+  SpaceCompact,
   type MenuItemType,
 } from 'antdv-next'
 import {
@@ -76,13 +77,24 @@ const AgentConversationList = defineComponent({
       return `${prefixCls.value}-${name}`
     }
 
+    function containsSelected(item: AgentConversationRecord): boolean {
+      const key = String(item.key ?? item.id)
+      if (props.selectedKeys.includes(key)) {
+        return true
+      }
+      const children = (item.children || []) as AgentConversationRecord[]
+      return children.some(containsSelected)
+    }
+
     function renderIcon(item: AgentConversationRecord) {
       const type = getEnumValue(item.type)
-      if (type === AI_SERVER_AGENT_CONVERSATION_TYPE.DEFAULT_WORKSPACE) {
-        return <FolderOpenOutlined class={tone('primary')} />
-      }
-      if (type === AI_SERVER_AGENT_CONVERSATION_TYPE.CUSTOMIZE_WORKSPACE) {
-        return <FolderOutlined class={tone('success')} />
+      if (isEnumValue(type, AI_SERVER_AGENT_CONVERSATION_TYPE.DEFAULT_WORKSPACE)
+        || isEnumValue(type, AI_SERVER_AGENT_CONVERSATION_TYPE.CUSTOMIZE_WORKSPACE)) {
+        const Icon = containsSelected(item) ? FolderOpenOutlined : FolderOutlined
+        const color = isEnumValue(type, AI_SERVER_AGENT_CONVERSATION_TYPE.DEFAULT_WORKSPACE)
+          ? 'primary'
+          : 'success'
+        return <Icon class={tone(color)} />
       }
       const status = getEnumValue(item.status as number)
       const spec = STATUS_ICON[status as keyof typeof STATUS_ICON]
@@ -138,11 +150,16 @@ const AgentConversationList = defineComponent({
 
     function renderEditor(item: AgentConversationRecord) {
       return (
-        <Flex gap="small">
+        <SpaceCompact block>
           <Input
             value={item.name}
             placeholder={locale.value.workspacePlaceholder}
             disabled={props.loading}
+            autoFocus
+            onVnodeMounted={(vnode: VNode) => {
+              const exposed = vnode.component?.exposed as {focus?: () => void} | null
+              void nextTick(() => exposed?.focus?.())
+            }}
             onUpdate:value={(value: string) => {
               item.name = value
             }}
@@ -161,7 +178,7 @@ const AgentConversationList = defineComponent({
             onClick={() => props.actions.cancelEdit(item)}
             v-slots={{icon: () => <CloseOutlined />}}
           />
-        </Flex>
+        </SpaceCompact>
       )
     }
 
@@ -201,15 +218,17 @@ const AgentConversationList = defineComponent({
           }}
           v-slots={{
             header: () => (
-              <div class={`${prefixCls.value}-header`}>
-                <Button
-                  block
-                  type="primary"
-                  onClick={() => props.host.onOpenPluginMarket()}
-                  v-slots={{icon: () => <ShopOutlined />}}
-                >
-                  {locale.value.pluginMarket}
-                </Button>
+              <>
+                <div class={`${prefixCls.value}-header`}>
+                  <Button
+                    block
+                    type="primary"
+                    onClick={() => props.host.onOpenPluginMarket()}
+                    v-slots={{icon: () => <ShopOutlined />}}
+                  >
+                    {locale.value.pluginMarket}
+                  </Button>
+                </div>
                 <Divider plain titlePlacement="start">
                   <Flex align="center" gap="small">
                     <FolderOutlined />
@@ -222,7 +241,7 @@ const AgentConversationList = defineComponent({
                     />
                   </Flex>
                 </Divider>
-              </div>
+              </>
             ),
             icon: (node: ConversationNode) => {
               const item = lookup.get(node.key)

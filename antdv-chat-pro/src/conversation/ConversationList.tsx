@@ -13,6 +13,10 @@ function stopRowAction(event: MouseEvent) {
   event.preventDefault()
 }
 
+function stopRowBubble(event: MouseEvent) {
+  event.stopPropagation()
+}
+
 function asNode(item: RenderItem): ConversationNode {
   return {
     key: String(item.key),
@@ -51,7 +55,7 @@ const ConversationList = defineComponent({
     function renderLabel(node: ConversationNode) {
       if (node.editing) {
         return (
-          <div onClick={stopRowAction} onMousedown={stopRowAction}>
+          <div onClick={stopRowBubble} onMousedown={stopRowBubble}>
             {slots.editor?.(node)}
           </div>
         )
