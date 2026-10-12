@@ -140,6 +140,6 @@ createClient({
 ### 管理端接线
 
 - Service、领域类型、枚举、权限串从 `@loncra/client/<module>` 导入。
-- `src/apis` 只留三个包装：`AuthServerService`（i18n 默认名）、`ResourceServerService`（验证码弹层）、`AgentService`（SSE）。
+- `src/apis` 只留两个包装：`ResourceServerService`（验证码弹层）、`AgentService`（SSE）。用户显示名用 `@loncra/client/auth` 的 `AuthServerService.getPrincipalNameByUserDetails`，没有姓名时默认 `-`。
 - `src/types/apis` 只留 UI 叠层（`BaseChatBubble`、Sender 词槽、Dayjs、vue-router），不要再转发 client 类型。
 - `*_ROUTE`、Socket、provide key、视频 UI 留在管理端。

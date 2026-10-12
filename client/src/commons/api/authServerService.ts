@@ -143,7 +143,7 @@ export class AuthServerService {
 
   static getPrincipalNameByUserDetails(
     details: PlatformUser | UserMetadata | undefined | null,
-    defaultValue = '',
+    defaultValue = '-',
   ): string {
     if (!details) {
       return ''
