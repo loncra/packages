@@ -2,14 +2,14 @@ import {inject, type InjectionKey, provide, reactive} from 'vue'
 import useApp from 'antdv-next/dist/app/useApp'
 import {isBusinessSuccess, isEnumValue, timeToMs} from '@loncra/client/commons'
 import {
-  ChatCallService,
-  MESSAGE_SERVER_MESSAGE_GROUP,
-  MESSAGE_SERVER_USER_CHAT_CALL_PARTICIPANT_STATUS,
-  MESSAGE_SERVER_USER_CHAT_CALL_STATUS,
-  MESSAGE_SERVER_USER_CHAT_PARTICIPANT_TYPE,
-  type UserChatCallEntity,
-  type UserChatCallParticipantEntity,
-  type UserChatCallResponseBody,
+    ChatCallService,
+    MESSAGE_SERVER_MESSAGE_GROUP,
+    MESSAGE_SERVER_USER_CHAT_CALL_PARTICIPANT_STATUS,
+    MESSAGE_SERVER_USER_CHAT_CALL_STATUS,
+    MESSAGE_SERVER_USER_CHAT_PARTICIPANT_TYPE,
+    type UserChatCallEntity,
+    type UserChatCallParticipantEntity,
+    type UserChatCallResponseBody,
 } from '@loncra/client/message'
 import type {ImChatCallHost} from '../host.ts'
 import {createImCallMedia, type ImCallMedia, type ImCallMediaState} from './media.ts'
@@ -111,7 +111,7 @@ export function provideImChatCall(host: ImChatCallHost): ImChatCallSession {
     state.width = undefined
     state.height = undefined
     state.mediaState = emptyMediaState(true)
-    const media = createImCallMedia(call, host.selfName)
+    const media = createImCallMedia(call, host.self.systemName)
     session.media = media
     unsubscribe = media.subscribe((next) => {
       state.mediaState = next
@@ -221,7 +221,7 @@ export function provideImChatCall(host: ImChatCallHost): ImChatCallSession {
     if (!isEnumValue(participant.status, MESSAGE_SERVER_USER_CHAT_CALL_PARTICIPANT_STATUS.ACTIVE)) {
       return
     }
-    if (participant.principal !== host.selfName) {
+    if (participant.principal !== host.self.systemName) {
       const caller = state.call.participants.find((item) =>
         isEnumValue(item.type, MESSAGE_SERVER_USER_CHAT_PARTICIPANT_TYPE.CALLER),
       )

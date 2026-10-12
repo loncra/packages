@@ -1,44 +1,40 @@
-import {computed, defineComponent, inject, nextTick, ref, watch, type PropType} from 'vue'
+import {computed, defineComponent, inject, nextTick, type PropType, ref, watch} from 'vue'
 import {
-  Button,
-  DateRangePicker,
-  Divider,
-  Empty,
-  Flex,
-  Input,
-  Modal,
-  Pagination,
-  Segmented,
-  Space,
-  SpaceCompact,
-  Spin,
-  Typography,
+    Button,
+    DateRangePicker,
+    Divider,
+    Empty,
+    Flex,
+    Input,
+    Modal,
+    Pagination,
+    Segmented,
+    Space,
+    SpaceCompact,
+    Spin,
+    Typography,
 } from 'antdv-next'
 import {
-  AudioOutlined,
-  FileImageOutlined,
-  FileTextOutlined,
-  MessageOutlined,
-  SearchOutlined,
-  VideoCameraOutlined,
+    AudioOutlined,
+    FileImageOutlined,
+    FileTextOutlined,
+    MessageOutlined,
+    SearchOutlined,
+    VideoCameraOutlined,
 } from '@antdv-next/icons'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {AttachmentMasonry, useDateFormat, UserAvatar} from '@loncra/antdv-pro'
 import {classNames, fillLocale} from '@loncra/antdv'
+import {AttachmentService, type ObjectItemInfo, type PageRequest, type TotalPage,} from '@loncra/client/commons'
 import {
-  AttachmentService,
-  type ObjectItemInfo,
-  type PageRequest,
-  type TotalPage,
-} from '@loncra/client/commons'
-import {
-  ChatMessageService,
-  MESSAGE_SERVER_USER_CHAT_MESSAGE_TYPE,
-  type UserChatMessageResponseBody,
+    ChatMessageService,
+    MESSAGE_SERVER_USER_CHAT_MESSAGE_TYPE,
+    type UserChatMessageResponseBody,
 } from '@loncra/client/message'
 import type {TextBlock} from '@loncra/chat-core'
 import ImBubbleContent from '../bubble/ImBubbleContent.tsx'
 import type {ImChatHost} from '../host.ts'
+import {AuthServerService} from '@loncra/client/auth'
 import {IM_HISTORY_KEY} from './useImHistory.ts'
 import {useLocale} from '../../_util/useLocale.ts'
 import useStyle, {IM_HISTORY_PREFIX} from './style/index.ts'
@@ -307,7 +303,7 @@ const ImHistoriesModal = defineComponent({
                             <div class={`${prefix}-main`}>
                               <div class={`${prefix}-title`}>
                                 <Typography.Text strong class={`${prefix}-name`}>
-                                  {props.host.principalName(details)}
+                                  {AuthServerService.getPrincipalNameByUserDetails(details)}
                                 </Typography.Text>
                                 <Space>
                                   <Button

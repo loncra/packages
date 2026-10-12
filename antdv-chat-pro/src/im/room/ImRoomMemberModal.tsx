@@ -1,20 +1,17 @@
-import {computed, defineComponent, ref, watch, type PropType} from 'vue'
+import {computed, defineComponent, type PropType, ref, watch} from 'vue'
 import {Button, Modal, Popconfirm, Space, SpaceCompact} from 'antdv-next'
 import useApp from 'antdv-next/dist/app/useApp'
-import {SystemUserPanel, type SystemUserContactItem} from '@loncra/antdv-pro'
+import {type SystemUserContactItem, SystemUserPanel} from '@loncra/antdv-pro'
 import {fillLocale} from '@loncra/antdv'
+import {isEnumValue, type NameValueEnumMetadata, type RestResult,} from '@loncra/client/commons'
 import {
-  isEnumValue,
-  type NameValueEnumMetadata,
-  type RestResult,
-} from '@loncra/client/commons'
-import {
-  ChatMessageService,
-  MESSAGE_SERVER_USER_CHAT_PARTICIPANT_TYPE,
-  type UserChatConversationResponseBody,
-  type UserChatParticipantEntity,
+    ChatMessageService,
+    MESSAGE_SERVER_USER_CHAT_PARTICIPANT_TYPE,
+    type UserChatConversationResponseBody,
+    type UserChatParticipantEntity,
 } from '@loncra/client/message'
 import type {ImHost} from '../host.ts'
+import {AuthServerService} from '@loncra/client/auth'
 import {useLocale} from '../../_util/useLocale.ts'
 
 export type ImRoomMemberModalMode = 'add' | 'member'
@@ -61,10 +58,10 @@ const ImRoomMemberModal = defineComponent({
       }
       if (props.mode === 'member') {
         return props.participants
-          .filter((item) => item.principal !== props.host.selfName)
+          .filter((item) => item.principal !== props.host.self.systemName)
           .map((item) => ({
             key: String(item.metadata.details.id),
-            label: props.host.principalName(item.metadata.details),
+            label: AuthServerService.getPrincipalNameByUserDetails(item.metadata.details),
             data: item.metadata.details,
             participantType: item.type,
           }))

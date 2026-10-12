@@ -1,4 +1,4 @@
-import {computed, defineComponent, nextTick, onMounted, onUnmounted, ref, watch, type CSSProperties} from 'vue'
+import {computed, type CSSProperties, defineComponent, nextTick, onMounted, onUnmounted, ref, watch} from 'vue'
 import {Badge, Button, Flex, Statistic} from 'antdv-next'
 import {BlockOutlined, SplitCellsOutlined} from '@antdv-next/icons'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
@@ -6,23 +6,24 @@ import useApp from 'antdv-next/dist/app/useApp'
 import {UserAvatar} from '@loncra/antdv-pro'
 import {classNames, fillLocale} from '@loncra/antdv'
 import {getEnumName, isEnumValue, type NameValueEnumMetadata} from '@loncra/client/commons'
+import {AuthServerService} from '@loncra/client/auth'
 import {
-  MESSAGE_SERVER_CHAT_CALL_TYPE,
-  MESSAGE_SERVER_USER_CHAT_CALL_PARTICIPANT_STATUS,
-  MESSAGE_SERVER_USER_CHAT_CALL_STATUS,
-  USER_CHAT_CALL_PARTICIPANT_ERROR_STATUS_VALUE,
-  USER_CHAT_CALL_PARTICIPANT_PROCESSING_STATUS_VALUE,
-  type UserChatCallParticipantEntity,
+    MESSAGE_SERVER_CHAT_CALL_TYPE,
+    MESSAGE_SERVER_USER_CHAT_CALL_PARTICIPANT_STATUS,
+    MESSAGE_SERVER_USER_CHAT_CALL_STATUS,
+    USER_CHAT_CALL_PARTICIPANT_ERROR_STATUS_VALUE,
+    USER_CHAT_CALL_PARTICIPANT_PROCESSING_STATUS_VALUE,
+    type UserChatCallParticipantEntity,
 } from '@loncra/client/message'
 import {useLocale} from '../../_util/useLocale.ts'
 import {useImChatCall} from './useImChatCall.ts'
 import {
-  CALL_MINI_SIZE,
-  CALL_SPLIT,
-  type CallSplit,
-  computePrivateCallLayout,
-  DEFAULT_VIDEO_METRICS,
-  layoutConstraints,
+    CALL_MINI_SIZE,
+    CALL_SPLIT,
+    type CallSplit,
+    computePrivateCallLayout,
+    DEFAULT_VIDEO_METRICS,
+    layoutConstraints,
 } from './layout.ts'
 import useStyle, {IM_CALL_PREFIX} from './style/index.ts'
 
@@ -85,10 +86,10 @@ const ImCallPrivateLayout = defineComponent({
     })
 
     const remote = computed(() =>
-      session.state.call?.participants.find((item) => item.principal !== session.host.selfName),
+      session.state.call?.participants.find((item) => item.principal !== session.host.self.systemName),
     )
     const localDetails = computed(() =>
-      session.state.call?.participants.find((item) => item.principal === session.host.selfName)?.metadata?.details,
+      session.state.call?.participants.find((item) => item.principal === session.host.self.systemName)?.metadata?.details,
     )
     const remoteActive = computed(() =>
       remote.value ? isEnumValue(remote.value.status, MESSAGE_SERVER_USER_CHAT_CALL_PARTICIPANT_STATUS.ACTIVE) : false,
@@ -288,7 +289,7 @@ const ImCallPrivateLayout = defineComponent({
       }
       const peer = remote.value
       if (peer) {
-        const name = session.host.principalName(peer.metadata?.details) || locale.value.unnamed
+        const name = AuthServerService.getPrincipalNameByUserDetails(peer.metadata?.details) || locale.value.unnamed
         const template = isEnumValue(call.type, MESSAGE_SERVER_CHAT_CALL_TYPE.VIDEO)
           ? locale.value.videoTitle
           : locale.value.voiceTitle

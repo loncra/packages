@@ -1,11 +1,11 @@
-import {computed, defineComponent, useAttrs, type PropType} from 'vue'
-import {Button, Dropdown, type ButtonProps, type MenuItemType} from 'antdv-next'
+import {computed, defineComponent, type PropType, useAttrs} from 'vue'
 import type {MenuInfo} from 'antdv-next'
+import {Button, type ButtonProps, Dropdown, type MenuItemType} from 'antdv-next'
 import {AudioOutlined, PhoneOutlined, VideoCameraOutlined} from '@antdv-next/icons'
 import useApp from 'antdv-next/dist/app/useApp'
 import {fillLocale} from '@loncra/antdv'
 import {isEnumValue} from '@loncra/client/commons'
-import {ChatCallService, MESSAGE_SERVER_CHAT_CALL_TYPE, type ChatCallType} from '@loncra/client/message'
+import {ChatCallService, type ChatCallType, MESSAGE_SERVER_CHAT_CALL_TYPE} from '@loncra/client/message'
 import {useLocale} from '../../_util/useLocale.ts'
 import {useImChatCall} from './useImChatCall.ts'
 
@@ -42,7 +42,7 @@ const ImCallButton = defineComponent({
         return
       }
       try {
-        const calling = props.principals.filter((name) => name !== session.host.selfName)
+        const calling = props.principals.filter((name) => name !== session.host.self.systemName)
         const created = await ChatCallService.create(props.roomId, type, calling)
         if (!created.data) {
           return

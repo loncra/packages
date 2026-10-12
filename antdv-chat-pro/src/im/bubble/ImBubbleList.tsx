@@ -1,9 +1,9 @@
-import {defineComponent, inject, ref, type PropType} from 'vue'
+import {defineComponent, inject, type PropType, ref} from 'vue'
 import {UserAvatar} from '@loncra/antdv-pro'
-import {textBubble, type ImChatBubble, type ImContentBlock} from '@loncra/chat-core'
+import {type ImChatBubble, type ImContentBlock, textBubble} from '@loncra/chat-core'
 import BubbleList from '../../bubble-list/BubbleList.tsx'
 import type {BubbleListExpose, BubbleListItem, BubbleRenderRow, BubbleSession} from '../../bubble-list/types.ts'
-import {isEnumValue, type NameValueEnumMetadata} from '@loncra/client/commons'
+import {type NameValueEnumMetadata} from '@loncra/client/commons'
 import ImBubbleContent from './ImBubbleContent.tsx'
 import ImBubbleFooter from './ImBubbleFooter.tsx'
 import ImBubbleHeader from './ImBubbleHeader.tsx'
@@ -110,7 +110,6 @@ const ImBubbleList = defineComponent({
                 role={bubble.role}
                 roomType={props.roomType}
                 details={bubble.participant?.metadata?.details}
-                principalName={props.host.principalName}
               />
             )
           },

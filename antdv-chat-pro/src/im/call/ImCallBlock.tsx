@@ -3,11 +3,11 @@ import {Badge, Space} from 'antdv-next'
 import {AudioOutlined, VideoCameraOutlined} from '@antdv-next/icons'
 import {getEnumName, getEnumValue, isEnumValue} from '@loncra/client/commons'
 import {
-  MESSAGE_SERVER_CHAT_CALL_SCENE,
-  MESSAGE_SERVER_CHAT_CALL_TYPE,
-  MESSAGE_SERVER_USER_CHAT_CALL_PARTICIPANT_STATUS,
-  USER_CHAT_CALL_PARTICIPANT_ERROR_STATUS_VALUE,
-  USER_CHAT_CALL_PARTICIPANT_PROCESSING_STATUS_VALUE,
+    MESSAGE_SERVER_CHAT_CALL_SCENE,
+    MESSAGE_SERVER_CHAT_CALL_TYPE,
+    MESSAGE_SERVER_USER_CHAT_CALL_PARTICIPANT_STATUS,
+    USER_CHAT_CALL_PARTICIPANT_ERROR_STATUS_VALUE,
+    USER_CHAT_CALL_PARTICIPANT_PROCESSING_STATUS_VALUE,
 } from '@loncra/client/message'
 import type {CallBlock} from '@loncra/chat-core'
 import type {ImHost} from '../host.ts'
@@ -43,7 +43,7 @@ const ImCallBlock = defineComponent({
         ? VideoCameraOutlined
         : AudioOutlined
       const incoming = isEnumValue(block.status, MESSAGE_SERVER_USER_CHAT_CALL_PARTICIPANT_STATUS.INITIATING)
-        && block.caller !== props.host.selfName
+        && block.caller !== props.host.self.systemName
         && isEnumValue(block.scene, MESSAGE_SERVER_CHAT_CALL_SCENE.PRIVATE)
       return (
         <Space>

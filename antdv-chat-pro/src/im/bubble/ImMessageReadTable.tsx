@@ -4,14 +4,12 @@ import {EyeInvisibleOutlined, EyeOutlined} from '@antdv-next/icons'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {classNames, fillLocale} from '@loncra/antdv'
 import {isEnumValue, YES_OR_NO_TYPE} from '@loncra/client/commons'
-import {
-  ChatMessageService,
-  type UserChatMessageReadResponseBody,
-} from '@loncra/client/message'
+import {ChatMessageService, type UserChatMessageReadResponseBody,} from '@loncra/client/message'
 import {useDateFormat, UserAvatar} from '@loncra/antdv-pro'
 import {useLocale} from '../../_util/useLocale.ts'
 import useStyle, {IM_BUBBLE_PREFIX} from './style/index.ts'
 import type {ImChatHost} from '../host.ts'
+import {AuthServerService} from '@loncra/client/auth'
 
 const ImMessageReadTable = defineComponent({
   name: 'LImMessageReadTable',
@@ -65,10 +63,10 @@ const ImMessageReadTable = defineComponent({
     })
 
     function nameOf(record: UserChatMessageReadResponseBody): string {
-      if (record.principal === props.host.selfName) {
+      if (record.principal === props.host.self.systemName) {
         return locale.value.me
       }
-      return props.host.principalName(record.participant?.metadata?.details)
+      return AuthServerService.getPrincipalNameByUserDetails(record.participant?.metadata?.details)
     }
 
     return () => (

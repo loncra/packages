@@ -1,51 +1,34 @@
-import {computed, defineComponent, ref, watch, type PropType} from 'vue'
+import {computed, defineComponent, type PropType, ref, watch} from 'vue'
+import {Avatar, Badge, Button, Divider, Empty, Flex, Input, Space, SpaceCompact, Switch, Typography,} from 'antdv-next'
 import {
-  Avatar,
-  Badge,
-  Button,
-  Divider,
-  Empty,
-  Flex,
-  Input,
-  Space,
-  SpaceCompact,
-  Switch,
-  Typography,
-} from 'antdv-next'
-import {
-  CheckOutlined,
-  CloseCircleOutlined,
-  CloseOutlined,
-  DeleteOutlined,
-  EditOutlined,
-  HistoryOutlined,
-  LogoutOutlined,
-  SettingOutlined,
-  UserAddOutlined,
-  UserSwitchOutlined,
+    CheckOutlined,
+    CloseCircleOutlined,
+    CloseOutlined,
+    DeleteOutlined,
+    EditOutlined,
+    HistoryOutlined,
+    LogoutOutlined,
+    SettingOutlined,
+    UserAddOutlined,
+    UserSwitchOutlined,
 } from '@antdv-next/icons'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import useApp from 'antdv-next/dist/app/useApp'
 import {type SystemUserContactItem, UserAvatar} from '@loncra/antdv-pro'
 import {classNames, fillLocale} from '@loncra/antdv'
+import {getEnumName, getEnumValue, isEnumValue, type RestResult, YES_OR_NO_TYPE,} from '@loncra/client/commons'
 import {
-  getEnumName,
-  getEnumValue,
-  isEnumValue,
-  type RestResult,
-  YES_OR_NO_TYPE,
-} from '@loncra/client/commons'
-import {
-  type BasicUserChatConversation,
-  ChatMessageService,
-  MESSAGE_SERVER_USER_CHAT_CONVERSATION_STATUS,
-  MESSAGE_SERVER_USER_CHAT_PARTICIPANT_TYPE,
-  MESSAGE_SERVER_USER_CHAT_ROOM_TYPE,
-  USER_CHAT_PARTICIPANT_OWNER_TYPE_VALUE,
-  type UserChatConversationResponseBody,
-  type UserChatParticipantEntity,
+    type BasicUserChatConversation,
+    ChatMessageService,
+    MESSAGE_SERVER_USER_CHAT_CONVERSATION_STATUS,
+    MESSAGE_SERVER_USER_CHAT_PARTICIPANT_TYPE,
+    MESSAGE_SERVER_USER_CHAT_ROOM_TYPE,
+    USER_CHAT_PARTICIPANT_OWNER_TYPE_VALUE,
+    type UserChatConversationResponseBody,
+    type UserChatParticipantEntity,
 } from '@loncra/client/message'
 import type {ImChatHost} from '../host.ts'
+import {AuthServerService} from '@loncra/client/auth'
 import ImHistoriesModal from '../history/ImHistoriesModal.tsx'
 import ImRoomMemberModal, {type ImRoomMemberModalMode} from './ImRoomMemberModal.tsx'
 import {useLocale} from '../../_util/useLocale.ts'
@@ -98,11 +81,11 @@ const ImRoomSettings = defineComponent({
       isEnumValue(props.conversation?.room?.type, MESSAGE_SERVER_USER_CHAT_ROOM_TYPE.GROUP_CHAT),
     )
     const selfCanManage = computed(() =>
-      props.participants.some((item) => item.principal === props.host.selfName && isOwnerType(item)),
+      props.participants.some((item) => item.principal === props.host.self.systemName && isOwnerType(item)),
     )
     const selfIsOwner = computed(() =>
       props.participants.some((item) =>
-        item.principal === props.host.selfName
+        item.principal === props.host.self.systemName
         && isEnumValue(item.type, MESSAGE_SERVER_USER_CHAT_PARTICIPANT_TYPE.OWNER),
       ),
     )
@@ -112,7 +95,7 @@ const ImRoomSettings = defineComponent({
         return props.participants
       }
       return props.participants.filter((item) =>
-        props.host.principalName(item.metadata?.details).toLowerCase().includes(text),
+        AuthServerService.getPrincipalNameByUserDetails(item.metadata?.details).toLowerCase().includes(text),
       )
     })
 
@@ -297,7 +280,7 @@ const ImRoomSettings = defineComponent({
 
     function renderMember(participant: UserChatParticipantEntity) {
       const prefix = prefixCls.value
-      const name = props.host.principalName(participant.metadata?.details)
+      const name = AuthServerService.getPrincipalNameByUserDetails(participant.metadata?.details)
       const avatar = (
         <UserAvatar
           user={participant.metadata?.details}

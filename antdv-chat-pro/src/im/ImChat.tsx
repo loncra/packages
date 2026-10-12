@@ -1,13 +1,13 @@
-import {computed, defineComponent, reactive, type PropType, ref} from 'vue'
+import {computed, defineComponent, type PropType, reactive, ref} from 'vue'
 import {ContactsOutlined, MessageOutlined} from '@antdv-next/icons'
 import {Drawer, Empty, Flex, Segmented, Spin, Splitter, SplitterPanel} from 'antdv-next'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {classNames} from '@loncra/antdv'
 import {isEnumValue, type RestResult} from '@loncra/client/commons'
 import {
+  type BasicUserChatConversation,
   MESSAGE_SERVER_USER_CHAT_CONVERSATION_STATUS,
   MESSAGE_SERVER_USER_CHAT_MESSAGE_TYPE,
-  type BasicUserChatConversation,
   type UserChatConversationResponseBody,
   type UserChatMessageEntity,
   type UserChatMessageResponseBody,
@@ -89,7 +89,7 @@ const ImChat = defineComponent({
       readableSystemMessage: () => locale.value.unreadSystem,
       resolveRole: (message) => {
         const details = message.participant?.metadata?.details as {systemName?: string} | undefined
-        let role: ChatRole = props.host.selfName === details?.systemName ? 'user' : 'ai'
+        let role: ChatRole = props.host.self.systemName === details?.systemName ? 'user' : 'ai'
         if (isEnumValue(message.type, MESSAGE_SERVER_USER_CHAT_MESSAGE_TYPE.SYSTEM)) {
           role = 'system'
         }
@@ -140,12 +140,12 @@ const ImChat = defineComponent({
       if (isEnumValue(message.type, MESSAGE_SERVER_USER_CHAT_MESSAGE_TYPE.SYSTEM)) {
         return 'system'
       }
-      return message.principal === props.host.selfName ? 'user' : 'ai'
+      return message.principal === props.host.self.systemName ? 'user' : 'ai'
     }
 
     function applyIncomingMessage(message: UserChatMessageResponseBody | UserChatMessageEntity) {
       if (
-        message.principal === props.host.selfName
+        message.principal === props.host.self.systemName
         && isEnumValue(message.type, MESSAGE_SERVER_USER_CHAT_MESSAGE_TYPE.USER)
       ) {
         return
@@ -219,7 +219,7 @@ const ImChat = defineComponent({
     async function refreshConversations() {
       const currentId = session.item?.data?.id
       await conversations.load()
-      const principal = props.host.selfName
+      const principal = props.host.self.systemName
       for (const key of Object.keys(storedDrafts)) {
         delete storedDrafts[key]
       }
@@ -297,8 +297,6 @@ const ImChat = defineComponent({
                         unreadCount: props.host.unreadCount,
                         messagePreview: props.host.messagePreview,
                         draftPreview: props.host.draftPreview,
-                        principalName: (participant) =>
-                          props.host.principalName(participant.metadata?.details),
                       }}
                       storedDrafts={storedDrafts}
                       onActive={(key: string, messageId?: number) => {

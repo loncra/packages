@@ -4,15 +4,12 @@ import {UserOutlined} from '@antdv-next/icons'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {classNames} from '@loncra/antdv'
 import {AttachmentUpload} from '@loncra/antdv-pro'
-import {isEnumValue} from '@loncra/client/commons'
-import {
-  MESSAGE_SERVER_USER_CHAT_PARTICIPANT_TYPE,
-  type UserChatMessageResponseBody,
-} from '@loncra/client/message'
+import {getEnumName, isEnumValue} from '@loncra/client/commons'
+import {MESSAGE_SERVER_USER_CHAT_PARTICIPANT_TYPE, type UserChatMessageResponseBody,} from '@loncra/client/message'
 import type {CallBlock, TextBlock} from '@loncra/chat-core'
-import {getEnumName} from '@loncra/client/commons'
 import SenderSlotBubbleContent from '../../sender-slot-bubble-content/SenderSlotBubbleContent.tsx'
 import type {ImChatHost} from '../host.ts'
+import {AuthServerService} from '@loncra/client/auth'
 import ImCallBlock from '../call/ImCallBlock.tsx'
 import {useLocale} from '../../_util/useLocale.ts'
 import useStyle, {IM_BUBBLE_PREFIX} from './style/index.ts'
@@ -45,7 +42,7 @@ const ImBubbleContent = defineComponent({
 
     function renderReference(message: UserChatMessageResponseBody) {
       const owner = message.participant?.type
-      const mine = message.principal === props.host.selfName
+      const mine = message.principal === props.host.self.systemName
       return (
         <span key={message.id} class={classNames(prefixCls.value, hashId.value, cssVarCls.value)}>
         <Tag
@@ -59,7 +56,7 @@ const ImBubbleContent = defineComponent({
               {owner != null && !isEnumValue(owner, MESSAGE_SERVER_USER_CHAT_PARTICIPANT_TYPE.MEMBER)
                 ? `[${getEnumName(owner)}] `
                 : ''}
-              {mine ? locale.value.me : `[${props.host.principalName(message.participant?.metadata?.details)}]`}
+              {mine ? locale.value.me : `[${AuthServerService.getPrincipalNameByUserDetails(message.participant?.metadata?.details)}]`}
               :
             </Typography.Text>
             <Typography.Text class={`${prefixCls.value}-reference-preview`} type="secondary" ellipsis>
@@ -110,7 +107,7 @@ const ImBubbleContent = defineComponent({
               return <ImCallBlock block={piece as CallBlock} host={props.host} />
             }
             if (piece.type === 'custom' && piece.slotKind === 'undo') {
-              const mine = props.principal === props.host.selfName
+              const mine = props.principal === props.host.self.systemName
               return (
                 <Tooltip title={piece.tooltip}>
                   <Typography.Text delete type="secondary">

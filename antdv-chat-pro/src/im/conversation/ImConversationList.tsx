@@ -1,36 +1,22 @@
-import {computed, defineComponent, ref, type PropType} from 'vue'
+import {computed, defineComponent, type PropType, ref} from 'vue'
+import {Avatar, Badge, Button, Empty, Flex, Input, Menu, type MenuItemType, Popover, Typography,} from 'antdv-next'
 import {
-  Avatar,
-  Badge,
-  Button,
-  Empty,
-  Flex,
-  Input,
-  Menu,
-  Popover,
-  Typography,
-  type MenuItemType,
-} from 'antdv-next'
-import {
-  AlertOutlined,
-  DeleteOutlined,
-  MutedOutlined,
-  PushpinFilled,
-  PushpinOutlined,
-  SearchOutlined,
-  SoundOutlined,
+    AlertOutlined,
+    DeleteOutlined,
+    MutedOutlined,
+    PushpinFilled,
+    PushpinOutlined,
+    SearchOutlined,
+    SoundOutlined,
 } from '@antdv-next/icons'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import useApp from 'antdv-next/dist/app/useApp'
 import {classNames, fillLocale} from '@loncra/antdv'
 import {useLocale} from '../../_util/useLocale.ts'
 import {isEnumValue, YES_OR_NO_TYPE} from '@loncra/client/commons'
+import {AuthServerService} from '@loncra/client/auth'
 import {AttachmentService} from '@loncra/client/resource'
-import {
-  ChatMessageService,
-  type MessageContentMentionMetadata,
-  type UserChatConversationResponseBody,
-} from '@loncra/client/message'
+import {ChatMessageService, type UserChatConversationResponseBody,} from '@loncra/client/message'
 import type {SlotConfigType} from '@antdv-next/x/dist/sender/interface'
 import ConversationList from '../../conversation/ConversationList.tsx'
 import type {ConversationNode} from '../../conversation/types.ts'
@@ -39,7 +25,6 @@ import useStyle, {IM_CONVERSATION_PREFIX} from './style/index.ts'
 export interface ImConversationHost {
   timeText: (unix?: number) => string
   unreadCount: (id: string) => number
-  principalName: (participant: MessageContentMentionMetadata['participant']) => string
   messagePreview: (
     message: UserChatConversationResponseBody['lastUserMessage'] | undefined,
     conversation: UserChatConversationResponseBody,
@@ -198,7 +183,7 @@ const ImConversationList = defineComponent({
                       </Typography.Text>
                       <span>
                         {fillLocale(locale.value.mentionLine, {
-                          principal: props.host.principalName(mention.participant),
+                          principal: AuthServerService.getPrincipalNameByUserDetails(mention.participant.metadata?.details),
                         })}
                       </span>
                       <Button

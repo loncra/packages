@@ -6,7 +6,7 @@ import type {SlotConfigType} from '@antdv-next/x/dist/sender/interface'
 import type {InstructionMeasure, InstructionSenderHandle} from '@loncra/antdv-chat'
 import {UserAvatar} from '@loncra/antdv-pro'
 import {classNames, fillLocale} from '@loncra/antdv'
-import {isEnumValue, type IdValueMetadata, YES_OR_NO_TYPE} from '@loncra/client/commons'
+import {type IdValueMetadata, isEnumValue, YES_OR_NO_TYPE} from '@loncra/client/commons'
 import {
   CHAT_EVERYONE_ID,
   ChatMessageService,
@@ -26,6 +26,7 @@ import ImBubbleList from '../bubble/ImBubbleList'
 import ImSender, {type ImSenderExpose} from '../sender/ImSender'
 import ImCallButton from '../call/ImCallButton'
 import type {ImPageHost} from '../host'
+import {AuthServerService} from '@loncra/client/auth'
 import {useLocale} from '../../_util/useLocale'
 import useStyle, {IM_CHAT_VIEW_PREFIX} from './style'
 
@@ -98,7 +99,7 @@ const ImChatView = defineComponent({
       if (readable === undefined) {
         return false
       }
-      return isEnumValue(readable, YES_OR_NO_TYPE.YES) && message.principal !== props.host.selfName
+      return isEnumValue(readable, YES_OR_NO_TYPE.YES) && message.principal !== props.host.self.systemName
     }
 
     async function flushReadQueue(): Promise<void> {
@@ -215,10 +216,10 @@ const ImChatView = defineComponent({
         return undefined
       }
       const people = props.session.participants
-        .filter((participant) => participant.principal !== props.host.selfName)
+        .filter((participant) => participant.principal !== props.host.self.systemName)
         .map((participant) => ({
           id: participant.principal,
-          value: props.host.principalName(participant.metadata.details),
+          value: AuthServerService.getPrincipalNameByUserDetails(participant.metadata.details),
           metadata: participant as unknown as Record<string, unknown>,
         }))
       return {
@@ -291,7 +292,7 @@ const ImChatView = defineComponent({
         ...absent.filter((item) => {
           const participant = item.metadata as unknown as UserChatParticipantEntity | undefined
           return participant?.metadata?.details
-            && matches(props.host.principalName(participant.metadata.details))
+            && matches(AuthServerService.getPrincipalNameByUserDetails(participant.metadata.details))
         }),
       ]
     }
@@ -424,8 +425,8 @@ const ImChatView = defineComponent({
                         return (
                           <Space>
                             <UserAvatar user={details} />
-                            <Typography.Text ellipsis={{tooltip: props.host.principalName(details)}}>
-                              {props.host.principalName(details)}
+                            <Typography.Text ellipsis={{tooltip: AuthServerService.getPrincipalNameByUserDetails(details)}}>
+                              {AuthServerService.getPrincipalNameByUserDetails(details)}
                             </Typography.Text>
                           </Space>
                         )

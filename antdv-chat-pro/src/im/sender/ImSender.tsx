@@ -1,44 +1,38 @@
-import {
-  computed,
-  defineComponent,
-  getCurrentInstance,
-  h,
-  markRaw,
-  type PropType,
-  ref,
-  unref,
-} from 'vue'
+import {computed, defineComponent, getCurrentInstance, h, markRaw, type PropType, ref, unref,} from 'vue'
 import {Flex, Tag, Typography} from 'antdv-next'
 import type {UploadFile} from 'antdv-next/dist/upload/interface'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {UserOutlined} from '@antdv-next/icons'
 import {XProvider} from '@antdv-next/x'
 import type {SlotConfigType} from '@antdv-next/x/dist/sender/interface'
-import type {InstructionItem, InstructionMeasure, InstructionSenderHandle, InstructionSenderProps} from '@loncra/antdv-chat'
+import type {
+    InstructionItem,
+    InstructionMeasure,
+    InstructionSenderHandle,
+    InstructionSenderProps
+} from '@loncra/antdv-chat'
 import {EmojiButton} from '@loncra/antdv-chat'
 import {classNames} from '@loncra/antdv'
 import {
-  AttachmentUpload,
-  type AttachmentUploadExecutorOptions,
-  type AttachmentUploadExpose,
-  type AttachmentValue,
-  convertUploadFiles,
-  isObjectWriteResult,
-  isUploadFile,
-  uploadFile,
-  useAntdvConfig,
+    AttachmentUpload,
+    type AttachmentUploadExecutorOptions,
+    type AttachmentUploadExpose,
+    type AttachmentValue,
+    convertUploadFiles,
+    isObjectWriteResult,
+    isUploadFile,
+    uploadFile,
+    useAntdvConfig,
 } from '@loncra/antdv-pro'
 import {getEnumName, type IdValueMetadata, isEnumValue} from '@loncra/client/commons'
 import type {ObjectWriteResult} from '@loncra/client/resource'
-import {
-  MESSAGE_SERVER_USER_CHAT_PARTICIPANT_TYPE,
-  type UserChatMessageResponseBody,
-} from '@loncra/client/message'
+import {MESSAGE_SERVER_USER_CHAT_PARTICIPANT_TYPE, type UserChatMessageResponseBody,} from '@loncra/client/message'
 import type {DraftRestoreResult, ImContentBlock, InstructionBlock, ReferenceBlock} from '@loncra/chat-core'
 import DraftSender, {type DraftSenderExpose} from '../../draft-sender/DraftSender'
 import {createImDraftBinding} from '../draft/createImDraftBinding'
 import type {ImDraftLive} from '../draft/imDraftCodec'
 import type {ImPageHost} from '../host'
+import {AuthServerService} from '@loncra/client/auth'
 import {useLocale} from '../../_util/useLocale'
 import useStyle from './style'
 
@@ -496,7 +490,7 @@ const ImSender = defineComponent({
     }
 
     const binding = createImDraftBinding({
-      principal: () => props.host.selfName,
+      principal: () => props.host.self.systemName,
       targetId: () => props.targetId,
       factories: {
         restoreFilesSlot: (files, key) => createFilesSlot(files, key),
@@ -585,7 +579,7 @@ const ImSender = defineComponent({
                         const owner = message.participant?.type
                         const notMember = owner != null
                           && !isEnumValue(owner, MESSAGE_SERVER_USER_CHAT_PARTICIPANT_TYPE.MEMBER)
-                        const mine = message.principal === props.host.selfName
+                        const mine = message.principal === props.host.self.systemName
                         return (
                           <span key={String(message.id)} class={`${prefixCls.value}-reference`}>
                             <Tag
@@ -601,7 +595,7 @@ const ImSender = defineComponent({
                                   {notMember ? `[${getEnumName(owner)}]` : ''}
                                   {mine
                                     ? bubbleLocale.value.me
-                                    : `[${props.host.principalName(message.participant?.metadata?.details)}]`}
+                                    : `[${AuthServerService.getPrincipalNameByUserDetails(message.participant?.metadata?.details)}]`}
                                   :
                                 </Typography.Text>
                                 <Typography.Text

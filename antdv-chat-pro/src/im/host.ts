@@ -4,8 +4,7 @@ import type {IdValueMetadata, TimeProperties} from '@loncra/client/commons'
 import type {UserChatConversationResponseBody} from '@loncra/client/message'
 
 export interface ImHost {
-  selfName: string
-  principalName: (details: PlatformUser | UserMetadata | undefined) => string
+  self: PlatformUser | (UserMetadata & {systemName: string})
 }
 
 export interface ImChatHost extends ImHost {
