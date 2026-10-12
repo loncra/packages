@@ -1,6 +1,7 @@
 import {defineComponent, inject, type PropType, ref} from 'vue'
 import {UserAvatar} from '@loncra/antdv-pro'
 import {type ImChatBubble, type ImContentBlock, textBubble} from '@loncra/chat-core'
+import {CHAT_BUBBLE_TYPE} from '@loncra/client/ai'
 import BubbleList from '../../bubble-list/BubbleList.tsx'
 import type {BubbleListExpose, BubbleListItem, BubbleRenderRow, BubbleSession} from '../../bubble-list/types.ts'
 import {type NameValueEnumMetadata} from '@loncra/client/commons'
@@ -63,7 +64,7 @@ const ImBubbleList = defineComponent({
             bubble: textBubble(
               `divider-${String(msg.key)}-${msgTime}`,
               props.host.timeText(msgTime),
-              'divider',
+              CHAT_BUBBLE_TYPE.DIVIDER,
             ),
           })
           lastDividerTime = msgTime
@@ -115,7 +116,7 @@ const ImBubbleList = defineComponent({
           },
           contentRender: ({item}: {item: BubbleListItem}) => {
             const bubble = asBubble(item)
-            if (!bubble || (bubble.role !== 'user' && bubble.role !== 'ai')) {
+            if (!bubble || (bubble.role !== CHAT_BUBBLE_TYPE.USER && bubble.role !== CHAT_BUBBLE_TYPE.AI)) {
               return null
             }
             return (
@@ -138,7 +139,7 @@ const ImBubbleList = defineComponent({
             const callMessage = bubble?.content?.some(
               (block) => block.type === 'custom' && 'slotKind' in block && block.slotKind === 'call',
             )
-            if (!bubble || bubble.id == null || callMessage || (bubble.role !== 'user' && bubble.role !== 'ai')) {
+            if (!bubble || bubble.id == null || callMessage || (bubble.role !== CHAT_BUBBLE_TYPE.USER && bubble.role !== CHAT_BUBBLE_TYPE.AI)) {
               return null
             }
             return (

@@ -3,7 +3,7 @@ import type {RoleType} from '@antdv-next/x/dist/bubble/interface'
 import {UserAvatar} from '@loncra/antdv-pro'
 import type {PlatformUser, UserMetadata} from '@loncra/client/auth'
 import {getEnumValue} from '@loncra/client/commons'
-import {STREAM_RUNNING_STATUS_VALUE} from '@loncra/client/ai'
+import {CHAT_BUBBLE_TYPE, STREAM_RUNNING_STATUS_VALUE} from '@loncra/client/ai'
 import BubbleList from '../../bubble-list/BubbleList.tsx'
 import {DEFAULT_BUBBLE_LIST_ROLE} from '../../bubble-list/useBubbleList.ts'
 import type {BubbleListExpose, BubbleListItem, BubbleSession} from '../../bubble-list/types.ts'
@@ -78,13 +78,13 @@ const AgentBubbleList = defineComponent({
         }}
         v-slots={{
           avatar: ({item}: {item: BubbleListItem}) => {
-            if (item.role === 'user') {
+            if (item.role === CHAT_BUBBLE_TYPE.USER) {
               return <UserAvatar user={props.user} {...({size: 'large'} as Record<string, unknown>)} />
             }
             return slots.assistantAvatar?.()
           },
           contentRender: ({item}: {item: BubbleListItem}) => {
-            if (item.role === 'ai') {
+            if (item.role === CHAT_BUBBLE_TYPE.AI) {
               return (
                 <AgentAssistantContent
                   item={item as unknown as {key: string | number; content: never[]}}

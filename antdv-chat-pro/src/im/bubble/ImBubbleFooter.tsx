@@ -6,6 +6,7 @@ import useApp from 'antdv-next/dist/app/useApp'
 import {classNames, fillLocale} from '@loncra/antdv'
 import {isEnumValue, type NameValueEnumMetadata, YES_OR_NO_TYPE} from '@loncra/client/commons'
 import {ChatMessageService} from '@loncra/client/message'
+import {CHAT_BUBBLE_TYPE} from '@loncra/client/ai'
 import {useLocale} from '../../_util/useLocale.ts'
 import useStyle, {IM_BUBBLE_PREFIX} from './style/index.ts'
 
@@ -32,7 +33,7 @@ const ImBubbleFooter = defineComponent({
     const showReference = computed(() => isEnumValue(props.undo, YES_OR_NO_TYPE.NO))
     const showUndo = computed(() =>
       showReference.value
-      && props.role === 'user'
+      && props.role === CHAT_BUBBLE_TYPE.USER
       && props.undoableTime != null
       && left.value > 0,
     )

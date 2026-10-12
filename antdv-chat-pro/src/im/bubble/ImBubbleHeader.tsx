@@ -3,6 +3,7 @@ import {Typography} from 'antdv-next'
 import {isEnumValue, type NameValueEnumMetadata} from '@loncra/client/commons'
 import {MESSAGE_SERVER_USER_CHAT_ROOM_TYPE} from '@loncra/client/message'
 import {AuthServerService, type PlatformUser, type UserMetadata} from '@loncra/client/auth'
+import {CHAT_BUBBLE_TYPE} from '@loncra/client/ai'
 
 const ImBubbleHeader = defineComponent({
   name: 'LImBubbleHeader',
@@ -16,7 +17,7 @@ const ImBubbleHeader = defineComponent({
   },
   setup(props) {
     return () => {
-      if (props.role !== 'ai' || !isEnumValue(props.roomType, MESSAGE_SERVER_USER_CHAT_ROOM_TYPE.GROUP_CHAT)) {
+      if (props.role !== CHAT_BUBBLE_TYPE.AI || !isEnumValue(props.roomType, MESSAGE_SERVER_USER_CHAT_ROOM_TYPE.GROUP_CHAT)) {
         return null
       }
       return <Typography.Text>{AuthServerService.getPrincipalNameByUserDetails(props.details)}</Typography.Text>

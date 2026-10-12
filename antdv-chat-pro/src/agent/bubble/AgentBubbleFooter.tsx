@@ -14,6 +14,7 @@ import {getEnumName, getEnumValue} from '@loncra/client/commons'
 import {
   AI_SERVER_AGENT_CONTENT_TYPE,
   BLOCK_RUNNING_STATUS_VALUE,
+  CHAT_BUBBLE_TYPE,
 } from '@loncra/client/ai'
 import {useLocale} from '../../_util/useLocale.ts'
 import useStyle, {AGENT_BUBBLE_PREFIX} from './style/index.ts'
@@ -94,7 +95,7 @@ const AgentBubbleFooter = defineComponent({
 
     return () => {
       const item = props.item
-      if (item.role === 'ai') {
+      if (item.role === CHAT_BUBBLE_TYPE.AI) {
         const showToken = Boolean(item.metadata?.tokenUsage)
         if (!answerReady.value && !showToken) {
           return null
@@ -147,7 +148,7 @@ const AgentBubbleFooter = defineComponent({
           </div>
         )
       }
-      if (item.role !== 'user' || item.data == null) {
+      if (item.role !== CHAT_BUBBLE_TYPE.USER || item.data == null) {
         return null
       }
       const typeValue = Number(getEnumValue(item.type as number))

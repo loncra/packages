@@ -5,6 +5,7 @@ import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {classNames} from '@loncra/antdv'
 import {isEnumValue, type NameValueEnumMetadata} from '@loncra/client/commons'
 import {MESSAGE_SERVER_USER_CHAT_ROOM_TYPE} from '@loncra/client/message'
+import {CHAT_BUBBLE_TYPE} from '@loncra/client/ai'
 import type {ImChatBubble} from '@loncra/chat-core'
 import {useLocale} from '../../_util/useLocale.ts'
 import ImMessageReadTable from './ImMessageReadTable.tsx'
@@ -28,7 +29,7 @@ const ImBubbleRead = defineComponent({
     const [hashId, cssVarCls] = useStyle(prefixCls)
     return () => {
       const item = props.item
-      if (isEnumValue(props.roomType, MESSAGE_SERVER_USER_CHAT_ROOM_TYPE.PRIVATE_CHAT) && item.role === 'user') {
+      if (isEnumValue(props.roomType, MESSAGE_SERVER_USER_CHAT_ROOM_TYPE.PRIVATE_CHAT) && item.role === CHAT_BUBBLE_TYPE.USER) {
         const unread = item.readableCount === 1
         return (
           <div class={classNames(prefixCls.value, hashId.value, cssVarCls.value)}>
@@ -51,7 +52,7 @@ const ImBubbleRead = defineComponent({
         <div class={classNames(prefixCls.value, hashId.value, cssVarCls.value)}>
           <div class={`${prefixCls.value}-read`}>
             <Popover
-              placement={item.role === 'user' ? 'left' : 'right'}
+              placement={item.role === CHAT_BUBBLE_TYPE.USER ? 'left' : 'right'}
               trigger="click"
               v-slots={{
                 content: () => <ImMessageReadTable messageId={Number(item.id)} host={props.host} />,

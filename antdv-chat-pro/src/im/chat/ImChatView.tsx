@@ -19,6 +19,7 @@ import {
   type UserChatParticipantEntity,
 } from '@loncra/client/message'
 import {appendMessages, type ImChatBubble, type ImContentBlock} from '@loncra/chat-core'
+import {CHAT_BUBBLE_TYPE} from '@loncra/client/ai'
 import {sendImMessage} from '../send/sendImMessage'
 import type {BubbleListItem} from '../../bubble-list/types'
 import type {ImHistorySession} from '../history/useImHistory'
@@ -309,7 +310,7 @@ const ImChatView = defineComponent({
         if (!result.data) {
           return
         }
-        appendMessages(result.data, 'user', props.session.dataSource.elements)
+        appendMessages(result.data, CHAT_BUBBLE_TYPE.USER, props.session.dataSource.elements)
         await senderRef.value?.clearStored()
         senderRef.value?.clear()
         props.moveToTop(result.data.userChatRoomId, result.data)

@@ -10,13 +10,11 @@
  * 不在本文件：BubbleListProps、BubbleListCallbacks（含 HTMLElement），留给 antdv-chat。
  */
 import type {PageResult, VersionEntityMetadata} from '@loncra/client/commons'
+import {CHAT_BUBBLE_TYPE} from '@loncra/client/ai'
 import type {TextBlock} from './content.ts'
 
-/**
- * 来源：vue-basic-admin/src/constants/systemConstant.ts CHAT_BUBBLE_TYPE。
- * 管理端实际赋的就是这四个字符串。divider 是列表分隔，不是服务端消息角色。
- */
-export type ChatRole = 'ai' | 'system' | 'user' | 'divider'
+/** 气泡角色。divider 是列表分隔，不是服务端消息角色。 */
+export type ChatRole = (typeof CHAT_BUBBLE_TYPE)[keyof typeof CHAT_BUBBLE_TYPE]
 
 /** 来源：chat.ts BaseChatBubble。TBlock 至少有 TextBlock 的 type 和 value。 */
 export interface ChatBubbleBody<TBlock extends TextBlock<string, unknown>>
@@ -43,7 +41,7 @@ export interface ChatBubbleItem<TBlock extends TextBlock<string, unknown>>
 export function textBubble(
   key: string | number,
   value: string,
-  role: 'system' | 'divider' = 'system',
+  role: typeof CHAT_BUBBLE_TYPE.SYSTEM | typeof CHAT_BUBBLE_TYPE.DIVIDER = CHAT_BUBBLE_TYPE.SYSTEM,
   creationTime?: number,
 ): ChatBubbleItem<TextBlock> {
   return {
@@ -65,7 +63,7 @@ export function bubbleListContent(item: {
 }): string | readonly TextBlock<string, unknown>[] {
   const block = item.content[0]
   if (
-    (item.role === 'system' || item.role === 'divider')
+    (item.role === CHAT_BUBBLE_TYPE.SYSTEM || item.role === CHAT_BUBBLE_TYPE.DIVIDER)
     && item.content.length === 1
     && block?.type === 'text'
     && typeof block.value === 'string'
@@ -112,7 +110,7 @@ export function appendMessages<TBlock extends TextBlock<string, unknown>>(
     return
   }
 
-  const items = role === 'system'
+  const items = role === CHAT_BUBBLE_TYPE.SYSTEM
     ? content.map((block) => toItem([block]))
     : [toItem(content)]
 

@@ -93,3 +93,10 @@ export const AI_SERVER_PLUGIN_INSTALL_STATUS = {
   ACTIVATED: 20,
   DISABLED: 30,
 } as const
+
+export const CHAT_BUBBLE_TYPE = {
+  AI: 'ai',
+  SYSTEM: 'system',
+  USER: 'user',
+  DIVIDER: 'divider',
+} as const

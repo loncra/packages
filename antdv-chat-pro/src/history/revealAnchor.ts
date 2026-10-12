@@ -5,6 +5,7 @@ import {
   type TextBlock,
   textBubble,
 } from '@loncra/chat-core'
+import {CHAT_BUBBLE_TYPE} from '@loncra/client/ai'
 
 /**
  * 在已加载的气泡里定位消息。有系统提示时，插在锚点前一条。
@@ -25,7 +26,7 @@ export async function revealAnchor(
       ? textBubble(
         'system-anchor-message-' + now,
         systemMessage,
-        'system',
+        CHAT_BUBBLE_TYPE.SYSTEM,
         (anchorBubble.creationTime ?? 0) - 1,
       )
       : undefined,

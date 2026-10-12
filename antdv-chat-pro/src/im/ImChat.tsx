@@ -12,6 +12,7 @@ import {
   type UserChatMessageEntity,
   type UserChatMessageResponseBody,
 } from '@loncra/client/message'
+import {CHAT_BUBBLE_TYPE} from '@loncra/client/ai'
 import {appendMessages, type ChatRole, isPlaceholderDraft, type PersistableSlot} from '@loncra/chat-core'
 import {draftDatabase} from '@loncra/chat-core/dexie'
 import type {SlotConfigType} from '@antdv-next/x/dist/sender/interface'
@@ -89,9 +90,9 @@ const ImChat = defineComponent({
       readableSystemMessage: () => locale.value.unreadSystem,
       resolveRole: (message) => {
         const details = message.participant?.metadata?.details as {systemName?: string} | undefined
-        let role: ChatRole = props.host.self.systemName === details?.systemName ? 'user' : 'ai'
+        let role: ChatRole = props.host.self.systemName === details?.systemName ? CHAT_BUBBLE_TYPE.USER : CHAT_BUBBLE_TYPE.AI
         if (isEnumValue(message.type, MESSAGE_SERVER_USER_CHAT_MESSAGE_TYPE.SYSTEM)) {
-          role = 'system'
+          role = CHAT_BUBBLE_TYPE.SYSTEM
         }
         return role
       },
@@ -135,12 +136,12 @@ const ImChat = defineComponent({
 
     function messageRole(message: UserChatMessageResponseBody | UserChatMessageEntity): ChatRole {
       if (isEnumValue(message.type, MESSAGE_SERVER_USER_CHAT_MESSAGE_TYPE.USER)) {
-        return 'ai'
+        return CHAT_BUBBLE_TYPE.AI
       }
       if (isEnumValue(message.type, MESSAGE_SERVER_USER_CHAT_MESSAGE_TYPE.SYSTEM)) {
-        return 'system'
+        return CHAT_BUBBLE_TYPE.SYSTEM
       }
-      return message.principal === props.host.self.systemName ? 'user' : 'ai'
+      return message.principal === props.host.self.systemName ? CHAT_BUBBLE_TYPE.USER : CHAT_BUBBLE_TYPE.AI
     }
 
     function applyIncomingMessage(message: UserChatMessageResponseBody | UserChatMessageEntity) {

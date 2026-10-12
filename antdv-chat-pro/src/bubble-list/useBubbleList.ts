@@ -1,6 +1,7 @@
 import {computed, type MaybeRefOrGetter, nextTick, onUnmounted, ref, toValue, watch} from 'vue'
 import type {BubbleItemType, BubbleListRef, RoleType} from '@antdv-next/x/dist/bubble/interface'
 import {bubbleListContent} from '@loncra/chat-core'
+import {CHAT_BUBBLE_TYPE} from '@loncra/client/ai'
 import {BUBBLE_LIST_PREFIX} from './style/index.ts'
 import type {
   BubbleListCallbacks,
@@ -251,7 +252,7 @@ export function useBubbleList<T extends BubbleListItem>(
     const children = content.children
     for (let i = 0; i < children.length && i < domainItems.value.length; i++) {
       const bubble = domainItems.value[i]
-      if (!bubble || bubble.role === 'divider') {
+      if (!bubble || bubble.role === CHAT_BUBBLE_TYPE.DIVIDER) {
         continue
       }
       if (filter && !filter(bubble)) {
