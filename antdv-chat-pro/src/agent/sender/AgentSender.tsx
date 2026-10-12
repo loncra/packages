@@ -1,7 +1,16 @@
 import {computed, defineComponent, h, type PropType, ref, type VNodeChild} from 'vue'
 import {Button, Dropdown, Menu, Tag} from 'antdv-next'
 import type {MenuInfo, MenuItemType} from 'antdv-next'
-import {PlusOutlined} from '@antdv-next/icons'
+import {
+  ApiOutlined,
+  createFromIconfontCN,
+  PlusOutlined,
+  ProfileOutlined,
+  QuestionCircleOutlined,
+  RobotOutlined,
+} from '@antdv-next/icons'
+import {isEnumValue} from '@loncra/client/commons'
+import {AI_SERVER_AGENT_CHAT_TYPE} from '@loncra/client/ai'
 import {SenderHeader} from '@antdv-next/x'
 import type {SlotConfigType} from '@antdv-next/x/dist/sender/interface'
 import type {DraftRestoreResult} from '@loncra/chat-core'
@@ -27,8 +36,23 @@ export interface AgentSenderWorkspace {
 export interface AgentSenderChoice {
   label?: string
   color?: string
+  /** 模型图标字体名。没有时按钮用默认图标。 */
+  icon?: string | null
   items: MenuItemType[]
   selectedKeys: string[]
+}
+
+const IconFont = createFromIconfontCN()
+
+function chatTypeIcon(key: string | undefined) {
+  const type = Number(key)
+  if (isEnumValue(type, AI_SERVER_AGENT_CHAT_TYPE.ASK)) {
+    return QuestionCircleOutlined
+  }
+  if (isEnumValue(type, AI_SERVER_AGENT_CHAT_TYPE.PLAN)) {
+    return ProfileOutlined
+  }
+  return RobotOutlined
 }
 
 export interface AgentSenderExpose {
@@ -203,9 +227,12 @@ const AgentSender = defineComponent({
                 placement="topLeft"
                 onMenuClick={(info: MenuInfo) => props.onPlusClick?.(info.key)}
               >
-                <Button shape="circle" size="small" disabled={plusDisabled}>
-                  {{icon: () => slots.plusIcon?.() ?? h(PlusOutlined)}}
-                </Button>
+                <Button
+                  shape="circle"
+                  size="small"
+                  disabled={plusDisabled}
+                  v-slots={{icon: () => <PlusOutlined />}}
+                />
               </Dropdown>,
               props.model ? (
                 <Dropdown
@@ -220,7 +247,11 @@ const AgentSender = defineComponent({
                     color="primary"
                     variant="outlined"
                     size="small"
-                    v-slots={{icon: () => slots.modelIcon?.()}}
+                    v-slots={{
+                      icon: () => props.model?.icon
+                        ? <IconFont type={props.model.icon} />
+                        : <ApiOutlined />,
+                    }}
                   >
                     {props.model.label}
                   </Button>
@@ -240,7 +271,12 @@ const AgentSender = defineComponent({
                     variant="dashed"
                     type="text"
                     size="small"
-                    v-slots={{icon: () => slots.typeIcon?.()}}
+                    v-slots={{
+                      icon: () => {
+                        const TypeIcon = chatTypeIcon(props.typeChoice?.selectedKeys[0])
+                        return <TypeIcon />
+                      },
+                    }}
                   >
                     {props.typeChoice.label}
                   </Button>

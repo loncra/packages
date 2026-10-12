@@ -18,6 +18,12 @@ export const AI_SERVER_AGENT_CONVERSATION_TYPE = {
   WORKSPACE_CONVERSATION: 30,
 } as const
 
+export const AI_SERVER_AGENT_CHAT_TYPE = {
+  ASK: 10,
+  PLAN: 20,
+  AGENT: 30,
+} as const
+
 export const AI_SERVER_AGENT_CHAT_STATUS = {
   READY: 10,
   RUNNING: 20,
