@@ -85,18 +85,6 @@ function genAgentHubStyle(token: LoncraStyleToken): CSSInterpolation {
           padding:`${padding} 0 !important`
         }
       },
-      [`${componentCls}-spin`]: {
-        width: '100%',
-        height: '100%',
-        minHeight: 0,
-        [`> ${antCls}-spin-container`]: {
-          display: 'flex',
-          flexDirection: 'column',
-          width: '100%',
-          height: '100%',
-          minHeight: 0,
-        },
-      },
     },
   }
 }

@@ -51,6 +51,7 @@ export { classNames } from './_util/classNames'
 export { splitSemantic } from './_util/splitSemantic'
 export { genStyleHooks } from './_util/genStyle'
 export type { LoncraStyleToken } from './_util/genStyle'
+export { GLOBAL_PREFIX, GlobalStyleProvider, useGlobalStyle } from './globalStyle'
 export { useIsDark } from './_util/useIsDark'
 export { useFormItemTrigger } from './_util/useFormItemTrigger'
 

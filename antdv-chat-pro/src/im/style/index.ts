@@ -5,7 +5,7 @@ import {genStyleHooks} from '@loncra/antdv'
 export const IM_CHAT_PREFIX = 'loncra-im-chat'
 
 function genImChatStyle(token: LoncraStyleToken): CSSInterpolation {
-  const {componentCls, antCls, paddingXS, colorBgLayout} = token
+  const {componentCls, paddingXS, colorBgLayout} = token
   return {
     [componentCls]: {
       height: '100%',
@@ -44,18 +44,6 @@ function genImChatStyle(token: LoncraStyleToken): CSSInterpolation {
       [`${componentCls}-drawer`]: {
         height: '100%',
         minHeight: 0,
-      },
-      [`${componentCls}-spin${antCls}-spin`]: {
-        width: '100%',
-        height: '100%',
-        minHeight: 0,
-        [`> ${antCls}-spin-container`]: {
-          display: 'flex',
-          flexDirection: 'column',
-          width: '100%',
-          height: '100%',
-          minHeight: 0,
-        },
       },
     },
   }
