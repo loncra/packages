@@ -22,25 +22,27 @@ function genImCallStyle(token: LoncraStyleToken): CSSInterpolation {
 
   return {
     [componentCls]: {
-      [`${antCls}-modal ${antCls}-modal-container`]: {
-        padding: 0,
+      [`${componentCls}-modal`]: {
+        [`${componentCls}-modal-container`]: {
+          padding: 0,
+        },
+        [`${componentCls}-modal-header`]: {
+          margin: 0,
+          padding: paddingXS,
+          textAlign: 'center',
+        },
+        [`${componentCls}-modal-body`]: {
+          padding: 0,
+        },
       },
-      [`${antCls}-modal ${antCls}-modal-header`]: {
-        margin: 0,
-        padding: paddingXS,
-        textAlign: 'center',
-      },
-      [`${antCls}-modal ${antCls}-modal-body`]: {
-        padding: 0,
+      [`&${componentCls}-minimized${componentCls}-modal-wrap`]: {
+        position: 'static',
+        overflow: 'visible',
       },
       [`&${componentCls}-minimized`]: {
         pointerEvents: 'none',
         overflow: 'visible',
-        [`&${antCls}-modal-wrap, ${antCls}-modal-wrap`]: {
-          position: 'static',
-          overflow: 'visible',
-        },
-        [`${antCls}-modal`]: {
+        [`${componentCls}-modal`]: {
           position: 'fixed',
           top: 'auto',
           right: 'auto',
@@ -52,20 +54,15 @@ function genImCallStyle(token: LoncraStyleToken): CSSInterpolation {
           pointerEvents: 'auto',
           transform: 'none',
         },
-        [`${antCls}-modal-header`]: {
+        [`${componentCls}-modal-header`]: {
           display: 'none',
-        },
-        [`${antCls}-modal-content`]: {
-          overflow: 'hidden',
-          borderRadius: borderRadiusLG,
-          boxShadow,
         },
       },
       [`${componentCls}-viewport`]: {
         position: 'relative',
         width: '100%',
         overflow: 'hidden',
-        background: '#000',
+        background: colorBgLayout,
         '&:fullscreen': {
           width: '100%',
           height: '100%',
@@ -99,11 +96,11 @@ function genImCallStyle(token: LoncraStyleToken): CSSInterpolation {
         height: '100%',
       },
       [`${componentCls}-stage-mini`]: {
-        background: '#000',
+        background: colorBgLayout,
         cursor: 'pointer',
       },
       [`${componentCls}-stage-full`]: {
-        background: '#000',
+        background: colorBgLayout,
       },
       [`${componentCls}-stage-window`]: {
         background: colorBgLayout,

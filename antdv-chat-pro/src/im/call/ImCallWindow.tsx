@@ -95,7 +95,13 @@ const ImCallWindow = defineComponent({
           maskClosable={false}
           width={width}
           footer={null}
-          wrapClassName={classNames(prefix, hashId.value, cssVarCls.value, minimized && `${prefix}-minimized`)}
+          class={`${prefix}-modal`}
+          wrapClassName={classNames(prefix, hashId.value, cssVarCls.value, `${prefix}-modal-wrap`, minimized && `${prefix}-minimized`)}
+          classes={{
+            container: `${prefix}-modal-container`,
+            header: `${prefix}-modal-header`,
+            body: `${prefix}-modal-body`,
+          }}
           onCancel={() => void session.hangUp()}
           v-slots={{
             title: expanded
