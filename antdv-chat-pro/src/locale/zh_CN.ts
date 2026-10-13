@@ -120,6 +120,31 @@ const locale: Locale = {
     tokenCache: '缓存命中',
     tokenCacheHitRate: '缓存命率',
   },
+  AgentChat: {
+    welcomeTitle: '你好，我是 Captain.J',
+    welcomeDescription: '今天有什么需要干的吗？',
+    placeholder: '向智能体提问…',
+    workspace: '工作空间',
+    noMore: '没有更多的数据了',
+  },
+  AgentHub: {
+    mcp: 'MCP 插件',
+    skill: '技能插件',
+    myPlugin: '我的插件',
+    changelog: '更新日志',
+    install: '安装',
+    installTitle: '安装 {name}',
+    uninstall: '卸载',
+    uninstallConfirmTitle: '卸载确认',
+    uninstallConfirmSingle: '确定要卸载 {name} 吗？',
+    workspaceScope: '生效范围',
+    workspaceScopeAll: '全部工作空间',
+    workspaceScopeSpecific: '指定工作空间',
+    workspaceRequired: '指定工作空间时至少选择一个工作空间',
+    workspaceEmpty: '暂无工作空间',
+    workspace: '工作空间',
+    all: '全部',
+  },
 }
 
 export default locale

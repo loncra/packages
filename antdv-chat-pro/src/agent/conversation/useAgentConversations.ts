@@ -1,4 +1,4 @@
-import {onMounted, ref, type Ref} from 'vue'
+import {ref, type Ref} from 'vue'
 import useApp from 'antdv-next/dist/app/useApp'
 import {findFirstTreeNode, isEnumValue} from '@loncra/client/commons'
 import {useLocale} from '../../_util/useLocale.ts'
@@ -151,10 +151,6 @@ export function useAgentConversations<T extends AgentConversationRecord>(
       loading.value = false
     }
   }
-
-  onMounted(() => {
-    void load()
-  })
 
   return {
     conversations,

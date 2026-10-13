@@ -43,6 +43,7 @@ export const SYSTEM_ENUM_TYPE = {
   ENTERPRISE_INVITATION_STATUS_ENUM: 'EnterpriseInvitationStatusEnum',
   AUDIT_TYPE_ENUM: 'AuditTypeEnum',
   AUDIT_STATUS_ENUM: 'AuditStatusEnum',
+  AGENT_CHAT_TYPE_ENUM: 'AgentChatTypeEnum',
   VALUE_TYPE_ENUM: 'ValueTypeEnum',
   YES_OR_NO: 'YesOrNo',
 } as const

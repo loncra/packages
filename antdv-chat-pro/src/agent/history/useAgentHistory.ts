@@ -15,7 +15,7 @@ import {
   textBubble,
 } from '@loncra/chat-core'
 
-type HistoryBubble = ChatBubbleItem<TextBlock<string, unknown>>
+export type HistoryBubble = ChatBubbleItem<TextBlock<string, unknown>>
 
 /** 与管理端分页默认条数一致，只在会话上还没有 size 时使用。 */
 const FALLBACK_PAGE_SIZE = 10

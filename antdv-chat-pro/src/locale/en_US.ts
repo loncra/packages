@@ -120,6 +120,31 @@ const locale: Locale = {
     tokenCache: 'Cache hit',
     tokenCacheHitRate: 'Cache hit rate',
   },
+  AgentChat: {
+    welcomeTitle: 'Hello, I am Captain.J',
+    welcomeDescription: 'What do you need to do today?',
+    placeholder: 'Ask the agent…',
+    workspace: 'Workspace',
+    noMore: 'No more data available',
+  },
+  AgentHub: {
+    mcp: 'MCP plugins',
+    skill: 'Skill plugins',
+    myPlugin: 'My plugins',
+    changelog: 'Changelog',
+    install: 'Install',
+    installTitle: 'Install {name}',
+    uninstall: 'Uninstall',
+    uninstallConfirmTitle: 'Confirm uninstall',
+    uninstallConfirmSingle: 'Are you sure you want to uninstall {name}?',
+    workspaceScope: 'Scope',
+    workspaceScopeAll: 'All workspaces',
+    workspaceScopeSpecific: 'Selected workspaces',
+    workspaceRequired: 'Select at least one workspace',
+    workspaceEmpty: 'No workspace yet',
+    workspace: 'Workspace',
+    all: 'All',
+  },
 }
 
 export default locale

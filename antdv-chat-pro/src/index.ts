@@ -63,3 +63,6 @@ export {default as AgentBubbleFooter} from './agent/bubble/AgentBubbleFooter.tsx
 export {default as AgentAssistantContent} from './agent/bubble/AgentAssistantContent.tsx'
 export {default as AgentUserContent} from './agent/bubble/AgentUserContent.tsx'
 export {default as AgentBubbleList} from './agent/bubble/AgentBubbleList.tsx'
+export {default as AgentChat} from './agent/AgentChat'
+export type {AgentSession} from './agent/types'
+export {default as SkillReleaseChangeLog} from './agent/hub/SkillReleaseChangeLog'

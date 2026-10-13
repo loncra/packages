@@ -124,6 +124,33 @@ export interface AgentBubbleLocale {
   tokenCacheHitRate: string
 }
 
+export interface AgentChatLocale {
+  welcomeTitle: string
+  welcomeDescription: string
+  placeholder: string
+  workspace: string
+  noMore: string
+}
+
+export interface AgentHubLocale {
+  mcp: string
+  skill: string
+  myPlugin: string
+  changelog: string
+  install: string
+  installTitle: string
+  uninstall: string
+  uninstallConfirmTitle: string
+  uninstallConfirmSingle: string
+  workspaceScope: string
+  workspaceScopeAll: string
+  workspaceScopeSpecific: string
+  workspaceRequired: string
+  workspaceEmpty: string
+  workspace: string
+  all: string
+}
+
 export interface Locale {
   locale: string
   ImConversation?: ImConversationLocale
@@ -134,4 +161,6 @@ export interface Locale {
   ImChat?: ImChatLocale
   ImCall?: ImCallLocale
   AgentBubble?: AgentBubbleLocale
+  AgentChat?: AgentChatLocale
+  AgentHub?: AgentHubLocale
 }

@@ -88,6 +88,8 @@ const AgentSender = defineComponent({
       required: true,
     },
     slotConfig: Array as PropType<SlotConfigType[]>,
+    placeholder: String,
+    instructionMap: Object as PropType<Record<string, InstructionItem[]>>,
     isRunning: {type: Boolean, default: false},
     workspace: Object as PropType<AgentSenderWorkspace>,
     /** 该前缀的点名弹层改用目录菜单。 */
@@ -151,6 +153,8 @@ const AgentSender = defineComponent({
           onRestore={props.onRestore}
           saveSource={props.saveSource}
           slotConfig={props.slotConfig}
+          placeholder={props.placeholder}
+          instructionMap={props.instructionMap}
           onFilterDataSource={props.onFilterDataSource}
           senderInsertInstruction={props.senderInsertInstruction}
           createInstructionSlot={props.createInstructionSlot}
