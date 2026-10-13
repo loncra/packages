@@ -11,6 +11,10 @@ function genAgentBubbleStyle(token: LoncraStyleToken): CSSInterpolation {
     marginXS,
     paddingXS,
     paddingSM,
+    lineWidth,
+    lineType,
+    colorTextSecondary,
+    colorBorderSecondary,
     fontSizeSM,
     motionDurationSlow,
     colorTextQuaternary,
@@ -27,9 +31,18 @@ function genAgentBubbleStyle(token: LoncraStyleToken): CSSInterpolation {
         },
       },
       [`${componentCls}-tool`]: {
+        [`${antCls}-card-head`]: {
+          borderBottom: 'none',
+          padding:paddingXS,
+          fontWeight: 'normal',
+          color: colorTextSecondary
+        },
         [`${antCls}-card-body`]: {
           padding: 0,
         },
+      },
+      [`${componentCls}-answer`]: {
+        paddingBlock: '0 !important',
       },
       [`${componentCls}-tool-toggle`]: {
         cursor: 'pointer',
@@ -43,15 +56,11 @@ function genAgentBubbleStyle(token: LoncraStyleToken): CSSInterpolation {
         transform: 'rotate(90deg)',
       },
       [`${componentCls}-tool-body`]: {
+        borderTop: `${lineWidth} ${lineType} ${colorBorderSecondary}`,
         padding: paddingSM,
-      },
-      [`${componentCls}-scroll`]: {
-        maxHeight: '30vh',
-        overflow: 'auto',
-      },
-      [`${componentCls}-scroll-tall`]: {
-        maxHeight: '40vh',
-        overflow: 'auto',
+        [`${antCls}-thought-chain ${antCls}-thought-chain-node-description`]: {
+          marginBlockEnd:0
+        }
       },
     },
   }

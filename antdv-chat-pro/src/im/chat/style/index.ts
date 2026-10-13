@@ -19,7 +19,7 @@ function genImChatViewStyle(token: LoncraStyleToken): CSSInterpolation {
       [`${componentCls}-footer`]: {
         flexShrink: 0,
         padding: paddingSM,
-        borderTop: `${unit(lineWidth)} ${lineType} ${colorBorderSecondary}`,
+        borderTop: `${lineWidth} ${lineType} ${colorBorderSecondary}`,
       },
       [`${componentCls}-jump`]: {
         position: 'absolute',

@@ -29,7 +29,7 @@ function genInstructionSenderStyle(token: LoncraStyleToken): CSSInterpolation {
     [componentCls]: {
       [`${componentCls}-footer`]: {
         padding: `${unit(paddingXS)} !important`,
-        borderTop: `${unit(lineWidth)} ${lineType} ${colorBorderSecondary}`,
+        borderTop: `${lineWidth} ${lineType} ${colorBorderSecondary}`,
       },
       [`.antd-sender-input.antd-sender-input-slot`]: {
         [`> .antd-sender-slot:not(.antd-sender-slot-content)`]: {
@@ -45,7 +45,7 @@ function genInstructionSenderStyle(token: LoncraStyleToken): CSSInterpolation {
     },
     [`${componentCls}-footer`]: {
       padding: `${unit(paddingXS)} !important`,
-      borderTop: `${unit(lineWidth)} ${lineType} ${colorBorderSecondary}`,
+      borderTop: `${lineWidth} ${lineType} ${colorBorderSecondary}`,
     },
     [`${componentCls}-panel`]: {
       maxHeight: panelSize,

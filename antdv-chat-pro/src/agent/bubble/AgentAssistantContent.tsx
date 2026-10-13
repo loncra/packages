@@ -65,10 +65,10 @@ const AgentAssistantContent = defineComponent({
           <div class={classNames(prefixCls.value, hashId.value, cssVarCls.value)}>
           <Flex vertical gap="small">
             {groupedBlocks.value.map((group) => (
-              <div key={group.groupId}>
+              <>
                 {group.thinkBlock
                   ? (
-                    <Card class={`${prefixCls.value}-think`}>
+                    <Card key={group.groupId} class={`${prefixCls.value}-think`}>
                       <Think
                         title={locale.value.think}
                         defaultExpanded={false}
@@ -100,6 +100,7 @@ const AgentAssistantContent = defineComponent({
                   ? (
                     <Bubble
                       content=" "
+                      class={`${prefixCls.value}-answer`}
                       v-slots={{
                         content: () => (
                           <Markdown
@@ -229,11 +230,12 @@ const AgentAssistantContent = defineComponent({
                                         {results.map((result) => (
                                           <Popover
                                             key={result.url}
+                                            classes={{container:'loncra-common-padding-none', title:'loncra-common-padding-xs'}}
                                             title={result.title}
                                             v-slots={{
                                               content: () => result.raw_content
                                                 ? (
-                                                  <div class={`${prefixCls.value}-scroll`}>
+                                                  <div class="loncra-common-scroll loncra-common-padding-xs">
                                                     <Markdown
                                                       {...markdownAttrs({
                                                         content: result.raw_content,
@@ -308,7 +310,7 @@ const AgentAssistantContent = defineComponent({
                 {group.errorBlock
                   ? <Alert type="error" showIcon message={group.errorBlock.value} />
                   : null}
-              </div>
+              </>
             ))}
           </Flex>
           </div>

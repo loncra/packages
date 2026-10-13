@@ -80,6 +80,10 @@ function genBubbleListStyle(token: LoncraStyleToken): CSSInterpolation {
         [`${componentCls}-user`]: {
           background: colorPrimaryBg,
         },
+        [`${componentCls}-avatar`]: {
+          flex: 'none',
+          alignSelf: 'flex-start',
+        },
         [`${componentCls}-system`]: {
           color: colorTextSecondary,
         },

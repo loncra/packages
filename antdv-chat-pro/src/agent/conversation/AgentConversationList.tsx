@@ -229,7 +229,7 @@ const AgentConversationList = defineComponent({
                     {locale.value.pluginMarket}
                   </Button>
                 </div>
-                <Divider plain titlePlacement="start">
+                <Divider plain titlePlacement="start" class="loncra-common-margin-none">
                   <Flex align="center" gap="small">
                     <FolderOutlined />
                     <span>{locale.value.workspaceTitle}</span>

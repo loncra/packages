@@ -76,12 +76,13 @@ export const DEFAULT_BUBBLE_LIST_ROLE = {
     variant: 'filled',
     placement: 'end',
     shape: 'corner',
-    classes: {content: `${BUBBLE_LIST_PREFIX}-user`},
+    classes: {content: `${BUBBLE_LIST_PREFIX}-user`,avatar: `${BUBBLE_LIST_PREFIX}-avatar`},
   },
   ai: {
     variant: 'filled',
     placement: 'start',
     shape: 'corner',
+    classes: {avatar: `${BUBBLE_LIST_PREFIX}-avatar`},
   },
   system: {
     variant: 'outlined',

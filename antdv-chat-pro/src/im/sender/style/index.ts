@@ -12,7 +12,7 @@ function genImSenderStyle(token: LoncraStyleToken): CSSInterpolation {
       width: '100%',
       padding: paddingXS,
       background: colorBgLayout,
-      borderBottom: `${unit(lineWidth)} ${lineType} ${colorBorderSecondary}`,
+      borderBottom: `${lineWidth} ${lineType} ${colorBorderSecondary}`,
       borderTopLeftRadius: borderRadiusLG,
       borderTopRightRadius: borderRadiusLG,
       [`${componentCls}-reference`]: {
