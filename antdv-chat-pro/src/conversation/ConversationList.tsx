@@ -83,7 +83,6 @@ const ConversationList = defineComponent({
                     onMousedown={stopRowAction}
                   >
                     <Dropdown
-                      trigger={['click']}
                       popupRender={() => (
                         <div onClick={stopRowAction} onMousedown={stopRowAction}>
                           {slots.actions?.(node)}

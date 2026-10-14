@@ -1,13 +1,6 @@
-import {defineComponent, h, type PropType} from 'vue'
-import {
-    Button,
-    Empty,
-    Flex,
-    Input,
-    Menu,
-    SpaceCompact,
-    TypographyText,
-} from 'antdv-next'
+import {computed, defineComponent, h, type PropType} from 'vue'
+import {Button, Empty, Flex, Input, Menu, SpaceCompact, TypographyText,} from 'antdv-next'
+import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {
     CheckOutlined,
     CloseOutlined,
@@ -19,10 +12,11 @@ import {
 } from '@antdv-next/icons'
 import {classNames} from '@loncra/antdv'
 import {ActionButton, type ResolvedAction} from '@loncra/antdv-pro'
-import ConversationList from '../../conversation'
 import type {ConversationNode} from '../../conversation'
+import ConversationList from '../../conversation'
 import type {EditObjectItemInfo} from '../types'
 import type {useFileEditor} from '../useFileEditor'
+import useStyle from './style'
 
 const FileConversation = defineComponent({
   name: 'LFileConversation',
@@ -32,12 +26,6 @@ const FileConversation = defineComponent({
       type: Object as PropType<ReturnType<typeof useFileEditor>>,
       required: true,
     },
-    prefixCls: {
-      type: String,
-      required: true,
-    },
-    hashId: String,
-    cssVarCls: String,
     name: String,
     readonly: {
       type: Boolean,
@@ -45,6 +33,11 @@ const FileConversation = defineComponent({
     },
   },
   setup(props) {
+    const config = useConfig()
+    const prefixCls = computed(() =>
+      config.value.getPrefixCls('file-conversation', 'loncra-file-conversation'),
+    )
+    const [hashId, cssVarCls] = useStyle(prefixCls)
     return () => {
       const {
         locale,
@@ -60,7 +53,7 @@ const FileConversation = defineComponent({
         state,
       } = props.editor
       const hashed = (...names: (string | undefined)[]) =>
-        classNames(props.hashId, props.cssVarCls, ...names)
+        classNames(hashId.value, cssVarCls.value, ...names)
 
       const lookup = new Map<string, EditObjectItemInfo>()
       const toNode = (item: EditObjectItemInfo): ConversationNode => {
@@ -108,7 +101,7 @@ const FileConversation = defineComponent({
 
       return (
         <ConversationList
-          class={hashed(`${props.prefixCls}-side`)}
+          class={hashed(`${prefixCls.value}-side`)}
           items={nodes}
           selectedKeys={state.value.selectedItem ? [state.value.selectedItem.id] : []}
           openKeys={state.value.openKeys}
@@ -127,7 +120,7 @@ const FileConversation = defineComponent({
                 gap="small"
                 justify="space-between"
                 align="center"
-                class={hashed(`${props.prefixCls}-toolbar`)}
+                class={hashed(`${prefixCls.value}-toolbar`)}
               >
                 <Flex flex="1" gap="small" align="center">
                   {h(ProfileOutlined)}
@@ -144,7 +137,7 @@ const FileConversation = defineComponent({
                 return null
               }
               return item.loading
-                ? h(LoadingOutlined, {class: hashed(`${props.prefixCls}-icon-spin`)})
+                ? h(LoadingOutlined, {class: hashed(`${prefixCls.value}-icon-spin`)})
                 : resolveIcon(item)
             },
             editor: (node: ConversationNode) => {

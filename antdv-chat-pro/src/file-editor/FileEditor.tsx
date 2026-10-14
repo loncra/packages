@@ -92,9 +92,6 @@ const FileEditor = defineComponent({
             <SplitterPanel class={hashed(`${prefixCls.value}-panel`)} defaultSize="20%" min="10%" max="30%">
               <FileConversation
                 editor={editor}
-                prefixCls={prefixCls.value}
-                hashId={hashId.value}
-                cssVarCls={cssVarCls.value}
                 name={props.name}
                 readonly={props.readonly}
               />
@@ -102,9 +99,6 @@ const FileEditor = defineComponent({
             <SplitterPanel class={hashed(`${prefixCls.value}-panel-main`)}>
               <FileTabs
                 editor={editor}
-                prefixCls={prefixCls.value}
-                hashId={hashId.value}
-                cssVarCls={cssVarCls.value}
                 bucket={props.bucket}
                 rootPath={props.path}
                 readonly={props.readonly}

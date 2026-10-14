@@ -1,24 +1,12 @@
-import {defineComponent, h, type PropType} from 'vue'
-import {
-    Badge,
-    Button,
-    Empty,
-    Flex,
-    SpaceCompact,
-    Tabs,
-    Tooltip,
-    TypographyText,
-} from 'antdv-next'
-import {
-    AimOutlined,
-    CloseOutlined,
-    DownloadOutlined,
-    SaveOutlined,
-} from '@antdv-next/icons'
+import {computed, defineComponent, h, type PropType} from 'vue'
+import {Badge, Button, Empty, Flex, SpaceCompact, Tabs, Tooltip, TypographyText,} from 'antdv-next'
+import {AimOutlined, CloseOutlined, DownloadOutlined, SaveOutlined,} from '@antdv-next/icons'
+import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {classNames} from '@loncra/antdv'
 import type {ObjectItemInfo} from '@loncra/client/resource'
 import FilePaneHost from '../FilePaneHost'
 import type {useFileEditor} from '../useFileEditor'
+import useStyle from './style'
 
 const FileTabs = defineComponent({
   name: 'LFileTabs',
@@ -28,12 +16,6 @@ const FileTabs = defineComponent({
       type: Object as PropType<ReturnType<typeof useFileEditor>>,
       required: true,
     },
-    prefixCls: {
-      type: String,
-      required: true,
-    },
-    hashId: String,
-    cssVarCls: String,
     bucket: {
       type: String,
       required: true,
@@ -48,6 +30,11 @@ const FileTabs = defineComponent({
     },
   },
   setup(props) {
+    const config = useConfig()
+    const prefixCls = computed(() =>
+      config.value.getPrefixCls('file-tabs', 'loncra-file-tabs'),
+    )
+    const [hashId, cssVarCls] = useStyle(prefixCls)
     return () => {
       const {
         locale,
@@ -65,10 +52,10 @@ const FileTabs = defineComponent({
         state,
       } = props.editor
       const hashed = (...names: (string | undefined)[]) =>
-        classNames(props.hashId, props.cssVarCls, ...names)
+        classNames(hashId.value, cssVarCls.value, ...names)
 
       return state.value.tabs.length ? (
-        <Flex vertical class={hashed(`${props.prefixCls}-tabs`)}>
+        <Flex vertical class={hashed(`${prefixCls.value}-tabs`)}>
           <Tabs
             hideAdd
             size="small"
@@ -76,11 +63,11 @@ const FileTabs = defineComponent({
             activeKey={state.value.selectedItem?.id}
             items={tabItems.value}
             classes={{
-              root: hashed(`${props.prefixCls}-tabs-root`),
-              body: hashed(`${props.prefixCls}-tabs-body`),
-              content: hashed(`${props.prefixCls}-tabs-content`),
-              item: hashed(`${props.prefixCls}-tab-item`),
-              header: hashed(`${props.prefixCls}-tab-header`),
+              root: hashed(`${prefixCls.value}-tabs-root`),
+              body: hashed(`${prefixCls.value}-tabs-body`),
+              content: hashed(`${prefixCls.value}-tabs-content`),
+              item: hashed(`${prefixCls.value}-tab-item`),
+              header: hashed(`${prefixCls.value}-tab-header`),
             }}
             onChange={activateTab}
             v-slots={{
@@ -92,7 +79,7 @@ const FileTabs = defineComponent({
                 <Flex
                   align="center"
                   gap="small"
-                  class={hashed(`${props.prefixCls}-tab-label`)}
+                  class={hashed(`${prefixCls.value}-tab-label`)}
                 >
                   {/*
                     图标**在这里画**（要套 `Badge` 的"未保存"圆点）—— 不能交给 `items[].icon`：
@@ -102,7 +89,7 @@ const FileTabs = defineComponent({
                     {resolveIcon(item.file)}
                   </Badge>
                   <TypographyText
-                    class={hashed(`${props.prefixCls}-grow`)}
+                    class={hashed(`${prefixCls.value}-grow`)}
                     ellipsis={{
                       tooltip: {title: item.label, mouseEnterDelay: 1},
                     }}
@@ -112,7 +99,7 @@ const FileTabs = defineComponent({
                   <Button
                     type="text"
                     size="small"
-                    class={hashed(`${props.prefixCls}-tab-close`)}
+                    class={hashed(`${prefixCls.value}-tab-close`)}
                     {...({
                       onClick: (e: Event) => {
                         e.stopPropagation()
@@ -134,14 +121,10 @@ const FileTabs = defineComponent({
                   <FilePaneHost
                     key={item.key}
                     ref={paneHostRef(item.key)}
-                    class={hashed(`${props.prefixCls}-pane`)}
                     item={item.file}
                     bucket={props.bucket}
                     readonly={props.readonly}
                     rootPath={props.rootPath}
-                    prefixCls={props.prefixCls}
-                    hashId={props.hashId}
-                    cssVarCls={props.cssVarCls}
                     onDirtyChange={(dirty: boolean) => onPaneDirtyChange(item.key, dirty)}
                   />
                 ) : null,
@@ -183,7 +166,7 @@ const FileTabs = defineComponent({
           />
         </Flex>
       ) : (
-        <Flex class={hashed(`${props.prefixCls}-pane`)} align="center" justify="center">
+        <Flex class={hashed(`${prefixCls.value}-tabs`)} align="center" justify="center">
           <Empty />
         </Flex>
       )

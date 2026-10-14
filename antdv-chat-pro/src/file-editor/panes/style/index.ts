@@ -1,9 +1,14 @@
 import type {CSSObject} from '@antdv-next/cssinjs'
-import type {LoncraStyleToken} from '@loncra/antdv'
+import {genStyleHooks, type LoncraStyleToken} from '@loncra/antdv'
 
-export default function genFilePanesStyle(token: LoncraStyleToken): CSSObject {
+function genFilePaneStyle(token: LoncraStyleToken): CSSObject {
   const {componentCls, colorBgLayout, paddingXS} = token
   return {
+    [`${componentCls}-pane`]: {
+      width: '100%',
+      height: '100%',
+      minHeight: 0,
+    },
     [`${componentCls}-media`]: {
       display: 'flex',
       width: '100%',
@@ -21,5 +26,17 @@ export default function genFilePanesStyle(token: LoncraStyleToken): CSSObject {
     [`${componentCls}-media-video`]: {
       background: colorBgLayout,
     },
+    [`${componentCls}-media-audio`]: {
+      width: '100%',
+      maxWidth: '36rem',
+    },
+    [`${componentCls}-editor`]: {
+      width: '100%',
+      height: '100%',
+      minHeight: 0,
+      overflow: 'hidden',
+    },
   }
 }
+
+export default genStyleHooks('FilePane', genFilePaneStyle, {order: 1})

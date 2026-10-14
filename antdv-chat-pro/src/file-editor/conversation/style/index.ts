@@ -1,8 +1,8 @@
-import {Keyframes} from '@antdv-next/cssinjs'
 import type {CSSObject} from '@antdv-next/cssinjs'
-import type {LoncraStyleToken} from '@loncra/antdv'
+import {Keyframes} from '@antdv-next/cssinjs'
+import {genStyleHooks, type LoncraStyleToken} from '@loncra/antdv'
 
-export default function genFileConversationStyle(token: LoncraStyleToken): CSSObject {
+function genFileConversationStyle(token: LoncraStyleToken): CSSObject {
   const {
     componentCls,
     prefixCls,
@@ -54,3 +54,5 @@ export default function genFileConversationStyle(token: LoncraStyleToken): CSSOb
     },
   }
 }
+
+export default genStyleHooks('FileConversation', genFileConversationStyle, {order: 1})

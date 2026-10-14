@@ -1,5 +1,4 @@
 import {defineComponent} from 'vue'
-import {classNames} from '@loncra/antdv'
 import CodeEditor from '../../CodeEditor'
 
 const TextPane = defineComponent({
@@ -31,7 +30,6 @@ const TextPane = defineComponent({
   setup(props, {emit}) {
     return () => (
       <CodeEditor
-        class={classNames(props.hashId, `${props.prefixCls}-pane`)}
         ext={props.ext}
         readonly={props.readonly}
         modelValue={props.modelValue}

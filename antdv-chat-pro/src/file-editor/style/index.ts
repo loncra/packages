@@ -1,10 +1,5 @@
 import type {CSSInterpolation} from '@antdv-next/cssinjs'
 import {genStyleHooks, type LoncraStyleToken} from '@loncra/antdv'
-import genFileConversationStyle from '../conversation/style'
-import genFileTabsStyle from '../tabs/style'
-import genFileAudioPaneStyle from '../panes/audio/style'
-import genFilePanesStyle from '../panes/style'
-import genFileTextPaneStyle from '../panes/text/style'
 
 function genFileEditorStyle(token: LoncraStyleToken): CSSInterpolation {
   const {componentCls, antCls, borderRadiusLG, colorBorderSecondary, lineWidth, lineType} = token
@@ -50,11 +45,6 @@ function genFileEditorStyle(token: LoncraStyleToken): CSSInterpolation {
       overflow: 'hidden',
       padding: 0,
     },
-    ...genFileConversationStyle(token),
-    ...genFileTabsStyle(token),
-    ...genFilePanesStyle(token),
-    ...genFileAudioPaneStyle(token),
-    ...genFileTextPaneStyle(token),
   }
 }
 

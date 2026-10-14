@@ -1,5 +1,6 @@
 import {computed, defineComponent, type PropType, watch} from 'vue'
 import {Spin} from 'antdv-next'
+import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {classNames, GLOBAL_PREFIX} from '@loncra/antdv'
 import type {ObjectItemInfo} from '@loncra/client/resource'
 import AudioPane from './panes/audio/AudioPane'
@@ -7,6 +8,7 @@ import ImagePane from './panes/image/ImagePane'
 import TextPane from './panes/text/TextPane'
 import UnsupportedPane from './panes/unsupported/UnsupportedPane'
 import VideoPane from './panes/video/VideoPane'
+import useStyle from './panes/style'
 import {useFilePane} from './useFilePane'
 
 const FilePaneHost = defineComponent({
@@ -29,17 +31,16 @@ const FilePaneHost = defineComponent({
       type: String,
       required: true,
     },
-    prefixCls: {
-      type: String,
-      required: true,
-    },
-    hashId: String,
-    cssVarCls: String,
   },
   emits: {
     dirtyChange: (_dirty: boolean) => true,
   },
   setup(props, {emit, expose}) {
+    const config = useConfig()
+    const prefixCls = computed(() =>
+      config.value.getPrefixCls('file-pane', 'loncra-file-pane'),
+    )
+    const [hashId, cssVarCls] = useStyle(prefixCls)
     const pane = useFilePane(props)
 
     const showViewer = computed(
@@ -60,9 +61,9 @@ const FilePaneHost = defineComponent({
 
     return () => {
       const shared = {
-        prefixCls: props.prefixCls,
-        hashId: props.hashId,
-        cssVarCls: props.cssVarCls,
+        prefixCls: prefixCls.value,
+        hashId: hashId.value,
+        cssVarCls: cssVarCls.value,
       }
       let viewer: unknown = null
       if (showViewer.value) {
@@ -91,9 +92,9 @@ const FilePaneHost = defineComponent({
       return (
         <Spin
           spinning={pane.loading.value}
-          class={classNames(props.hashId, props.cssVarCls, `${GLOBAL_PREFIX}-full-spin`)}
+          class={classNames(hashId.value, cssVarCls.value, `${GLOBAL_PREFIX}-full-spin`)}
         >
-          <div class={classNames(props.hashId, `${props.prefixCls}-pane`)}>{viewer}</div>
+          <div class={classNames(hashId.value, `${prefixCls.value}-pane`)}>{viewer}</div>
         </Spin>
       )
     }
