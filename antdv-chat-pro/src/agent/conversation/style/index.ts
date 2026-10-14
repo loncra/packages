@@ -21,11 +21,11 @@ function genAgentConversationStyle(token: LoncraStyleToken): CSSInterpolation {
         [`${antCls}-divider`]: {
           marginTop:`0 !important`
         },
-        [`${componentCls}-primary`]: {color: colorPrimary},
-        [`${componentCls}-success`]: {color: colorSuccess},
-        [`${componentCls}-warning`]: {color: colorWarning},
-        [`${componentCls}-error`]: {color: colorError},
-        [`${componentCls}-secondary`]: {color: colorTextSecondary},
+        [`${componentCls}-primary`]: {color: `${colorPrimary} !important`},
+        [`${componentCls}-success`]: {color: `${colorSuccess} !important`},
+        [`${componentCls}-warning`]: {color: `${colorWarning} !important`},
+        [`${componentCls}-error`]: {color: `${colorError} !important`},
+        [`${componentCls}-secondary`]: {color: `${colorTextSecondary} !important`},
         [`${componentCls}-running`]: {
           color: colorPrimary,
           animationName: runningSpin,

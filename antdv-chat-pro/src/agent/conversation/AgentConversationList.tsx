@@ -77,20 +77,11 @@ const AgentConversationList = defineComponent({
       return `${prefixCls.value}-${name}`
     }
 
-    function containsSelected(item: AgentConversationRecord): boolean {
-      const key = String(item.key ?? item.id)
-      if (props.selectedKeys.includes(key)) {
-        return true
-      }
-      const children = (item.children || []) as AgentConversationRecord[]
-      return children.some(containsSelected)
-    }
-
     function renderIcon(item: AgentConversationRecord) {
       const type = getEnumValue(item.type)
       if (isEnumValue(type, AI_SERVER_AGENT_CONVERSATION_TYPE.DEFAULT_WORKSPACE)
         || isEnumValue(type, AI_SERVER_AGENT_CONVERSATION_TYPE.CUSTOMIZE_WORKSPACE)) {
-        const Icon = containsSelected(item) ? FolderOpenOutlined : FolderOutlined
+        const Icon = props.openKeys.includes(String(item.key ?? item.id)) ? FolderOpenOutlined : FolderOutlined
         const color = isEnumValue(type, AI_SERVER_AGENT_CONVERSATION_TYPE.DEFAULT_WORKSPACE)
           ? 'primary'
           : 'success'
