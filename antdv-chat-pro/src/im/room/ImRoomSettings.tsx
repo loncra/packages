@@ -14,7 +14,8 @@ import {
 } from '@antdv-next/icons'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import useApp from 'antdv-next/dist/app/useApp'
-import {type SystemUserContactItem, UserAvatar} from '@loncra/antdv-pro'
+import {type SystemUserContactItem} from '../../system-user-panel'
+import {UserAvatar} from '@loncra/antdv-pro'
 import {classNames, fillLocale} from '@loncra/antdv'
 import {getEnumName, getEnumValue, isEnumValue, type RestResult, YES_OR_NO_TYPE,} from '@loncra/client/commons'
 import {

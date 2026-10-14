@@ -9,33 +9,6 @@ export interface AttachmentUploadLocale {
   deleteConfirmSingle: string
 }
 
-export interface FileEditorLocale {
-  untitled: string
-  refresh: string
-  uploadFile: string
-  uploadDirectory: string
-  rename: string
-  delete: string
-  deleteConfirmTitle: string
-  deleteConfirmSingle: string
-  save: string
-  locate: string
-  download: string
-  unsavedConfirm: string
-  unsupported: string
-  tooLarge: string
-  nameEmpty: string
-  nameReserved: string
-  nameIllegal: string
-  nameTooLong: string
-}
-
-export interface SystemUserPanelLocale {
-  selectedMember: string
-  phoneNumber: string
-  email: string
-}
-
 /**
  * 操作记录（审计）块的文案（`Crud.operationTrace.*`）。
  *
@@ -163,8 +136,6 @@ export interface Locale {
   locale: string
   UserSelect?: UserSelectLocale
   AttachmentUpload?: AttachmentUploadLocale
-  FileEditor?: FileEditorLocale
-  SystemUserPanel?: SystemUserPanelLocale
   Crud?: CrudLocale
   ConfigProviderSetting?: ConfigProviderSettingLocale
 }

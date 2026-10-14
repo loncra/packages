@@ -2,6 +2,7 @@ export { default as zhCN } from './locale/zh_CN'
 export { default as enUS } from './locale/en_US'
 export { default as Provider } from './config-provider'
 export {
+  antdvConfigProviderProps,
   createAntdvConfig,
   useAntdvConfig,
   ANTDV_CONFIG_KEY,
@@ -38,14 +39,6 @@ export type { UserAvatarProps, UserAvatarSlots } from './user-avatar'
 export { default as UserSelect } from './user-select'
 export type { UserSelectEmits, UserSelectOption, UserSelectProps, UserSelectSlots } from './user-select'
 
-export {default as SystemUserPanel} from './system-user-panel'
-export type {
-  SystemUserContactItem,
-  SystemUserPanelEmits,
-  SystemUserPanelProps,
-  SystemUserPanelSlots,
-} from './system-user-panel'
-
 export { default as AttachmentMasonry } from './attachment-masonry'
 export type {
   AttachmentMasonryEmits,
@@ -64,8 +57,6 @@ export type {
   AttachmentUploadExecutorOptions,
 } from './attachment-upload'
 export { ATTACHMENT_UPLOAD_MODE, ATTACHMENT_PREVIEW_MODE } from './attachment-upload'
-export { default as FileEditor } from './file-editor'
-export type { FileEditorProps, FileEditorSlots } from './file-editor'
 
 export {default as CrudConfigProvider, useActionAuth, useCrudConfig} from './crud-config-provider'
 export type {CrudConfig, CrudConfigProviderProps, CrudConfigProviderSlots} from './crud-config-provider'
@@ -84,6 +75,7 @@ export {
   isObjectWriteResult,
   isUploadFile,
   normalizeAttachmentToList,
+  resolveDisplayName,
 } from './_util/attachmentList'
 
 export {

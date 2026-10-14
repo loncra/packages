@@ -2,27 +2,27 @@ import {defineComponent, onMounted, onUnmounted, ref, watch} from 'vue'
 import {autocompletion, closeBrackets, closeBracketsKeymap, completionKeymap,} from '@codemirror/autocomplete'
 import {defaultKeymap, history, historyKeymap} from '@codemirror/commands'
 import {
-  bracketMatching,
-  defaultHighlightStyle,
-  foldGutter,
-  foldKeymap,
-  indentOnInput,
-  syntaxHighlighting,
+    bracketMatching,
+    defaultHighlightStyle,
+    foldGutter,
+    foldKeymap,
+    indentOnInput,
+    syntaxHighlighting,
 } from '@codemirror/language'
 import {lintKeymap} from '@codemirror/lint'
 import {highlightSelectionMatches, searchKeymap} from '@codemirror/search'
 import {EditorState} from '@codemirror/state'
 import {
-  crosshairCursor,
-  drawSelection,
-  dropCursor,
-  EditorView,
-  highlightActiveLine,
-  highlightActiveLineGutter,
-  highlightSpecialChars,
-  keymap,
-  lineNumbers,
-  rectangularSelection,
+    crosshairCursor,
+    drawSelection,
+    dropCursor,
+    EditorView,
+    highlightActiveLine,
+    highlightActiveLineGutter,
+    highlightSpecialChars,
+    keymap,
+    lineNumbers,
+    rectangularSelection,
 } from '@codemirror/view'
 import {oneDark} from '@codemirror/theme-one-dark'
 import {classNames, useIsDark} from '@loncra/antdv'

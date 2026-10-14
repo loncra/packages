@@ -1,14 +1,14 @@
 import {computed, defineComponent, type PropType, type Ref, ref, useModel} from 'vue'
 import {Checkbox, Divider, Empty, Flex, Input, Space, TypographyText} from 'antdv-next'
 import {SearchOutlined, UsergroupAddOutlined} from '@antdv-next/icons'
-import {Conversations} from '@antdv-next/x'
 import type {ConversationItemType, DividerItemType} from '@antdv-next/x'
+import {Conversations} from '@antdv-next/x'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {classNames} from '@loncra/antdv'
 import type {PlatformUser} from '@loncra/client/auth'
 import {AuthServerService} from '@loncra/client/auth'
 import {useLocale} from '../_util/useLocale'
-import UserAvatar from '../user-avatar'
+import {UserAvatar} from '@loncra/antdv-pro'
 import useStyle from './style'
 
 /**

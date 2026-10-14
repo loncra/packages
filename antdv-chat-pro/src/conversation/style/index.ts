@@ -67,6 +67,7 @@ function genConversationListStyle(token: LoncraStyleToken): CSSInterpolation {
         display: 'grid',
         flexShrink: 0,
         justifyItems: 'end',
+        alignItems: 'center',
         marginInlineStart: marginXS,
       },
       [`${componentCls}-time, ${componentCls}-actions`]: {

@@ -1,6 +1,6 @@
 import type {LanguageSupport} from '@codemirror/language'
 import type {ObjectItemInfo} from '@loncra/client/resource'
-import {resolveDisplayName} from '../_util/attachmentList'
+import {resolveDisplayName} from '@loncra/antdv-pro'
 import {AUDIO_EXT, IMAGE_EXT, TEXT_MAX_BYTES, VIDEO_EXT} from './constants'
 import type {FilePaneContext, ResolvedFilePaneKind} from './types'
 

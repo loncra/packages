@@ -9,7 +9,7 @@
 | [`antdv-pro`](./antdv-pro)（`@loncra/antdv-pro`） | 调 `@loncra/client` 的通用 antdv 控件，依赖 client + antdv |
 | [`chat-core`](./chat-core)（`@loncra/chat-core`） | IM 与 Agent 共用的类型、纯函数、`DraftStore`。主入口不引用 Dexie。不含通话 |
 | [`antdv-chat`](./antdv-chat)（`@loncra/antdv-chat`） | `@antdv-next/x` 的扩展：表情、Markdown、指令输入。不依赖 `chat-core` |
-| [`antdv-chat-pro`](./antdv-chat-pro)（`@loncra/antdv-chat-pro`） | IM 与 Agent 业务控件。依赖 antdv-chat、chat-core、client。管理端会话页引用它 |
+| [`antdv-chat-pro`](./antdv-chat-pro)（`@loncra/antdv-chat-pro`） | IM 与 Agent 业务控件、`FileEditor` / `SystemUserPanel`、包住 `XProvider` 的 `Provider`。依赖 antdv-pro、antdv-chat、chat-core、client。管理端会话页引用它 |
 
 管理端：`"@loncra/client": "file:../packages/client"`、`"@loncra/antdv": "file:../packages/antdv"`、`"@loncra/antdv-pro": "file:../packages/antdv-pro"`、`"@loncra/antdv-chat": "file:../packages/antdv-chat"`、`"@loncra/antdv-chat-pro": "file:../packages/antdv-chat-pro"`。
 
@@ -49,15 +49,15 @@
 
 ## `@loncra/antdv-chat-pro`
 
-IM 与 Agent 的业务控件。依赖 `@loncra/antdv-chat`、`@loncra/chat-core`、`@loncra/client`。管理端会话页引用本包。宿主负责应用启动时已有的 `createClient()`，本包只调用 Service。禁止 Pinia、vue-i18n、路由、socket、SSE。
+IM 与 Agent 的业务控件，外加 `FileEditor` / `SystemUserPanel` 与 `Provider`（在 `@loncra/antdv-pro` 的 `Provider` 外面包一层 `XProvider`）。依赖 `@loncra/antdv-pro`、`@loncra/antdv-chat`、`@loncra/chat-core`、`@loncra/client`。管理端会话页引用本包。宿主负责应用启动时已有的 `createClient()`，本包只调用 Service。禁止 Pinia、vue-i18n、路由、socket、SSE。
 
 | 路径 | 内容 |
 |---|---|
-| `@loncra/antdv-chat-pro` | 气泡列表、词槽气泡、草稿输入、IM 发送器、Agent 发送器 |
+| `@loncra/antdv-chat-pro` | 气泡列表、词槽气泡、草稿输入、IM 发送器、Agent 发送器、`FileEditor`、`SystemUserPanel`、`Provider` |
 
 ## `@loncra/antdv-pro`
 
-对标 `@loncra/antdv` 的 TSX 写法，直接调 `@loncra/client` Service。宿主（管理端）负责 `createClient()`。peer：`vue`、`antdv-next`、`@loncra/antdv`、`@loncra/client`；相对时间再 peer `dayjs`；上传分片再 peer `p-limit`；FileEditor 文本 pane 再 peer `@codemirror/*`；SystemUserPanel 列表再 peer `@antdv-next/x`。禁止 axios、`createClient`、Pinia、vue-i18n、路由、管理端 `@/apis`。CRUD 第二批。IM / Agent 已另包（`@loncra/antdv-chat-pro`）。
+对标 `@loncra/antdv` 的 TSX 写法，直接调 `@loncra/client` Service。宿主（管理端）负责 `createClient()`。peer：`vue`、`antdv-next`、`@loncra/antdv`、`@loncra/client`；相对时间再 peer `dayjs`；上传分片再 peer `p-limit`。**本包不引 `@antdv-next/x`**：X 上下文由 `@loncra/antdv-chat-pro` 的 `Provider` 提供。禁止 axios、`createClient`、Pinia、vue-i18n、路由、管理端 `@/apis`。CRUD 第二批。IM / Agent 已另包（`@loncra/antdv-chat-pro`）。
 
 | 路径 | 内容 |
 |---|---|
@@ -65,7 +65,7 @@ IM 与 Agent 的业务控件。依赖 `@loncra/antdv-chat`、`@loncra/chat-core`
 | `@loncra/antdv-pro/locale/zh_CN` | 简体中文，与 antdv-next / `@loncra/antdv` locale 合并后交给 `ConfigProvider` |
 | `@loncra/antdv-pro/locale/en_US` | 英文 |
 
-当前控件：`UserAvatar`、`UserSelect`、`AttachmentMasonry`、`AttachmentUpload`、`FileEditor`、`SystemUserPanel`；
+当前控件：`UserAvatar`、`UserSelect`、`AttachmentMasonry`、`AttachmentUpload`；
 
 **CRUD 页面套件（列表形态已进包）**：`crud-page/` 目录 + `CrudConfigProvider` 的跳转兜底。
 目录：核心在 `crud-page/`（`types.ts` / `registry.ts` / `define.ts`），表格形态在 `crud-page/home/`（`CrudHomePage.tsx` / `columns.ts`）；表单、详情以后按同样的 `<形态>/` 目录进来。

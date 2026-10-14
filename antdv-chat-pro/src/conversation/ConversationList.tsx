@@ -61,7 +61,7 @@ const ConversationList = defineComponent({
         )
       }
       return (
-        <div class={`${prefixCls.value}-row`}>
+        <Flex vertical>
           <div class={`${prefixCls.value}-line`}>
             <Typography.Text class={`${prefixCls.value}-name`} ellipsis>
               {node.name}
@@ -100,7 +100,7 @@ const ConversationList = defineComponent({
           {slots.subtitle
             ? <div class={`${prefixCls.value}-subtitle`}>{slots.subtitle(node)}</div>
             : null}
-        </div>
+        </Flex>
       )
     }
 

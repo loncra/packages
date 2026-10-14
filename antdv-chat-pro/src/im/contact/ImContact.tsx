@@ -1,7 +1,7 @@
 import {computed, defineComponent, type PropType} from 'vue'
 import {Empty, Flex} from 'antdv-next'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
-import {SystemUserPanel, type SystemUserContactItem} from '@loncra/antdv-pro'
+import SystemUserPanel, {type SystemUserContactItem} from '../../system-user-panel'
 import {classNames} from '@loncra/antdv'
 import type {PlatformUser} from '@loncra/client/auth'
 import {ChatMessageService, type UserChatConversationResponseBody} from '@loncra/client/message'

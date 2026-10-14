@@ -151,6 +151,33 @@ export interface AgentHubLocale {
   all: string
 }
 
+export interface FileEditorLocale {
+  untitled: string
+  refresh: string
+  uploadFile: string
+  uploadDirectory: string
+  rename: string
+  delete: string
+  deleteConfirmTitle: string
+  deleteConfirmSingle: string
+  save: string
+  locate: string
+  download: string
+  unsavedConfirm: string
+  unsupported: string
+  tooLarge: string
+  nameEmpty: string
+  nameReserved: string
+  nameIllegal: string
+  nameTooLong: string
+}
+
+export interface SystemUserPanelLocale {
+  selectedMember: string
+  phoneNumber: string
+  email: string
+}
+
 export interface Locale {
   locale: string
   ImConversation?: ImConversationLocale
@@ -163,4 +190,6 @@ export interface Locale {
   AgentBubble?: AgentBubbleLocale
   AgentChat?: AgentChatLocale
   AgentHub?: AgentHubLocale
+  FileEditor?: FileEditorLocale
+  SystemUserPanel?: SystemUserPanelLocale
 }

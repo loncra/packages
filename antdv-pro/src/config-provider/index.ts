@@ -1,4 +1,4 @@
-export {default} from './ConfigProvider'
+export {default, antdvConfigProviderProps} from './ConfigProvider'
 export {
   ANTDV_CONFIG_KEY,
   createAntdvConfig,

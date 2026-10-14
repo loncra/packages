@@ -1,3 +1,5 @@
+export {default as Provider} from './config-provider'
+
 export {default as BubbleList} from './bubble-list'
 export {DEFAULT_BUBBLE_LIST_ROLE, toAxBubbleItem, useBubbleList} from './bubble-list'
 export type {
@@ -66,3 +68,14 @@ export {default as AgentBubbleList} from './agent/bubble/AgentBubbleList.tsx'
 export {default as AgentChat} from './agent/AgentChat'
 export type {AgentSession} from './agent/types'
 export {default as SkillReleaseChangeLog} from './agent/hub/SkillReleaseChangeLog'
+
+export {default as FileEditor} from './file-editor'
+export type {FileEditorProps, FileEditorSlots} from './file-editor'
+
+export {default as SystemUserPanel} from './system-user-panel'
+export type {
+  SystemUserContactItem,
+  SystemUserPanelEmits,
+  SystemUserPanelProps,
+  SystemUserPanelSlots,
+} from './system-user-panel'

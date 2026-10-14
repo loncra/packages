@@ -44,7 +44,7 @@ export interface AntdvConfig {
   state: AntdvConfigState
   /** 解析后的主题（跟随系统时会随系统变化） */
   theme: ComputedRef<AntdvResolvedTheme>
-  /** 喂 antdv `XProvider :theme`（`compact` 会合并进 algorithm） */
+  /** 喂 `XProvider :theme`（`compact` 会合并进 algorithm） */
   themeConfig: ComputedRef<ThemeConfig>
   setMode: (mode: AntdvThemeMode) => void
   setCompact: (compact: boolean) => void

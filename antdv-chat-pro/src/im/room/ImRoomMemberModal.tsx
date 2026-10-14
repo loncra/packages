@@ -1,7 +1,7 @@
 import {computed, defineComponent, type PropType, ref, watch} from 'vue'
 import {Button, Modal, Popconfirm, Space, SpaceCompact} from 'antdv-next'
 import useApp from 'antdv-next/dist/app/useApp'
-import {type SystemUserContactItem, SystemUserPanel} from '@loncra/antdv-pro'
+import SystemUserPanel, {type SystemUserContactItem} from '../../system-user-panel'
 import {fillLocale} from '@loncra/antdv'
 import {isEnumValue, type NameValueEnumMetadata, type RestResult,} from '@loncra/client/commons'
 import {

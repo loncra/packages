@@ -2,28 +2,27 @@ import {computed, h, onMounted, reactive, ref, type VNodeChild, watch} from 'vue
 import type {MenuItemType, UploadChangeParam} from 'antdv-next'
 import useApp from 'antdv-next/dist/app/useApp'
 import {
-  DeleteOutlined,
-  FileAddOutlined,
-  FileOutlined,
-  FolderAddOutlined,
-  FolderOpenOutlined,
-  FolderOutlined,
-  FormOutlined,
-  ReloadOutlined,
+    DeleteOutlined,
+    FileAddOutlined,
+    FileOutlined,
+    FolderAddOutlined,
+    FolderOpenOutlined,
+    FolderOutlined,
+    FormOutlined,
+    ReloadOutlined,
 } from '@antdv-next/icons'
 import {
-  filterTreeDeep,
-  findFirstTreeNode,
-  isBusinessSuccess,
-  type RestResult,
-  unmergeTree,
+    filterTreeDeep,
+    findFirstTreeNode,
+    isBusinessSuccess,
+    type RestResult,
+    unmergeTree,
 } from '@loncra/client/commons'
 import type {ObjectItemInfo, ObjectWriteResult} from '@loncra/client/resource'
 import {AttachmentService} from '@loncra/client/resource'
 import type {UploadFile} from 'antdv-next/dist/upload/interface'
-import {uploadFile} from '../_util/uploadFile'
+import {resolveDisplayName, uploadFile} from '@loncra/antdv-pro'
 import {useLocale} from '../_util/useLocale'
-import {resolveDisplayName} from '../_util/attachmentList'
 import {validateFileOrFolderName} from './_util/validateName'
 import type {EditObjectItemInfo, FileEditorProps} from './types'
 

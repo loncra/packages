@@ -2,7 +2,7 @@ import {computed, onMounted, ref, type Ref} from 'vue'
 import {AttachmentService} from '@loncra/client/resource'
 import type {UploadFile} from 'antdv-next/dist/upload/interface'
 import useApp from 'antdv-next/dist/app/useApp'
-import {uploadFile} from '../_util/uploadFile'
+import {uploadFile} from '@loncra/antdv-pro'
 import {buildFilePaneContext, isTextTooLarge, resolveFilePaneKind} from './filePaneKinds'
 import type {FilePaneProps} from './types'
 
