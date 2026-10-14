@@ -44,6 +44,7 @@ const ConversationList = defineComponent({
     selectedKeys: {type: Array as PropType<string[]>, required: true},
     openKeys: {type: Array as PropType<string[]>, required: true},
     loading: {type: Boolean, default: false},
+    actionsVisible: {type: Boolean, default: true},
   },
   emits: ['update:selectedKeys', 'update:openKeys', 'active'],
   setup(props, {emit, slots, attrs}) {
@@ -74,27 +75,31 @@ const ConversationList = defineComponent({
                   </Typography.Text>
                 )
                 : null}
-              <span
-                class={`${prefixCls.value}-actions`}
-                onClick={stopRowAction}
-                onMousedown={stopRowAction}
-              >
-                <Dropdown
-                  trigger={['click']}
-                  popupRender={() => (
-                    <div onClick={stopRowAction} onMousedown={stopRowAction}>
-                      {slots.actions?.(node)}
-                    </div>
-                  )}
-                >
-                  <Button
-                    type="text"
-                    size="small"
+              {props.actionsVisible
+                ? (
+                  <span
+                    class={`${prefixCls.value}-actions`}
                     onClick={stopRowAction}
-                    v-slots={{icon: () => <EllipsisOutlined />}}
-                  />
-                </Dropdown>
-              </span>
+                    onMousedown={stopRowAction}
+                  >
+                    <Dropdown
+                      trigger={['click']}
+                      popupRender={() => (
+                        <div onClick={stopRowAction} onMousedown={stopRowAction}>
+                          {slots.actions?.(node)}
+                        </div>
+                      )}
+                    >
+                      <Button
+                        type="text"
+                        size="small"
+                        onClick={stopRowAction}
+                        v-slots={{icon: () => <EllipsisOutlined />}}
+                      />
+                    </Dropdown>
+                  </span>
+                )
+                : null}
             </span>
           </div>
           {slots.subtitle

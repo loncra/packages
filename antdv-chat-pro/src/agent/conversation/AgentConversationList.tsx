@@ -141,7 +141,7 @@ const AgentConversationList = defineComponent({
 
     function renderEditor(item: AgentConversationRecord) {
       return (
-        <SpaceCompact block>
+        <SpaceCompact size="small" block>
           <Input
             value={item.name}
             placeholder={locale.value.workspacePlaceholder}

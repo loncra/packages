@@ -410,13 +410,7 @@ export function useFileEditor(props: FileEditorProps) {
     }
   }
 
-  async function loadChildren(item: ObjectItemInfo) {
-    if (state.value.openKeys.includes(item.id)) {
-      state.value.openKeys = state.value.openKeys.filter((k) => k !== item.id)
-    } else {
-      state.value.openKeys = [...state.value.openKeys, item.id]
-    }
-
+  async function fetchChildren(item: ObjectItemInfo) {
     if (item.children !== undefined) {
       return
     }
@@ -429,9 +423,31 @@ export function useFileEditor(props: FileEditorProps) {
       )
       const data = result.data || []
       item.children = data.map((c) => toEditObjectItemInfo(c, item.objectName))
-      state.value.openKeys = [...state.value.openKeys, item.id]
+      if (!state.value.openKeys.includes(item.id)) {
+        state.value.openKeys = [...state.value.openKeys, item.id]
+      }
     } finally {
       item.loading = false
+    }
+  }
+
+  async function loadChildren(item: ObjectItemInfo) {
+    if (state.value.openKeys.includes(item.id)) {
+      state.value.openKeys = state.value.openKeys.filter((k) => k !== item.id)
+    } else {
+      state.value.openKeys = [...state.value.openKeys, item.id]
+    }
+    await fetchChildren(item)
+  }
+
+  function setOpenKeys(keys: string[]) {
+    const added = keys.filter((key) => !state.value.openKeys.includes(key))
+    state.value.openKeys = keys
+    for (const key of added) {
+      const item = findFirstTreeNode((p) => p.id === key, state.value.dataSource)
+      if (item?.dir) {
+        void fetchChildren(item)
+      }
     }
   }
 
@@ -487,6 +503,7 @@ export function useFileEditor(props: FileEditorProps) {
     fileUploadTrigger,
     dirUploadTrigger,
     createMenu,
+    setOpenKeys,
     onMenuClick,
     activateTab,
     closeTab,

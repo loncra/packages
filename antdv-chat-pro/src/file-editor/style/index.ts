@@ -13,8 +13,6 @@ function genFileEditorStyle(token: LoncraStyleToken): CSSInterpolation {
     borderRadiusLG,
     paddingXS,
     paddingSM,
-    marginXS,
-    controlHeightSM,
     lineWidth,
     lineType,
     antCls,
@@ -63,39 +61,6 @@ function genFileEditorStyle(token: LoncraStyleToken): CSSInterpolation {
         overflow: 'hidden',
         padding: 0,
       },
-      [`${componentCls}-menu`]: {
-        border: 'none',
-        [`&${antCls}-menu-light${antCls}-menu-root${antCls}-menu-inline, &${antCls}-menu-light${antCls}-menu-root${antCls}-menu-vertical, &${antCls}-menu-dark${antCls}-menu-root${antCls}-menu-inline, &${antCls}-menu-dark${antCls}-menu-root${antCls}-menu-vertical`]:
-          {
-            borderBottom: 0,
-            borderInlineEnd: 0,
-          },
-        [`${antCls}-menu-inline, ${antCls}-menu-horizontal`]: {
-          borderBottom: 0,
-          borderInlineEnd: 0,
-        },
-        [`&${antCls}-menu-light${antCls}-menu-inline ${antCls}-menu-sub${antCls}-menu-inline, &${antCls}-menu-dark${antCls}-menu-inline ${antCls}-menu-sub${antCls}-menu-inline`]:
-          {
-            background: colorBgContainer,
-          },
-        [`${antCls}-menu-submenu > ${antCls}-menu`]: {
-          backgroundColor: colorBgContainer,
-        },
-        [`&${antCls}-menu-inline ${antCls}-menu-item, &${antCls}-menu-inline ${antCls}-menu-submenu-title`]:
-          {
-            height: 32,
-            lineHeight: '32px',
-            marginBottom: 0,
-            paddingInlineEnd: paddingXS,
-          },
-        [`${antCls}-menu-sub${antCls}-menu-inline > ${antCls}-menu-submenu > ${antCls}-menu-submenu-title`]:
-          {
-            height: 32,
-            lineHeight: '32px',
-            marginBottom: 0,
-            paddingInlineEnd: paddingXS,
-          },
-      },
     },
     [`${componentCls}-hidden-upload`]: {
       display: 'none',
@@ -128,55 +93,9 @@ function genFileEditorStyle(token: LoncraStyleToken): CSSInterpolation {
       padding: paddingXS,
       borderBottom: `${lineWidth} ${lineType} ${colorBorderSecondary}`,
     },
-    [`${componentCls}-tree`]: {
-      minHeight: 0,
-      flex: 1,
-      overflowY: 'auto',
-    },
-    [`${componentCls}-spin`]: {
-      width: '100%',
-      height: '100%',
-      minHeight: 0,
-      [`&${antCls}-spin, &${antCls}-spin-nested-loading`]: {
-        width: '100%',
-        height: '100%',
-        minHeight: 0,
-      },
-      [`${antCls}-spin-container`]: {
-        width: '100%',
-        height: '100%',
-        minHeight: 0,
-        display: 'flex',
-        flexDirection: 'column',
-      },
-      [`&${antCls}-spin-nested-loading > div > ${antCls}-spin`]: {
-        maxHeight: 'none',
-        height: '100%',
-      },
-    },
     [`${componentCls}-grow`]: {
       flex: 1,
       minWidth: 0,
-    },
-    [`${componentCls}-row`]: {
-      minWidth: 0,
-      width: '100%',
-    },
-    [`${componentCls}-more`]: {
-      position: 'relative',
-      display: 'inline-flex',
-      flexShrink: 0,
-      alignItems: 'center',
-      justifyContent: 'flex-end',
-    },
-    [`${componentCls}-more-btn`]: {
-      position: 'absolute',
-      opacity: 0,
-      transition: `opacity ${motionDurationMid}`,
-    },
-    [`${componentCls}-row:hover ${componentCls}-more-btn`]: {
-      position: 'static',
-      opacity: 1,
     },
     [`${componentCls}-tabs`]: {
       minHeight: 0,
