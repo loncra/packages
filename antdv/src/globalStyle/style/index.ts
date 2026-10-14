@@ -33,10 +33,31 @@ function genGlobalStyle(token: LoncraStyleToken): CSSInterpolation {
             border: `${lineWidth} ${lineType} ${colorBorder} !important`,
             [`&-secondary`]: {
                 border: `${lineWidth} ${lineType} ${colorBorderSecondary} !important`,
-                [`&-bottom`]: {
+                [`&-b`]: {
                     borderBottom: `${lineWidth} ${lineType} ${colorBorderSecondary} !important`,
                 }
             },
+            [`&-none`]: {
+                border: 'none !important',
+                [`&-t`]: {
+                    borderTop: 'none !important',
+                },
+                [`&-r`]: {
+                    borderRight: 'none !important',
+                },
+                [`&-b`]: {
+                    borderBottom: 'none !important',
+                },
+                [`&-l`]: {
+                    borderLeft: 'none !important',
+                },
+                [`&-x`]: {
+                    borderInline: 'none !important',
+                },
+                [`&-y`]: {
+                    borderBlock: 'none !important',
+                },
+            }
         },
         [`${componentCls}-min-width-xl`]: {
           minWidth: calc(sizeXL).mul(10).equal(),
