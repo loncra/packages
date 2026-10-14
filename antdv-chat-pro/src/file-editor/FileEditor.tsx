@@ -1,38 +1,10 @@
-import {computed, defineComponent, h, type PropType} from 'vue'
-import {
-    Badge,
-    Button,
-    Empty,
-    Flex,
-    Input,
-    Menu,
-    SpaceCompact,
-    Splitter,
-    SplitterPanel,
-    Tabs,
-    Tooltip,
-    TypographyText,
-    Upload,
-} from 'antdv-next'
+import {computed, defineComponent, type PropType} from 'vue'
+import {Splitter, SplitterPanel, Upload} from 'antdv-next'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
-import {
-    AimOutlined,
-    CheckOutlined,
-    CloseOutlined,
-    DownloadOutlined,
-    FileAddOutlined,
-    FolderAddOutlined,
-    LoadingOutlined,
-    ProfileOutlined,
-    ReloadOutlined,
-    SaveOutlined,
-} from '@antdv-next/icons'
 import {classNames} from '@loncra/antdv'
-import type {ObjectItemInfo} from '@loncra/client/resource'
-import ConversationList from '../conversation'
-import type {ConversationNode} from '../conversation'
-import FilePaneHost from './FilePaneHost'
-import type {EditObjectItemInfo, FileEditorProps} from './types'
+import FileConversation from './conversation/FileConversation'
+import FileTabs from './tabs/FileTabs'
+import type {FileEditorProps} from './types'
 import {useFileEditor} from './useFileEditor'
 import useStyle from './style'
 
@@ -71,32 +43,7 @@ const FileEditor = defineComponent({
       const {class: attrClass, style: attrStyle} = attrs
       const hashed = (...names: (string | undefined)[]) =>
         classNames(hashId.value, cssVarCls.value, ...names)
-      const {
-        locale,
-        resolveIcon,
-        fileUploadTrigger,
-        dirUploadTrigger,
-        createMenu,
-        setOpenKeys,
-        onMenuClick,
-        activateTab,
-        onRefresh,
-        cancelEdit,
-        confirmEdit,
-        onSelectOpenFile,
-        onDownloadFile,
-        onUploadChange,
-        tabItems,
-        tabMeta,
-        onPaneDirtyChange,
-        paneHostRef,
-        onCloseTab,
-        saveActive,
-        activeCanSave,
-        onRootUpload,
-        getDisplayName,
-        state,
-      } = editor
+      const {state, fileUploadTrigger, dirUploadTrigger, onUploadChange} = editor
 
       const sizeStyle: Record<string, string> = {}
       if (props.height != null && props.height !== '') {
@@ -108,21 +55,6 @@ const FileEditor = defineComponent({
         sizeStyle.maxHeight =
           typeof props.maxHeight === 'number' ? `${props.maxHeight}px` : props.maxHeight
       }
-
-      const lookup = new Map<string, EditObjectItemInfo>()
-      const toNode = (item: EditObjectItemInfo): ConversationNode => {
-        const children = (item.children ?? []) as EditObjectItemInfo[]
-        lookup.set(item.id, item)
-        return {
-          key: item.id,
-          name: getDisplayName(item),
-          editing:
-            state.value.currentEditItem?.id === item.id &&
-            state.value.currentEditItem?.editing === true,
-          children: children.length > 0 ? children.map(toNode) : undefined,
-        }
-      }
-      const nodes = (state.value.dataSource as EditObjectItemInfo[]).map(toNode)
 
       return (
         /*
@@ -158,238 +90,25 @@ const FileEditor = defineComponent({
           </Upload>
           <Splitter class={hashed(`${prefixCls.value}-splitter`)}>
             <SplitterPanel class={hashed(`${prefixCls.value}-panel`)} defaultSize="20%" min="10%" max="30%">
-              <ConversationList
-                class={hashed(`${prefixCls.value}-side`)}
-                items={nodes}
-                selectedKeys={state.value.selectedItem ? [state.value.selectedItem.id] : []}
-                openKeys={state.value.openKeys}
-                loading={state.value.loading}
-                actionsVisible={!props.readonly}
-                onUpdate:openKeys={setOpenKeys}
-                onActive={(key: string) => {
-                  const item = lookup.get(key)
-                  if (item) {
-                    void onMenuClick(item)
-                  }
-                }}
-                v-slots={{
-                  header: () => (
-                    <Flex
-                      gap="small"
-                      justify="space-between"
-                      align="center"
-                      class={hashed(`${prefixCls.value}-toolbar`)}
-                    >
-                      <Flex flex="1" gap="small" align="center">
-                        {h(ProfileOutlined)}
-                        <TypographyText ellipsis>
-                          {props.name || locale.value.untitled}
-                        </TypographyText>
-                      </Flex>
-                      <SpaceCompact size="small">
-                        <Tooltip title={locale.value.refresh}>
-                          <Button size="small" onClick={onRefresh} loading={state.value.loading}>
-                            {{icon: () => h(ReloadOutlined)}}
-                          </Button>
-                        </Tooltip>
-                        {!props.readonly ? (
-                          <>
-                            <Tooltip title={locale.value.uploadFile}>
-                              <Button size="small" onClick={() => onRootUpload(false)}>
-                                {{icon: () => h(FileAddOutlined)}}
-                              </Button>
-                            </Tooltip>
-                            <Tooltip title={locale.value.uploadDirectory}>
-                              <Button size="small" onClick={() => onRootUpload(true)}>
-                                {{icon: () => h(FolderAddOutlined)}}
-                              </Button>
-                            </Tooltip>
-                          </>
-                        ) : null}
-                      </SpaceCompact>
-                    </Flex>
-                  ),
-                  icon: (node: ConversationNode) => {
-                    const item = lookup.get(node.key)
-                    if (!item) {
-                      return null
-                    }
-                    return item.loading
-                      ? h(LoadingOutlined, {class: hashed(`${prefixCls.value}-icon-spin`)})
-                      : resolveIcon(item)
-                  },
-                  editor: (node: ConversationNode) => {
-                    const item = lookup.get(node.key)
-                    if (!item) {
-                      return null
-                    }
-                    return (
-                      <SpaceCompact size="small" block>
-                        <Input
-                          value={item.editName}
-                          onUpdate:value={(value: string) => {
-                            item.editName = value
-                          }}
-                          onPressEnter={() => {
-                            void confirmEdit(item)
-                          }}
-                        />
-                        <Button
-                          type="primary"
-                          onClick={() => {
-                            void confirmEdit(item)
-                          }}
-                        >
-                          {{icon: () => h(CheckOutlined)}}
-                        </Button>
-                        <Button
-                          type="primary"
-                          danger
-                          onClick={() => {
-                            cancelEdit(item)
-                          }}
-                        >
-                          {{icon: () => h(CloseOutlined)}}
-                        </Button>
-                      </SpaceCompact>
-                    )
-                  },
-                  actions: (node: ConversationNode) => {
-                    const item = lookup.get(node.key)
-                    if (!item) {
-                      return null
-                    }
-                    return <Menu {...createMenu(item)} />
-                  },
-                  empty: () => (
-                    <Flex justify="center" align="center">
-                      <Empty />
-                    </Flex>
-                  ),
-                }}
+              <FileConversation
+                editor={editor}
+                prefixCls={prefixCls.value}
+                hashId={hashId.value}
+                cssVarCls={cssVarCls.value}
+                name={props.name}
+                readonly={props.readonly}
               />
             </SplitterPanel>
             <SplitterPanel class={hashed(`${prefixCls.value}-panel-main`)}>
-              {state.value.tabs.length ? (
-                <Flex vertical class={hashed(`${prefixCls.value}-tabs`)}>
-                  <Tabs
-                    hideAdd
-                    size="small"
-                    destroyOnHidden={false}
-                    activeKey={state.value.selectedItem?.id}
-                    items={tabItems.value}
-                    classes={{
-                      root: hashed(`${prefixCls.value}-tabs-root`),
-                      body: hashed(`${prefixCls.value}-tabs-body`),
-                      content: hashed(`${prefixCls.value}-tabs-content`),
-                      item: hashed(`${prefixCls.value}-tab-item`),
-                      header: hashed(`${prefixCls.value}-tab-header`),
-                    }}
-                    onChange={activateTab}
-                    v-slots={{
-                      labelRender: ({
-                        item,
-                      }: {
-                        item: {key: string; label: string; file: ObjectItemInfo}
-                      }) => (
-                        <Flex
-                          align="center"
-                          gap="small"
-                          class={hashed(`${prefixCls.value}-tab-label`)}
-                        >
-                          {/*
-                            图标**在这里画**（要套 `Badge` 的"未保存"圆点）—— 不能交给 `items[].icon`：
-                            `@v-c/tabs` 的 `TabNode` 会把那份再画一遍 ⇒ 两个图标（见 `useFileEditor` 的 `tabItems`）
-                          */}
-                          <Badge dot={tabMeta[item.key]?.dirty} offset={[0, 0]}>
-                            {resolveIcon(item.file)}
-                          </Badge>
-                          <TypographyText
-                            class={hashed(`${prefixCls.value}-grow`)}
-                            ellipsis={{
-                              tooltip: {title: item.label, mouseEnterDelay: 1},
-                            }}
-                          >
-                            {item.label}
-                          </TypographyText>
-                          <Button
-                            type="text"
-                            size="small"
-                            class={hashed(`${prefixCls.value}-tab-close`)}
-                            {...({
-                              onClick: (e: Event) => {
-                                e.stopPropagation()
-                                onCloseTab(item.key)
-                              },
-                              onMousedown: (e: Event) => e.stopPropagation(),
-                            } as Record<string, unknown>)}
-                          >
-                            {{icon: () => h(CloseOutlined)}}
-                          </Button>
-                        </Flex>
-                      ),
-                      contentRender: ({
-                        item,
-                      }: {
-                        item: {key: string; file?: ObjectItemInfo}
-                      }) =>
-                        item.file ? (
-                          <FilePaneHost
-                            key={item.key}
-                            ref={paneHostRef(item.key)}
-                            class={hashed(`${prefixCls.value}-pane`)}
-                            item={item.file}
-                            bucket={props.bucket}
-                            readonly={props.readonly}
-                            rootPath={props.path}
-                            prefixCls={prefixCls.value}
-                            hashId={hashId.value}
-                            cssVarCls={cssVarCls.value}
-                            onDirtyChange={(dirty: boolean) => onPaneDirtyChange(item.key, dirty)}
-                          />
-                        ) : null,
-                      rightExtra: () =>
-                        state.value.selectedItem ? (
-                          <SpaceCompact size="small">
-                            {activeCanSave.value ? (
-                              <Tooltip title={locale.value.save}>
-                                <Button size="small" onClick={saveActive}>
-                                  {{icon: () => h(SaveOutlined)}}
-                                </Button>
-                              </Tooltip>
-                            ) : null}
-                            <Tooltip title={locale.value.locate}>
-                              <Button
-                                size="small"
-                                onClick={() =>
-                                  state.value.selectedItem &&
-                                  onSelectOpenFile(state.value.selectedItem)
-                                }
-                              >
-                                {{icon: () => h(AimOutlined)}}
-                              </Button>
-                            </Tooltip>
-                            <Tooltip title={locale.value.download}>
-                              <Button
-                                size="small"
-                                onClick={() =>
-                                  state.value.selectedItem &&
-                                  onDownloadFile(state.value.selectedItem)
-                                }
-                              >
-                                {{icon: () => h(DownloadOutlined)}}
-                              </Button>
-                            </Tooltip>
-                          </SpaceCompact>
-                        ) : null,
-                    }}
-                  />
-                </Flex>
-              ) : (
-                <Flex class={hashed(`${prefixCls.value}-pane`)} align="center" justify="center">
-                  <Empty />
-                </Flex>
-              )}
+              <FileTabs
+                editor={editor}
+                prefixCls={prefixCls.value}
+                hashId={hashId.value}
+                cssVarCls={cssVarCls.value}
+                bucket={props.bucket}
+                rootPath={props.path}
+                readonly={props.readonly}
+              />
             </SplitterPanel>
           </Splitter>
         </div>

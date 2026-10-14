@@ -1,12 +1,12 @@
 import {computed, defineComponent, type PropType, watch} from 'vue'
 import {Spin} from 'antdv-next'
-import {classNames} from '@loncra/antdv'
+import {classNames, GLOBAL_PREFIX} from '@loncra/antdv'
 import type {ObjectItemInfo} from '@loncra/client/resource'
-import AudioPane from './panes/AudioPane'
-import ImagePane from './panes/ImagePane'
-import TextPane from './panes/TextPane'
-import UnsupportedPane from './panes/UnsupportedPane'
-import VideoPane from './panes/VideoPane'
+import AudioPane from './panes/audio/AudioPane'
+import ImagePane from './panes/image/ImagePane'
+import TextPane from './panes/text/TextPane'
+import UnsupportedPane from './panes/unsupported/UnsupportedPane'
+import VideoPane from './panes/video/VideoPane'
 import {useFilePane} from './useFilePane'
 
 const FilePaneHost = defineComponent({
@@ -91,12 +91,7 @@ const FilePaneHost = defineComponent({
       return (
         <Spin
           spinning={pane.loading.value}
-          class={classNames(
-            props.hashId,
-            props.cssVarCls,
-            `${props.prefixCls}-spin`,
-            `${props.prefixCls}-pane`,
-          )}
+          class={classNames(props.hashId, props.cssVarCls, `${GLOBAL_PREFIX}-full-spin`)}
         >
           <div class={classNames(props.hashId, `${props.prefixCls}-pane`)}>{viewer}</div>
         </Spin>

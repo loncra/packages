@@ -125,7 +125,7 @@ const ConversationList = defineComponent({
             {props.items.length === 0
               ? slots.empty?.()
               : (
-                <Spin spinning={props.loading}>
+                <Spin spinning={props.loading} class={`${GLOBAL_PREFIX}-full-spin`}>
                   <Menu
                     mode="inline"
                     inlineIndent={token.value.paddingSM}

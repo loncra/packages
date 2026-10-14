@@ -1,6 +1,6 @@
 import {defineComponent} from 'vue'
 import {classNames} from '@loncra/antdv'
-import CodeEditor from '../CodeEditor'
+import CodeEditor from '../../CodeEditor'
 
 const TextPane = defineComponent({
   name: 'LFileTextPane',

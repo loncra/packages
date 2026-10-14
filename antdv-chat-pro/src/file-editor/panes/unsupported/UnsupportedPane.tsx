@@ -1,7 +1,7 @@
 import {defineComponent, type PropType} from 'vue'
 import {Empty, Flex} from 'antdv-next'
 import {classNames} from '@loncra/antdv'
-import {useLocale} from '../../_util/useLocale'
+import {useLocale} from '../../../_util/useLocale'
 
 const UnsupportedPane = defineComponent({
   name: 'LFileUnsupportedPane',

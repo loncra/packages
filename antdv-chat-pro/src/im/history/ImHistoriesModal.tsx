@@ -24,7 +24,7 @@ import {
 } from '@antdv-next/icons'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {AttachmentMasonry, useDateFormat, UserAvatar} from '@loncra/antdv-pro'
-import {classNames, fillLocale} from '@loncra/antdv'
+import {classNames, fillLocale, GLOBAL_PREFIX} from '@loncra/antdv'
 import {AttachmentService, type ObjectItemInfo, type PageRequest, type TotalPage,} from '@loncra/client/commons'
 import {
     ChatMessageService,
@@ -283,7 +283,7 @@ const ImHistoriesModal = defineComponent({
                 segment.value = value
               }}
             />
-            <Spin spinning={loading.value}>
+            <Spin spinning={loading.value} class={`${GLOBAL_PREFIX}-full-spin`}>
               <Flex vertical gap="middle">
                 <div class={`${prefix}-list`}>
                   {segment.value === 'message'
