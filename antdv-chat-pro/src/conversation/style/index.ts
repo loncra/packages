@@ -6,7 +6,6 @@ export const CONVERSATION_LIST_PREFIX = 'loncra-conversation-list'
 
 function genConversationListStyle(token: LoncraStyleToken): CSSInterpolation {
   const {componentCls, antCls, colorTextSecondary, fontSizeSM, motionDurationMid, lineHeight, paddingXS, paddingSM, marginXS} = token
-  const menuCls = `${antCls}-menu`
   // 菜单行高写在 antd 的 inline 规则里，后注册且带自身 hash。classes 只负责把类挂上去，
   // 这里用菜单根上的双类把特异性抬过那条 height/line-height，避免再在 tsx 里写 styles。
   const row: CSSObject = {
@@ -22,12 +21,6 @@ function genConversationListStyle(token: LoncraStyleToken): CSSInterpolation {
     paddingInline: paddingXS,
     alignItems: 'center',
   }
-  const title: CSSObject = {
-    overflow: 'visible',
-    whiteSpace: 'normal',
-    textOverflow: 'clip',
-    lineHeight,
-  }
   return {
     [componentCls]: {
       height: '100%',
@@ -42,31 +35,18 @@ function genConversationListStyle(token: LoncraStyleToken): CSSInterpolation {
       },
       [`${componentCls}-menu`]: {
         background: 'transparent',
-        [`&${menuCls}-root${menuCls}-inline`]: {
-          borderInlineEnd: 'none',
-        },
-        [`&${menuCls}-inline`]: {
-          [`
-            ${menuCls}-item::after,
-            ${menuCls}-item:hover::after,
-            ${menuCls}-item-active::after,
-            ${menuCls}-item-selected::after
-          `]: {
+        [`${componentCls}-item`]: {
+          ...row,
+          '&::after': {
             content: 'none',
             borderInlineEnd: 'none',
           },
-          [`
-            > ${menuCls}-item${componentCls}-item,
-            ${menuCls}-item${componentCls}-item
-          `]: {
-            ...row,
-            paddingInline: paddingSM,
-          },
-          [`
-            > ${menuCls}-submenu > ${menuCls}-submenu-title,
-            ${menuCls}-submenu-title
-          `]: row,
-          [`${menuCls}-title-content${componentCls}-item-content, ${menuCls}-submenu-title > ${menuCls}-title-content`]: title,
+        },
+        [`${antCls}-menu-submenu-title`]: {
+          ...row,
+          [`${antCls}-menu-submenu-arrow`]: {
+            textAlign:'center'
+          }
         },
       },
       [`${componentCls}-line`]: {
@@ -83,7 +63,6 @@ function genConversationListStyle(token: LoncraStyleToken): CSSInterpolation {
       [`${componentCls}-side`]: {
         display: 'grid',
         flexShrink: 0,
-        alignItems: 'center',
         justifyItems: 'end',
         marginInlineStart: marginXS,
       },
@@ -104,10 +83,10 @@ function genConversationListStyle(token: LoncraStyleToken): CSSInterpolation {
           margin: 0,
         },
       },
-      [`${componentCls}-row:hover ${componentCls}-time`]: {
+      [`${componentCls}-item:hover ${componentCls}-time, ${componentCls}-menu ${antCls}-menu-submenu-title:hover ${antCls}-menu-submenu-arrow`]: {
         opacity: 0,
       },
-      [`${componentCls}-row:hover ${componentCls}-actions`]: {
+      [`${componentCls}-item:hover ${componentCls}-actions, ${componentCls}-menu ${antCls}-menu-submenu-title:hover ${componentCls}-actions`]: {
         opacity: 1,
         pointerEvents: 'auto',
       },

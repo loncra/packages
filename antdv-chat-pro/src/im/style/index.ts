@@ -12,7 +12,7 @@ function genImChatStyle(token: LoncraStyleToken): CSSInterpolation {
       minHeight: 0,
       [`${componentCls}-side`]: {
         height: '100%',
-        padding: 0,
+        paddingLeft: `0 !important`,
         overflow: 'hidden',
       },
       [`${componentCls}-column`]: {
@@ -24,7 +24,6 @@ function genImChatStyle(token: LoncraStyleToken): CSSInterpolation {
         flexShrink: 0,
         padding: paddingXS,
         background: colorBgLayout,
-        marginLeft: '-1px',
       },
       [`${componentCls}-main`]: {
         height: '100%',
