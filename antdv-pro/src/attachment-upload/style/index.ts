@@ -1,5 +1,5 @@
 import type {CSSInterpolation} from '@antdv-next/cssinjs'
-import {genStyleHooks, type LoncraStyleToken} from '@loncra/antdv'
+import {GLOBAL_SPIN_KEYFRAMES, genStyleHooks, type LoncraStyleToken} from '@loncra/antdv'
 
 function genAttachmentUploadStyle(token: LoncraStyleToken): CSSInterpolation {
   const {
@@ -132,15 +132,10 @@ function genAttachmentUploadStyle(token: LoncraStyleToken): CSSInterpolation {
     [`${componentCls}-overlay-spin`]: {
       fontSize: fontSizeLG,
       color: colorTextLightSolid,
-      animationName: 'loncra-attachment-upload-spin',
+      animationName: GLOBAL_SPIN_KEYFRAMES,
       animationDuration: motionDurationSlow,
       animationTimingFunction: 'linear',
       animationIterationCount: 'infinite',
-    },
-    '@keyframes loncra-attachment-upload-spin': {
-      to: {
-        transform: 'rotate(360deg)',
-      },
     },
     [`${componentCls}-grow`]: {
       flex: 1,

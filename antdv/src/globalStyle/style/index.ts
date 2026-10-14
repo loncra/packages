@@ -1,9 +1,25 @@
 import type {CSSInterpolation} from '@antdv-next/cssinjs'
+import {Keyframes} from '@antdv-next/cssinjs'
 import type {LoncraStyleToken} from '../../_util/genStyle'
 import {genStyleHooks} from '../../_util/genStyle'
 
 /** 全局样式类的统一前缀（`componentCls` ⇒ `.loncra-common`）；全局类名一律 `${GLOBAL_PREFIX}-xxx` */
 export const GLOBAL_PREFIX = 'loncra-common'
+
+export const GLOBAL_SPIN_KEYFRAMES = new Keyframes(`${GLOBAL_PREFIX}-spin`, {
+    to: {transform: 'rotate(360deg)'},
+})
+
+export const GLOBAL_JUMP_KEYFRAMES = new Keyframes(`${GLOBAL_PREFIX}-jump`, {
+    '0%, 100%': {
+        transform: 'translateX(-50%) translateY(-25%)',
+        animationTimingFunction: 'cubic-bezier(0.8, 0, 1, 1)',
+    },
+    '50%': {
+        transform: 'translateX(-50%)',
+        animationTimingFunction: 'cubic-bezier(0, 0, 0.2, 1)',
+    },
+})
 
 function genGlobalStyle(token: LoncraStyleToken): CSSInterpolation {
     const {
@@ -19,7 +35,7 @@ function genGlobalStyle(token: LoncraStyleToken): CSSInterpolation {
       sizeXL,
       sizeXXL
     } = token
-    return {
+    const classes: CSSInterpolation = {
         [`${componentCls}-padding-none`]: {
             padding: '0 !important',
         },
@@ -83,6 +99,7 @@ function genGlobalStyle(token: LoncraStyleToken): CSSInterpolation {
             },
         },
     }
+    return [GLOBAL_SPIN_KEYFRAMES, GLOBAL_JUMP_KEYFRAMES, classes]
 }
 
 /**

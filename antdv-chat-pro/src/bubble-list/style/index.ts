@@ -1,7 +1,6 @@
 import type {CSSInterpolation} from '@antdv-next/cssinjs'
 import {Keyframes} from '@antdv-next/cssinjs'
-import type {LoncraStyleToken} from '@loncra/antdv'
-import {genStyleHooks} from '@loncra/antdv'
+import {GLOBAL_JUMP_KEYFRAMES, genStyleHooks, type LoncraStyleToken} from '@loncra/antdv'
 
 export const BUBBLE_LIST_PREFIX = 'loncra-bubble-list'
 
@@ -11,15 +10,6 @@ const bubbleFlash = new Keyframes('loncraBubbleListFlash', {
   },
   '50%': {
     opacity: 0,
-  },
-})
-
-const jumpBounce = new Keyframes('loncraBubbleListJump', {
-  '0%, 100%': {
-    transform: 'translateX(-50%) translateY(-25%)',
-  },
-  '50%': {
-    transform: 'translateX(-50%)',
   },
 })
 
@@ -43,7 +33,6 @@ function genBubbleListStyle(token: LoncraStyleToken): CSSInterpolation {
 
   return [
     bubbleFlash,
-    jumpBounce,
     {
       [componentCls]: {
         height: '100%',
@@ -66,7 +55,7 @@ function genBubbleListStyle(token: LoncraStyleToken): CSSInterpolation {
           marginBottom: marginSM,
           left: '50%',
           boxShadow: boxShadowSecondary,
-          animationName: jumpBounce,
+          animationName: GLOBAL_JUMP_KEYFRAMES,
           animationDuration: '1s',
           animationIterationCount: 'infinite',
         },
