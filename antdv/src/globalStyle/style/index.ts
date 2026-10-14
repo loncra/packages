@@ -47,11 +47,44 @@ function genGlobalStyle(token: LoncraStyleToken): CSSInterpolation {
         },
         [`${componentCls}-border`]: {
             border: `${lineWidth} ${lineType} ${colorBorder} !important`,
+            [`&-b`]: {
+                borderBottom: `${lineWidth} ${lineType} ${colorBorder} !important`,
+            },
+            [`&-t`]: {
+                borderTop: `${lineWidth} ${lineType} ${colorBorder} !important`,
+            },
+            [`&-r`]: {
+                borderRight: `${lineWidth} ${lineType} ${colorBorder} !important`,
+            },
+            [`&-l`]: {
+                borderLeft: `${lineWidth} ${lineType} ${colorBorder} !important`,
+            },
+            [`&-x`]: {
+                borderInline: `${lineWidth} ${lineType} ${colorBorder} !important`,
+            },
+            [`&-y`]: {
+                borderBlock: `${lineWidth} ${lineType} ${colorBorder} !important`,
+            },
             [`&-secondary`]: {
                 border: `${lineWidth} ${lineType} ${colorBorderSecondary} !important`,
                 [`&-b`]: {
                     borderBottom: `${lineWidth} ${lineType} ${colorBorderSecondary} !important`,
-                }
+                },
+                [`&-t`]: {
+                    borderTop: `${lineWidth} ${lineType} ${colorBorderSecondary} !important`,
+                },
+                [`&-r`]: {
+                    borderRight: `${lineWidth} ${lineType} ${colorBorderSecondary} !important`,
+                },
+                [`&-l`]: {
+                    borderLeft: `${lineWidth} ${lineType} ${colorBorderSecondary} !important`,
+                },
+                [`&-x`]: {
+                    borderInline:`${lineWidth} ${lineType} ${colorBorderSecondary} !important`,
+                },
+                [`&-y`]: {
+                    borderBlock: `${lineWidth} ${lineType} ${colorBorderSecondary} !important`,
+                },
             },
             [`&-none`]: {
                 border: 'none !important',
@@ -76,7 +109,7 @@ function genGlobalStyle(token: LoncraStyleToken): CSSInterpolation {
             }
         },
         [`${componentCls}-min-width-xl`]: {
-          minWidth: calc(sizeXL).mul(10).equal(),
+            minWidth: calc(sizeXL).mul(10).equal(),
         },
         [`${componentCls}-margin-xs`]: {
             margin: `${marginXS} !important`,
