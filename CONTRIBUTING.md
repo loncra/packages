@@ -110,9 +110,9 @@
 
 ### 5. 版本与包间引用
 
-- **`vue` 版本以管理端 `vue-basic-admin/package.json` 的 `vue` 字段为唯一来源**，不要在别处另记一份数字。`packages/*` 里所有 `devDependencies.vue` 必须与它逐字一致（钉死，不用 `^`）。
+- **`vue` 版本以 `packages` 为准、管理端跟随**：具体数字只在包自己的 `devDependencies.vue` 里钉死（不用 `^`；`antdv-chat-pro` 不装 vue，只声明 peer），管理端 `vue-basic-admin/package.json` 的 `vue` 必须与它逐字一致，且不得超出 `peerDependencies.vue` 声明的兼容范围。管理端是宿主、实际运行的那份 vue 在它手里，但版本号由 packages 定 —— 管理端不能装到 packages 还没支持的版本上。
 - 管理端与 packages 是**各自独立的安装**，而管理端的 `vue-tsc` 会把包源码一起编译：两处 vue 版本不同就会出现两份 d.ts，报一屏看起来一模一样的类型错误。升级时两边同时改，装完核对各自 `node_modules/vue` 与 `@vue/runtime-core` 的版本号。
-- 包之间由管理端按 `"@loncra/xxx": "file:../packages/xxx"` 引用。包的 `exports` 直指 `./src/index.ts`（源码直连，无构建产物）；若将来要发布或被第二个项目引用，必须先补构建管线（tsup 或 tsc + dts）与版本发布流程。
+- 包之间由管理端按 `"@loncra/xxx": "file:../packages/xxx"` 引用。包的 `exports` 一律直指 `./src/*.ts`（源码直连，无构建产物），除 `.` 之外按需开子路径入口 —— 有哪些子路径看各包 `package.json`，不要在这里另记一份清单。**新增子路径时，包的 `exports` 与管理端 `vue-basic-admin/tsconfig.app.json` 的 `paths` 必须同时加** —— 管理端靠 `paths` 把包源码拉进编译，漏一处就报解析不到。若将来要发布或被第二个项目引用，必须先补构建管线（tsup 或 tsc + dts）与版本发布流程。
 
 **为什么**：源码直连换来的是"改包源码 → 管理端立刻生效"，这是单人维护下最省时间的形态；代价就是上面那条版本必须钉死。
 
@@ -127,7 +127,7 @@ npm run lint
 
 - 未装 `oxlint` 时用 `npx --yes oxlint@1.83.0 .`（与管理端同版本，行为一致）。
 - **阈值只能写在配置文件里**：命令行 `-A all -W max-lines` 会把规则选项重置成默认值，不要用它筛"只看尺寸规则"。
-- 尺寸阈值先以 warn 上线，存量清零后升 error；升级前不得用作 CI 阻断条件。
+- 尺寸阈值先以 warn 上线，存量清零后再升 error。
 - **不要用 `oxlint-disable` 注释压制报错**：规则报错改代码；确需抑制就写进 `packages/.oxlintrc.json`，跟规则一起过 review。
 
 ## 控件包专用
@@ -185,7 +185,7 @@ const prefixCls = computed(() => config.value.getPrefixCls('xxx', 'loncra-xxx'))
 const [hashId, cssVarCls] = useStyle(prefixCls)
 ```
 
-- `hashId` / `cssVarCls` 不跨组件用 props 传，子部件要用就自己算一份（`hashId` 是主题级一个值，各处算出来天然一致）。
+- `hashId` / `cssVarCls` 不跨组件用 props 传，子部件要用就自己算一份（`hashId` 是主题级一个值，各处算出来天然一致）。**例外是纯展示子控件**：它不接 config（见 [8. 分层与职责](#8-分层与职责)），只能由父级把 `prefixCls` / `hashId` / `cssVarCls` 一起传进来。
 - 同一前缀的内部子部件，不允许把选择器片段导出到别的目录再在父级展开：要么并进同一个 `genStyleHooks`，要么给它独立前缀 + 自己的 `genStyleHooks`。
 - 覆盖 antd 时用 `!important`。不把"自有类自重复"（`.${componentCls}-item.${componentCls}-item` 凑到 3 个类）当作要求 —— 它有压不过的场景。
 - 公共工具类落在 `antdv/src/globalStyle/style/index.ts`（`GLOBAL_PREFIX = 'loncra-common'`），命名 `loncra-common-[<变体>-]<属性>[-<修饰>][-<方向>]`：属性全拼小写连字符；变体（`after`/`before`/`hover`）放在属性前；方向只用 `t/r/b/l/x/y` 且恒为最后一段；值用 `none` 或 `xs|sm|md|lg|xl`；派生写在同一顶层键里用嵌套 `&-`；会与 antd 打架的加 `!important`（纯尺寸 / 布局 / 结构类不加）。必须有 `GlobalStyleProvider` 渲染在 `ConfigProvider` 内才会生成 CSS。
