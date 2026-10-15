@@ -1,0 +1,17 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["eslint", "typescript"],
+  "env": {
+    "browser": true
+  },
+  "categories": {
+    "correctness": "error"
+  },
+  "rules": {
+    "max-lines": ["warn", { "max": 400, "skipBlankLines": true, "skipComments": true }],
+    "max-lines-per-function": ["warn", { "max": 200, "skipBlankLines": true, "skipComments": true }],
+    "complexity": ["warn", 10],
+    "max-depth": ["warn", 4],
+    "no-control-regex": "off"
+  }
+}
