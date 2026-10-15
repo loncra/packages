@@ -4,7 +4,6 @@ import {findFirstTreeNode, isEnumValue} from '@loncra/client/commons'
 import {useLocale} from '../../_util/useLocale.ts'
 import {
   AgentService,
-  AI_SERVER_AGENT_CHAT_STATUS,
   AI_SERVER_AGENT_CONVERSATION_TYPE,
   type AgentConversationEntity,
 } from '@loncra/client/ai'

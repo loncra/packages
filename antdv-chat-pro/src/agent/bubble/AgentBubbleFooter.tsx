@@ -1,5 +1,5 @@
 import {computed, defineComponent, type PropType} from 'vue'
-import {Badge, Button, Divider, Flex, Popover, Progress, Space, Tag, Typography} from 'antdv-next'
+import {Badge, Button, Divider, Flex, Popover, Progress, Space, Tag} from 'antdv-next'
 import {
   CopyOutlined,
   DatabaseOutlined,
@@ -93,63 +93,63 @@ const AgentBubbleFooter = defineComponent({
       )
     }
 
-    return () => {
-      const item = props.item
-      if (item.role === CHAT_BUBBLE_TYPE.AI) {
-        const showToken = Boolean(item.metadata?.tokenUsage)
-        if (!answerReady.value && !showToken) {
-          return null
-        }
-        return (
-          <div class={classNames(prefixCls.value, hashId.value, cssVarCls.value)}>
-            <Space class={`${prefixCls.value}-footer`}>
-              {answerReady.value
-                ? (
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    color={item.copy ? 'cyan' : 'default'}
-                    onClick={() => void copyAnswer()}
-                    v-slots={{icon: () => <CopyOutlined />}}
-                  />
-                )
-                : null}
-              {showToken
-                ? (
-                  <Popover
-                      classes={{container:'loncra-common-padding-none', title:'loncra-common-padding-xs'}}
-                      trigger={"click"}
-                      v-slots={{
-                      title: () => (
-                        <Flex justify="space-between" align="center">
-                          <span>{locale.value.tokenTotal}</span>
-                          <span>{countTokenUsage(item)}</span>
-                        </Flex>
-                      ),
-                      content: () => (
-                        <Flex vertical gap="small" class="loncra-common-scroll loncra-common-padding-xs loncra-common-min-width-xl">
-                          {tokenRows('inputTokens', 'blue', locale.value.tokenInput)}
-                          <Divider class="loncra-common-margin-none" />
-                          {tokenRows('outputTokens', 'magenta', locale.value.tokenOutput)}
-                          <Divider class="loncra-common-margin-none" />
-                          {tokenRows('cachedTokens', 'yellow', locale.value.tokenCache)}
-                          <Divider class="loncra-common-margin-none" />
-                          <Badge color="green" text={locale.value.tokenCacheHitRate} />
-                          <Progress size="small" status="active" percent={cacheHitRate(item)} />
-                        </Flex>
-                      ),
-                    }}
-                  >
-                    <Button size="small" variant="dashed" v-slots={{icon: () => <DatabaseOutlined />}}>
-                      {locale.value.token}:{countTokenUsage(item)}
-                    </Button>
-                  </Popover>
-                )
-                : null}
-            </Space>
-          </div>
-        )
+    function renderAiFooter(item: FooterItem) {
+      const showToken = Boolean(item.metadata?.tokenUsage)
+      if (!answerReady.value && !showToken) {
+        return null
       }
+      return (
+        <div class={classNames(prefixCls.value, hashId.value, cssVarCls.value)}>
+          <Space class={`${prefixCls.value}-footer`}>
+            {answerReady.value
+              ? (
+                <Button
+                  size="small"
+                  variant="outlined"
+                  color={item.copy ? 'cyan' : 'default'}
+                  onClick={() => void copyAnswer()}
+                  v-slots={{icon: () => <CopyOutlined />}}
+                />
+              )
+              : null}
+            {showToken
+              ? (
+                <Popover
+                    classes={{container:'loncra-common-padding-none', title:'loncra-common-padding-xs'}}
+                    trigger={"click"}
+                    v-slots={{
+                    title: () => (
+                      <Flex justify="space-between" align="center">
+                        <span>{locale.value.tokenTotal}</span>
+                        <span>{countTokenUsage(item)}</span>
+                      </Flex>
+                    ),
+                    content: () => (
+                      <Flex vertical gap="small" class="loncra-common-scroll loncra-common-padding-xs loncra-common-min-width-xl">
+                        {tokenRows('inputTokens', 'blue', locale.value.tokenInput)}
+                        <Divider class="loncra-common-margin-none" />
+                        {tokenRows('outputTokens', 'magenta', locale.value.tokenOutput)}
+                        <Divider class="loncra-common-margin-none" />
+                        {tokenRows('cachedTokens', 'yellow', locale.value.tokenCache)}
+                        <Divider class="loncra-common-margin-none" />
+                        <Badge color="green" text={locale.value.tokenCacheHitRate} />
+                        <Progress size="small" status="active" percent={cacheHitRate(item)} />
+                      </Flex>
+                    ),
+                  }}
+                >
+                  <Button size="small" variant="dashed" v-slots={{icon: () => <DatabaseOutlined />}}>
+                    {locale.value.token}:{countTokenUsage(item)}
+                  </Button>
+                </Popover>
+              )
+              : null}
+          </Space>
+        </div>
+      )
+    }
+
+    function renderUserFooter(item: FooterItem) {
       if (item.role !== CHAT_BUBBLE_TYPE.USER || item.data == null) {
         return null
       }
@@ -171,6 +171,14 @@ const AgentBubbleFooter = defineComponent({
           </Tag>
         </Space>
       )
+    }
+
+    return () => {
+      const item = props.item
+      if (item.role === CHAT_BUBBLE_TYPE.AI) {
+        return renderAiFooter(item)
+      }
+      return renderUserFooter(item)
     }
   },
 })

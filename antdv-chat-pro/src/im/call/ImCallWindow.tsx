@@ -27,6 +27,27 @@ import useStyle, {IM_CALL_PREFIX} from './style/index.ts'
 
 const DURATION_FORMAT = 'HH:mm:ss'
 
+function computeViewportStyle(fullscreen: boolean, minimized: boolean, height?: number) {
+  if (fullscreen) {
+    return undefined
+  }
+  if (minimized) {
+    return {height: `${CALL_MINI_SIZE.HEIGHT}px`}
+  }
+  if (height) {
+    return {height: `${height}px`}
+  }
+  return undefined
+}
+
+function viewportClass(prefix: string, minimized: boolean, fullscreen: boolean, height: number | undefined, expanded: boolean) {
+  return classNames(
+    `${prefix}-viewport`,
+    minimized ? `${prefix}-viewport-mini` : `${prefix}-viewport-expanded`,
+    (fullscreen || (!height && expanded)) && `${prefix}-viewport-fill`,
+  )
+}
+
 const ImCallWindow = defineComponent({
   name: 'LImCallWindow',
   setup() {
@@ -64,6 +85,110 @@ const ImCallWindow = defineComponent({
     onMounted(() => document.addEventListener('fullscreenchange', onFullscreenChange))
     onUnmounted(() => document.removeEventListener('fullscreenchange', onFullscreenChange))
 
+    function renderTitle(prefix: string) {
+      const call = session.state.call
+      if (!call) {
+        return undefined
+      }
+      const TypeIcon = isEnumValue(call.type, MESSAGE_SERVER_CHAT_CALL_TYPE.VIDEO)
+        ? VideoCameraOutlined
+        : AudioOutlined
+      return (
+        <Flex justify="space-between" align="center">
+          <Space>
+            <TypeIcon />
+            <Typography.Text>{session.state.title}</Typography.Text>
+          </Space>
+          <span class={`${prefix}-status`}>
+            ({getEnumName(call.status)})
+            {isEnumValue(call.status, MESSAGE_SERVER_USER_CHAT_CALL_STATUS.ACTIVE)
+              ? (
+                <Statistic.Timer
+                  value={call.startTime}
+                  format={DURATION_FORMAT}
+                  type="countup"
+                />
+              )
+              : null}
+          </span>
+          <SpaceCompact class={`${prefix}-actions`}>
+            <Button size="small" onClick={() => void toggleFullscreen()} v-slots={{
+              icon: () => session.state.fullscreen ? <CompressOutlined /> : <ExpandOutlined />,
+            }} />
+            <Button size="small" onClick={() => void session.setMinimized(true)} v-slots={{
+              icon: () => <BlockOutlined />,
+            }} />
+            <Button
+              size="small"
+              danger
+              type="primary"
+              loading={session.state.loading}
+              onClick={() => void session.hangUp()}
+              v-slots={{icon: () => <CloseOutlined />}}
+            />
+          </SpaceCompact>
+        </Flex>
+      )
+    }
+
+    function renderToolbar(prefix: string, expanded: boolean, completed: boolean) {
+      if (completed || !expanded) {
+        return null
+      }
+      return (
+        <div
+          class={`${prefix}-toolbar`}
+          onClick={(event: MouseEvent) => event.stopPropagation()}
+        >
+          <SpaceCompact>
+            <Button
+              class={`${prefix}-tool`}
+              variant="outlined"
+              onClick={() => void session.media?.setMicrophoneEnabled(!session.state.mediaState.localMicrophone)}
+              v-slots={{
+                icon: () => session.state.mediaState.localMicrophone ? <AudioOutlined /> : <AudioMutedOutlined />,
+              }}
+            />
+            <Button
+              class={`${prefix}-tool`}
+              variant="outlined"
+              onClick={() => void session.media?.setCameraEnabled(!session.state.mediaState.localCamera)}
+              v-slots={{
+                icon: () => session.state.mediaState.localCamera ? <VideoCameraOutlined /> : <EyeInvisibleOutlined />,
+              }}
+            />
+          </SpaceCompact>
+          <Button
+            class={`${prefix}-hangup`}
+            shape="circle"
+            type="primary"
+            danger
+            loading={session.state.loading}
+            onClick={() => void session.hangUp()}
+            v-slots={{icon: () => <PoweroffOutlined />}}
+          />
+        </div>
+      )
+    }
+
+    function renderCountdown(prefix: string, expanded: boolean) {
+      const deadline = session.state.closeDeadline
+      if (!deadline || !expanded) {
+        return null
+      }
+      return (
+        <Flex class={`${prefix}-countdown`} justify="center" align="center" gap="small">
+          <Statistic.Timer
+            class={`${prefix}-timer`}
+            value={deadline}
+            type="countdown"
+            format={locale.value.closeCountdown}
+            onFinish={() => void session.hangUp()}
+          />
+        </Flex>
+      )
+    }
+
     return () => {
       const call = session.state.call
       if (!call || !session.state.open) {
@@ -73,17 +198,7 @@ const ImCallWindow = defineComponent({
       const minimized = session.state.minimized
       const expanded = !minimized
       const completed = isEnumValue(call.status, MESSAGE_SERVER_USER_CHAT_CALL_STATUS.COMPLETED)
-      const TypeIcon = isEnumValue(call.type, MESSAGE_SERVER_CHAT_CALL_TYPE.VIDEO)
-        ? VideoCameraOutlined
-        : AudioOutlined
       const width = minimized ? CALL_MINI_SIZE.WIDTH : session.state.width
-      const viewportStyle = session.state.fullscreen
-        ? undefined
-        : minimized
-          ? {height: `${CALL_MINI_SIZE.HEIGHT}px`}
-          : session.state.height
-            ? {height: `${session.state.height}px`}
-            : undefined
       return (
         <Modal
           open
@@ -104,54 +219,13 @@ const ImCallWindow = defineComponent({
           }}
           onCancel={() => void session.hangUp()}
           v-slots={{
-            title: expanded
-              ? () => (
-                <Flex justify="space-between" align="center">
-                  <Space>
-                    <TypeIcon />
-                    <Typography.Text>{session.state.title}</Typography.Text>
-                  </Space>
-                  <span class={`${prefix}-status`}>
-                    ({getEnumName(call.status)})
-                    {isEnumValue(call.status, MESSAGE_SERVER_USER_CHAT_CALL_STATUS.ACTIVE)
-                      ? (
-                        <Statistic.Timer
-                          value={call.startTime}
-                          format={DURATION_FORMAT}
-                          type="countup"
-                        />
-                      )
-                      : null}
-                  </span>
-                  <SpaceCompact class={`${prefix}-actions`}>
-                    <Button size="small" onClick={() => void toggleFullscreen()} v-slots={{
-                      icon: () => session.state.fullscreen ? <CompressOutlined /> : <ExpandOutlined />,
-                    }} />
-                    <Button size="small" onClick={() => void session.setMinimized(true)} v-slots={{
-                      icon: () => <BlockOutlined />,
-                    }} />
-                    <Button
-                      size="small"
-                      danger
-                      type="primary"
-                      loading={session.state.loading}
-                      onClick={() => void session.hangUp()}
-                      v-slots={{icon: () => <CloseOutlined />}}
-                    />
-                  </SpaceCompact>
-                </Flex>
-              )
-              : undefined,
+            title: expanded ? () => renderTitle(prefix) : undefined,
           }}
         >
           <div
             ref={viewportRef}
-            class={classNames(
-              `${prefix}-viewport`,
-              minimized ? `${prefix}-viewport-mini` : `${prefix}-viewport-expanded`,
-              (session.state.fullscreen || (!session.state.height && expanded)) && `${prefix}-viewport-fill`,
-            )}
-            style={viewportStyle}
+            class={viewportClass(prefix, minimized, session.state.fullscreen, session.state.height, expanded)}
+            style={computeViewportStyle(session.state.fullscreen, minimized, session.state.height)}
             onClick={() => {
               if (minimized) {
                 void session.setMinimized(false)
@@ -159,55 +233,8 @@ const ImCallWindow = defineComponent({
             }}
           >
             {isEnumValue(call.scene, MESSAGE_SERVER_CHAT_CALL_SCENE.PRIVATE) ? <ImCallPrivateLayout /> : null}
-            {!completed && expanded
-              ? (
-                <div
-                  class={`${prefix}-toolbar`}
-                  onClick={(event: MouseEvent) => event.stopPropagation()}
-                >
-                  <SpaceCompact>
-                    <Button
-                      class={`${prefix}-tool`}
-                      variant="outlined"
-                      onClick={() => void session.media?.setMicrophoneEnabled(!session.state.mediaState.localMicrophone)}
-                      v-slots={{
-                        icon: () => session.state.mediaState.localMicrophone ? <AudioOutlined /> : <AudioMutedOutlined />,
-                      }}
-                    />
-                    <Button
-                      class={`${prefix}-tool`}
-                      variant="outlined"
-                      onClick={() => void session.media?.setCameraEnabled(!session.state.mediaState.localCamera)}
-                      v-slots={{
-                        icon: () => session.state.mediaState.localCamera ? <VideoCameraOutlined /> : <EyeInvisibleOutlined />,
-                      }}
-                    />
-                  </SpaceCompact>
-                  <Button
-                    class={`${prefix}-hangup`}
-                    shape="circle"
-                    type="primary"
-                    danger
-                    loading={session.state.loading}
-                    onClick={() => void session.hangUp()}
-                    v-slots={{icon: () => <PoweroffOutlined />}}
-                  />
-                </div>
-              )
-              : null}
-            {session.state.closeDeadline && expanded
-              ? (
-                <Flex class={`${prefix}-countdown`} justify="center" align="center" gap="small">
-                  <Statistic.Timer
-                    class={`${prefix}-timer`}
-                    value={session.state.closeDeadline}
-                    type="countdown"
-                    format={locale.value.closeCountdown}
-                    onFinish={() => void session.hangUp()}
-                  />
-                </Flex>
-              )
-              : null}
+            {renderToolbar(prefix, expanded, completed)}
+            {renderCountdown(prefix, expanded)}
           </div>
         </Modal>
       )

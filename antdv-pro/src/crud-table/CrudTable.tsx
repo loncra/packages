@@ -105,7 +105,6 @@ const CrudTable = defineComponent({
   slots: Object as SlotsType<QueryTableSlots<DefaultCrudEntity>>,
   setup(props, {attrs, emit, expose, slots}) {
     type TEntity = DefaultCrudEntity
-    type TId = string | number
     const queryTable = ref<CollectionExpose<TEntity>>()
 
     // 双向绑定：透传给 QueryTable 时同时传值与 onUpdate，由最远端统一持有状态

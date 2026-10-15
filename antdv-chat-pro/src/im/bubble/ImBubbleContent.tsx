@@ -4,9 +4,17 @@ import {UserOutlined} from '@antdv-next/icons'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {classNames} from '@loncra/antdv'
 import {AttachmentUpload} from '@loncra/antdv-pro'
-import {getEnumName, isEnumValue} from '@loncra/client/commons'
+import {getEnumName, isEnumValue, type ObjectWriteResult} from '@loncra/client/commons'
 import {MESSAGE_SERVER_USER_CHAT_PARTICIPANT_TYPE, type UserChatMessageResponseBody,} from '@loncra/client/message'
-import type {CallBlock, TextBlock} from '@loncra/chat-core'
+import type {
+  AttachmentBlock,
+  CallBlock,
+  ImCustomBlock,
+  InstructionBlock,
+  ReferenceBlock,
+  TextBlock,
+  UndoBlock,
+} from '@loncra/chat-core'
 import SenderSlotBubbleContent from '../../sender-slot-bubble-content/SenderSlotBubbleContent.tsx'
 import type {ImChatHost} from '../host.ts'
 import {AuthServerService} from '@loncra/client/auth'
@@ -68,63 +76,82 @@ const ImBubbleContent = defineComponent({
       )
     }
 
+    function renderFilesBlock(piece: AttachmentBlock) {
+      return (
+        <AttachmentUpload
+          preview
+          value={piece.value}
+          onUpdate:value={(value) => {
+            if (Array.isArray(value)) {
+              piece.value = value as ObjectWriteResult[]
+            }
+          }}
+        />
+      )
+    }
+
+    function renderInstructionBlock(piece: InstructionBlock) {
+      const name = instructionText(piece.value)
+      return (
+        <Tag
+          variant="outlined"
+          v-slots={{
+            icon: piece.prefix === '@' ? () => <UserOutlined /> : undefined,
+            default: () => name,
+          }}
+        />
+      )
+    }
+
+    function renderCallBlock(piece: CallBlock) {
+      return <ImCallBlock block={piece} host={props.host} />
+    }
+
+    function renderUndoBlock(piece: UndoBlock) {
+      const mine = props.principal === props.host.self.systemName
+      return (
+        <Tooltip title={piece.tooltip}>
+          <Typography.Text delete type="secondary">
+            {mine ? locale.value.selfUndo : piece.value}
+          </Typography.Text>
+          {mine
+            ? (
+              <Typography.Link href="javascript:;" onClick={() => props.onReedit()}>
+                {locale.value.reedit}
+              </Typography.Link>
+            )
+            : null}
+        </Tooltip>
+      )
+    }
+
+    function renderReferenceBlock(piece: ReferenceBlock) {
+      return <Flex vertical gap="small">{piece.value.map(renderReference)}</Flex>
+    }
+
     return () => (
       <SenderSlotBubbleContent
         content={props.content}
         v-slots={{
           renderBlock: ({block}: {block: TextBlock<string, unknown>}) => {
-            const piece = block as TextBlock<'custom', any> & {
-              slotKind?: string
-              prefix?: string
-              tooltip?: string
+            if (block.type !== 'custom') {
+              return null
             }
-            if (piece.type === 'custom' && piece.slotKind === 'files') {
-              return (
-                <AttachmentUpload
-                  preview
-                  value={piece.value}
-                  onUpdate:value={(value) => {
-                    if (Array.isArray(value)) {
-                      piece.value = value
-                    }
-                  }}
-                />
-              )
+            const slotKind = (block as ImCustomBlock<string, unknown>).slotKind
+            if (slotKind === 'files') {
+              return renderFilesBlock(block as AttachmentBlock)
             }
-            if (piece.type === 'custom' && piece.slotKind === 'instruction') {
-              const name = instructionText(piece.value)
-              return (
-                <Tag
-                  variant="outlined"
-                  v-slots={{
-                    icon: piece.prefix === '@' ? () => <UserOutlined /> : undefined,
-                    default: () => name,
-                  }}
-                />
-              )
+            if (slotKind === 'instruction') {
+              return renderInstructionBlock(block as InstructionBlock)
             }
-            if (piece.type === 'custom' && piece.slotKind === 'call') {
-              return <ImCallBlock block={piece as CallBlock} host={props.host} />
+            if (slotKind === 'call') {
+              return renderCallBlock(block as CallBlock)
             }
-            if (piece.type === 'custom' && piece.slotKind === 'undo') {
-              const mine = props.principal === props.host.self.systemName
-              return (
-                <Tooltip title={piece.tooltip}>
-                  <Typography.Text delete type="secondary">
-                    {mine ? locale.value.selfUndo : piece.value}
-                  </Typography.Text>
-                  {mine
-                    ? (
-                      <Typography.Link href="javascript:;" onClick={() => props.onReedit()}>
-                        {locale.value.reedit}
-                      </Typography.Link>
-                    )
-                    : null}
-                </Tooltip>
-              )
+            if (slotKind === 'undo') {
+              return renderUndoBlock(block as UndoBlock)
             }
-            if (piece.type === 'custom' && piece.slotKind === 'reference') {
-              return <Flex vertical gap="small">{piece.value.map(renderReference)}</Flex>
+            if (slotKind === 'reference') {
+              return renderReferenceBlock(block as ReferenceBlock)
             }
             return null
           },

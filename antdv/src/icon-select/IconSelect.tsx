@@ -116,7 +116,7 @@ const IconSelect = defineComponent({
     rootClass: String,
   },
   emits: ['update:value'],
-  setup(props, { emit, slots, attrs }) {
+  setup(props, { slots, attrs }) {
     const locale = useLocale('IconSelect')
     useFormItemTrigger(() => props.value)
     const config = useConfig()

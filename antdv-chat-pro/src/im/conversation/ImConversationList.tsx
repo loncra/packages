@@ -64,33 +64,40 @@ const ImConversationList = defineComponent({
     const prefixCls = computed(() => config.value.getPrefixCls('im-conversation', IM_CONVERSATION_PREFIX))
     const [hashId, cssVarCls] = useStyle(prefixCls)
 
+    async function removeConversation(item: UserChatConversationResponseBody) {
+      const id = Number(item.id)
+      const confirmed = await confirmDelete(modal, locale.value)
+      if (!confirmed) {
+        return
+      }
+      try {
+        const result = await ChatMessageService.deleteConversation([id])
+        message.success(result.message ?? '')
+        emit('delete', item)
+      } catch (e) {
+        message.error(e instanceof Error ? e.message : String(e))
+      }
+    }
+
+    async function toggleConversationFlag(key: 'pinned' | 'muted', item: UserChatConversationResponseBody) {
+      const id = Number(item.id)
+      const result = key === 'pinned'
+        ? await ChatMessageService.pinnedConversation([id])
+        : await ChatMessageService.mutedConversation([id])
+      emit('flags', result.data ?? [])
+    }
+
     async function onMenuClick(key: string, item: UserChatConversationResponseBody) {
       const id = Number(item.id)
       if (!Number.isFinite(id)) {
         return
       }
       if (key === 'delete') {
-        const confirmed = await confirmDelete(modal, locale.value)
-        if (!confirmed) {
-          return
-        }
-        try {
-          const result = await ChatMessageService.deleteConversation([id])
-          message.success(result.message ?? '')
-          emit('delete', item)
-        } catch (e) {
-          message.error(e instanceof Error ? e.message : String(e))
-        }
+        await removeConversation(item)
         return
       }
-      if (key === 'pinned') {
-        const result = await ChatMessageService.pinnedConversation([id])
-        emit('flags', result.data ?? [])
-        return
-      }
-      if (key === 'muted') {
-        const result = await ChatMessageService.mutedConversation([id])
-        emit('flags', result.data ?? [])
+      if (key === 'pinned' || key === 'muted') {
+        await toggleConversationFlag(key, item)
       }
     }
 

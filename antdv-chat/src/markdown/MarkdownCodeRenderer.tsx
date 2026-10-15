@@ -6,6 +6,36 @@ export interface MarkdownCodeRendererProps {
   class?: unknown
 }
 
+function vnodeTextProp(vnode: VNode): string | undefined {
+  const textProp = (vnode.props as { text?: unknown } | null)?.text
+  return typeof textProp === 'string' ? textProp : undefined
+}
+
+function slotText(children: unknown): string {
+  if (children && typeof children === 'object' && 'default' in children) {
+    const slot = (children as { default?: () => unknown }).default
+    return toText(slot?.())
+  }
+  return ''
+}
+
+function textFromVNode(vnode: VNode): string {
+  if (vnode.type === Text) {
+    return typeof vnode.children === 'string' ? vnode.children : ''
+  }
+  const textProp = vnodeTextProp(vnode)
+  if (textProp !== undefined) {
+    return textProp
+  }
+  if (typeof vnode.children === 'string') {
+    return vnode.children
+  }
+  if (Array.isArray(vnode.children)) {
+    return toText(vnode.children)
+  }
+  return slotText(vnode.children)
+}
+
 function toText(nodes: unknown): string {
   if (nodes == null) {
     return ''
@@ -19,25 +49,7 @@ function toText(nodes: unknown): string {
   if (!isVNode(nodes)) {
     return ''
   }
-  const vnode = nodes as VNode
-  if (vnode.type === Text) {
-    return typeof vnode.children === 'string' ? vnode.children : ''
-  }
-  const textProp = (vnode.props as { text?: unknown } | null)?.text
-  if (typeof textProp === 'string') {
-    return textProp
-  }
-  if (typeof vnode.children === 'string') {
-    return vnode.children
-  }
-  if (Array.isArray(vnode.children)) {
-    return toText(vnode.children)
-  }
-  if (vnode.children && typeof vnode.children === 'object' && 'default' in vnode.children) {
-    const slot = (vnode.children as { default?: () => unknown }).default
-    return toText(slot?.())
-  }
-  return ''
+  return textFromVNode(nodes as VNode)
 }
 
 const MarkdownCodeRenderer = defineComponent({

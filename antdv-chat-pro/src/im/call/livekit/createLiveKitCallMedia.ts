@@ -3,6 +3,7 @@ import {
   MESSAGE_SERVER_CHAT_CALL_SCENE,
   MESSAGE_SERVER_CHAT_CALL_TYPE,
   MESSAGE_SERVER_USER_CHAT_CALL_PARTICIPANT_STATUS,
+  type UserChatCallParticipantEntity,
   type UserChatCallResponseBody,
 } from '@loncra/client/message'
 import {
@@ -237,6 +238,29 @@ export const createLiveKitCallMedia: ImCallMediaCreate = (call, selfName) => {
     adoptExistingRemoteTracks(current)
   }
 
+  async function joinSelfRoom(participant: UserChatCallParticipantEntity) {
+    const liveKit = participant.metadata?.liveKit
+    if (!liveKit?.id || liveKit.value == null) {
+      return
+    }
+    const currentRoom = ensureRoom()
+    // 先监听再连接。对方要是已经发布，connect 期间就会订阅，漏掉这次就没有画面和声音。
+    bindRemote(currentRoom)
+    await currentRoom.connect(String(liveKit.id), String(liveKit.value))
+    adoptExistingRemoteTracks(currentRoom)
+  }
+
+  async function maybePublishAll(current: UserChatCallResponseBody) {
+    const everyoneActive = (current.participants ?? []).every((item) =>
+      isEnumValue(item.status, MESSAGE_SERVER_USER_CHAT_CALL_PARTICIPANT_STATUS.ACTIVE),
+    )
+    if (!everyoneActive || !room || room.state !== ConnectionState.Connected) {
+      return
+    }
+    publishReady = true
+    await publishBoth(room)
+  }
+
   const media: ImCallMedia = {
     // 麦克风和摄像头共用一次授权。无痕模式第一次会停在授权框，进房可以先发生。
     // 授权成功就发布；拒绝或没有设备则关掉对应开关，通话继续。两路互不影响。
@@ -272,24 +296,9 @@ export const createLiveKitCallMedia: ImCallMediaCreate = (call, selfName) => {
         return
       }
       if (participant.principal === selfName) {
-        const liveKit = participant.metadata?.liveKit
-        if (!liveKit?.id || liveKit.value == null) {
-          return
-        }
-        const currentRoom = ensureRoom()
-        // 先监听再连接。对方要是已经发布，connect 期间就会订阅，漏掉这次就没有画面和声音。
-        bindRemote(currentRoom)
-        await currentRoom.connect(String(liveKit.id), String(liveKit.value))
-        adoptExistingRemoteTracks(currentRoom)
+        await joinSelfRoom(participant)
       }
-      const everyoneActive = (current.participants ?? []).every((item) =>
-        isEnumValue(item.status, MESSAGE_SERVER_USER_CHAT_CALL_PARTICIPANT_STATUS.ACTIVE),
-      )
-      if (!everyoneActive || !room || room.state !== ConnectionState.Connected) {
-        return
-      }
-      publishReady = true
-      await publishBoth(room)
+      await maybePublishAll(current)
     },
     async attach(role, element) {
       elements[role] = element

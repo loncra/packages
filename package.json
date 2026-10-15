@@ -6,7 +6,8 @@
     "antdv",
     "antdv-pro",
     "antdv-chat",
-    "chat-core"
+    "chat-core",
+    "antdv-chat-pro"
   ],
   "scripts": {
     "lint": "oxlint ."

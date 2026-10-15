@@ -88,7 +88,6 @@ const CrudCardGrid = defineComponent({
   slots: Object as SlotsType<QueryCardGridSlots<DefaultCrudEntity>>,
   setup(props, {attrs, emit, expose, slots}) {
     type TEntity = DefaultCrudEntity
-    type TId = string | number
     const grid = ref<CollectionExpose<TEntity>>()
 
     // 双向绑定：本层持有值（宿主不绑 v-model 时也有本地值），往下一层同时传值与 onUpdate

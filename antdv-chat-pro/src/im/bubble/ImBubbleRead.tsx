@@ -27,25 +27,22 @@ const ImBubbleRead = defineComponent({
     const config = useConfig()
     const prefixCls = computed(() => config.value.getPrefixCls('im-bubble', IM_BUBBLE_PREFIX))
     const [hashId, cssVarCls] = useStyle(prefixCls)
-    return () => {
-      const item = props.item
-      if (isEnumValue(props.roomType, MESSAGE_SERVER_USER_CHAT_ROOM_TYPE.PRIVATE_CHAT) && item.role === CHAT_BUBBLE_TYPE.USER) {
-        const unread = item.readableCount === 1
-        return (
-          <div class={classNames(prefixCls.value, hashId.value, cssVarCls.value)}>
-            <div class={`${prefixCls.value}-read`}>
-              <Tooltip title={unread ? locale.value.unread : locale.value.read}>
-                <Typography.Text type={unread ? 'secondary' : 'success'}>
-                  {unread ? <EyeInvisibleOutlined /> : <EyeOutlined />}
-                </Typography.Text>
-              </Tooltip>
-            </div>
+    function renderPrivateRead(item: ImChatBubble) {
+      const unread = item.readableCount === 1
+      return (
+        <div class={classNames(prefixCls.value, hashId.value, cssVarCls.value)}>
+          <div class={`${prefixCls.value}-read`}>
+            <Tooltip title={unread ? locale.value.unread : locale.value.read}>
+              <Typography.Text type={unread ? 'secondary' : 'success'}>
+                {unread ? <EyeInvisibleOutlined /> : <EyeOutlined />}
+              </Typography.Text>
+            </Tooltip>
           </div>
-        )
-      }
-      if (!isEnumValue(props.roomType, MESSAGE_SERVER_USER_CHAT_ROOM_TYPE.GROUP_CHAT) || !item.participant || item.id == null) {
-        return null
-      }
+        </div>
+      )
+    }
+
+    function renderGroupRead(item: ImChatBubble) {
       const pending = Math.abs(item.readableCount - item.readCount)
       const done = pending >= item.readCount
       return (
@@ -78,6 +75,17 @@ const ImBubbleRead = defineComponent({
           </div>
         </div>
       )
+    }
+
+    return () => {
+      const item = props.item
+      if (isEnumValue(props.roomType, MESSAGE_SERVER_USER_CHAT_ROOM_TYPE.PRIVATE_CHAT) && item.role === CHAT_BUBBLE_TYPE.USER) {
+        return renderPrivateRead(item)
+      }
+      if (!isEnumValue(props.roomType, MESSAGE_SERVER_USER_CHAT_ROOM_TYPE.GROUP_CHAT) || !item.participant || item.id == null) {
+        return null
+      }
+      return renderGroupRead(item)
     }
   },
 })

@@ -125,7 +125,7 @@ export function unmergeTree<T>(data: TreeLike<T>[] = []): T[] {
   const result: T[] = []
   for (const d of data) {
     // 添加当前节点（不包含 children 属性）
-    const {children, ...nodeWithoutChildren} = d
+    const {children: _children, ...nodeWithoutChildren} = d
     result.push(nodeWithoutChildren as T)
     // 如果有子节点，递归处理子节点
     if (hasTreeChildren(d)) {
@@ -181,8 +181,7 @@ export function findAllTreeNodes<T>(predicate: Predicate<T>, data: TreeLike<T>[]
     if (predicate(node)) {
       // children 变量本身不会被使用，它的作用只是"告诉"解构赋值："请把这个属性分离出去"
       // nodeWithoutChildren 将包含除了 children 之外的所有属性（id、name、type 等）
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const {children, ...nodeWithoutChildren} = node
+      const {children: _children, ...nodeWithoutChildren} = node
       // 将不包含 children 的节点添加到结果中（扁平化结果不需要 children 属性）
       result.push(nodeWithoutChildren as T)
     }

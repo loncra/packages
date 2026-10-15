@@ -23,7 +23,6 @@ import type {AuthorityProps} from '../_util/crud/actions'
 import type {CollectionExpose} from '../_util/crud/collectionExpose'
 import type {
   BasicCrudQueryExpose,
-  EnumBucketRequest,
   PageDictionaries,
   RefreshOnActivate,
 } from '../basic-crud-query'

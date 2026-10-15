@@ -23,7 +23,7 @@ import type {
   CollectionService,
   DefaultCrudEntity,
 } from '../_util/crud/useCollectionData'
-import type {DragPreviewContent, DragProp} from '../_util/crud/useDrag'
+import type {DragProp} from '../_util/crud/useDrag'
 import type {EnumBucketRequest, PageDictionaries, RefreshOnActivate} from '../basic-crud-query/types'
 import type {EnumBucketsResponseBody} from '@loncra/client/resource'
 
