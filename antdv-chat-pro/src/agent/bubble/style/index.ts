@@ -43,6 +43,7 @@ function genAgentBubbleStyle(token: LoncraStyleToken): CSSInterpolation {
       },
       [`${componentCls}-answer`]: {
         paddingBlock: 0,
+        paddingInlineEnd:0
       },
       [`${componentCls}-tool-toggle`]: {
         cursor: 'pointer',
