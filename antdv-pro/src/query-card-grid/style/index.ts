@@ -1,5 +1,5 @@
 import type {CSSInterpolation} from '@antdv-next/cssinjs'
-import type {LoncraStyleToken} from '../../_util/genStyleLayer'
+import type {LoncraStyleToken} from '@loncra/antdv'
 import {genStyleHooks} from '../../_util/genStyleLayer'
 import {genDragGhostStyle, genDragStyle} from '../../_util/crud/genDragStyle'
 

@@ -1,6 +1,5 @@
 import type {CSSInterpolation} from '@antdv-next/cssinjs'
-import {GLOBAL_SPIN_KEYFRAMES} from '@loncra/antdv'
-import type {LoncraStyleToken} from '../../../_util/genStyleLayer'
+import {GLOBAL_SPIN_KEYFRAMES, type LoncraStyleToken} from '@loncra/antdv'
 import {genStyleHooks} from '../../../_util/genStyleLayer'
 
 export const AGENT_CONVERSATION_PREFIX = 'loncra-agent-conversation'

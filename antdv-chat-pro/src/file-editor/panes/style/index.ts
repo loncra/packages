@@ -1,5 +1,5 @@
 import type {CSSObject} from '@antdv-next/cssinjs'
-import type {LoncraStyleToken} from '../../../_util/genStyleLayer'
+import type {LoncraStyleToken} from '@loncra/antdv'
 import {genStyleHooks} from '../../../_util/genStyleLayer'
 
 function genFilePaneStyle(token: LoncraStyleToken): CSSObject {

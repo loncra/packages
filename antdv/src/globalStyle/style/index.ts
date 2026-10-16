@@ -1,6 +1,5 @@
-import type {CSSInterpolation} from '@antdv-next/cssinjs'
-import {Keyframes} from '@antdv-next/cssinjs'
-import type {LoncraStyleToken} from '../../_util/genStyleLayer'
+import {Keyframes, type CSSInterpolation} from '@antdv-next/cssinjs'
+import type {LoncraStyleToken} from '@loncra/antdv'
 import {genStyleHooks} from '../../_util/genStyleLayer'
 
 export const GLOBAL_PREFIX = 'loncra-common'

@@ -1,6 +1,5 @@
 import type {CSSObject} from '@antdv-next/cssinjs'
-import {GLOBAL_SPIN_KEYFRAMES} from '@loncra/antdv'
-import type {LoncraStyleToken} from '../../../_util/genStyleLayer'
+import {GLOBAL_SPIN_KEYFRAMES, type LoncraStyleToken} from '@loncra/antdv'
 import {genStyleHooks} from '../../../_util/genStyleLayer'
 
 function genFileConversationStyle(token: LoncraStyleToken): CSSObject {

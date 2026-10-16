@@ -1,6 +1,5 @@
-import type {CSSObject} from '@antdv-next/cssinjs'
-import {unit} from '@antdv-next/cssinjs'
-import type {LoncraStyleToken} from '../../../_util/genStyleLayer'
+import {unit, type CSSObject} from '@antdv-next/cssinjs'
+import type {LoncraStyleToken} from '@loncra/antdv'
 import {genStyleHooks} from '../../../_util/genStyleLayer'
 
 function genFileTabsStyle(token: LoncraStyleToken): CSSObject {

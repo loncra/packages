@@ -1,5 +1,5 @@
 import type {CSSInterpolation} from '@antdv-next/cssinjs'
-import type {LoncraStyleToken} from '../../../_util/genStyleLayer'
+import type {LoncraStyleToken} from '@loncra/antdv'
 import {genStyleHooks} from '../../../_util/genStyleLayer'
 
 export const AGENT_BUBBLE_PREFIX = 'loncra-agent-bubble'
@@ -14,6 +14,7 @@ function genAgentBubbleStyle(token: LoncraStyleToken): CSSInterpolation {
     lineWidth,
     lineType,
     colorTextSecondary,
+    colorTextTertiary,
     colorBorderSecondary,
     fontSizeSM,
     motionDurationSlow,
@@ -28,6 +29,13 @@ function genAgentBubbleStyle(token: LoncraStyleToken): CSSInterpolation {
       [`${componentCls}-think`]: {
         [`${antCls}-card-body`]: {
           padding: paddingXS,
+        },
+        [`.antd-think-status-wrapper .antd-think-status-down-icon`]: {
+          fontSize: fontSizeSM,
+          color: colorTextQuaternary,
+        },
+        [`.antd-think-content .x-markdown ol li::marker, .antd-think-content .x-markdown ul li::marker, .antd-think-content .x-markdown *`]: {
+          color: `${colorTextTertiary} !important`,
         },
       },
       [`${componentCls}-tool`]: {
@@ -61,7 +69,10 @@ function genAgentBubbleStyle(token: LoncraStyleToken): CSSInterpolation {
         padding: paddingSM,
         [`${antCls}-thought-chain ${antCls}-thought-chain-node-description`]: {
           marginBlockEnd:0
-        }
+        },
+        [`.antd-thought-chain-node-box`]: {
+          minWidth: 0,
+        },
       },
     },
   }

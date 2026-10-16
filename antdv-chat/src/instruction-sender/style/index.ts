@@ -1,6 +1,5 @@
 import type {CSSInterpolation} from '@antdv-next/cssinjs'
-import {unit} from '@antdv-next/cssinjs'
-import type {LoncraStyleToken} from '../../_util/genStyleLayer'
+import type {LoncraStyleToken} from '@loncra/antdv'
 import {genStyleHooks} from '../../_util/genStyleLayer'
 
 function genInstructionSenderStyle(token: LoncraStyleToken): CSSInterpolation {
@@ -21,24 +20,20 @@ function genInstructionSenderStyle(token: LoncraStyleToken): CSSInterpolation {
   return {
     [componentCls]: {
       [`${componentCls}-footer`]: {
-        padding: `${unit(paddingXS)} !important`,
+        padding: paddingXS,
         borderTop: `${lineWidth} ${lineType} ${colorBorderSecondary}`,
       },
       [`.antd-sender-input.antd-sender-input-slot`]: {
         [`> .antd-sender-slot:not(.antd-sender-slot-content)`]: {
-          height: 'auto !important',
+          height: 'auto',
           verticalAlign: 'bottom',
-          marginBlock: '0 !important',
+          marginBlock: 0,
         },
         [`&[contenteditable="false"]`]: {
           opacity: 0.5,
-          cursor: 'not-allowed !important',
+          cursor: 'not-allowed',
         },
       },
-    },
-    [`${componentCls}-footer`]: {
-      padding: `${unit(paddingXS)} !important`,
-      borderTop: `${lineWidth} ${lineType} ${colorBorderSecondary}`,
     },
     [`${componentCls}-panel`]: {
       maxHeight: panelSize,

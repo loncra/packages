@@ -1,5 +1,5 @@
 import type {CSSInterpolation, CSSObject} from '@antdv-next/cssinjs'
-import type {LoncraStyleToken} from '../../_util/genStyleLayer'
+import type {LoncraStyleToken} from '@loncra/antdv'
 import {genStyleHooks} from '../../_util/genStyleLayer'
 
 export const CONVERSATION_LIST_PREFIX = 'loncra-conversation-list'
