@@ -43,7 +43,6 @@ import {ChatMessageService} from '@loncra/client/message'
 - 只有全应用入口才进 `commons/api`。
 - 跨模块 import 走 barrel（`from '../../commons'`）；模块内部用相对路径，避免经 `index` 形成循环。
 - 领域类型与枚举一律从 `@loncra/client/<module>` 导出，宿主不另写副本。
-- 跨包通用规则（契约分类、粒度阈值、版本与包间引用、自动检查）见 [CONTRIBUTING-PACKAGES.md](../CONTRIBUTING-PACKAGES.md)。
 
 ## 启动
 

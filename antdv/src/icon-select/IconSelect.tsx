@@ -388,6 +388,7 @@ const IconSelect = defineComponent({
               <Popover
                 class={popoverClass}
                 rootClass={popoverClass}
+                trigger={"click"}
                 classes={{root: popoverClass, content: popoverClass}}
                 v-slots={{
                   title: () => (

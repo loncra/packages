@@ -56,4 +56,3 @@ import {createLiveKitCallMedia} from '@loncra/antdv-chat-pro/im/call/livekit'
 - **有自有样式的控件**才一个 `prefixCls` 对一个 `genStyleHooks`，样式写在自己目录的 `style/index.ts`（`DraftSender` 就没有自有样式）。
 - 根节点挂类一律用 `class` 绑定，`rootClass` 只作宿主入参并入 `class`；子节点走 `classes.*`。例外是**交给 antdv-next 子组件的 `rootClass` 入参**（`ConversationList` 给 `Menu`、`useBubbleList` 经 `toAxBubbleItem` 给气泡组件），那是在替子组件传根类，不是本控件自己挂根类。
 - 命名：IM 侧文件 `ImXxx.tsx`、Agent 侧 `AgentXxx.tsx`，两个套件共用的件不带前缀（`BubbleList` / `ConversationList` / `DraftSender`）；`file-editor` 的子域文件带 `File` 父级前缀（`FileTabs` / `FileConversation` / `FilePaneHost`）。
-- 控件骨架、命名与类名、样式规则见 [CONTRIBUTING.md](../CONTRIBUTING.md) 第 7–10 节；跨包通用规则见 [CONTRIBUTING-PACKAGES.md](../CONTRIBUTING-PACKAGES.md)。

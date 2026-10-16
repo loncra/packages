@@ -62,4 +62,3 @@ import zhCN from '@loncra/antdv-pro/locale/zh_CN'
 - 根节点挂类一律用 `class` 绑定，`rootClass` 只作宿主入参并入 `class`；子节点走 `classes.*`（经 `splitSemantic` 拆）。
 - **分层**：`basic-crud-query` 是所有内容层的底座（内部用 `data-loading-card-plan` 与 `action-button`）→ `query-table` / `query-card-grid` 做查询内容 → `crud-table` / `crud-card-grid` 是固定实体类型的门面 → `crud-page` 装配页面（`define*` 声明翻成 props，字段组件走 `registry.ts`）。
 - **Provider 层次**：`Provider`（`config-provider`）内嵌 antdv-next 的 `ConfigProvider`、`GlobalStyleProvider` 与 `ClientProvider`、`CrudConfigProvider`。`Form` 与 `ConfigProviderSetting` 读 `useAntdvConfig`，CRUD 相关读 `useCrudConfig` / `useActionAuth`。
-- 控件骨架、命名与类名、样式规则见 [CONTRIBUTING.md](../CONTRIBUTING.md) 第 7–10 节；跨包通用规则见 [CONTRIBUTING-PACKAGES.md](../CONTRIBUTING-PACKAGES.md)。

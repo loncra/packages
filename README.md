@@ -30,12 +30,12 @@ chat-core     ← antdv-chat-pro
 - **引用方式**：`"@loncra/xxx": "file:../packages/xxx"`。各包 `exports` 直指 `./src/*.ts`（源码直连，没有构建产物）；**新增子路径入口时，包的 `exports` 与宿主 `tsconfig.app.json` 的 `paths` 必须同时改**，否则宿主编译时解析不到。
 - **启动顺序**：先用 client 建好连接（`createClient()`，或把 `ClientConfig` 交给 `antdv-pro` 的 `ClientProvider`），再用 `antdv-chat-pro` 的 `Provider`（它在 `antdv-pro` 的 `Provider` 外面再包一层 `@antdv-next/x` 的 `XProvider`）。
 - **locale**：跨包、以及与 `antdv-next/locale` 的合并由宿主做（宿主把合并结果交给 `ConfigProvider`）；包内只做一层回落 —— 宿主传入的优先，没有就用包自己的 `zh_CN`。
-- **样式层**：antd 的样式住在 `@layer antd`（宿主用 `a-style-provider layer` 开启），包内 cssinjs 的 `prepend` 关闭 —— 详见 [CONTRIBUTING.md](./CONTRIBUTING.md) 第 10 节。
+- **样式层**：antd 的样式住在 `@layer antd`（宿主用 `a-style-provider layer` 开启），包内 cssinjs 的 `prepend` 关闭 —— 详见 [CONTRIBUTING.md](./CONTRIBUTING.md) 第 11 节。
 - **版本**：`vue` 的版本以本仓为准、宿主跟随，具体规则见 [CONTRIBUTING-PACKAGES.md](./CONTRIBUTING-PACKAGES.md) 第 5 节。
 
 ## 控件总表
 
-每个控件一份使用说明，就放在它自己的目录里（`src/<控件>/README.md`）。**这批说明正在逐份补齐** —— 下面表里链接还打不开的，就是尚未写的那一份。控件说明的写法见 [CONTRIBUTING.md](./CONTRIBUTING.md) 第 7–10 节。
+每个控件一份使用说明，就放在它自己的目录里（`src/<控件>/README.md`）。**这批说明正在逐份补齐** —— 下面表里链接还打不开的，就是尚未写的那一份。控件说明的写法见 [CONTRIBUTING.md](./CONTRIBUTING.md) 第 12 节。
 
 ### `@loncra/antdv`
 
@@ -97,7 +97,7 @@ chat-core     ← antdv-chat-pro
 
 | 文档 | 管什么 |
 | --- | --- |
-| [CONTRIBUTING.md](./CONTRIBUTING.md) | 控件开发规范：控件目录骨架、分层与职责、命名与类名、样式 |
+| [CONTRIBUTING.md](./CONTRIBUTING.md) | 控件开发规范：控件目录骨架、分层与职责、命名与类名、样式、样式层与覆盖顺序、控件使用说明的写法 |
 | [CONTRIBUTING-PACKAGES.md](./CONTRIBUTING-PACKAGES.md) | 跨包通用规则：总原则、文件角色、契约与实现、粒度阈值、版本与包间引用、自动检查 |
 | 各包 `README.md` | 这个包是什么 + 这个包自己的开发规范 |
 | `src/<控件>/README.md` | 单个控件的使用说明：何时使用、代码演示、API、类型、语义化 DOM |

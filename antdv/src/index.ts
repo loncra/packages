@@ -49,8 +49,9 @@ export { createUseLocale, fillLocale, useLocale } from './_util/useLocale'
 export type { LocaleComponentName } from './_util/useLocale'
 export { classNames } from './_util/classNames'
 export { splitSemantic } from './_util/splitSemantic'
+export { createStyleHooks } from './_util/styleFactory'
+export type { LoncraStyleToken } from './_util/styleFactory'
 export { genStyleHooks } from './_util/genStyle'
-export type { LoncraStyleToken } from './_util/genStyle'
 export {
   GLOBAL_JUMP_KEYFRAMES,
   GLOBAL_PREFIX,

@@ -34,7 +34,7 @@
   props: () => ({
     class: 'w-full',
     mode: ICON_SELECT_MODE.AVATAR,
-    iconRender: (type: string) => renderIconFont(type, 'align'),
+    iconRender: (type: string) => renderIconFont(type),
     options: iconOptions.value,
   }),
 }

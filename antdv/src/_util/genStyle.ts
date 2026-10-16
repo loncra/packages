@@ -1,10 +1,9 @@
 import type {CSSInterpolation} from '@antdv-next/cssinjs'
-import type {AliasToken, TokenWithCommonCls} from 'antdv-next/theme/internal'
 import {genStyleHooks as antGenStyleHooks} from 'antdv-next/theme/internal'
 import type {ComputedRef, Ref} from 'vue'
+import type {LoncraStyleToken} from './styleFactory'
 
-/** genStyleHooks 注入的尺寸/颜色已是 CSS 变量（如 `var(--ant-padding-xs)`），禁止 Number()。 */
-export type LoncraStyleToken = TokenWithCommonCls<AliasToken>
+export type {LoncraStyleToken}
 
 type GenerateStyle = (token: LoncraStyleToken) => CSSInterpolation
 

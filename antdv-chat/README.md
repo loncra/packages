@@ -39,4 +39,3 @@ import zhCN from '@loncra/antdv-chat/locale/zh_CN'
 - 写法对标 `antdv-next` 源码：`.tsx` + `defineComponent` + JSX。组件名 `L` 前缀，`inheritAttrs: false`；根节点挂类一律用 `class` 绑定，`rootClass` 只作宿主入参并入 `class`；子节点走 `classes.*`。
 - 有自有样式的控件 = 一个 `prefixCls` = 一个 `genStyleHooks`，样式只写在自己目录的 `style/index.ts`。
 - 本包 peer 里的 X 生态（`@antdv-next/x`、`@antdv-next/x-markdown`）只在本包内用。
-- 控件骨架、命名与类名、样式规则见 [CONTRIBUTING.md](../CONTRIBUTING.md) 第 7–10 节；跨包通用规则见 [CONTRIBUTING-PACKAGES.md](../CONTRIBUTING-PACKAGES.md)。

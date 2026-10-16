@@ -1,6 +1,6 @@
 # packages 跨包通用规则
 
-适用范围：`packages` 下所有包（含 `client` / `chat-core`）。划分依据：通用部分管"文件与契约"；控件包专用部分管"组件、类名与样式"，见 [CONTRIBUTING.md](./CONTRIBUTING.md) 第 7–10 节。规则依据与延伸阅读见 [参考文献](#参考文献)。
+适用范围：`packages` 下所有包（含 `client` / `chat-core`）。划分依据：通用部分管"文件与契约"；控件包专用部分管"组件、类名与样式"，见 [CONTRIBUTING.md](./CONTRIBUTING.md) 第 7–12 节。规则依据与延伸阅读见 [参考文献](#参考文献)。
 
 ## 通用
 

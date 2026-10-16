@@ -44,4 +44,3 @@ import zhCN from '@loncra/antdv/locale/zh_CN'
 - 有自有样式的控件 = 一个 `prefixCls` = 一个 `genStyleHooks`，样式只写在自己目录的 `style/index.ts`，不写内联 `style`，更不写管理端的全局 css。
 - **图标渲染归宿主**：包内不解析宿主的全局 `IconFont`、不渲染宿主的图标字体（`_util/iconFont.ts` 已删）。要画图标的地方一律由宿主注入 —— `IconSelect` 的 `iconRender`、`KeyValueTable` 的 `#title` 插槽；包内自带外观只用官方 `@antdv-next/icons`。
 - 公共工具类只从 `globalStyle/` 出，且必须有 `GlobalStyleProvider` 渲染在 `ConfigProvider` **内部**才会生成 CSS。
-- 跨包通用规则见 [CONTRIBUTING-PACKAGES.md](../CONTRIBUTING-PACKAGES.md)，本文件不重复。
