@@ -1,144 +1,103 @@
 # Loncra packages
 
-仓根直接挂包。
+管理端（后台管理系统，重心是 CRUD）在变大的过程中剥离出来的公共能力：六个包，各自对外是一种"标准"，宿主按需引用。
 
-| 包 | 职责 |
-|---|---|
-| [`client`](./client)（`@loncra/client`） | 后端 TypeScript HTTP 契约与 Service，不依赖 Vue / axios / `import.meta.env` |
-| [`antdv`](./antdv)（`@loncra/antdv`） | 扩展 antdv-next：TSX 控件 + ConfigProvider locale，不调后端 |
-| [`antdv-pro`](./antdv-pro)（`@loncra/antdv-pro`） | 调 `@loncra/client` 的通用 antdv 控件，依赖 client + antdv |
-| [`chat-core`](./chat-core)（`@loncra/chat-core`） | IM 与 Agent 共用的类型、纯函数、`DraftStore`。主入口不引用 Dexie。不含通话 |
-| [`antdv-chat`](./antdv-chat)（`@loncra/antdv-chat`） | `@antdv-next/x` 的扩展：表情、Markdown、指令输入。不依赖 `chat-core` |
-| [`antdv-chat-pro`](./antdv-chat-pro)（`@loncra/antdv-chat-pro`） | IM 与 Agent 业务控件、`FileEditor` / `SystemUserPanel`、包住 `XProvider` 的 `Provider`。依赖 antdv-pro、antdv-chat、chat-core、client。管理端会话页引用它 |
+## 六个包
 
-管理端：`"@loncra/client": "file:../packages/client"`、`"@loncra/antdv": "file:../packages/antdv"`、`"@loncra/antdv-pro": "file:../packages/antdv-pro"`、`"@loncra/antdv-chat": "file:../packages/antdv-chat"`、`"@loncra/antdv-chat-pro": "file:../packages/antdv-chat-pro"`。
+| 包 | 职责 | 依赖 |
+| --- | --- | --- |
+| [`client`](./client)（`@loncra/client`） | 前端调后端的标准：HTTP 契约、领域类型与枚举、领域 Service | 无 |
+| [`chat-core`](./chat-core)（`@loncra/chat-core`） | IM 与 Agent 共用的标准：词槽、气泡与会话、历史分页、草稿存储口 | `client` |
+| [`antdv`](./antdv)（`@loncra/antdv`） | 在 `antdv-next` 之上扩展的管理端公共控件 | 无内部依赖 |
+| [`antdv-chat`](./antdv-chat)（`@loncra/antdv-chat`） | 在 `@antdv-next/x` 之上扩展的聊天控件 | `antdv` |
+| [`antdv-pro`](./antdv-pro)（`@loncra/antdv-pro`） | 借助 `client` 的类型与服务、在 `antdv-next` 上扩展的控件（要调后端的那类） | `antdv`、`client` |
+| [`antdv-chat-pro`](./antdv-chat-pro)（`@loncra/antdv-chat-pro`） | IM 与 Agent 的落地层：两套界面、配置定义、后端调用 | `antdv`、`antdv-chat`、`antdv-pro`、`chat-core`、`client` |
 
-## 包内规范
+依赖方向（被依赖的包 ← 依赖它的包）：
 
-见 [`CONTRIBUTING.md`](./CONTRIBUTING.md)：组件结构 / 分层职责 / 契约与实现（策略 · 适配 · 注入）/ 粒度阈值 / 命名与挂类 / 样式规范 / 文档规范 / 版本与安装 / 自动检查（`npm run lint`）。
-
-## `@loncra/antdv`
-
-对标 antdv-next 源码（`Xxx.tsx` + `defineComponent` + JSX），不是管理端 SFC。peer：`vue`、`antdv-next`；用到官方图标时再 peer `@antdv-next/icons`。禁止 `@loncra/client`、vue-i18n、Pinia、路由、Service。
-
-| 路径 | 内容 |
-|---|---|
-| `@loncra/antdv` | 控件 + `useLocale` |
-| `@loncra/antdv/locale/zh_CN` | 简体中文，与 `antdv-next/locale` 合并后交给 `ConfigProvider` |
-| `@loncra/antdv/locale/en_US` | 英文 |
-
-当前控件：`TooltipValidationFormItem`、`QrCodeModal`、`BasicImage`、`IconSelect`、`KeyValueTable`、`Editor`（`antdv-next-tiptap`）。上传与调 client 的通用控件进 `@loncra/antdv-pro`，IM / Agent 进 `@loncra/antdv-chat-pro`，不进本包。
-
-**图标渲染归宿主**：包内**不解析宿主的全局 `IconFont`，也不渲染宿主的图标字体**（`_util/iconFont.ts` 已删）。
-需要画图标的地方一律由宿主注入：`IconSelect` 的 `iconRender` 属性、`KeyValueTable` 的 `#title` 插槽、
-`FileEditor` 的 `getIcon`（返回 VNode）、`@loncra/antdv-chat` 的 `InstructionSender` 的 `createInstructionSlot` 等。
-包内自带外观只用官方 `@antdv-next/icons`。
-
-## `@loncra/antdv-chat`
-
-`@antdv-next/x` 的扩展，**2026-10-01 建包**。peer：`vue`、`antdv-next`、`@antdv-next/icons`、`@antdv-next/x`、`@antdv-next/x-markdown`、`@loncra/antdv`。不依赖 `chat-core`。基础件（`classNames` / `genStyleHooks` / `useIsDark` / `createUseLocale`）**复用 `@loncra/antdv`，不复制**；只有 `locale` 与 `Locale` 类型是本包自己的。禁止 Pinia、vue-router、vue-i18n、管理端 `@/apis`、`import.meta.env`。
-
-| 路径 | 内容 |
-|---|---|
-| `@loncra/antdv-chat` | 控件 + `useLocale` |
-| `@loncra/antdv-chat/locale/zh_CN` | 简体中文，与 antdv-next / antdv / antdv-pro locale 合并后交给 `ConfigProvider` |
-| `@loncra/antdv-chat/locale/en_US` | 英文 |
-
-当前只剩 `EmojiButton`、`InstructionSender`（+ `useInstructionSender`）、`Markdown` / `MarkdownCodeRenderer`。
-
-## `@loncra/antdv-chat-pro`
-
-IM 与 Agent 的业务控件，外加 `FileEditor` / `SystemUserPanel` 与 `Provider`（在 `@loncra/antdv-pro` 的 `Provider` 外面包一层 `XProvider`）。依赖 `@loncra/antdv-pro`、`@loncra/antdv-chat`、`@loncra/chat-core`、`@loncra/client`。管理端会话页引用本包。宿主负责应用启动时已有的 `createClient()`，本包只调用 Service。禁止 Pinia、vue-i18n、路由、socket、SSE。
-
-| 路径 | 内容 |
-|---|---|
-| `@loncra/antdv-chat-pro` | 气泡列表、词槽气泡、草稿输入、IM 发送器、Agent 发送器、`FileEditor`、`SystemUserPanel`、`Provider` |
-
-## `@loncra/antdv-pro`
-
-对标 `@loncra/antdv` 的 TSX 写法，直接调 `@loncra/client` Service。宿主（管理端）负责 `createClient()`。peer：`vue`、`antdv-next`、`@loncra/antdv`、`@loncra/client`；相对时间再 peer `dayjs`；上传分片再 peer `p-limit`。**本包不引 `@antdv-next/x`**：X 上下文由 `@loncra/antdv-chat-pro` 的 `Provider` 提供。禁止 axios、`createClient`、Pinia、vue-i18n、路由、管理端 `@/apis`。CRUD 第二批。IM / Agent 已另包（`@loncra/antdv-chat-pro`）。
-
-| 路径 | 内容 |
-|---|---|
-| `@loncra/antdv-pro` | 控件 + `useLocale` |
-| `@loncra/antdv-pro/locale/zh_CN` | 简体中文，与 antdv-next / `@loncra/antdv` locale 合并后交给 `ConfigProvider` |
-| `@loncra/antdv-pro/locale/en_US` | 英文 |
-
-当前控件：`UserAvatar`、`UserSelect`、`AttachmentMasonry`、`AttachmentUpload`；
-
-**CRUD 页面套件（列表形态已进包）**：`crud-page/` 目录 + `CrudConfigProvider` 的跳转兜底。
-目录：核心在 `crud-page/`（`types.ts` / `registry.ts` / `define.ts`），表格形态在 `crud-page/home/`（`CrudHomePage.tsx` / `columns.ts`）；表单、详情以后按同样的 `<形态>/` 目录进来。
-`define.ts` 是三种形态**共用**的声明入口（恒等合并 `{...core, <形态>}`）：已有 `defineHomePage`，`defineFormPage` / `defineDetailPage` 随形态一起并排加在这里。
-
-分层（表格）：`DataLoadingCardPlan`（Card 壳 + 生命周期 + loading）→ `BasicCrudQuery`（数据 / 系统字典 / 标题 / 统一分页 / 动作解析）→ `QueryTable` · `QueryCardGrid`（内容层，受控：只画自己那套）→ `CrudTable` · `CrudCardGrid`（门面：**props 与内容层完全同名同形、只做透传**，不自造名字）。
-系统字典（声明里的 `list.enums` / `list.dictionaryCodes`）由 `BasicCrudQuery` 挂载时加载（`basic-crud-query/dictionaries.ts`），用 `v-model:buckets` / `v-model:dictionaries` 回传给建列的地方（**`dictionaryCodes` = 要加载什么，`dictionaries` = 加载结果**）。
-
-- `CrudHomePage`：把页面声明（`CrudTableDefinition`）翻成 `CrudTable` 的 props；不认路由 / i18n / 弹层。
-- 声明（宿主业务目录里的 `xxx.page.ts` / `xxx.home.page.ts`）：`CrudPageCore`（service / i18nPrefix / routes / fields / `i18nResolver` / `onNavigate`）+ `PageTableDefinition`（columns / enums / authority / `toolbarActions` / `recordActions` / drag…）。
-- 跳转：页面声明给 `onNavigate` 就用它（`record` 是精确实体），否则落到 `CrudConfigProvider` 的 `onNavigate` 兜底，都没有则 no-op（内嵌选择器安全）。
-- 文案：宿主给 `i18nResolver`，pro 只拿 key；枚举：`format: 'enum' | 'enumList'` 用 `enumRef`（**模块 + 枚举 id**）+ `list.enums`（按模块分组，`EnumBucketRequest`）预载的桶自算（不走宿主的全局枚举表）。桶必须带模块：`resource-server` / `auth-server` / `ai-server` / `message-server` 各一套，只给 id 查不到。
-- 表单 / 详情形态（`defineFormPage` / `defineDetailPage`、壳层）尚未迁移。
-
-## `@loncra/client`
-
-### 入口
-
-| 路径 | 内容 |
-|---|---|
-| `@loncra/client` | 聚合出口（一般按子路径导入） |
-| `@loncra/client/commons` | 公共类型、枚举、REST 基类、跨模块 API |
-| `@loncra/client/auth` | 认证中心 |
-| `@loncra/client/resource` | 资源服务 |
-| `@loncra/client/message` | 消息中心（含 IM HTTP） |
-| `@loncra/client/ai` | AI 中心（Agent REST，不含 SSE） |
-| `@loncra/client/adapters/axios` | 把已配置的 Axios 实例接到 `HttpClient` |
-
-### 分层
-
-每个模块目录：`enumerate` / `constants` / `domain` / `service`。
-
-- **enumerate**：和后端枚举一一对应的码。commons 放在 `enumerate.ts`；领域按主题聚文件（`message/enumerate/chat.ts`），不要一码一文件。
-- **constants**：权限串、请求参数名、用枚举值拼出来的判断数组。数组不是枚举。
-- **Yes/No 只用 `YES_OR_NO_TYPE`**，不要再造 `SITE_PUSHABLE` 这类 0/1 克隆。
-- **domain**：一层领域类型。不要放 Vue / antdv-next / 路由类型。
-- **service**：继承 REST 基类的领域 CRUD；该域自己的静态 HTTP 也在这里。
-
-`commons` 再分两类。标准是「谁会调」，不是「静态方法 / 没继承基类」：
-
-- `commons/service/`：`Page` / `Find` 等 REST 基类。
-- `commons/api/`：跨模块入口（登录、枚举/验证码、附件、头像、未读）。布局角标、任意页都会用。
-- `{module}/service/`：`ChatMessageService` / `ChatCallService` / `AgentService` 这类领域 HTTP。不要进 commons，否则 commons 会依赖模块类型。
-
-新业务模块按上面拆：只有全应用入口才进 `commons/api`。
-
-跨模块 import 走 barrel（`from '../../commons'`）。模块内部用相对路径，避免经 index 循环。
-
-### 启动
-
-核心只认 `HttpClient`。使用任何 Service 之前必须 `createClient()`：
-
-```ts
-import {createClient} from '@loncra/client'
-import {createAxiosHttpClient} from '@loncra/client/adapters/axios'
-
-createClient({
-  http: createAxiosHttpClient(axiosInstance),
-  runtimeMode: 'MONOLITH', // 或 'MICROSERVICE'
-  getAccessToken: () => storage.getItem('accessToken'),
-  resourcePath: '/resource',
-  openUrl: (url) => window.open(url),
-  authenticationTypeHeaderName: 'Authentication-Type',
-  formValueConvert: (key, value) => value, // 可选；管理端用来处理 Dayjs
-})
+```
+client        ← chat-core、antdv-pro、antdv-chat-pro
+antdv         ← antdv-chat、antdv-pro、antdv-chat-pro
+antdv-pro     ← antdv-chat-pro
+antdv-chat    ← antdv-chat-pro
+chat-core     ← antdv-chat-pro
 ```
 
-`BASE_URL` 用 getter + `modulePrefix`：单体 `/api`，微服务 `/api/{module}`。
+「依赖」列与上图只记**本仓内部的包依赖**；外部 peer（含 `dexie` / `livekit-client` / `axios` 这类可选项）以各包自己的 `README.md` 为准。
 
-`formUrlEncoded` 在 `commons/utils`。骨架只编码；值转换由 `createClient({ formValueConvert })` 注入，单次调用也可传第三个 `valueConvert`。
+## 宿主接线
 
-### 管理端接线
+- **引用方式**：`"@loncra/xxx": "file:../packages/xxx"`。各包 `exports` 直指 `./src/*.ts`（源码直连，没有构建产物）；**新增子路径入口时，包的 `exports` 与宿主 `tsconfig.app.json` 的 `paths` 必须同时改**，否则宿主编译时解析不到。
+- **启动顺序**：先用 client 建好连接（`createClient()`，或把 `ClientConfig` 交给 `antdv-pro` 的 `ClientProvider`），再用 `antdv-chat-pro` 的 `Provider`（它在 `antdv-pro` 的 `Provider` 外面再包一层 `@antdv-next/x` 的 `XProvider`）。
+- **locale**：跨包、以及与 `antdv-next/locale` 的合并由宿主做（宿主把合并结果交给 `ConfigProvider`）；包内只做一层回落 —— 宿主传入的优先，没有就用包自己的 `zh_CN`。
+- **样式层**：antd 的样式住在 `@layer antd`（宿主用 `a-style-provider layer` 开启），包内 cssinjs 的 `prepend` 关闭 —— 详见 [CONTRIBUTING.md](./CONTRIBUTING.md) 第 10 节。
+- **版本**：`vue` 的版本以本仓为准、宿主跟随，具体规则见 [CONTRIBUTING-PACKAGES.md](./CONTRIBUTING-PACKAGES.md) 第 5 节。
 
-- Service、领域类型、枚举、权限串从 `@loncra/client/<module>` 导入。
-- `src/apis` 只留两个包装：`ResourceServerService`（验证码弹层）、`AgentService`（SSE）。用户显示名用 `@loncra/client/auth` 的 `AuthServerService.getPrincipalNameByUserDetails`，没有姓名时默认 `-`。
-- `src/types/apis` 只留 UI 叠层（`BaseChatBubble`、Sender 词槽、Dayjs、vue-router），不要再转发 client 类型。
-- `*_ROUTE`、Socket、provide key、视频 UI 留在管理端。
+## 控件总表
+
+每个控件一份使用说明，就放在它自己的目录里（`src/<控件>/README.md`）。**这批说明正在逐份补齐** —— 下面表里链接还打不开的，就是尚未写的那一份。控件说明的写法见 [CONTRIBUTING.md](./CONTRIBUTING.md) 第 7–10 节。
+
+### `@loncra/antdv`
+
+| 控件 | 说明 | 使用说明 |
+| --- | --- | --- |
+| `TooltipValidationFormItem` | 把表单项的校验信息收进 `Tooltip`，长表单不占纵向空间 | [说明](./antdv/src/tooltip-validation-form-item/README.md) |
+| `QrCodeModal` | 二维码弹窗 | [说明](./antdv/src/qr-code-modal/README.md) |
+| `BasicImage` | 图片展示，取不到图时回退包内自带占位图 | [说明](./antdv/src/basic-image/README.md) |
+| `IconSelect` | 图标选择：图标库 / 纯文本 / 头像三形态，外加只读预览 | [说明](./antdv/src/icon-select/README.md) |
+| `KeyValueTable` | 键值表格，行内可编辑，提交前收敛编辑态 | [说明](./antdv/src/key-value-table/README.md) |
+| `Editor` | 富文本编辑器（`antdv-next-tiptap`） | [说明](./antdv/src/editor/README.md) |
+
+### `@loncra/antdv-chat`
+
+| 控件 | 说明 | 使用说明 |
+| --- | --- | --- |
+| `EmojiButton` | 表情选择按钮 | [说明](./antdv-chat/src/emoji-button/README.md) |
+| `InstructionSender` | 可带指令的发送器（含 `useInstructionSender`） | [说明](./antdv-chat/src/instruction-sender/README.md) |
+| `Markdown` / `MarkdownCodeRenderer` | Markdown 渲染与代码块渲染器 | [说明](./antdv-chat/src/markdown/README.md) |
+
+### `@loncra/antdv-pro`
+
+| 控件 | 说明 | 使用说明 |
+| --- | --- | --- |
+| `antdv-pro/Provider` | 管理端总 Provider：主题 / token / 尺寸 / 布局 | [说明](./antdv-pro/src/config-provider/README.md) |
+| `ConfigProviderSetting` | 主题与布局的设置面板 | [说明](./antdv-pro/src/config-provider-setting/README.md) |
+| `ClientProvider` | 把 `ClientConfig` 交给 `configureClient` | [说明](./antdv-pro/src/client-provider/README.md) |
+| `CrudConfigProvider` | CRUD 配置与权限判定 | [说明](./antdv-pro/src/crud-config-provider/README.md) |
+| `Form` | 受 ConfigProvider 布局驱动的表单 | [说明](./antdv-pro/src/form/README.md) |
+| `ActionButton` | 把已解析的动作渲染成按钮 / 下拉 | [说明](./antdv-pro/src/action-button/README.md) |
+| `UserAvatar` | 用户头像 | [说明](./antdv-pro/src/user-avatar/README.md) |
+| `UserSelect` | 用户选择 | [说明](./antdv-pro/src/user-select/README.md) |
+| `AttachmentUpload` | 附件上传：分片、进度、模式常量 | [说明](./antdv-pro/src/attachment-upload/README.md) |
+| `AttachmentMasonry` | 附件瀑布流展示 | [说明](./antdv-pro/src/attachment-masonry/README.md) |
+| `DataLoadingCardPlan` | 取数过程中的加载卡片 | [说明](./antdv-pro/src/data-loading-card-plan/README.md) |
+| `BasicCrudQuery` | 查询底座：搜索区 + 取数 + 分页 + 动作解析 | [说明](./antdv-pro/src/basic-crud-query/README.md) |
+| `QueryTable` | 查询内容的表格形态 | [说明](./antdv-pro/src/query-table/README.md) |
+| `QueryCardGrid` | 查询内容的卡片形态 | [说明](./antdv-pro/src/query-card-grid/README.md) |
+| `CrudTable` | 表格形态门面（固定实体类型后透传） | [说明](./antdv-pro/src/crud-table/README.md) |
+| `CrudCardGrid` | 卡片形态门面（透传） | [说明](./antdv-pro/src/crud-card-grid/README.md) |
+| `crud-page` 套件 | 页面装配 + `define*` 声明入口 + 字段注册表 | [说明](./antdv-pro/src/crud-page/README.md) |
+| `useAppNotification`（hook） | 通知，需要宿主的 `<a-app>` | - |
+
+### `@loncra/antdv-chat-pro`
+
+| 控件 | 说明 | 使用说明 |
+| --- | --- | --- |
+| `antdv-chat-pro/Provider` | 全局配置：包住 `antdv-pro` 的 `Provider`，外面再套一层 `@antdv-next/x` 的 `XProvider` | [说明](./antdv-chat-pro/src/config-provider/README.md) |
+| `ImChat` 套件 | IM 界面与内部件（气泡、发送器、联系人、群设置、会话列表、历史、通话） | [说明](./antdv-chat-pro/src/im/README.md) |
+| `AgentChat` 套件 | Agent 界面与内部件（气泡、发送器、会话列表、历史、插件市场） | [说明](./antdv-chat-pro/src/agent/README.md) |
+| `BubbleList` | 气泡列表底座 | [说明](./antdv-chat-pro/src/bubble-list/README.md) |
+| `SenderSlotBubbleContent` | 词槽气泡内容 | [说明](./antdv-chat-pro/src/sender-slot-bubble-content/README.md) |
+| `DraftSender` | 带草稿的发送器 | [说明](./antdv-chat-pro/src/draft-sender/README.md) |
+| `ConversationList` | 会话列表底座 | [说明](./antdv-chat-pro/src/conversation/README.md) |
+| `FileEditor` | 文件预览与编辑（CodeMirror） | [说明](./antdv-chat-pro/src/file-editor/README.md) |
+| `SystemUserPanel` | 系统用户面板 | [说明](./antdv-chat-pro/src/system-user-panel/README.md) |
+
+## 规范在哪
+
+| 文档 | 管什么 |
+| --- | --- |
+| [CONTRIBUTING.md](./CONTRIBUTING.md) | 控件开发规范：控件目录骨架、分层与职责、命名与类名、样式 |
+| [CONTRIBUTING-PACKAGES.md](./CONTRIBUTING-PACKAGES.md) | 跨包通用规则：总原则、文件角色、契约与实现、粒度阈值、版本与包间引用、自动检查 |
+| 各包 `README.md` | 这个包是什么 + 这个包自己的开发规范 |
+| `src/<控件>/README.md` | 单个控件的使用说明：何时使用、代码演示、API、类型、语义化 DOM |
