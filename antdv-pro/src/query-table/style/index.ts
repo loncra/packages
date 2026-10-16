@@ -1,5 +1,6 @@
 import type {CSSInterpolation} from '@antdv-next/cssinjs'
-import {genStyleHooks, type LoncraStyleToken} from '@loncra/antdv'
+import type {LoncraStyleToken} from '../../_util/genStyleLayer'
+import {genStyleHooks} from '../../_util/genStyleLayer'
 import {genDragGhostStyle, genDragStyle} from '../../_util/crud/genDragStyle'
 
 function genQueryTableStyle(token: LoncraStyleToken): CSSInterpolation {
@@ -11,11 +12,6 @@ function genQueryTableStyle(token: LoncraStyleToken): CSSInterpolation {
         '.icon': {verticalAlign: 'middle'},
         '.icon.align': {marginBottom: '3px'},
         [`${antCls}-table-content`]: {borderRadius: 0},
-        /**
-         * `plain` 时表格自带标题里那一行（左标题、右工具栏）：`.ant-table-title` 自己已有内边距，
-         * 这里只负责把它排成一行 —— 标题与表格**同进同退**，不再出现"标题在原地、表格被 antd
-         * 的嵌套表规则拉走 32px"的错位。
-         */
         [`${componentCls}-table-title`]: {
           display: 'flex',
           alignItems: 'center',
@@ -34,4 +30,4 @@ function genQueryTableStyle(token: LoncraStyleToken): CSSInterpolation {
   ]
 }
 
-export default genStyleHooks('QueryTable', genQueryTableStyle)
+export default genStyleHooks('QueryTable', genQueryTableStyle, {order: 2})

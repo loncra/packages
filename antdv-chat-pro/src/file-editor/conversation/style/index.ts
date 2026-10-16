@@ -1,5 +1,7 @@
 import type {CSSObject} from '@antdv-next/cssinjs'
-import {GLOBAL_SPIN_KEYFRAMES, genStyleHooks, type LoncraStyleToken} from '@loncra/antdv'
+import {GLOBAL_SPIN_KEYFRAMES} from '@loncra/antdv'
+import type {LoncraStyleToken} from '../../../_util/genStyleLayer'
+import {genStyleHooks} from '../../../_util/genStyleLayer'
 
 function genFileConversationStyle(token: LoncraStyleToken): CSSObject {
   const {
@@ -25,7 +27,6 @@ function genFileConversationStyle(token: LoncraStyleToken): CSSObject {
     },
     [`${componentCls}-icon-spin`]: {
       marginBottom: 3,
-      // 给 `Keyframes` **实例**（不是字符串）：cssinjs 会换成 `getName(hashId)`（带 hashId，不撞车）
       animationName: GLOBAL_SPIN_KEYFRAMES,
       animationDuration: motionDurationSlow,
       animationTimingFunction: 'linear',
@@ -34,4 +35,4 @@ function genFileConversationStyle(token: LoncraStyleToken): CSSObject {
   }
 }
 
-export default genStyleHooks('FileConversation', genFileConversationStyle, {order: 1})
+export default genStyleHooks('FileConversation', genFileConversationStyle, {order: 4})

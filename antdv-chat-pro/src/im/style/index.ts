@@ -1,6 +1,6 @@
 import type {CSSInterpolation} from '@antdv-next/cssinjs'
-import type {LoncraStyleToken} from '@loncra/antdv'
-import {genStyleHooks} from '@loncra/antdv'
+import type {LoncraStyleToken} from '../../_util/genStyleLayer'
+import {genStyleHooks} from '../../_util/genStyleLayer'
 
 export const IM_CHAT_PREFIX = 'loncra-im-chat'
 
@@ -12,7 +12,7 @@ function genImChatStyle(token: LoncraStyleToken): CSSInterpolation {
       minHeight: 0,
       [`${componentCls}-side`]: {
         height: '100%',
-        paddingLeft: `0 !important`,
+        paddingLeft: 0,
         overflow: 'hidden',
       },
       [`${componentCls}-column`]: {
@@ -48,4 +48,4 @@ function genImChatStyle(token: LoncraStyleToken): CSSInterpolation {
   }
 }
 
-export default genStyleHooks('ImChat', genImChatStyle, {order: 1})
+export default genStyleHooks('ImChat', genImChatStyle, {order: 4})

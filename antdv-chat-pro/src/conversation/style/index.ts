@@ -1,13 +1,11 @@
 import type {CSSInterpolation, CSSObject} from '@antdv-next/cssinjs'
-import type {LoncraStyleToken} from '@loncra/antdv'
-import {genStyleHooks} from '@loncra/antdv'
+import type {LoncraStyleToken} from '../../_util/genStyleLayer'
+import {genStyleHooks} from '../../_util/genStyleLayer'
 
 export const CONVERSATION_LIST_PREFIX = 'loncra-conversation-list'
 
 function genConversationListStyle(token: LoncraStyleToken): CSSInterpolation {
   const {componentCls, antCls, colorText, colorTextSecondary, colorBgTextActive, fontSizeSM, motionDurationMid, lineHeight, paddingXS, marginXS} = token
-  // 菜单行高写在 antd 的 inline 规则里，后注册且带自身 hash。classes 只负责把类挂上去，
-  // 这里用菜单根上的双类把特异性抬过那条 height/line-height，避免再在 tsx 里写 styles。
   const row: CSSObject = {
     height: 'auto',
     minHeight: 0,
@@ -43,11 +41,11 @@ function genConversationListStyle(token: LoncraStyleToken): CSSInterpolation {
           },
         },
         [`${antCls}-menu-item-selected, ${antCls}-menu-item-active`]: {
-          color: `${colorText} !important`,
-          backgroundColor: `${colorBgTextActive} !important`,
+          color: colorText,
+          backgroundColor: colorBgTextActive,
         },
         [`${antCls}-menu-sub`]: {
-          backgroundColor: 'transparent !important',
+          backgroundColor: 'transparent',
         },
         [`${antCls}-menu-submenu-title`]: {
           ...row,
@@ -107,4 +105,4 @@ function genConversationListStyle(token: LoncraStyleToken): CSSInterpolation {
   }
 }
 
-export default genStyleHooks('ConversationList', genConversationListStyle, {order: 1})
+export default genStyleHooks('ConversationList', genConversationListStyle, {order: 4})

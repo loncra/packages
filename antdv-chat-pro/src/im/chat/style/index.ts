@@ -1,5 +1,7 @@
 import type {CSSInterpolation} from '@antdv-next/cssinjs'
-import {genStyleHooks, GLOBAL_JUMP_KEYFRAMES, type LoncraStyleToken} from '@loncra/antdv'
+import {GLOBAL_JUMP_KEYFRAMES} from '@loncra/antdv'
+import type {LoncraStyleToken} from '../../../_util/genStyleLayer'
+import {genStyleHooks} from '../../../_util/genStyleLayer'
 
 export const IM_CHAT_VIEW_PREFIX = 'loncra-im-chat-view'
 
@@ -34,4 +36,4 @@ function genImChatViewStyle(token: LoncraStyleToken): CSSInterpolation {
   }
 }
 
-export default genStyleHooks('ImChatView', genImChatViewStyle, {order: 1})
+export default genStyleHooks('ImChatView', genImChatViewStyle, {order: 4})

@@ -1,6 +1,6 @@
 import type {CSSInterpolation} from '@antdv-next/cssinjs'
-import type {LoncraStyleToken} from '@loncra/antdv'
-import {genStyleHooks} from '@loncra/antdv'
+import type {LoncraStyleToken} from '../../../_util/genStyleLayer'
+import {genStyleHooks} from '../../../_util/genStyleLayer'
 
 export const IM_HISTORY_PREFIX = 'loncra-im-history'
 
@@ -52,4 +52,4 @@ function genImHistoryStyle(token: LoncraStyleToken): CSSInterpolation {
   }
 }
 
-export default genStyleHooks('ImHistory', genImHistoryStyle, {order: 1})
+export default genStyleHooks('ImHistory', genImHistoryStyle, {order: 4})

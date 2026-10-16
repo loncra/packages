@@ -1,5 +1,6 @@
 import type {CSSObject} from '@antdv-next/cssinjs'
-import {genStyleHooks, type LoncraStyleToken} from '@loncra/antdv'
+import type {LoncraStyleToken} from '../../../_util/genStyleLayer'
+import {genStyleHooks} from '../../../_util/genStyleLayer'
 
 function genFilePaneStyle(token: LoncraStyleToken): CSSObject {
   const {componentCls, colorBgLayout, paddingXS} = token
@@ -39,4 +40,4 @@ function genFilePaneStyle(token: LoncraStyleToken): CSSObject {
   }
 }
 
-export default genStyleHooks('FilePane', genFilePaneStyle, {order: 1})
+export default genStyleHooks('FilePane', genFilePaneStyle, {order: 4})

@@ -1,6 +1,6 @@
 import type {CSSInterpolation} from '@antdv-next/cssinjs'
-import type {LoncraStyleToken} from '@loncra/antdv'
-import {genStyleHooks} from '@loncra/antdv'
+import type {LoncraStyleToken} from '../../../_util/genStyleLayer'
+import {genStyleHooks} from '../../../_util/genStyleLayer'
 
 function genImContactStyle(token: LoncraStyleToken): CSSInterpolation {
   const {componentCls} = token
@@ -19,4 +19,4 @@ function genImContactStyle(token: LoncraStyleToken): CSSInterpolation {
   }
 }
 
-export default genStyleHooks('ImContact', genImContactStyle, {order: 1})
+export default genStyleHooks('ImContact', genImContactStyle, {order: 4})

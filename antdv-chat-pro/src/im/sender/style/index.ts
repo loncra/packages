@@ -1,6 +1,6 @@
 import type {CSSInterpolation} from '@antdv-next/cssinjs'
-import type {LoncraStyleToken} from '@loncra/antdv'
-import {genStyleHooks} from '@loncra/antdv'
+import type {LoncraStyleToken} from '../../../_util/genStyleLayer'
+import {genStyleHooks} from '../../../_util/genStyleLayer'
 
 function genImSenderStyle(token: LoncraStyleToken): CSSInterpolation {
   const {componentCls, paddingXS, lineWidth, lineType, colorBorderSecondary, colorBgLayout, borderRadiusLG} =
@@ -40,4 +40,4 @@ function genImSenderStyle(token: LoncraStyleToken): CSSInterpolation {
   }
 }
 
-export default genStyleHooks('ImSender', genImSenderStyle, {order: 1})
+export default genStyleHooks('ImSender', genImSenderStyle, {order: 4})

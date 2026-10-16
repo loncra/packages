@@ -1,5 +1,6 @@
 import type {CSSInterpolation} from '@antdv-next/cssinjs'
-import {genStyleHooks, type LoncraStyleToken} from '@loncra/antdv'
+import type {LoncraStyleToken} from '../../_util/genStyleLayer'
+import {genStyleHooks} from '../../_util/genStyleLayer'
 
 export const APP_NOTIFICATION_PREFIX = 'loncra-app-notification'
 
@@ -24,4 +25,4 @@ function genAppNotificationStyle(token: LoncraStyleToken): CSSInterpolation {
   }
 }
 
-export default genStyleHooks('AppNotification', genAppNotificationStyle)
+export default genStyleHooks('AppNotification', genAppNotificationStyle, {order: 2})

@@ -1,6 +1,6 @@
 import type {CSSInterpolation} from '@antdv-next/cssinjs'
-import type {LoncraStyleToken} from '../../_util/genStyle'
-import {genStyleHooks} from '../../_util/genStyle'
+import type {LoncraStyleToken} from '../../_util/genStyleLayer'
+import {genStyleHooks} from '../../_util/genStyleLayer'
 
 function genBasicImageStyle(token: LoncraStyleToken): CSSInterpolation {
   const { componentCls, antCls } = token
@@ -25,4 +25,4 @@ function genBasicImageStyle(token: LoncraStyleToken): CSSInterpolation {
   } as CSSInterpolation
 }
 
-export default genStyleHooks('BasicImage', genBasicImageStyle)
+export default genStyleHooks('BasicImage', genBasicImageStyle, {order: 1})

@@ -1,5 +1,7 @@
 import type {CSSInterpolation} from '@antdv-next/cssinjs'
-import {GLOBAL_SPIN_KEYFRAMES, genStyleHooks, type LoncraStyleToken} from '@loncra/antdv'
+import {GLOBAL_SPIN_KEYFRAMES} from '@loncra/antdv'
+import type {LoncraStyleToken} from '../../_util/genStyleLayer'
+import {genStyleHooks} from '../../_util/genStyleLayer'
 
 function genAttachmentUploadStyle(token: LoncraStyleToken): CSSInterpolation {
   const {
@@ -238,11 +240,10 @@ function genAttachmentUploadStyle(token: LoncraStyleToken): CSSInterpolation {
     [`${componentCls}-preview-hidden`]: {
       display: 'none',
     },
-    /** 拖拽区里那两行标题（图标 + 文案）：不要 typography 自带的上下 margin（2026-09-23 从内联样式挪来） */
     [`${componentCls}-dragger-title`]: {
       margin: 0,
     },
   }
 }
 
-export default genStyleHooks('AttachmentUpload', genAttachmentUploadStyle)
+export default genStyleHooks('AttachmentUpload', genAttachmentUploadStyle, {order: 2})

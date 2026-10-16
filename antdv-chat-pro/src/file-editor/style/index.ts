@@ -1,5 +1,6 @@
 import type {CSSInterpolation} from '@antdv-next/cssinjs'
-import {genStyleHooks, type LoncraStyleToken} from '@loncra/antdv'
+import type {LoncraStyleToken} from '../../_util/genStyleLayer'
+import {genStyleHooks} from '../../_util/genStyleLayer'
 
 function genFileEditorStyle(token: LoncraStyleToken): CSSInterpolation {
   const {componentCls, antCls, borderRadiusLG, colorBorderSecondary, lineWidth, lineType} = token
@@ -48,4 +49,4 @@ function genFileEditorStyle(token: LoncraStyleToken): CSSInterpolation {
   }
 }
 
-export default genStyleHooks('FileEditor', genFileEditorStyle, {order: 1})
+export default genStyleHooks('FileEditor', genFileEditorStyle, {order: 4})

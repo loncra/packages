@@ -1,6 +1,6 @@
 import type {CSSInterpolation} from '@antdv-next/cssinjs'
-import type {LoncraStyleToken} from '@loncra/antdv'
-import {genStyleHooks} from '@loncra/antdv'
+import type {LoncraStyleToken} from '../../_util/genStyleLayer'
+import {genStyleHooks} from '../../_util/genStyleLayer'
 
 export const AGENT_CHAT_PREFIX = 'loncra-agent-chat'
 
@@ -13,7 +13,7 @@ function genAgentChatStyle(token: LoncraStyleToken): CSSInterpolation {
       [`${componentCls}-side`]: {
         height: '100%',
         minHeight: 0,
-        padding: '0 !important',
+        padding: 0,
         overflow: 'hidden',
       },
       [`${componentCls}-main`]: {
@@ -52,4 +52,4 @@ function genAgentChatStyle(token: LoncraStyleToken): CSSInterpolation {
   }
 }
 
-export default genStyleHooks('AgentChat', genAgentChatStyle, {order: 1})
+export default genStyleHooks('AgentChat', genAgentChatStyle, {order: 4})

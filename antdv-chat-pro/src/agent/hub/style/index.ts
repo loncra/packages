@@ -1,6 +1,6 @@
 import type {CSSInterpolation} from '@antdv-next/cssinjs'
-import type {LoncraStyleToken} from '@loncra/antdv'
-import {genStyleHooks} from '@loncra/antdv'
+import type {LoncraStyleToken} from '../../../_util/genStyleLayer'
+import {genStyleHooks} from '../../../_util/genStyleLayer'
 
 export const AGENT_HUB_PREFIX = 'loncra-agent-hub'
 
@@ -33,7 +33,7 @@ function genAgentHubStyle(token: LoncraStyleToken): CSSInterpolation {
         minHeight: 0,
         overflow: 'hidden',
         [`${antCls}-tabs-tab`]: {
-          margin:'0 !important',
+          margin: 0,
           [`.anticon:not(:last-child)`]: {
             marginRight:0
           }
@@ -51,7 +51,7 @@ function genAgentHubStyle(token: LoncraStyleToken): CSSInterpolation {
         flexDirection: 'column',
         height: '100%',
         minHeight: 0,
-        padding:'0 !important',
+        padding: 0,
         overflow: 'hidden',
       },
       [`${componentCls}-scroll`]: {
@@ -79,14 +79,14 @@ function genAgentHubStyle(token: LoncraStyleToken): CSSInterpolation {
         borderRadius: 0,
         paddingTop:paddingXXS,
         [`${antCls}-collapse-header`]: {
-          padding:`0 !important`
+          padding: 0
         },
         [`${antCls}-collapse-body`]: {
-          padding:`${padding} 0 !important`
+          padding: `${padding} 0`
         }
       },
     },
   }
 }
 
-export default genStyleHooks('AgentHub', genAgentHubStyle, {order: 1})
+export default genStyleHooks('AgentHub', genAgentHubStyle, {order: 4})

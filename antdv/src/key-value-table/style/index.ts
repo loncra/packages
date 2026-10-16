@@ -1,6 +1,6 @@
 import type {CSSInterpolation} from '@antdv-next/cssinjs'
-import type {LoncraStyleToken} from '../../_util/genStyle'
-import {genStyleHooks} from '../../_util/genStyle'
+import type {LoncraStyleToken} from '../../_util/genStyleLayer'
+import {genStyleHooks} from '../../_util/genStyleLayer'
 
 function genKeyValueTableStyle(token: LoncraStyleToken): CSSInterpolation {
   const { componentCls, antCls } = token
@@ -16,4 +16,4 @@ function genKeyValueTableStyle(token: LoncraStyleToken): CSSInterpolation {
   } as CSSInterpolation
 }
 
-export default genStyleHooks('KeyValueTable', genKeyValueTableStyle)
+export default genStyleHooks('KeyValueTable', genKeyValueTableStyle, {order: 1})

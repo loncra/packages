@@ -1,6 +1,6 @@
 import type {CSSInterpolation} from '@antdv-next/cssinjs'
-import type {LoncraStyleToken} from '@loncra/antdv'
-import {genStyleHooks} from '@loncra/antdv'
+import type {LoncraStyleToken} from '../../_util/genStyleLayer'
+import {genStyleHooks} from '../../_util/genStyleLayer'
 
 function genSenderSlotBubbleContentStyle(token: LoncraStyleToken): CSSInterpolation {
   const {componentCls} = token
@@ -12,4 +12,4 @@ function genSenderSlotBubbleContentStyle(token: LoncraStyleToken): CSSInterpolat
   }
 }
 
-export default genStyleHooks('SenderSlotBubbleContent', genSenderSlotBubbleContentStyle)
+export default genStyleHooks('SenderSlotBubbleContent', genSenderSlotBubbleContentStyle, {order: 4})

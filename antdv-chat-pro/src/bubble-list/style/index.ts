@@ -1,6 +1,8 @@
 import type {CSSInterpolation} from '@antdv-next/cssinjs'
 import {Keyframes} from '@antdv-next/cssinjs'
-import {GLOBAL_JUMP_KEYFRAMES, genStyleHooks, type LoncraStyleToken} from '@loncra/antdv'
+import {GLOBAL_JUMP_KEYFRAMES} from '@loncra/antdv'
+import type {LoncraStyleToken} from '../../_util/genStyleLayer'
+import {genStyleHooks} from '../../_util/genStyleLayer'
 
 export const BUBBLE_LIST_PREFIX = 'loncra-bubble-list'
 
@@ -85,4 +87,4 @@ function genBubbleListStyle(token: LoncraStyleToken): CSSInterpolation {
   ]
 }
 
-export default genStyleHooks('BubbleList', genBubbleListStyle, {order: 1})
+export default genStyleHooks('BubbleList', genBubbleListStyle, {order: 4})

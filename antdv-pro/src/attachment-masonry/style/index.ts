@@ -1,5 +1,6 @@
 import type {CSSInterpolation} from '@antdv-next/cssinjs'
-import {genStyleHooks, type LoncraStyleToken} from '@loncra/antdv'
+import type {LoncraStyleToken} from '../../_util/genStyleLayer'
+import {genStyleHooks} from '../../_util/genStyleLayer'
 
 function genAttachmentMasonryStyle(token: LoncraStyleToken): CSSInterpolation {
   const {componentCls, antCls, colorFillTertiary, fontSizeHeading2} = token
@@ -23,4 +24,4 @@ function genAttachmentMasonryStyle(token: LoncraStyleToken): CSSInterpolation {
   }
 }
 
-export default genStyleHooks('AttachmentMasonry', genAttachmentMasonryStyle)
+export default genStyleHooks('AttachmentMasonry', genAttachmentMasonryStyle, {order: 2})
