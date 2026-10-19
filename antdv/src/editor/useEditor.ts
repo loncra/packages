@@ -1,5 +1,5 @@
 import type {OutputFormat} from 'antdv-next-tiptap'
-import {normalizeRichTextValue} from '../_util/isEmptyRichText'
+import {normalizeRichTextValue} from '../_util/richText'
 
 interface EditorSource {
   outputFormat?: OutputFormat

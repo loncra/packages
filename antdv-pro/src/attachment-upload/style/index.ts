@@ -85,10 +85,6 @@ function genAttachmentUploadStyle(token: LoncraStyleToken): CSSInterpolation {
         borderColor: colorErrorBorder,
       },
     },
-    [`${componentCls}-thumb-cover`]: {
-      width: '100%',
-      height: '100%',
-    },
     [`${componentCls}-thumb-fallback`]: {
       display: 'inline-flex',
       width: '100%',

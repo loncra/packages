@@ -168,7 +168,6 @@ const AttachmentFilePreview = defineComponent({
           ) : file.thumbUrl ? (
             <BasicImage
               preview={false}
-              class={classNames(props.hashId, `${props.prefixCls}-thumb-cover`)}
               {...({src: file.thumbUrl} as Record<string, unknown>)}
             />
           ) : (

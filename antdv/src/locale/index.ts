@@ -1,5 +1,3 @@
-export interface TooltipValidationFormItemLocale {}
-
 export interface QrCodeModalLocale {
   share: string
   copy: string
@@ -20,7 +18,6 @@ export interface KeyValueTableLocale {
 
 export interface Locale {
   locale: string
-  TooltipValidationFormItem?: TooltipValidationFormItemLocale
   QrCodeModal?: QrCodeModalLocale
   IconSelect?: IconSelectLocale
   KeyValueTable?: KeyValueTableLocale
