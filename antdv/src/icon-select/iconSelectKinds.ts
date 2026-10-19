@@ -18,3 +18,20 @@ export function toAvatarModel(type: IconSelectAvatarModeValueType, payload: stri
   const text = payload ?? ''
   return text ? `${type}${text}` : ''
 }
+
+interface IconSelectAvatarLocale {
+  link: string
+  name: string
+  icon: string
+}
+
+export function avatarModeOptions(options: IconfontJson[], locale: IconSelectAvatarLocale) {
+  const result: { label: string; value: IconSelectAvatarModeValueType }[] = [
+    { label: locale.link, value: ICON_SELECT_AVATAR_MODE_VALUE.AVATAR },
+    { label: locale.name, value: ICON_SELECT_AVATAR_MODE_VALUE.INPUT },
+  ]
+  if (options.length > 0) {
+    result.push({ label: locale.icon, value: ICON_SELECT_AVATAR_MODE_VALUE.ICON })
+  }
+  return result
+}

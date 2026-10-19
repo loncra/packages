@@ -1,3 +1,5 @@
+/// <reference path="./env.d.ts" />
+
 export { default as TooltipValidationFormItem } from './tooltip-validation-form-item'
 export type {
   TooltipValidationFormItemProps,

@@ -13,5 +13,13 @@
     "complexity": ["warn", 10],
     "max-depth": ["warn", 4],
     "no-control-regex": "off"
-  }
+  },
+  "overrides": [
+    {
+      "files": ["antdv/src/index.ts"],
+      "rules": {
+        "typescript/triple-slash-reference": ["error", { "path": "always" }]
+      }
+    }
+  ]
 }

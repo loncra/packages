@@ -1,7 +1,9 @@
-import {computed, defineComponent, ref, watch} from 'vue'
+import {computed, defineComponent} from 'vue'
 import {CheckOutlined, CopyOutlined} from '@antdv-next/icons'
 import {Button, Flex, Input, Modal, type ModalProps, QRCode, SpaceCompact, theme,} from 'antdv-next'
 import {useLocale} from '../_util/context/useLocale'
+import {QRCODE_SIZE_RATIO} from './constants'
+import {useQrCodeModal} from './useQrCodeModal'
 
 export interface QrCodeModalProps {
   url: string
@@ -38,22 +40,8 @@ const QrCodeModal = defineComponent({
   setup(props, { emit, slots, attrs }) {
     const locale = useLocale('QrCodeModal')
     const { token } = theme.useToken()
-    const copied = ref(false)
-    const qrSize = computed(() => token.value.sizeLG * 10)
-
-    watch(
-      () => props.open,
-      (open) => {
-        if (!open) {
-          copied.value = false
-        }
-      },
-    )
-
-    async function onCopy() {
-      await navigator.clipboard.writeText(props.url || '')
-      copied.value = true
-    }
+    const qrSize = computed(() => token.value.sizeLG * QRCODE_SIZE_RATIO)
+    const { copied, copy } = useQrCodeModal(props)
 
     function onCancel() {
       emit('update:open', false)
@@ -74,7 +62,7 @@ const QrCodeModal = defineComponent({
             <Button
               variant="outlined"
               color={copied.value ? 'cyan' : 'default'}
-              onClick={onCopy}
+              onClick={copy}
               v-slots={{
                 icon: () =>
                   slots.copyIcon?.({ copied: copied.value }) ??

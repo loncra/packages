@@ -56,7 +56,7 @@
 | change | 内容变化（与 `update:value` 同一份归一结果） | `(value: string) => void` | - |
 | blur | 失焦；携带归一后的内容 | `(value: string) => void` | - |
 
-内部的 `update:modelValue` 与 `change` 两条通道都接到同一个提交函数，因此**同一次编辑可能收到两条** `update:value` / `change`；宿主只监听其中一个即可。`blur` 也会先走一次提交。提交是**无条件**的：归一后的值与原值相同时也会再发一次，宿主做"值不同才保存"要自己比对。
+编辑器内部每次内容变化会同时抛 `update:modelValue` 与 `change`；本组件只接前一条，所以每次编辑只发一次 `update:value` + 一次 `change`。`blur` 也会先走一次提交。提交是**无条件**的：归一后的值与原值相同时也会再发一次，宿主做"值不同才保存"要自己比对。
 
 ### 插槽 {#slots}
 
@@ -73,6 +73,10 @@
 - `file`：选中的文件。
 - `onProgress`：进度回调，传 0–100。
 - 返回：上传完成后的可访问地址。
+
+### EditorLocale {#editorlocale}
+
+> `'zh-CN' | 'en-US' | Record<string, string>`；传 `Record` 表示用自定义文案包，键与内置包一致。
 
 ### OutputFormat {#outputformat}
 

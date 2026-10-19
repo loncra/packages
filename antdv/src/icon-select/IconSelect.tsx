@@ -17,7 +17,7 @@ import {SelectOutlined} from '@antdv-next/icons'
 import {classNames} from '../_util/classNames'
 import {useFormItemTrigger} from '../_util/useFormItemTrigger'
 import {useLocale} from '../_util/context/useLocale'
-import {parseAvatarModel} from './iconSelectKinds'
+import {avatarModeOptions, parseAvatarModel} from './iconSelectKinds'
 import {useIconSelect} from './useIconSelect'
 import useStyle from './style'
 import {ICON_SELECT_AVATAR_MODE_VALUE, ICON_SELECT_MODE} from './constants'
@@ -49,23 +49,6 @@ export interface IconSelectEmits {
 
 export interface IconSelectSlots {
   afterAvatar?: () => unknown
-}
-
-interface IconSelectAvatarLocale {
-  link: string
-  name: string
-  icon: string
-}
-
-function avatarModeOptions(options: IconfontJson[], locale: IconSelectAvatarLocale) {
-  const result: { label: string; value: IconSelectAvatarModeValueType }[] = [
-    { label: locale.link, value: ICON_SELECT_AVATAR_MODE_VALUE.AVATAR },
-    { label: locale.name, value: ICON_SELECT_AVATAR_MODE_VALUE.INPUT },
-  ]
-  if (options.length > 0) {
-    result.push({ label: locale.icon, value: ICON_SELECT_AVATAR_MODE_VALUE.ICON })
-  }
-  return result
 }
 
 function renderAvatar(

@@ -1,6 +1,5 @@
 import type {CSSInterpolation} from '@antdv-next/cssinjs'
-import type {LoncraStyleToken} from '@loncra/antdv'
-import {genStyleHooks} from '../../_util/genStyleLayer'
+import {genStyleHooks, type LoncraStyleToken} from '../../_util/genStyleLayer'
 import {genScrollAreaStyle} from '../../_util/style/fragments'
 
 function genIconSelectStyle(token: LoncraStyleToken): CSSInterpolation {

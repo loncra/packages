@@ -3,8 +3,10 @@ import type {OutputFormat, PluginName} from 'antdv-next-tiptap'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {useFormItemInputContext} from 'antdv-next/dist/form/context'
 import {classNames} from '../_util/classNames'
-import {normalizeRichTextValue} from '../_util/isEmptyRichText'
 import {useFormItemTrigger} from '../_util/useFormItemTrigger'
+import {isEditorEditable, resolveEditorLocale} from './editorKinds'
+import {useEditor} from './useEditor'
+import type {EditorLocale, UploadFn} from './types'
 import useStyle from './style'
 
 const AEditor = defineAsyncComponent(async () => {
@@ -14,8 +16,7 @@ const AEditor = defineAsyncComponent(async () => {
 })
 
 export type { OutputFormat, PluginName }
-
-export type UploadFn = (file: File, onProgress: (percent: number) => void) => Promise<string>
+export type { EditorLocale, UploadFn } from './types'
 
 export interface EditorProps {
   value?: string
@@ -23,7 +24,7 @@ export interface EditorProps {
   disabled?: boolean
   editable?: boolean
   outputFormat?: OutputFormat
-  locale?: 'zh-CN' | 'en-US' | Record<string, string>
+  locale?: EditorLocale
   disabledPlugins?: PluginName[]
   uploadImage?: UploadFn
   uploadVideo?: UploadFn
@@ -42,20 +43,6 @@ export interface EditorEmits {
 
 export interface EditorSlots {
   'word-count'?: (ctx: { count: number; limit: true | number }) => unknown
-}
-
-function resolveLocale(
-  configLocale: unknown,
-  propLocale: EditorProps['locale'],
-): 'zh-CN' | 'en-US' | Record<string, string> {
-  if (propLocale) {
-    return propLocale
-  }
-  const locale = (configLocale as { locale?: string } | undefined)?.locale
-  if (locale === 'en-US' || locale?.startsWith('en')) {
-    return 'en-US'
-  }
-  return 'zh-CN'
 }
 
 const Editor = defineComponent({
@@ -100,15 +87,12 @@ const Editor = defineComponent({
       config.value.getPrefixCls('editor', props.prefixCls ?? 'loncra-editor'),
     )
     const [hashId, cssVarCls] = useStyle(prefixCls)
-    const editorLocale = computed(() => resolveLocale(config.value.locale, props.locale))
-    const editable = computed(() => !props.disabled && props.editable !== false)
-
-    function commit(value: string) {
-      const next = normalizeRichTextValue(value, props.outputFormat)
-      emit('update:value', next)
-      emit('change', next)
-      return next
-    }
+    const editorLocale = computed(() => resolveEditorLocale(config.value.locale, props.locale))
+    const editable = computed(() => isEditorEditable(props.disabled, props.editable))
+    const { commit } = useEditor(props, {
+      onUpdateValue: (value: string) => emit('update:value', value),
+      onChange: (value: string) => emit('change', value),
+    })
 
     return () => {
       const { class: attrClass, style: attrStyle, ...rest } = attrs
@@ -137,9 +121,6 @@ const Editor = defineComponent({
             uploadVideo={props.uploadVideo}
             wordCount={props.wordCount}
             onUpdate:modelValue={(value?: string) => {
-              commit(value ?? '')
-            }}
-            onChange={(value?: string) => {
               commit(value ?? '')
             }}
             onBlur={(value?: string) => {
