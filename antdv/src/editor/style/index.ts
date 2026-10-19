@@ -10,7 +10,7 @@ function genEditorStyle(token: LoncraStyleToken): CSSInterpolation {
         minHeight: 0,
         background: 'transparent',
       },
-      [`&-status-error .editor`]: {
+      [`&-status-error .editor, &-status-error .editor .editor-toolbar, &-status-error .editor .editor-word-count`]: {
         borderColor: `${colorError} !important`,
       },
     },

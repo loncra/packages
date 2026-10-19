@@ -1,5 +1,5 @@
 import {defineComponent} from 'vue'
-import CodeEditor from '../../CodeEditor'
+import TextCodeEditor from './TextCodeEditor'
 
 const TextPane = defineComponent({
   name: 'LFileTextPane',
@@ -29,7 +29,7 @@ const TextPane = defineComponent({
   },
   setup(props, {emit}) {
     return () => (
-      <CodeEditor
+      <TextCodeEditor
         ext={props.ext}
         readonly={props.readonly}
         modelValue={props.modelValue}

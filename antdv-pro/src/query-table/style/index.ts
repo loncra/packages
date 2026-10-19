@@ -9,8 +9,6 @@ function genQueryTableStyle(token: LoncraStyleToken): CSSInterpolation {
   return [
     {
       [componentCls]: {
-        '.icon': {verticalAlign: 'middle'},
-        '.icon.align': {marginBottom: '3px'},
         [`${antCls}-table-content`]: {borderRadius: 0},
         [`${componentCls}-table-title`]: {
           display: 'flex',

@@ -51,13 +51,6 @@ export interface IconSelectProps {
   options?: IconfontJson[]
   mode?: IconSelectModeType
   preview?: boolean
-  /**
-   * 图标怎么画：宿主自己渲染。**包不认识宿主的图标字体**，所以这是唯一入口，不给就什么都不画。
-   *
-   * 只收 `type` 一个参数 —— 之前那个可选的 `className` 二参是个**空口径**（内部 4 个调用点
-   * 都只传 type，永远传不出去），已删。宿主要追加自己的类（尺寸 / 对齐）就自己包一层：
-   * `iconRender={(type) => renderIconFont(type, 'align')}`。
-   */
   iconRender?: (type: string) => VNodeChild
   prefixCls?: string
   class?: unknown
@@ -132,7 +125,6 @@ const IconSelect = defineComponent({
       },
     })
 
-    // 双向绑定：父级 v-model 时纯受控，未绑时写本地值并 emit
     const modelValue = useModel(props, 'value') as unknown as Ref<string>
 
     const avatarOptions = computed(() => {
@@ -184,17 +176,6 @@ const IconSelect = defineComponent({
       })),
     )
 
-    /**
-     * 模式（`avatar://` / `icon://` / `text://`）。
-     *
-     * ⚠️ **不能只从 `modelValue` 派生**：`toAvatarModel(type, '')` 对空 payload 返回 `''`
-     * （空值 = 未选，这是有意的），所以"切到图标模式但还没选图标"这件事**模型里存不下** ⇒
-     * 只读模型的话，用户一点「图标」，`avatarType` 立刻变回默认的 `avatar://`（Select 弹回「链接」），
-     * 图标模式那一支整个不渲染（选图标的占位按钮和 Popover 永远不出现）。2026-09-28 用户报。
-     *
-     * 所以：模型**有 payload** 时以模型为准（单一真相源优先）；payload 为空时用下面这层界面态兜住
-     * （旧组件那个内部 `avatarType` ref 干的就是这件事）。
-     */
     const localAvatarType = ref<IconSelectAvatarModeValueType>(
       parseAvatarModel(props.value ?? '').type,
     )
@@ -274,7 +255,6 @@ const IconSelect = defineComponent({
 
     return () => {
       const { class: attrClass, style: attrStyle, ...rest } = attrs
-      /** 组件自己的根元素吃**全部**：prefixCls + hashId + cssVarCls + `rootClass` 声明 + 宿主透传的 class */
       const rootClass = classNames(
         prefixCls.value,
         hashId.value,
@@ -282,14 +262,6 @@ const IconSelect = defineComponent({
         props.rootClass,
         attrClass,
       )
-      /**
-       * Popover 是**传送到 body** 的，里面的规则要 `.loncra-icon-select` 当祖先选择器（`-tabs-nav` 那种是
-       * 嵌套写法）+ `hashId` / `cssVarCls` 才命中 ⇒ 弹层那几个壳也得挂这套类。
-       *
-       * ⚠️ **但绝不能带宿主的 `class`**：宿主一般写的是 `w-full` 这类工具类，挂到 `.ant-popover` 上就是
-       * "一开弹层整个被撑成全宽"的元凶（`attrClass` 只该落在组件根元素上）。
-       * 2026-09-28 用户截图定位：`.ant-popover.loncra-icon-select.css-var-… w-full`。
-       */
       const popoverClass = classNames(
         prefixCls.value,
         hashId.value,
@@ -419,7 +391,6 @@ const IconSelect = defineComponent({
                   ),
                 }}
               >
-                {/* 已选图标仍按原方式渲染（数据源来自 options）；未选中时用 SelectOutlined 占位 */}
                 <Button>
                   {avatarPayload.value ? renderIcon(avatarPayload.value) : <SelectOutlined />}
                 </Button>

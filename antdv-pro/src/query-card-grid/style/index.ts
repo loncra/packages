@@ -9,8 +9,6 @@ function genQueryCardGridStyle(token: LoncraStyleToken): CSSInterpolation {
   return [
     {
       [componentCls]: {
-        '.icon': {verticalAlign: 'middle'},
-        '.icon.align': {marginBottom: '3px'},
         [`${antCls}-card-body`]: {
           padding: 0,
           marginBlockStart: -1,

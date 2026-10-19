@@ -51,13 +51,14 @@ export { classNames } from './_util/classNames'
 export { splitSemantic } from './_util/splitSemantic'
 export { createStyleHooks } from './_util/style/factory'
 export type { LoncraStyleToken } from './_util/style/factory'
-export { genFullSpinStyle, JUMP_KEYFRAMES, SPIN_KEYFRAMES } from './_util/style/fragments'
+export {
+  genCoverImageStyle,
+  genFullSpinStyle,
+  genScrollAreaStyle,
+  JUMP_KEYFRAMES,
+  SPIN_KEYFRAMES,
+} from './_util/style/fragments'
 export { useIsDark } from './_util/context/useIsDark'
 export { useFormItemTrigger } from './_util/useFormItemTrigger'
 
-/**
- * 包的 **VNode 类型视野**：宿主给 pro 传 VNode（动作的 `icon`、默认标题…）时用这两个类型，
- * 免得踩"两份 vue 副本"——两边 `@vue/runtime-core` 的 d.ts 互不兼容，只有同一个视野里才判等。
- * （运行期是同一份 vue：宿主的 vite `dedupe: ['vue']` 已经合并。）
- */
 export type { VNode, VNodeChild } from 'vue'

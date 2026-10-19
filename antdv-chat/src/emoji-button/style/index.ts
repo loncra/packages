@@ -1,5 +1,5 @@
 import type {CSSInterpolation} from '@antdv-next/cssinjs'
-import type {LoncraStyleToken} from '@loncra/antdv'
+import {genScrollAreaStyle, type LoncraStyleToken} from '@loncra/antdv'
 import {genStyleHooks} from '../../_util/genStyleLayer'
 
 function genEmojiButtonStyle(token: LoncraStyleToken): CSSInterpolation {
@@ -9,10 +9,6 @@ function genEmojiButtonStyle(token: LoncraStyleToken): CSSInterpolation {
     [componentCls]: {
       [`&-panel`]: {
         width: calc(controlHeightLG).mul(10).equal(),
-      },
-      [`${componentCls}-body`]: {
-        overflow: 'auto',
-        maxHeight: calc(controlHeightLG).mul(8).equal(),
       },
       [`${componentCls}-cell`]: {
         cursor: 'pointer',
@@ -28,6 +24,7 @@ function genEmojiButtonStyle(token: LoncraStyleToken): CSSInterpolation {
         lineHeight: 1,
       },
     },
+    ...genScrollAreaStyle(token, '-body', 8),
   }
 }
 

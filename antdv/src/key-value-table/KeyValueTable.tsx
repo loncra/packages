@@ -28,10 +28,6 @@ export interface KeyValueTableEmits {
 }
 
 export interface KeyValueTableSlots {
-  /**
-   * 标题那一坨（图标 + 标题文本）整条由宿主渲染，包不再认识宿主的图标字体。
-   * 右上角的新增按钮仍由包渲染（`edit` 控制）。
-   */
   title?: (ctx: { title?: string }) => unknown
 }
 
@@ -75,7 +71,6 @@ const KeyValueTable = defineComponent({
     )
     const [hashId, cssVarCls] = useStyle(prefixCls)
 
-    // 双向绑定：父级 v-model 时纯受控，未绑时写本地值并 emit
     const model = useModel(props, 'value') as unknown as Ref<KeyValueRow[]>
 
     const columns = computed<TableColumnType<KeyValueRow>[]>(() => {

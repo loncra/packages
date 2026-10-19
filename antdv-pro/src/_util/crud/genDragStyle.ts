@@ -41,13 +41,14 @@ export function genDragGhostStyle(token: LoncraStyleToken, componentCls: string)
     lineWidth,
     padding,
     paddingXS,
+    zIndexPopupBase,
   } = token
 
   return {
     [`${componentCls}-drag-ghost`]: {
       position: 'fixed',
       insetInlineStart: '-9999px',
-      zIndex: 9999,
+      zIndex: zIndexPopupBase + 1100,
       pointerEvents: 'none',
       padding: paddingXS,
       paddingInline: padding,

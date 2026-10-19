@@ -26,7 +26,7 @@ import {
 } from '@codemirror/view'
 import {oneDark} from '@codemirror/theme-one-dark'
 import {classNames, useIsDark} from '@loncra/antdv'
-import {loadLanguage} from './filePaneKinds'
+import {loadLanguage} from '../../filePaneKinds'
 
 const editorSetup = [
   lineNumbers(),
@@ -60,8 +60,8 @@ const editorSetup = [
   ]),
 ]
 
-const CodeEditor = defineComponent({
-  name: 'LFileCodeEditor',
+const TextCodeEditor = defineComponent({
+  name: 'LFileTextCodeEditor',
   inheritAttrs: false,
   props: {
     ext: {
@@ -163,4 +163,4 @@ const CodeEditor = defineComponent({
   },
 })
 
-export default CodeEditor
+export default TextCodeEditor

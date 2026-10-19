@@ -30,7 +30,7 @@ import {createLiveKitCallMedia} from '@loncra/antdv-chat-pro/im/call/livekit'
 | `SenderSlotBubbleContent` | 词槽气泡内容 | [说明](./src/sender-slot-bubble-content/README.md) |
 | `DraftSender` | 带草稿的发送器（`DraftBinding`） | [说明](./src/draft-sender/README.md) |
 | `ConversationList` | 会话列表底座（`ConversationNode`） | [说明](./src/conversation/README.md) |
-| `FileEditor` | 文件预览与编辑（CodeMirror）：`CodeEditor`、`filePaneKinds`、`FilePaneHost`（按类型分发）、`useFileEditor` / `useFilePane`、`panes/`、`tabs/`、`conversation/` | [说明](./src/file-editor/README.md) |
+| `FileEditor` | 文件预览与编辑（CodeMirror）：`panes/text/TextCodeEditor`、`filePaneKinds`、`FilePaneHost`（按类型分发）、`useFileEditor` / `useFilePane`、`panes/`、`tabs/`、`conversation/` | [说明](./src/file-editor/README.md) |
 | `SystemUserPanel` | 系统用户面板 | [说明](./src/system-user-panel/README.md) |
 
 不是控件、直接从根导出的还有：动作 `sendImMessage`、`sendAgentChat`、`interruptAgent`、`updateSessionMessage`，草稿绑定 `createImDraftBinding`、`createAgentDraftBinding`。

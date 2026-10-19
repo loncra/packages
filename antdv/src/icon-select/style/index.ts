@@ -1,9 +1,10 @@
 import type {CSSInterpolation} from '@antdv-next/cssinjs'
 import type {LoncraStyleToken} from '@loncra/antdv'
 import {genStyleHooks} from '../../_util/genStyleLayer'
+import {genScrollAreaStyle} from '../../_util/style/fragments'
 
 function genIconSelectStyle(token: LoncraStyleToken): CSSInterpolation {
-  const {componentCls, antCls, controlHeightLG, fontSizeXL, marginXS, paddingMD, calc} = token
+  const {componentCls, antCls, fontSizeXL, marginXS, paddingMD} = token
 
   return {
     [componentCls]: {
@@ -35,15 +36,8 @@ function genIconSelectStyle(token: LoncraStyleToken): CSSInterpolation {
       width: '100%',
       gap: marginXS,
     },
-    [`${componentCls}-tabs-body`]: {
-      overflow: 'auto',
-      maxHeight: calc(controlHeightLG).mul(8).equal(),
-    },
-    [`${componentCls}-popover-body`]: {
-      overflow: 'auto',
-      maxHeight: calc(controlHeightLG).mul(4).equal(),
-      maxWidth: calc(controlHeightLG).mul(10).equal(),
-    },
+    ...genScrollAreaStyle(token, '-tabs-body', 8),
+    ...genScrollAreaStyle(token, '-popover-body', 4, 10),
     [`${componentCls}-glyph`]: {
       fontSize: fontSizeXL,
     },

@@ -1,5 +1,5 @@
 import type {CSSInterpolation} from '@antdv-next/cssinjs'
-import {SPIN_KEYFRAMES, type LoncraStyleToken} from '@loncra/antdv'
+import {genCoverImageStyle, SPIN_KEYFRAMES, type LoncraStyleToken} from '@loncra/antdv'
 import {genStyleHooks} from '../../_util/genStyleLayer'
 
 function genAttachmentUploadStyle(token: LoncraStyleToken): CSSInterpolation {
@@ -16,6 +16,7 @@ function genAttachmentUploadStyle(token: LoncraStyleToken): CSSInterpolation {
     colorErrorBg,
     colorBgContainer,
     colorBgLayout,
+    colorBgMask,
     colorTextLightSolid,
     borderRadiusSM,
     borderRadiusLG,
@@ -33,6 +34,8 @@ function genAttachmentUploadStyle(token: LoncraStyleToken): CSSInterpolation {
     antCls,
     motionDurationMid,
     motionDurationSlow,
+    sizeXL,
+    sizeXXL,
     marginXXS,
     calc,
   } = token
@@ -51,12 +54,12 @@ function genAttachmentUploadStyle(token: LoncraStyleToken): CSSInterpolation {
       gap: sizeSM,
     },
     [`${componentCls}-item-sm`]: {
-      width: 50,
-      height: 50,
+      width: calc(sizeXL).mul(2).equal(),
+      height: calc(sizeXL).mul(2).equal(),
     },
     [`${componentCls}-item-lg`]: {
-      width: 84,
-      height: 84,
+      width: calc(sizeXXL).mul(2).equal(),
+      height: calc(sizeXXL).mul(2).equal(),
     },
     [`${componentCls}-thumb`]: {
       position: 'relative',
@@ -85,11 +88,7 @@ function genAttachmentUploadStyle(token: LoncraStyleToken): CSSInterpolation {
     [`${componentCls}-thumb-cover`]: {
       width: '100%',
       height: '100%',
-      [`img, ${antCls}-image, ${antCls}-image-img`]: {
-        width: '100%',
-        height: '100%',
-        objectFit: 'cover',
-      },
+      ...genCoverImageStyle(token, {includeImg: true}),
     },
     [`${componentCls}-thumb-fallback`]: {
       display: 'inline-flex',
@@ -108,7 +107,7 @@ function genAttachmentUploadStyle(token: LoncraStyleToken): CSSInterpolation {
       alignItems: 'center',
       justifyContent: 'center',
       gap: sizeSM,
-      background: 'rgba(0, 0, 0, 0.3)',
+      background: colorBgMask,
       opacity: 0,
       transition: `opacity ${motionDurationMid}`,
     },
@@ -175,7 +174,7 @@ function genAttachmentUploadStyle(token: LoncraStyleToken): CSSInterpolation {
     [`${componentCls}-meta`]: {
       marginTop: marginXXS,
       display: 'flex',
-      width: 84,
+      width: calc(sizeXXL).mul(2).equal(),
       minWidth: 0,
       flexDirection: 'column',
       gap: marginXXS,
@@ -193,7 +192,7 @@ function genAttachmentUploadStyle(token: LoncraStyleToken): CSSInterpolation {
     [`${componentCls}-trigger`]: {
       display: 'inline-flex',
       flexDirection: 'column',
-      padding: `${paddingSM} ${padding} `,
+      padding: `${paddingSM} ${padding}`,
       border: `${lineWidth} dashed ${colorBorderSecondary}`,
       borderRadius: borderRadiusLG,
     },
@@ -211,8 +210,8 @@ function genAttachmentUploadStyle(token: LoncraStyleToken): CSSInterpolation {
       },
     },
     [`${componentCls}-trigger-upload-multi`]: {
-      width: 84,
-      height: 84,
+      width: calc(sizeXXL).mul(2).equal(),
+      height: calc(sizeXXL).mul(2).equal(),
     },
     [`${componentCls}-trigger-inner`]: {
       display: 'inline-flex',
@@ -224,8 +223,8 @@ function genAttachmentUploadStyle(token: LoncraStyleToken): CSSInterpolation {
       height: '100%',
     },
     [`${componentCls}-trigger-inner-multi`]: {
-      width: 84,
-      height: 84,
+      width: calc(sizeXXL).mul(2).equal(),
+      height: calc(sizeXXL).mul(2).equal(),
     },
     [`${componentCls}-plus-icon`]: {
       fontSize: fontSizeHeading2,
