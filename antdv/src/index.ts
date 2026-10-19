@@ -54,7 +54,6 @@ export { splitSemantic } from './_util/splitSemantic'
 export { createStyleHooks } from './_util/style/factory'
 export type { LoncraStyleToken } from './_util/style/factory'
 export {
-  genCoverImageStyle,
   genFullSpinStyle,
   genScrollAreaStyle,
   JUMP_KEYFRAMES,

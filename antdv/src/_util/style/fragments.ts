@@ -53,22 +53,3 @@ export function genScrollAreaStyle(
     }
 }
 
-export function genCoverImageStyle(
-    token: LoncraStyleToken,
-    options: {includeImg?: boolean; objectPosition?: string} = {},
-): CSSObject {
-    const {antCls} = token
-    const selectors = [
-        options.includeImg ? 'img' : '',
-        `${antCls}-image`,
-        `${antCls}-image-img`,
-    ].filter(Boolean)
-    return {
-        [selectors.join(', ')]: {
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            ...(options.objectPosition ? {objectPosition: options.objectPosition} : {}),
-        },
-    }
-}

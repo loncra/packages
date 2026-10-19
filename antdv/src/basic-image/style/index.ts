@@ -1,6 +1,5 @@
 import type {CSSInterpolation} from '@antdv-next/cssinjs'
 import {genStyleHooks, type LoncraStyleToken} from '../../_util/genStyleLayer'
-import {genCoverImageStyle} from '../../_util/style/fragments'
 
 function genBasicImageStyle(token: LoncraStyleToken): CSSInterpolation {
   const { componentCls, antCls } = token
@@ -13,7 +12,12 @@ function genBasicImageStyle(token: LoncraStyleToken): CSSInterpolation {
       [`${antCls}-image`]: {
         display: 'block',
       },
-      ...genCoverImageStyle(token, {objectPosition: 'center'}),
+      [`${antCls}-image, ${antCls}-image-img`]: {
+        width: '100%',
+        height: '100%',
+        objectFit: 'cover',
+        objectPosition: 'center',
+      },
     },
   } as CSSInterpolation
 }

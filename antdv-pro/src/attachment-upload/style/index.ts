@@ -1,5 +1,5 @@
 import type {CSSInterpolation} from '@antdv-next/cssinjs'
-import {genCoverImageStyle, SPIN_KEYFRAMES, type LoncraStyleToken} from '@loncra/antdv'
+import {SPIN_KEYFRAMES, type LoncraStyleToken} from '@loncra/antdv'
 import {genStyleHooks} from '../../_util/genStyleLayer'
 
 function genAttachmentUploadStyle(token: LoncraStyleToken): CSSInterpolation {
@@ -88,7 +88,6 @@ function genAttachmentUploadStyle(token: LoncraStyleToken): CSSInterpolation {
     [`${componentCls}-thumb-cover`]: {
       width: '100%',
       height: '100%',
-      ...genCoverImageStyle(token, {includeImg: true}),
     },
     [`${componentCls}-thumb-fallback`]: {
       display: 'inline-flex',
