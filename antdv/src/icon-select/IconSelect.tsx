@@ -1,14 +1,4 @@
-import {
-  computed,
-  defineComponent,
-  h,
-  type PropType,
-  type Ref,
-  ref,
-  useModel,
-  type VNodeChild,
-  watch,
-} from 'vue'
+import {computed, defineComponent, type PropType, type VNodeChild} from 'vue'
 import {
   Avatar,
   Button,
@@ -27,16 +17,11 @@ import {SelectOutlined} from '@antdv-next/icons'
 import {classNames} from '../_util/classNames'
 import {useFormItemTrigger} from '../_util/useFormItemTrigger'
 import {useLocale} from '../_util/context/useLocale'
+import {parseAvatarModel} from './iconSelectKinds'
+import {useIconSelect} from './useIconSelect'
 import useStyle from './style'
-import {
-  AVATAR_SCHEMES,
-  ICON_SELECT_AVATAR_MODE_VALUE,
-  ICON_SELECT_MODE,
-  type IconfontGlyph,
-  type IconfontJson,
-  type IconSelectAvatarModeValueType,
-  type IconSelectModeType,
-} from './types'
+import {ICON_SELECT_AVATAR_MODE_VALUE, ICON_SELECT_MODE} from './constants'
+import type {IconfontJson, IconSelectAvatarModeValueType, IconSelectModeType} from './types'
 
 export type {
   IconfontGlyph,
@@ -44,7 +29,7 @@ export type {
   IconSelectAvatarModeValueType,
   IconSelectModeType,
 } from './types'
-export { AVATAR_SCHEMES, ICON_SELECT_AVATAR_MODE_VALUE, ICON_SELECT_MODE } from './types'
+export {AVATAR_SCHEMES, ICON_SELECT_AVATAR_MODE_VALUE, ICON_SELECT_MODE} from './constants'
 
 export interface IconSelectProps {
   value?: string
@@ -66,22 +51,45 @@ export interface IconSelectSlots {
   afterAvatar?: () => unknown
 }
 
-function glyphType(pack: IconfontJson, glyph: IconfontGlyph) {
-  return pack.css_prefix_text + glyph.font_class
+interface IconSelectAvatarLocale {
+  link: string
+  name: string
+  icon: string
 }
 
-function parseAvatarModel(raw: string) {
-  const value = raw ?? ''
-  const type = AVATAR_SCHEMES.find((scheme) => value.startsWith(scheme))
-  if (!type) {
-    return { type: ICON_SELECT_AVATAR_MODE_VALUE.AVATAR, payload: value }
+function avatarModeOptions(options: IconfontJson[], locale: IconSelectAvatarLocale) {
+  const result: { label: string; value: IconSelectAvatarModeValueType }[] = [
+    { label: locale.link, value: ICON_SELECT_AVATAR_MODE_VALUE.AVATAR },
+    { label: locale.name, value: ICON_SELECT_AVATAR_MODE_VALUE.INPUT },
+  ]
+  if (options.length > 0) {
+    result.push({ label: locale.icon, value: ICON_SELECT_AVATAR_MODE_VALUE.ICON })
   }
-  return { type, payload: value.slice(type.length) }
+  return result
 }
 
-function toAvatarModel(type: IconSelectAvatarModeValueType, payload: string) {
-  const text = payload ?? ''
-  return text ? `${type}${text}` : ''
+function renderAvatar(
+  type: IconSelectAvatarModeValueType,
+  payload: string,
+  iconRender: (type: string) => VNodeChild,
+  avatarAttrs: Record<string, unknown> = {},
+) {
+  if (type === ICON_SELECT_AVATAR_MODE_VALUE.AVATAR) {
+    return <Avatar {...avatarAttrs} src={payload} />
+  }
+  if (type === ICON_SELECT_AVATAR_MODE_VALUE.ICON) {
+    return <Avatar {...avatarAttrs}>{iconRender(payload)}</Avatar>
+  }
+  if (type === ICON_SELECT_AVATAR_MODE_VALUE.INPUT) {
+    return <Avatar {...avatarAttrs}>{payload.substring(0, 1)}</Avatar>
+  }
+  return null
+}
+
+function preventEnter(event: KeyboardEvent) {
+  if (event.key === 'Enter') {
+    event.preventDefault()
+  }
 }
 
 const IconSelect = defineComponent({
@@ -118,111 +126,20 @@ const IconSelect = defineComponent({
     )
     const [hashId, cssVarCls] = useStyle(prefixCls)
 
-    const state = ref({
-      search: {
-        dataSource: [] as IconfontJson[],
-        text: '',
-      },
-    })
+    const {
+      modelValue,
+      tabItems,
+      onSearch,
+      glyphsOf,
+      selectedPackName,
+      avatarType,
+      avatarPayload,
+    } = useIconSelect(props)
 
-    const modelValue = useModel(props, 'value') as unknown as Ref<string>
-
-    const avatarOptions = computed(() => {
-      const result: { label: string; value: IconSelectAvatarModeValueType }[] = [
-        { label: locale.value.link, value: ICON_SELECT_AVATAR_MODE_VALUE.AVATAR },
-        { label: locale.value.name, value: ICON_SELECT_AVATAR_MODE_VALUE.INPUT },
-      ]
-      if (props.options.length > 0) {
-        result.push({ label: locale.value.icon, value: ICON_SELECT_AVATAR_MODE_VALUE.ICON })
-      }
-      return result
-    })
-
-    function search() {
-      const keyword = state.value.search.text.trim().toLowerCase()
-      if (keyword === '') {
-        state.value.search.dataSource = props.options
-        return
-      }
-      state.value.search.dataSource = props.options.map((icon) => ({
-        ...icon,
-        glyphs: icon.glyphs.filter((glyph) =>
-          glyphType(icon, glyph).toLowerCase().includes(keyword),
-        ),
-      }))
-    }
-
-    function onSearch(value: string) {
-      state.value.search.text = value
-      search()
-    }
-
-    function glyphsOf(name: string) {
-      const pack = state.value.search.dataSource.find((icon) => icon.name === name)
-      if (!pack) {
-        return []
-      }
-      return pack.glyphs.map((glyph) => ({
-        key: glyph.icon_id,
-        value: glyphType(pack, glyph),
-      }))
-    }
-
-    const tabItems = computed(() =>
-      state.value.search.dataSource.map((icon) => ({
-        key: `${icon.name}::${state.value.search.text}`,
-        packName: icon.name,
-        label: icon.name,
-      })),
-    )
-
-    const localAvatarType = ref<IconSelectAvatarModeValueType>(
-      parseAvatarModel(props.value ?? '').type,
-    )
-    const avatarType = computed<IconSelectAvatarModeValueType>({
-      get: () => {
-        const {type, payload} = parseAvatarModel(modelValue.value ?? '')
-        return payload ? type : localAvatarType.value
-      },
-      set: (type: IconSelectAvatarModeValueType) => {
-        localAvatarType.value = type
-        modelValue.value = toAvatarModel(type, parseAvatarModel(modelValue.value ?? '').payload)
-      },
-    })
-
-    const avatarPayload = computed({
-      get() {
-        return parseAvatarModel(modelValue.value ?? '').payload
-      },
-      set(payload: string) {
-        modelValue.value = toAvatarModel(avatarType.value, payload)
-      },
-    })
-
-    watch(() => props.options, () => search(), { immediate: true })
+    const avatarOptions = computed(() => avatarModeOptions(props.options, locale.value))
 
     function renderIcon(type: string): VNodeChild {
       return props.iconRender?.(type) ?? null
-    }
-
-    function renderAvatar(payload: string, avatarAttrs: Record<string, unknown> = {}) {
-      const parsed = parseAvatarModel(modelValue.value)
-      if (parsed.type === ICON_SELECT_AVATAR_MODE_VALUE.AVATAR) {
-        return <Avatar {...avatarAttrs} src={payload} />
-      }
-      if (parsed.type === ICON_SELECT_AVATAR_MODE_VALUE.ICON) {
-        return <Avatar {...avatarAttrs}>{renderIcon(payload)}</Avatar>
-      }
-      if (parsed.type === ICON_SELECT_AVATAR_MODE_VALUE.INPUT) {
-        return <Avatar {...avatarAttrs}>{payload.substring(0, 1)}</Avatar>
-      }
-      return null
-    }
-
-    function preventEnter(event: KeyboardEvent) {
-      if (event.key === 'Enter') {
-        event.preventDefault()
-      }
     }
 
     function hashed(...names: (string | undefined)[]) {
@@ -247,12 +164,6 @@ const IconSelect = defineComponent({
       )
     }
 
-    function selectedPackName() {
-      return props.options.find((icon) =>
-        icon.glyphs.some((glyph) => glyphType(icon, glyph) === String(modelValue.value)),
-      )?.name
-    }
-
     return () => {
       const { class: attrClass, style: attrStyle, ...rest } = attrs
       const rootClass = classNames(
@@ -272,7 +183,7 @@ const IconSelect = defineComponent({
       if (props.preview) {
         return (
           <div class={classNames(rootClass, `${prefixCls.value}-preview`)} style={attrStyle as never}>
-            {renderAvatar(avatarPayload.value, rest)}
+            {renderAvatar(parseAvatarModel(modelValue.value).type, avatarPayload.value, renderIcon, rest)}
             {slots.afterAvatar?.()}
           </div>
         )

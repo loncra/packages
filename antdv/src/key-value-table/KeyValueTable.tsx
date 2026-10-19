@@ -1,10 +1,12 @@
-import {computed, defineComponent, h, type Ref, useModel} from 'vue'
+import {computed, defineComponent, h} from 'vue'
 import {Button, Flex, FormItem, Input, Select, SpaceCompact, Table, type TableColumnType,} from 'antdv-next'
 import {CheckOutlined, CloseOutlined, DeleteOutlined, EditOutlined, PlusOutlined} from '@antdv-next/icons'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import TooltipValidationFormItem from '../tooltip-validation-form-item'
 import {classNames} from '../_util/classNames'
 import {useLocale} from '../_util/context/useLocale'
+import {KEY_VALUE_COLUMNS, TABLE_SCROLL_Y} from './constants'
+import {useKeyValueTable} from './useKeyValueTable'
 import type {KeyValueRow} from './types'
 import useStyle from './style'
 
@@ -71,75 +73,21 @@ const KeyValueTable = defineComponent({
     )
     const [hashId, cssVarCls] = useStyle(prefixCls)
 
-    const model = useModel(props, 'value') as unknown as Ref<KeyValueRow[]>
+    const {
+      rows,
+      addRow,
+      removeRow,
+      startEditing,
+      confirmRow,
+      cancelRow,
+      confirmAllEditingRows,
+    } = useKeyValueTable(props, (item, data) => emit('change', item, data))
 
-    const columns = computed<TableColumnType<KeyValueRow>[]>(() => {
-      const result: TableColumnType<KeyValueRow>[] = [
-        {
-          title: locale.value.name,
-          dataIndex: 'key',
-          key: 'key',
-          width: 120,
-        },
-        {
-          title: locale.value.value,
-          dataIndex: 'value',
-          key: 'value',
-        },
-      ]
-      if (props.edit) {
-        result.push({
-          title: locale.value.action,
-          dataIndex: 'action',
-          key: 'action',
-          align: 'center',
-          fixed: 'right',
-          width: 100,
-        })
-      }
-      return result
-    })
-
-    function addKeyValueRow() {
-      model.value = [
-        ...model.value,
-        { id: crypto.randomUUID(), key: '', value: '', editing: true },
-      ]
-    }
-
-    function removeKeyValueRow(record: KeyValueRow) {
-      model.value = model.value.filter((row) => row.id !== record.id)
-      emit('change', record, model.value)
-    }
-
-    function editKeyValueRow(record: KeyValueRow) {
-      record.editing = true
-      record.origin = { ...record }
-    }
-
-    function confirmKeyValueRow(record: KeyValueRow) {
-      record.editing = false
-      delete record.origin
-      emit('change', record, model.value)
-    }
-
-    function cancelKeyValueRow(record: KeyValueRow) {
-      if (record.origin) {
-        record.key = record.origin.key
-        record.value = record.origin.value
-        delete record.origin
-      }
-      record.editing = false
-      emit('change', record, model.value)
-    }
-
-    function confirmAllEditingRows() {
-      for (const row of model.value) {
-        if (row.editing) {
-          confirmKeyValueRow(row)
-        }
-      }
-    }
+    const columns = computed<TableColumnType<KeyValueRow>[]>(() => [
+      {...KEY_VALUE_COLUMNS.key, title: locale.value.name},
+      {...KEY_VALUE_COLUMNS.value, title: locale.value.value},
+      ...(props.edit ? [{...KEY_VALUE_COLUMNS.action, title: locale.value.action}] : []),
+    ])
 
     expose({ confirmAllEditingRows })
 
@@ -207,10 +155,10 @@ const KeyValueTable = defineComponent({
       if (record.editing) {
         return (
           <SpaceCompact>
-            <Button size="small" type="primary" onClick={() => confirmKeyValueRow(record)}>
+            <Button size="small" type="primary" onClick={() => confirmRow(record)}>
               {h(CheckOutlined)}
             </Button>
-            <Button size="small" type="primary" danger onClick={() => cancelKeyValueRow(record)}>
+            <Button size="small" type="primary" danger onClick={() => cancelRow(record)}>
               {h(CloseOutlined)}
             </Button>
           </SpaceCompact>
@@ -218,10 +166,10 @@ const KeyValueTable = defineComponent({
       }
       return (
         <SpaceCompact>
-          <Button size="small" type="primary" onClick={() => editKeyValueRow(record)}>
+          <Button size="small" type="primary" onClick={() => startEditing(record)}>
             {h(EditOutlined)}
           </Button>
-          <Button size="small" type="primary" danger onClick={() => removeKeyValueRow(record)}>
+          <Button size="small" type="primary" danger onClick={() => removeRow(record)}>
             {h(DeleteOutlined)}
           </Button>
         </SpaceCompact>
@@ -245,8 +193,8 @@ const KeyValueTable = defineComponent({
             {...rest}
             pagination={false}
             bordered
-            scroll={{ y: 275 }}
-            dataSource={model.value}
+            scroll={{ y: TABLE_SCROLL_Y }}
+            dataSource={rows.value}
             columns={columns.value}
             rowKey="id"
             v-slots={{
@@ -256,7 +204,7 @@ const KeyValueTable = defineComponent({
                       <Flex justify="space-between" align="center">
                         {slots.title ? slots.title({ title: props.title }) : props.title}
                         {props.edit ? (
-                          <Button size="small" onClick={addKeyValueRow}>{h(PlusOutlined)}</Button>
+                          <Button size="small" onClick={addRow}>{h(PlusOutlined)}</Button>
                         ) : null}
                       </Flex>
                     )
