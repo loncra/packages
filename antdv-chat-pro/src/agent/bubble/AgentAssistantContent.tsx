@@ -230,12 +230,11 @@ const AgentAssistantContent = defineComponent({
                                         {results.map((result) => (
                                           <Popover
                                             key={result.url}
-                                            classes={{container:'loncra-common-padding-none', title:'loncra-common-padding-xs'}}
                                             title={result.title}
                                             v-slots={{
                                               content: () => result.raw_content
                                                 ? (
-                                                  <div class="loncra-common-scroll loncra-common-padding-xs">
+                                                  <div>
                                                     <Markdown
                                                       {...markdownAttrs({
                                                         content: result.raw_content,

@@ -4,7 +4,7 @@ import type {RenderItem} from 'antdv-next/dist/menu/menu'
 import {Button, Dropdown, Flex, Menu, Spin, theme, Typography} from 'antdv-next'
 import {EllipsisOutlined} from '@antdv-next/icons'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
-import {classNames, GLOBAL_PREFIX} from '@loncra/antdv'
+import {classNames} from '@loncra/antdv'
 import type {ConversationNode} from './types.ts'
 import useStyle, {CONVERSATION_LIST_PREFIX} from './style/index.ts'
 
@@ -124,7 +124,7 @@ const ConversationList = defineComponent({
             {props.items.length === 0
               ? slots.empty?.()
               : (
-                <Spin spinning={props.loading} class={`${GLOBAL_PREFIX}-full-spin`}>
+                <Spin spinning={props.loading} class={`${prefixCls.value}-full-spin`}>
                   <Menu
                     mode="inline"
                     inlineIndent={token.value.paddingSM}
@@ -134,7 +134,7 @@ const ConversationList = defineComponent({
                     onUpdate:selectedKeys={(keys: string[]) => emit('update:selectedKeys', keys)}
                     onUpdate:openKeys={(keys: string[]) => emit('update:openKeys', keys)}
                     onClick={(info: {key: string | number}) => emit('active', String(info.key))}
-                    rootClass={classNames(`${prefixCls.value}-menu`, `${GLOBAL_PREFIX}-border-none-r`)}
+                    rootClass={`${prefixCls.value}-menu`}
                     classes={{
                       item: itemClass,
                       itemContent: itemContentClass,

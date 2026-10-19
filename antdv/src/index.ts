@@ -45,20 +45,14 @@ export { isEmptyRichText, normalizeRichTextValue } from './editor'
 export { default as zhCN } from './locale/zh_CN'
 export { default as enUS } from './locale/en_US'
 export type { Locale } from './locale'
-export { createUseLocale, fillLocale, useLocale } from './_util/useLocale'
-export type { LocaleComponentName } from './_util/useLocale'
+export { createUseLocale, fillLocale, useLocale } from './_util/context/useLocale'
+export type { LocaleComponentName } from './_util/context/useLocale'
 export { classNames } from './_util/classNames'
 export { splitSemantic } from './_util/splitSemantic'
-export { createStyleHooks } from './_util/styleFactory'
-export type { LoncraStyleToken } from './_util/styleFactory'
-export {
-  GLOBAL_JUMP_KEYFRAMES,
-  GLOBAL_PREFIX,
-  GLOBAL_SPIN_KEYFRAMES,
-  GlobalStyleProvider,
-  useGlobalStyle,
-} from './globalStyle'
-export { useIsDark } from './_util/useIsDark'
+export { createStyleHooks } from './_util/style/factory'
+export type { LoncraStyleToken } from './_util/style/factory'
+export { genFullSpinStyle, JUMP_KEYFRAMES, SPIN_KEYFRAMES } from './_util/style/fragments'
+export { useIsDark } from './_util/context/useIsDark'
 export { useFormItemTrigger } from './_util/useFormItemTrigger'
 
 /**

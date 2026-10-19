@@ -4,7 +4,7 @@ import {CheckOutlined, CloseOutlined, DeleteOutlined, EditOutlined, PlusOutlined
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import TooltipValidationFormItem from '../tooltip-validation-form-item'
 import {classNames} from '../_util/classNames'
-import {useLocale} from '../_util/useLocale'
+import {useLocale} from '../_util/context/useLocale'
 import type {KeyValueRow} from './types'
 import useStyle from './style'
 

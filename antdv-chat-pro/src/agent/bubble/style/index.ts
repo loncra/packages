@@ -19,8 +19,21 @@ function genAgentBubbleStyle(token: LoncraStyleToken): CSSInterpolation {
     fontSizeSM,
     motionDurationSlow,
     colorTextQuaternary,
+    calc,
+    sizeXL,
+    sizeXXL,
   } = token
   return {
+    [`${componentCls}-token-list`]: {
+        maxHeight: calc(sizeXXL).mul(5).equal(),
+        maxWidth: calc(sizeXXL).mul(10).equal(),
+        minWidth: calc(sizeXL).mul(10).equal(),
+        padding: paddingXS,
+        overflow: 'auto',
+    },
+    [`${componentCls}-divider-flush`]: {
+        margin: 0,
+    },
     [componentCls]: {
       [`${componentCls}-footer`]: {
         display: 'flex',

@@ -61,4 +61,4 @@ import zhCN from '@loncra/antdv-pro/locale/zh_CN'
 - CSS 变量用 `--loncra-<控件>-<语义>` 手写（如 `--loncra-card-grid-columns`），不走 `getPrefixCls`。
 - 根节点挂类一律用 `class` 绑定，`rootClass` 只作宿主入参并入 `class`；子节点走 `classes.*`（经 `splitSemantic` 拆）。
 - **分层**：`basic-crud-query` 是所有内容层的底座（内部用 `data-loading-card-plan` 与 `action-button`）→ `query-table` / `query-card-grid` 做查询内容 → `crud-table` / `crud-card-grid` 是固定实体类型的门面 → `crud-page` 装配页面（`define*` 声明翻成 props，字段组件走 `registry.ts`）。
-- **Provider 层次**：`Provider`（`config-provider`）内嵌 antdv-next 的 `ConfigProvider`、`GlobalStyleProvider` 与 `ClientProvider`、`CrudConfigProvider`。`Form` 与 `ConfigProviderSetting` 读 `useAntdvConfig`，CRUD 相关读 `useCrudConfig` / `useActionAuth`。
+- **Provider 层次**：`Provider`（`config-provider`）内嵌 antdv-next 的 `ConfigProvider` 与 `ClientProvider`、`CrudConfigProvider`。`Form` 与 `ConfigProviderSetting` 读 `useAntdvConfig`，CRUD 相关读 `useCrudConfig` / `useActionAuth`。

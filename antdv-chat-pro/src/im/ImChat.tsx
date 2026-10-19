@@ -2,7 +2,7 @@ import {computed, defineComponent, type PropType, reactive, ref} from 'vue'
 import {ContactsOutlined, MessageOutlined} from '@antdv-next/icons'
 import {Drawer, Empty, Flex, Segmented, Spin, Splitter, SplitterPanel} from 'antdv-next'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
-import {classNames, GLOBAL_PREFIX} from '@loncra/antdv'
+import {classNames} from '@loncra/antdv'
 import {isEnumValue, type RestResult} from '@loncra/client/commons'
 import {
   type BasicUserChatConversation,
@@ -285,7 +285,7 @@ const ImChat = defineComponent({
       return (
         <Splitter class={rootClass}>
           <SplitterPanel class={`${prefixCls.value}-side`} defaultSize="20%" min="15%" max="25%">
-            <Spin spinning={props.loading} class={`${GLOBAL_PREFIX}-full-spin`}>
+            <Spin spinning={props.loading} class={`${prefixCls.value}-full-spin`}>
               <Flex vertical class={`${prefixCls.value}-column`}>
                 {pane.value === 'conversation'
                   ? (
@@ -343,7 +343,7 @@ const ImChat = defineComponent({
             {session.item
               ? (
                 <div class={`${prefixCls.value}-stage`}>
-                  <Spin spinning={session.loading} class={`${GLOBAL_PREFIX}-full-spin`}>
+                  <Spin spinning={session.loading} class={`${prefixCls.value}-full-spin`}>
                     <ImChatView
                       ref={viewRef}
                       session={session}

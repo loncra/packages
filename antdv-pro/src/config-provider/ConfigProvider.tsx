@@ -1,6 +1,5 @@
 import {defineComponent, type PropType} from 'vue'
 import {ConfigProvider as AntdvNextConfigProvider} from 'antdv-next'
-import {GlobalStyleProvider} from '@loncra/antdv'
 import ClientProvider, {type ClientProviderProps} from '../client-provider'
 import CrudConfigProvider, {type CrudConfigProviderProps} from '../crud-config-provider'
 import {createAntdvConfig, provideAntdvConfig} from './useAntdvConfig'
@@ -68,13 +67,6 @@ const AntdvConfigProvider = defineComponent({
               theme={config.themeConfig.value}
               componentSize={config.state.componentSize}
             >
-              {/*
-                全局样式（`@loncra/antdv` 的 `globalStyle`）在这里跑一次、不产 DOM。
-                ⚠️ 必须待在 `AntdvNextConfigProvider` **里面**：hashId 由主题算出来
-                （`antdv-next/dist/theme/useToken.js:106`），站在外面调会拿到外层默认主题的 hashId
-                ⇒ 切主题后规则前缀跟元素对不上、静默失效。详见 `GlobalStyleProvider` 的注释。
-              */}
-              <GlobalStyleProvider />
               <CrudConfigProvider
                 hasPermission={props.hasPermission}
                 i18nResolver={props.i18nResolver}

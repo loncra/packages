@@ -1,5 +1,5 @@
 import type {CSSInterpolation} from '@antdv-next/cssinjs'
-import type {LoncraStyleToken} from '@loncra/antdv'
+import {genFullSpinStyle, type LoncraStyleToken} from '@loncra/antdv'
 import {genStyleHooks} from '../../../_util/genStyleLayer'
 
 export const AGENT_HUB_PREFIX = 'loncra-agent-hub'
@@ -86,6 +86,7 @@ function genAgentHubStyle(token: LoncraStyleToken): CSSInterpolation {
         }
       },
     },
+    ...genFullSpinStyle(token),
   }
 }
 

@@ -1,5 +1,5 @@
 import type {CSSInterpolation} from '@antdv-next/cssinjs'
-import {GLOBAL_JUMP_KEYFRAMES, type LoncraStyleToken} from '@loncra/antdv'
+import {JUMP_KEYFRAMES, type LoncraStyleToken} from '@loncra/antdv'
 import {genStyleHooks} from '../../../_util/genStyleLayer'
 
 export const IM_CHAT_VIEW_PREFIX = 'loncra-im-chat-view'
@@ -27,7 +27,7 @@ function genImChatViewStyle(token: LoncraStyleToken): CSSInterpolation {
         left: '50%',
         zIndex: 1,
         boxShadow: 'var(--ant-box-shadow-card)',
-        animationName: GLOBAL_JUMP_KEYFRAMES,
+        animationName: JUMP_KEYFRAMES,
         animationDuration: '1s',
         animationIterationCount: 'infinite',
       },

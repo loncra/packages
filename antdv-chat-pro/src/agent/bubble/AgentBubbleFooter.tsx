@@ -115,7 +115,6 @@ const AgentBubbleFooter = defineComponent({
             {showToken
               ? (
                 <Popover
-                    classes={{container:'loncra-common-padding-none', title:'loncra-common-padding-xs'}}
                     trigger={"click"}
                     v-slots={{
                     title: () => (
@@ -125,13 +124,13 @@ const AgentBubbleFooter = defineComponent({
                       </Flex>
                     ),
                     content: () => (
-                      <Flex vertical gap="small" class="loncra-common-scroll loncra-common-padding-xs loncra-common-min-width-xl">
+                      <Flex vertical gap="small" class={`${prefixCls.value}-token-list`}>
                         {tokenRows('inputTokens', 'blue', locale.value.tokenInput)}
-                        <Divider class="loncra-common-margin-none" />
+                        <Divider class={`${prefixCls.value}-divider-flush`} />
                         {tokenRows('outputTokens', 'magenta', locale.value.tokenOutput)}
-                        <Divider class="loncra-common-margin-none" />
+                        <Divider class={`${prefixCls.value}-divider-flush`} />
                         {tokenRows('cachedTokens', 'yellow', locale.value.tokenCache)}
-                        <Divider class="loncra-common-margin-none" />
+                        <Divider class={`${prefixCls.value}-divider-flush`} />
                         <Badge color="green" text={locale.value.tokenCacheHitRate} />
                         <Progress size="small" status="active" percent={cacheHitRate(item)} />
                       </Flex>

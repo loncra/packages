@@ -15,7 +15,7 @@ xxx/
   constants.ts             魔法值
   xxxKinds.ts              领域纯逻辑（零框架依赖）
   useXxx.ts                状态与副作用
-  _util/                   包内共用基础件（纯函数 + composable）
+  _util/                   包内共用基础件（纯函数 / composable / 样式机制与片段）
   <子域>/XxxSub.tsx        领域 UI 子组件
   <子域>/style/index.ts
   style/index.ts           本控件 cssinjs 样式
@@ -32,7 +32,7 @@ xxx/
 | 子控件（`panes/` 这类） | 纯展示：props 只有 `prefixCls/hashId/cssVarCls` + 自己的数据 | 业务、请求、自己的 prefixCls |
 | 子域 UI（`tabs/`、`conversation/`） | 领域交互，读传入的状态、调回调 | 自己再起一套重复状态 |
 | `useXxx.ts` | 状态 + 副作用 | JSX |
-| `xxxKinds.ts` / `_util/` | 纯函数 / composable | 业务逻辑、组件本体 |
+| `xxxKinds.ts` / `_util/` | 纯函数 / composable / 样式机制与片段 | 业务逻辑、组件本体 |
 | `types.ts` / `constants.ts` | 跨文件类型 / 魔法值 | 组件内联声明（见 [4. 粒度阈值](./CONTRIBUTING-PACKAGES.md#4-粒度阈值) 的审计项） |
 | `style/index.ts` | 该控件（或该子域）的 cssinjs 样式 | 内联 `style`、管理端全局 css |
 
@@ -61,7 +61,9 @@ const [hashId, cssVarCls] = useStyle(prefixCls)
 - `hashId` / `cssVarCls` 不跨组件用 props 传，子部件要用就自己算一份（`hashId` 是主题级一个值，各处算出来天然一致）。**例外是纯展示子控件**：它不接 config（见 [8. 分层与职责](#8-分层与职责)），只能由父级把 `prefixCls` / `hashId` / `cssVarCls` 一起传进来。
 - 同一前缀的内部子部件，不允许把选择器片段导出到别的目录再在父级展开：要么并进同一个 `genStyleHooks`，要么给它独立前缀 + 自己的 `genStyleHooks`。
 - 覆盖 antd 交给层序（见 [11. 样式层与覆盖顺序](#11-样式层与覆盖顺序)），控件样式里**不写** `!important`；它只留给层序管不到的地方（未分层的第三方 CSS、必须压过宿主 Tailwind 工具类、宿主没开 layer 模式）。不把"自有类自重复"（`.${componentCls}-item.${componentCls}-item` 凑到 3 个类）当作要求 —— 它有压不过的场景，且与层序无关。
-- 公共工具类落在 `antdv/src/globalStyle/style/index.ts`（`GLOBAL_PREFIX = 'loncra-common'`），命名 `loncra-common-[<变体>-]<属性>[-<修饰>][-<方向>]`：属性全拼小写连字符；变体（`after`/`before`/`hover`）放在属性前；方向只用 `t/r/b/l/x/y` 且恒为最后一段；值用 `none` 或 `xs|sm|md|lg|xl`；派生写在同一顶层键里用嵌套 `&-`；与宿主 Tailwind 工具类抢属性且必须赢的加 `!important`（纯尺寸 / 布局 / 结构类不加）。必须有 `GlobalStyleProvider` 渲染在 `ConfigProvider` 内才会生成 CSS。
+- **需要跨控件共享的样式写成参数化片段**：放在 `_util/style/fragments.ts` 这类共享位置，签名 `(token, ...)`、键用 `token.componentCls` 拼，由各控件的 `genStyleHooks` 自己展开（形态对齐 `antdv-next/dist/style` 的 `genCompactItemStyle` / `getArrowStyle`）。片段可以跨包 import；**不许**从一个控件目录导出给另一个控件用（见上一条）。没有消费方的片段随定义一起删。
+- **包内不提供全局工具类**：间距、边框、宽度这类普通布局宿主用 Tailwind、包内写 `${componentCls}-xxx`；"宿主也要用"的样式（如全高容器）由宿主在自己的层里写，不从包里要。
+- **顶层键会与主题 hashId 复合**：写 `` [`${componentCls}-xxx`] `` 这种顶层键时，cssinjs 生成的是 `:where(.css-hash).<类名>`（`@antdv-next/cssinjs` 的 `injectSelectorHash`）⇒ **挂这个类的元素自己必须带 `css-hash`**。antd 组件根（`a-spin` / `a-divider` / `a-flex` / `a-menu`）带；裸 `<div>`、以及 `classes.container` / `classes.title` 这类弹层内部节点只拿到我们的 class ⇒ 不命中。传送到 body 的内容（`Popover` / `Modal` / `Drawer`）拿不到控件祖先类，只能用"顶层键 + antd 根"这一种写法，不能嵌在 `[componentCls]` 下。
 
 **为什么**：样式"谁调 `useStyle` 谁生成"，所以前缀与注册点必须归控件自己所有；压过 antd 归层序管，`!important` 只补层序管不到的地方。
 
@@ -80,11 +82,9 @@ const [hashId, cssVarCls] = useStyle(prefixCls)
 - **`order` 只在退化场景有意义**：宿主没打开 `<a-style-provider layer>` 时，cssinjs 只在 `StyleContext.layer` 为真时才采用工厂的 `layer` ⇒ 这时样式不进任何层、`prepend` 回到 `'queue'`、priority 重新参与插入排序。包级 `order` 固定 `antdv` = 1 / `-pro` = 2 / `-chat` = 3 / `-chat-pro` = 4。
 - **宿主不声明那四个层名时**，层序退回"层名首次出现"的顺序：我们的层块在有 layer 时被追加到 `<head>` 末尾 ⇒ 反而变成最强（能压宿主工具类）。这不是我们承诺的语义，所以那一行属于宿主契约。
 - **`!important` 只剩三种场合**：① 宿主没开 layer 模式；② 压**未分层**的第三方 CSS（`antdv-next-tiptap` 的 UnoCSS 产物、`@antdv-next/x-markdown` 的 `.x-markdown-*`）——未分层的规则恒赢所有层；③ 必须压过宿主 Tailwind 工具类（甲之下它们比我们强）。
-- **公共工具类**（`.loncra-common*`）目前仍经旧工厂注册在 `@layer antd`，其中没带 `!important` 的 `-min-width-xl` / `-scroll` / `-full-spin` 会被宿主 Tailwind 工具类压掉，属预期；切到自有层后升到 `antdv-loncra`（仍低于 `utilities`），结论不变。
+- 包内不发全局类：跨控件共享走参数化片段（见 [10. 样式](#10-样式)），全高容器这类"宿主也要用"的样式由宿主写在自己的 `components` 层里，它比我们的层强，属预期。
 
 **为什么**：层序由一条宿主声明一次定死，比在每个控件里逐条提权可维护；`!important` 退回到"层序管不到的地方"这一种职责。
-
-上面是**目标状态**：还没切到自有层的控件（仍经旧工厂 `_util/genStyle.ts`，样式与 antd 一起落在 `@layer antd`）在切换前依旧要靠 `!important` 压 antd，别提前把它们撤掉。
 
 包内不要为了提权另开一层；控件的样式也不要落到宿主的全局 css 里（见 [10. 样式](#10-样式)）。
 

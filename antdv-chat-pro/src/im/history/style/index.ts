@@ -1,5 +1,5 @@
 import type {CSSInterpolation} from '@antdv-next/cssinjs'
-import type {LoncraStyleToken} from '@loncra/antdv'
+import {genFullSpinStyle, type LoncraStyleToken} from '@loncra/antdv'
 import {genStyleHooks} from '../../../_util/genStyleLayer'
 
 export const IM_HISTORY_PREFIX = 'loncra-im-history'
@@ -49,6 +49,7 @@ function genImHistoryStyle(token: LoncraStyleToken): CSSInterpolation {
         opacity: 0,
       },
     },
+    ...genFullSpinStyle(token),
   }
 }
 

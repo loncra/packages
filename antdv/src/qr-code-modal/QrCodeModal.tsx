@@ -1,7 +1,7 @@
 import {computed, defineComponent, ref, watch} from 'vue'
 import {CheckOutlined, CopyOutlined} from '@antdv-next/icons'
 import {Button, Flex, Input, Modal, type ModalProps, QRCode, SpaceCompact, theme,} from 'antdv-next'
-import {useLocale} from '../_util/useLocale'
+import {useLocale} from '../_util/context/useLocale'
 
 export interface QrCodeModalProps {
   url: string

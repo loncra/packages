@@ -2,7 +2,6 @@ import {computed, defineComponent, onMounted, type PropType, ref} from 'vue'
 import {Flex, Skeleton, Spin, Tabs} from 'antdv-next'
 import {createFromIconfontCN} from '@antdv-next/icons'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
-import {GLOBAL_PREFIX} from '@loncra/antdv'
 import {
     ResourceServerService,
     type TotalPage,
@@ -125,7 +124,7 @@ const McpMarket = defineComponent({
                             </Flex>
                         ),
                         contentRender: () => (
-                            <Spin spinning={loading.value} class={`${GLOBAL_PREFIX}-full-spin`}>
+                            <Spin spinning={loading.value} class={`${prefixCls.value}-full-spin`}>
                                 <PluginCard
                                     dataSource={dataSource.value}
                                     installs={props.installs}

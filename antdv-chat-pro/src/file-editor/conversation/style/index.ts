@@ -1,5 +1,5 @@
 import type {CSSObject} from '@antdv-next/cssinjs'
-import {GLOBAL_SPIN_KEYFRAMES, type LoncraStyleToken} from '@loncra/antdv'
+import {SPIN_KEYFRAMES, type LoncraStyleToken} from '@loncra/antdv'
 import {genStyleHooks} from '../../../_util/genStyleLayer'
 
 function genFileConversationStyle(token: LoncraStyleToken): CSSObject {
@@ -26,7 +26,7 @@ function genFileConversationStyle(token: LoncraStyleToken): CSSObject {
     },
     [`${componentCls}-icon-spin`]: {
       marginBottom: 3,
-      animationName: GLOBAL_SPIN_KEYFRAMES,
+      animationName: SPIN_KEYFRAMES,
       animationDuration: motionDurationSlow,
       animationTimingFunction: 'linear',
       animationIterationCount: 'infinite',

@@ -1,5 +1,5 @@
 import type {CSSInterpolation} from '@antdv-next/cssinjs'
-import type {LoncraStyleToken} from '@loncra/antdv'
+import {genFullSpinStyle, type LoncraStyleToken} from '@loncra/antdv'
 import {genStyleHooks} from '../../_util/genStyleLayer'
 
 export const IM_CHAT_PREFIX = 'loncra-im-chat'
@@ -45,6 +45,7 @@ function genImChatStyle(token: LoncraStyleToken): CSSInterpolation {
         minHeight: 0,
       },
     },
+    ...genFullSpinStyle(token),
   }
 }
 

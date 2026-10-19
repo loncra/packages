@@ -1,7 +1,7 @@
 import {computed, defineComponent, ref, watch} from 'vue'
 import {Empty, Flex, Spin, Tabs, Typography} from 'antdv-next'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
-import {classNames, GLOBAL_PREFIX} from '@loncra/antdv'
+import {classNames} from '@loncra/antdv'
 import {AiSkillPackageService, type SkillReleaseEntity} from '@loncra/client/ai'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
@@ -55,7 +55,7 @@ const SkillReleaseChangeLog = defineComponent({
       const release = activeRelease.value
       const changelog = release?.changelog?.trim()
       return (
-        <Spin spinning={loading.value} class={`${GLOBAL_PREFIX}-full-spin`}>
+        <Spin spinning={loading.value} class={`${prefixCls.value}-full-spin`}>
           {!loading.value && tabItems.value.length === 0
             ? <Empty />
             : tabItems.value.length

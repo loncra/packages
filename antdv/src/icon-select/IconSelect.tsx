@@ -26,7 +26,7 @@ import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {SelectOutlined} from '@antdv-next/icons'
 import {classNames} from '../_util/classNames'
 import {useFormItemTrigger} from '../_util/useFormItemTrigger'
-import {useLocale} from '../_util/useLocale'
+import {useLocale} from '../_util/context/useLocale'
 import useStyle from './style'
 import {
   AVATAR_SCHEMES,
