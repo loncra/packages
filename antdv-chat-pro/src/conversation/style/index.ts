@@ -31,6 +31,10 @@ function genConversationListStyle(token: LoncraStyleToken): CSSInterpolation {
         minHeight: 0,
         overflow: 'auto',
       },
+      [`${componentCls}-empty`]: {
+        width: '100%',
+        height: '100%',
+      },
       [`${componentCls}-menu`]: {
         background: 'transparent',
         borderInlineEnd: 'none',

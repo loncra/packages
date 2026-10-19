@@ -1,7 +1,7 @@
 import {computed, defineComponent, type PropType} from 'vue'
 import type {ItemType} from 'antdv-next/dist/menu/interface'
 import type {RenderItem} from 'antdv-next/dist/menu/menu'
-import {Button, Dropdown, Flex, Menu, Spin, theme, Typography} from 'antdv-next'
+import {Button, Dropdown, Empty, Flex, Menu, Spin, theme, Typography} from 'antdv-next'
 import {EllipsisOutlined} from '@antdv-next/icons'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {classNames} from '@loncra/antdv'
@@ -122,7 +122,11 @@ const ConversationList = defineComponent({
           {slots.header?.()}
           <div class={`${prefixCls.value}-body`}>
             {props.items.length === 0
-              ? slots.empty?.()
+              ? (
+                <Flex justify="center" align="center" class={`${prefixCls.value}-empty`}>
+                  <Empty />
+                </Flex>
+              )
               : (
                 <Spin spinning={props.loading} class={`${prefixCls.value}-full-spin`}>
                   <Menu

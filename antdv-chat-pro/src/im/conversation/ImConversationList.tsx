@@ -1,5 +1,5 @@
 import {computed, defineComponent, type PropType, ref} from 'vue'
-import {Avatar, Badge, Button, Empty, Flex, Input, Menu, type MenuItemType, Popover, Typography,} from 'antdv-next'
+import {Avatar, Badge, Button, Flex, Input, Menu, type MenuItemType, Popover, Typography,} from 'antdv-next'
 import {
     AlertOutlined,
     DeleteOutlined,
@@ -270,11 +270,6 @@ const ImConversationList = defineComponent({
                   v-slots={{suffix: () => <SearchOutlined />}}
                 />
               </div>
-            ),
-            empty: () => (
-              <Flex justify="center" align="center">
-                <Empty />
-              </Flex>
             ),
             icon: (node: ConversationNode) => {
               const item = lookup.get(node.key)

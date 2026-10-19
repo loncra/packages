@@ -1,5 +1,5 @@
 import {computed, defineComponent, h, type PropType} from 'vue'
-import {Button, Empty, Flex, Input, Menu, SpaceCompact, TypographyText,} from 'antdv-next'
+import {Button, Flex, Input, Menu, SpaceCompact, TypographyText,} from 'antdv-next'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {
     CheckOutlined,
@@ -183,11 +183,6 @@ const FileConversation = defineComponent({
               }
               return <Menu {...createMenu(item)} />
             },
-            empty: () => (
-              <Flex justify="center" align="center">
-                <Empty />
-              </Flex>
-            ),
           }}
         />
       )
