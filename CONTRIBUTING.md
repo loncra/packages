@@ -47,8 +47,23 @@ xxx/
 - 一个文件一个组件。
 - 类名挂法：组件内部挂类用 `class` 绑定；`rootClass` 只是宿主入参，最终并入 `class`；子节点走 `classes.*`。
 - `inheritAttrs: false` 之后 attrs 固定这样处理：取出 `class` / `style` 落到根节点，其余 `{...rest}` 透传给内部主组件。只有纯包装控件（见 [10. 样式](#10-样式)）才整体 `{...attrs}` 展开，且必须放在显式属性**之前** —— 让本组件的 `title` / `footer` / `onCancel` 覆盖宿主的同名 attrs。
+- **根节点契约**：一个控件一个稳定根 —— 同一形态下，所有渲染分支（空态、加载、错误、预览）的最外层都是同一个元素 / 组件，宿主的 `class` / `style` 与其余 attrs 只落它。形态 prop（`plain` / `mode` 这类确实要换壳的）允许每个形态各有根，但**挂类与 attrs 契约必须完全一致**（`prefixCls` / `rootClass` / `classes.root` / rest attrs 的落点规则不变），README 按形态列出根元素。分支不许改根的身份，也不许出现"某一支的 rest attrs 落到内部子件上"。
+- **根类名**：顺序固定 `prefixCls → hashId → cssVarCls → props.rootClass → attrs.class`。没有 `useStyle` 的控件（无自有样式）跳过 `hashId` / `cssVarCls`，不许随机少片段。
+- **根 style**：一律取 `attrs.style`；需要内置默认值时写成 `{...defaultStyle, ...attrs.style}`（宿主优先）。数组 / 函数形态的 `style` 必须原样透传，不许丢。
+- **rest attrs**：拆出 `class` / `style` 之后必须 `{...rest}` 展开（`id` / `data-*` / `aria-*` 不能吞）。
+- **容器**：只在"这一层不承担布局与样式职责"时才省略自造容器；`Flex` / `Space` 这类有职责的容器保留，但只能当根内部的区域，不能自己充当某一分支的根。
+- **并列节点**：表格 + 分页这类并列结构不算根 —— attrs 只落最外层，其余并列节点只吃自有类名；禁止返回 Fragment 多根。
+- **不产生 DOM 的控件**（`ClientProvider` / `ConfigProvider` / `CrudConfigProvider` 这类纯插槽转发）不接收 `class` / `style`，在 README 里写明；不要 `inheritAttrs: false` 之后静默丢弃。
+- **语义化 DOM 透传**：组合了多个 antd 组件、且有不止一个可定制节点的控件，必须声明 `classes` / `styles` 两个 props —— 这是本包对 antd 语义化 DOM 的统一入口。两者各是一张**区域表**：区域映射到 antd 组件就写该组件的类型（`SelectProps['classes']`、`TabsProps['styles']`…，函数形态随之继承），是我们自己的节点就写 `string` / `CSSProperties`；不手写 antd 已有的键名。
+- **语义键 = 区域名**：小写 camelCase，只描述位置，不带控件名前缀（`select`，不是 `iconSelectSelect`），并与类名后缀一一对应（`-select` ↔ `select`）—— 看类名就知道 key。
+- **区域就是一个 antd 组件时，值是该组件的原生语义对象**：原样透传，不改名、不翻译、不拍平（`classes.select` 直接喂给 `<Select classes>`）。该组件没有语义 DOM（如 `Avatar`）时值退化为 `string`，README 标注"仅根可定制"。
+- **同一个 antd 组件出现多次**：用父区域嵌套区分（`popover.tabs`），与 antd 自己的 `classes.popup` 同一套习惯。
+- **`root` 的归属**：`classes.root` / `styles.root` 只指本控件的稳定根，与内部 antd 组件的 `root` 不混用；我们自己的状态修饰类（`-preview` / `-avatar`）不是宿主入口，宿主要定制走对应区域 key。
+- **合并而不是二选一**：内部固定注入的类 / 样式必须与宿主的合并（类用 `classNames(hashId, cssVarCls, 自有类, 宿主类)`，样式用 `{...自有, ...宿主}`）；宿主给的是函数形态（`(info) => 对象`）时先求值再合并。不要为了合并去深路径引 antdv-next 的内部 `_util`（不是公开出口）。
+- **裸节点要带 hash**：语义类挂到裸节点时必须同时挂 `hashId` —— 顶层键编译成 `:where(.css-hash).<类名>`，没有 hash 的元素不命中（见 [10. 样式](#10-样式)）。
+- **没有落点就不给 key**：纯逻辑分组不提供语义键；README 列"无落点清单"，避免"给了 key 没效果"。
 
-**为什么**：命名是唯一的"跨文件导航"。前缀统一后，按字母排序相关文件天然相邻，grep 也一次到位。
+**为什么**：命名是唯一的"跨文件导航"。前缀统一后，按字母排序相关文件天然相邻，grep 也一次到位。根节点与语义键同理 —— 宿主能覆盖什么必须是可预期的：同一个控件换个 `props` 就换一套选择器，等于没有覆盖 API。
 
 ### 10. 样式
 
