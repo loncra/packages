@@ -11,6 +11,9 @@ import {
   SpaceAddon,
   SpaceCompact,
   Tabs,
+  type ButtonProps,
+  type PopoverProps,
+  type TabsProps,
 } from 'antdv-next'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {SelectOutlined} from '@antdv-next/icons'
@@ -24,9 +27,39 @@ import {ICON_SELECT_AVATAR_MODE_VALUE, ICON_SELECT_MODE} from './constants'
 import type {
   IconfontJson,
   IconSelectAvatarModeValueType,
+  IconSelectClasses,
   IconSelectModeType,
   IconSelectProps,
+  IconSelectStyles,
 } from './types'
+
+interface GlyphGridParams {
+  prefixCls: string
+  hashed: (...names: (string | undefined)[]) => string
+  glyphs: {key: string; value: string}[]
+  current: string
+  button: {
+    classes?: ButtonProps['classes']
+    styles?: ButtonProps['styles']
+  }
+  renderIcon: (type: string) => VNodeChild
+  onPick: (value: string) => void
+}
+
+interface GlyphPopoverParams {
+  prefixCls: string
+  scope: string
+  hashed: (...names: (string | undefined)[]) => string
+  classes: IconSelectClasses
+  styles: IconSelectStyles
+  placeholder: string
+  tabItems: TabsProps['items']
+  current: string
+  onPick: (value: string) => void
+  onSearch: (value: string) => void
+  glyphsOf: (packName: string) => {key: string; value: string}[]
+  renderIcon: (type: string) => VNodeChild
+}
 
 function renderAvatar(
   type: IconSelectAvatarModeValueType,
@@ -52,6 +85,105 @@ function preventEnter(event: KeyboardEvent) {
   }
 }
 
+function mergeSemanticClasses(base: unknown, patch: Record<string, string>) {
+  if (!base) {
+    return patch
+  }
+  if (typeof base === 'function') {
+    return (info: unknown) =>
+      mergeSemanticClasses((base as (value: unknown) => unknown)(info), patch)
+  }
+  const merged = {...(base as Record<string, unknown>)}
+  Object.keys(patch).forEach((key) => {
+    merged[key] = classNames(merged[key], patch[key])
+  })
+  return merged
+}
+
+function renderGlyphGrid(params: GlyphGridParams) {
+  return (
+    <Space wrap>
+      {params.glyphs.map((glyph) => (
+        <Button
+          key={glyph.key}
+          size="large"
+          type={params.current === glyph.value ? 'primary' : 'default'}
+          class={params.hashed(`${params.prefixCls}-glyph`)}
+          classes={params.button.classes}
+          styles={params.button.styles}
+          onClick={() => params.onPick(glyph.value)}
+        >
+          {params.renderIcon(glyph.value)}
+        </Button>
+      ))}
+    </Space>
+  )
+}
+
+function renderGlyphPopover(params: GlyphPopoverParams) {
+  const {prefixCls, scope, hashed, classes, styles} = params
+  const button = {classes: classes.glyph, styles: styles.glyph}
+
+  return (
+    <Popover
+      rootClass={scope}
+      classes={
+        mergeSemanticClasses(classes.popover, {
+          root: scope,
+          content: scope,
+        }) as PopoverProps['classes']
+      }
+      styles={styles.popover}
+      trigger={'click'}
+      v-slots={{
+        title: () => (
+          <Flex justify="space-between" align="center" class={scope}>
+            <InputSearch
+              class={hashed(`${prefixCls}-popover-search`)}
+              classes={classes.popover?.search}
+              styles={styles.popover?.search}
+              placeholder={params.placeholder}
+              size="small"
+              onSearch={params.onSearch}
+              onKeydown={preventEnter}
+            />
+          </Flex>
+        ),
+        content: () => (
+          <div class={scope}>
+            <Tabs
+              centered
+              items={params.tabItems}
+              classes={
+                mergeSemanticClasses(classes.popover?.tabs, {
+                  body: hashed(`${prefixCls}-popover-body`),
+                }) as TabsProps['classes']
+              }
+              styles={styles.popover?.tabs}
+              v-slots={{
+                contentRender: ({ item }: { item: { packName: string } }) =>
+                  renderGlyphGrid({
+                    prefixCls,
+                    hashed,
+                    glyphs: params.glyphsOf(item.packName),
+                    current: params.current,
+                    button,
+                    renderIcon: params.renderIcon,
+                    onPick: params.onPick,
+                  }),
+              }}
+            />
+          </div>
+        ),
+      }}
+    >
+      <Button>
+        {params.current ? params.renderIcon(params.current) : <SelectOutlined />}
+      </Button>
+    </Popover>
+  )
+}
+
 const IconSelect = defineComponent({
   name: 'LIconSelect',
   inheritAttrs: false,
@@ -75,6 +207,15 @@ const IconSelect = defineComponent({
     iconRender: Function as PropType<IconSelectProps['iconRender']>,
     prefixCls: String,
     rootClass: String,
+    size: [String, Number] as PropType<IconSelectProps['size']>,
+    classes: {
+      type: Object as PropType<IconSelectProps['classes']>,
+      default: () => ({}),
+    },
+    styles: {
+      type: Object as PropType<IconSelectProps['styles']>,
+      default: () => ({}),
+    },
   },
   emits: ['update:value'],
   setup(props, { slots, attrs }) {
@@ -106,44 +247,25 @@ const IconSelect = defineComponent({
       return classNames(hashId.value, cssVarCls.value, ...names)
     }
 
-    function renderGlyphButtons(packName: string, current: string, onPick: (value: string) => void) {
-      return (
-        <Space wrap>
-          {glyphsOf(packName).map((glyph) => (
-            <Button
-              key={glyph.key}
-              size="large"
-              type={current === glyph.value ? 'primary' : 'default'}
-              class={hashed(`${prefixCls.value}-glyph`)}
-              onClick={() => onPick(glyph.value)}
-            >
-              {renderIcon(glyph.value)}
-            </Button>
-          ))}
-        </Space>
-      )
-    }
-
     return () => {
       const { class: attrClass, style: attrStyle, ...rest } = attrs
-      const rootClass = classNames(
-        prefixCls.value,
-        hashId.value,
-        cssVarCls.value,
-        props.rootClass,
-        attrClass,
-      )
-      const popoverClass = classNames(
-        prefixCls.value,
-        hashId.value,
-        cssVarCls.value,
-        props.rootClass,
-      )
+      const classes = props.classes ?? {}
+      const styles = props.styles ?? {}
+      const scope = classNames(prefixCls.value, hashId.value, cssVarCls.value, props.rootClass)
+      const rootClass = classNames(scope, classes.root, attrClass)
+      const rootStyle = styles.root ? ([styles.root, attrStyle] as never) : (attrStyle as never)
+      const avatarAttrs = {
+        class: classes.avatar,
+        style: styles.avatar,
+        size: props.size,
+      }
+      const prefix = prefixCls.value
+      const gridButton = {classes: classes.glyph, styles: styles.glyph}
 
       if (props.preview) {
         return (
-          <div class={classNames(rootClass, `${prefixCls.value}-preview`)} style={attrStyle as never}>
-            {renderAvatar(parseAvatarModel(modelValue.value).type, avatarPayload.value, renderIcon, rest)}
+          <div class={classNames(rootClass, `${prefix}-preview`)} style={rootStyle} {...rest}>
+            {renderAvatar(parseAvatarModel(modelValue.value).type, avatarPayload.value, renderIcon, avatarAttrs)}
             {slots.afterAvatar?.()}
           </div>
         )
@@ -151,124 +273,135 @@ const IconSelect = defineComponent({
 
       if (props.mode === ICON_SELECT_MODE.VIEW) {
         return (
-          <Tabs
-            class={rootClass}
-            style={attrStyle as never}
-            centered
-            items={tabItems.value}
-            classes={{body: hashed(`${prefixCls.value}-tabs-body`)}}
-            v-slots={{
-              labelRender: ({ item }: { item: { label: string; packName: string } }) =>
-                `${item.label} (${glyphsOf(item.packName).length})`,
-              contentRender: ({ item }: { item: { packName: string } }) =>
-                renderGlyphButtons(item.packName, modelValue.value, (value) => {
-                  modelValue.value = value
-                }),
-              leftExtra: () => (
-                <InputSearch onSearch={onSearch} onKeydown={preventEnter} />
-              ),
-              rightExtra: () => (
-                <SpaceCompact>
-                  <SpaceAddon>{selectedPackName()}</SpaceAddon>
-                  <Input
-                    value={modelValue.value}
-                    onUpdate:value={(value: string) => {
+          <div class={rootClass} style={rootStyle} {...rest}>
+            <Tabs
+              centered
+              items={tabItems.value}
+              classes={
+                mergeSemanticClasses(classes.tabs, {
+                  body: hashed(`${prefix}-tabs-body`),
+                }) as TabsProps['classes']
+              }
+              styles={styles.tabs}
+              v-slots={{
+                labelRender: ({ item }: { item: { label: string; packName: string } }) =>
+                  `${item.label} (${glyphsOf(item.packName).length})`,
+                contentRender: ({ item }: { item: { packName: string } }) =>
+                  renderGlyphGrid({
+                    prefixCls: prefix,
+                    hashed,
+                    glyphs: glyphsOf(item.packName),
+                    current: modelValue.value,
+                    button: gridButton,
+                    renderIcon,
+                    onPick: (value) => {
                       modelValue.value = value
-                    }}
+                    },
+                  }),
+                leftExtra: () => (
+                  <InputSearch
+                    class={hashed(`${prefix}-search`)}
+                    classes={classes.search}
+                    styles={styles.search}
+                    onSearch={onSearch}
+                    onKeydown={preventEnter}
                   />
-                </SpaceCompact>
-              ),
-            }}
-          />
+                ),
+                rightExtra: () => (
+                  <SpaceCompact>
+                    <SpaceAddon
+                      class={hashed(`${prefix}-pack-name`, classes.packName)}
+                      style={styles.packName}
+                    >
+                      {selectedPackName()}
+                    </SpaceAddon>
+                    <Input
+                      class={hashed(`${prefix}-code-input`)}
+                      classes={classes.codeInput}
+                      styles={styles.codeInput}
+                      value={modelValue.value}
+                      onUpdate:value={(value: string) => {
+                        modelValue.value = value
+                      }}
+                    />
+                  </SpaceCompact>
+                ),
+              }}
+            />
+          </div>
         )
       }
 
       if (props.mode === ICON_SELECT_MODE.INPUT) {
         return (
-          <SpaceCompact class={rootClass} style={attrStyle as never}>
-            <Input
-              {...rest}
-              value={modelValue.value}
-              onUpdate:value={(value: string) => {
-                modelValue.value = value
-              }}
-            />
-          </SpaceCompact>
+          <div class={rootClass} style={rootStyle} {...rest}>
+            <SpaceCompact
+              class={hashed(`${prefix}-compact`, classes.compact)}
+              style={styles.compact}
+            >
+              <Input
+                class={hashed(`${prefix}-input`)}
+                classes={classes.input}
+                styles={styles.input}
+                value={modelValue.value}
+                onUpdate:value={(value: string) => {
+                  modelValue.value = value
+                }}
+              />
+            </SpaceCompact>
+          </div>
         )
       }
 
       return (
-        <Flex
-          align="center"
-          gap="small"
-          class={classNames(rootClass, `${prefixCls.value}-avatar`)}
-          style={attrStyle as never}
-        >
-          {avatarType.value === ICON_SELECT_AVATAR_MODE_VALUE.AVATAR ? (
-            <Avatar src={avatarPayload.value} />
-          ) : avatarType.value === ICON_SELECT_AVATAR_MODE_VALUE.ICON ? (
-            <Avatar>{renderIcon(avatarPayload.value)}</Avatar>
-          ) : (
-            <Avatar>{avatarPayload.value.substring(0, 1)}</Avatar>
-          )}
-          <SpaceCompact block class={`${prefixCls.value}-compact`}>
-            <Select
-              options={avatarOptions.value}
-              class={`${prefixCls.value}-select`}
-              value={avatarType.value}
-              onUpdate:value={(type) => {
-                avatarType.value = type as IconSelectAvatarModeValueType
-              }}
-            />
-            <Input
-              class={`${prefixCls.value}-payload`}
-              value={avatarPayload.value}
-              onUpdate:value={(value: string) => {
-                avatarPayload.value = value
-              }}
-            />
-            {avatarType.value === ICON_SELECT_AVATAR_MODE_VALUE.ICON ? (
-              <Popover
-                class={popoverClass}
-                rootClass={popoverClass}
-                trigger={"click"}
-                classes={{root: popoverClass, content: popoverClass}}
-                v-slots={{
-                  title: () => (
-                    <Flex justify="space-between" align="center" class={popoverClass}>
-                      <InputSearch
-                        class={hashed(`${prefixCls.value}-search`)}
-                        placeholder={locale.value.searchPlaceholder}
-                        size="small"
-                        onSearch={onSearch}
-                        onKeydown={preventEnter}
-                      />
-                    </Flex>
-                  ),
-                  content: () => (
-                    <div class={popoverClass}>
-                      <Tabs
-                        centered
-                        items={tabItems.value}
-                        classes={{body: hashed(`${prefixCls.value}-popover-body`)}}
-                        v-slots={{
-                          contentRender: ({item}: {item: {packName: string}}) =>
-                            renderGlyphButtons(item.packName, avatarPayload.value, (value) => {
-                              avatarPayload.value = value
-                            }),
-                        }}
-                      />
-                    </div>
-                  ),
+        <div class={classNames(rootClass, `${prefix}-avatar`)} style={rootStyle} {...rest}>
+          <Flex align="center" gap="small">
+            {renderAvatar(avatarType.value, avatarPayload.value, renderIcon, avatarAttrs)}
+            <SpaceCompact
+              block
+              class={hashed(`${prefix}-compact`, classes.compact)}
+              style={styles.compact}
+            >
+              <Select
+                options={avatarOptions.value}
+                class={hashed(`${prefix}-select`)}
+                classes={classes.select}
+                styles={styles.select}
+                value={avatarType.value}
+                onUpdate:value={(type) => {
+                  avatarType.value = type as IconSelectAvatarModeValueType
                 }}
-              >
-                <Button>
-                  {avatarPayload.value ? renderIcon(avatarPayload.value) : <SelectOutlined />}
-                </Button>
-              </Popover>
-            ) : null}
-          </SpaceCompact>
-        </Flex>
+              />
+              <Input
+                class={hashed(`${prefix}-payload`)}
+                classes={classes.payload}
+                styles={styles.payload}
+                value={avatarPayload.value}
+                onUpdate:value={(value: string) => {
+                  avatarPayload.value = value
+                }}
+              />
+              {avatarType.value === ICON_SELECT_AVATAR_MODE_VALUE.ICON
+                ? renderGlyphPopover({
+                    prefixCls: prefix,
+                    scope,
+                    hashed,
+                    classes,
+                    styles,
+                    placeholder: locale.value.searchPlaceholder,
+                    tabItems: tabItems.value,
+                    current: avatarPayload.value,
+                    onPick: (value) => {
+                      avatarPayload.value = value
+                    },
+                    onSearch,
+                    glyphsOf,
+                    renderIcon,
+                  })
+                : null}
+            </SpaceCompact>
+          </Flex>
+        </div>
       )
     }
   },

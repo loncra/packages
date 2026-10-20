@@ -11,8 +11,15 @@ function genIconSelectStyle(token: LoncraStyleToken): CSSInterpolation {
         position: 'relative',
         display: 'inline-block',
       },
+      [`&-avatar`]: {
+        width: '100%',
+        [`${antCls}-flex`]: {
+          gap: marginXS,
+        },
+      },
       [`&-compact`]: {
         flex: 1,
+        width: '100%',
       },
       [`&-select`]: {
         width: 'auto',
@@ -23,6 +30,9 @@ function genIconSelectStyle(token: LoncraStyleToken): CSSInterpolation {
       [`&-search`]: {
         width: '100%',
       },
+      [`&-popover-search`]: {
+        width: '100%',
+      },
       [`${antCls}-tabs-nav`]: {
         margin: 0
       },
@@ -30,10 +40,6 @@ function genIconSelectStyle(token: LoncraStyleToken): CSSInterpolation {
         margin: 0,
         paddingTop: paddingMD
       }
-    },
-    [`${componentCls}-avatar`]: {
-      width: '100%',
-      gap: marginXS,
     },
     ...genScrollAreaStyle(token, '-tabs-body', 8),
     ...genScrollAreaStyle(token, '-popover-body', 4, 10),

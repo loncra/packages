@@ -17,10 +17,12 @@ export type {
   IconfontGlyph,
   IconfontJson,
   IconSelectAvatarModeValueType,
+  IconSelectClasses,
   IconSelectEmits,
   IconSelectModeType,
   IconSelectProps,
   IconSelectSlots,
+  IconSelectStyles,
 } from './icon-select'
 export { AVATAR_SCHEMES, ICON_SELECT_AVATAR_MODE_VALUE, ICON_SELECT_MODE } from './icon-select'
 

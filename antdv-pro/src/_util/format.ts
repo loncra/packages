@@ -113,8 +113,7 @@ export function executeStatusCell() {
  * 图标 + 名称单元格（企业 / 插件 / 技能包那一列都长这样）。
  * 没图标时退化为名称首字（`IconSelect` 的 `INPUT` 形态）。
  *
- * `size` 透给 `IconSelect`（它落在 `Avatar` 上：`IconSelect` 没声明这个 prop ⇒ 走 attrs，
- * 见 `IconSelect.tsx:256/268` + `renderAvatar` 的三条分支）；不传 = `Avatar` 默认（32px）。
+ * `size` 是 `IconSelect` 的 prop，最终落在 `Avatar` 上；不传 = `Avatar` 默认（32px）。
  */
 export function iconNameCell<TRecord>(options: {
   renderIcon: IconRender

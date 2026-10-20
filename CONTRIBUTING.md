@@ -141,11 +141,11 @@ const [hashId, cssVarCls] = useStyle(prefixCls)
 ## 语义化 DOM {#semantic-dom}
 ```
 
-- **表格列名**：属性表与类型表用 `属性 | 说明 | 类型 | 默认值 | 版本`，事件 / 插槽 / 方法表用 `事件 | 说明 | 类型 | 版本`（首列换成 `插槽` / `方法`）。**版本列保留、值一律写 `-`**。
+- **表格列名**：属性表与类型表用 `属性 | 说明 | 类型 | 默认值 | 版本`，事件 / 插槽 / 方法表用 `事件 | 说明 | 类型 | 版本`（首列换成 `插槽` / `方法`）。**版本列保留、值一律写 `-`**。`classes` / `styles` 这类共用一个区域表的类型不单独建类型节：在「语义化 DOM」开头点明类型名即可。
 - **锚点**：`API` 下的四个小节用简化锚点（`{#props}` / `{#events}` / `{#slots}` / `{#methods}`），类型用小写类型名（`{#iconselectmodetype}`）；`{#when-to-use}` / `{#examples}` / `{#semantic-dom}` 照上面的骨架。
 - **不写** frontmatter、Design Token 表、FAQ，也不要用 `<demo src>` —— 代码演示直接内联 vue / ts 代码块。
 - **写清边界**：默认值从哪来、哪些 attrs 透传给哪个子组件、哪个 prop 形式可选而实际必填、多条规则命中时谁优先（范例：`IconSelect` 的 `preview` 优先于 `mode`；`iconRender` 不传则图标位置空白、外壳照常渲染）。
-- **「语义化 DOM」要写"拿不到什么"**：根元素是谁、`prefixCls` / `hashId` / `cssVarCls` / `class` / `rootClass` 各落在哪、内部类名清单、弹层（传送到 body）的落点与已知坑（如弹层那一串类不带宿主透传的 `class`）；**没有自有类名的节点显式点出来**，别让下一个人去猜。
+- **「语义化 DOM」按区域写**：一张 `区域 | 说明` 表，每个区域一句“是什么元素、能定制什么”，口径对齐 antdv-next 组件文档（`docs/src/pages/components/*/demo/_semantic.vue` 的 Semantic DOM）。`root` 行写清 `prefixCls` / `hashId` / `cssVarCls` / `class` / `style` / `rootClass` / `classes.root` 落在哪；弹层写传送位置与已知坑（如弹层那一串类不带宿主透传的 `class`）。一个 key 覆盖多个同义节点、没有语义 DOM 的区域、**拿不到的区域**（纯逻辑分组不给 key）都在说明里点出来，别让下一个人去猜。
 - **不写跨包指引**：包 `README.md` 不解释"为什么这样分"，控件说明里不出现"完整清单见某包"。
 
 #### 包 `README.md`
