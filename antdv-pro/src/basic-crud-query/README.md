@@ -105,9 +105,20 @@
 | dictionaryCodes | 要预载的数据字典 code | `(string \| undefined)[]` | - | - |
 | buckets / dictionaries | 预载结果（`v-model` 回给建列的地方） | `EnumBucketsResponseBody` / `PageDictionaries` | `{}` | - |
 | prefixCls | 前缀，默认 `loncra-basic-crud-query` | string | - | - |
-| rootClass | 声明了但**内核不消费**，只在形态组件那条路上生效（见[语义化 DOM](#semantic-dom)） | string | - | - |
+| rootClass | 并入根元素（`DataLoadingCard`）的类名，位置在宿主 `class` 之前 | string | - | - |
+| classes | 区域表，见 [语义化 DOM](#semantic-dom)：`card` / `spin` / `pagination` | `BasicCrudQueryClasses` | - | - |
+| styles | 同上区域的样式表 | `BasicCrudQueryStyles` | - | - |
 
 `drag` / `rowKey` 只出现在 `QueryCollectionProps` 类型里，**本组件的 props 没有声明它们**（真正消费的是 `QueryTable`）。所以 TSX 不报错，但传进来只会当普通属性落到根元素上（`plain` 时那个 `div` 上会出现 `drag="true"` 之类），不驱动任何行为。
+
+随属性走的几条边界：
+
+- **"受控"只在宿主同时给了值与对应的 `update:*` 时成立**：只给值不接事件时，`useModel` 会留本地副本，宿主传的值只当初始值。
+- **`selectedKey` 在 `setup` 时绑定**：运行中从 `selectedRows` 改成 `selectedItems` 不会重绑。
+- **同 id 覆盖是逐字段合并**：自定义 `{id: 'add', run}` 只换 `run`，`permission` 仍是 `authority?.add` ⇒ 没配 `authority` 的按钮依旧不显示。
+- **字典失败会连累取数**：`onPlanMounted` 先 `await loadDictionaries()` 再取数，没有 `try/catch` ⇒ 字典接口挂了列表一片空，错误冒成未处理拒绝。
+- **取数失败不兜底**：`fetchDataSource` 只有 `try/finally`，没有 `catch`；宿主的 axios 层已统一 `message.error`，这里不重复提示、也不吞错。
+- **`refreshOnActivate` 的三条**：只在 keep-alive 内触发；任务还在跑（`running` 未清）时切回会被忽略；首次 `activated` 恒定跳过 ⇒ `immediate: false` + keep-alive 的首屏一次都不取数。函数形态返回的 Promise 只被用来置位/复位 `loading`，reject 不会被接住。
 
 ### 事件 {#events}
 
@@ -120,6 +131,9 @@
 | deleted | 删除**成功后**抛，回传被删记录；失败走 `message.error`，不抛 | `(records: TEntity[]) => void` | - |
 
 同一件事通常有两条路，**选一条**：行内自定义动作既会执行 `run` 又会抛 `action`，两处都写同一个处理就等于执行两次。
+
+- **删除链路**：确认 → `service.delete` 成功 → 抛 `deleted` → 自动重新取数；失败只 `message.error`，不抛。
+- **行内动作别用内置 id**：`onRecordAction` 只按 id 判，自定义动作叫 `edit` / `detail` / `delete` 时 `action` 事件会被静默吞掉（`run` 照常执行）。
 
 ### 插槽 {#slots}
 
@@ -162,37 +176,29 @@
 
 > `{title?: VNodeChild, extra?: VNodeChild}` —— `plain` 时 `default` 插槽的作用域。
 
-`BasicCrudQueryProps` / `BasicCrudQueryEmits` / `BasicCrudQuerySlots` / `BasicCrudQueryExpose` / `QueryCollectionProps` / `AuthorityProps` / `EnumBucketRequest` 从包根 `@loncra/antdv-pro` 导出；**`RefreshOnActivate` 与 `BasicCrudQueryContentProps` 目前只在子路径 `./basic-crud-query` 里**（`QueryTable` 就是这么取的）。
+`BasicCrudQueryProps` / `BasicCrudQueryClasses` / `BasicCrudQueryStyles` / `BasicCrudQueryEmits` / `BasicCrudQuerySlots` / `BasicCrudQueryExpose` / `QueryCollectionProps` / `AuthorityProps` / `EnumBucketRequest` 从包根 `@loncra/antdv-pro` 导出；**`RefreshOnActivate` 与 `BasicCrudQueryContentProps` 目前只在子路径 `./basic-crud-query` 里**（`QueryTable` 就是这么取的）。
 
 ## 语义化 DOM {#semantic-dom}
 
-根元素就是 `DataLoadingCard`：默认形态 `.ant-card`，`plain` 形态裸 `<div>`。两种形态的根上都**没有** `prefixCls` / `hashId` / `cssVarCls`；attrs 全量落到这个根上。
+根元素就是 `DataLoadingCard`：默认形态 `.ant-card`，`plain` 形态它自己的 `div`。两种形态的根上都挂同一串类，顺序是 `${prefixCls}` → `hashId` → `cssVarCls` → `rootClass` → 宿主 `class`，`style` 也落这里；其余 attrs 全量落到这个根上。
 
-自有类名只有分页那一个节点：
+`DataLoadingCard` 自己也会把 `loncra-data-loading-card` 连同它的 `hashId` / `cssVarCls` 挂到**同一个元素**上（它就是那层的根），所以根上有两个前缀类。
+
+| 区域 | 说明 |
+| --- | --- |
+| root | 上面那个根元素（`.ant-card` 或 `plain` 的 `div`） |
+| card | 转手给 `DataLoadingCard` 的 `classes.card` / `styles.card`：卡片形态下生效，`plain` 下没有落点 |
+| spin | 转手给 `DataLoadingCard` 的 `classes.spin` / `styles.spin`：内容区那个 `Spin`（本组件恒传 `spin={false}`，所以**目前总是没有落点**） |
+| pagination | 分页器 `Pagination` 的语义键原样透传；`:pagination="false"` 时没有落点 |
+
+自有类名两处，样式规则只有一条 `marginTop`：
 
 | 落点 | 类名 |
 | --- | --- |
-| 分页的 antd 根 `.ant-pagination` | `${prefixCls}` + `hashId` + `cssVarCls` + `${prefixCls}-pagination`；规则只有一条 `marginTop` |
+| 根元素 | `${prefixCls}`（没有带后缀的自有类） |
+| 分页的 antd 根 `.ant-pagination` | `${prefixCls}` + `hashId` + `cssVarCls` + `${prefixCls}-pagination` |
 
 `prefixCls` 默认 `loncra-basic-crud-query`（`getPrefixCls('basic-crud-query', props.prefixCls ?? 'loncra-basic-crud-query')`）：宿主 `ConfigProvider` 的 `prefixCls` 只有在组件自己的 `prefixCls` **为空**时才生效。形态组件不传 `prefixCls` 时（`QueryCardGrid` 就没传），分页类名与网格前缀不同源。
 
-`rootClass` 的实际去向分三条路：
+`plain` 下 `classes.card` / `styles.card` 静默失效（没有 `Card` 可落），标题与工具栏也不再进卡片头 —— 它们通过默认插槽的作用域 `{title, extra}` 交给内容，不消费就没人渲染。
 
-| 用法 | 落点 |
-| --- | --- |
-| `<QueryTable root-class>` | 表格自己的根类；**卡片壳拿不到**（`QueryTable` 另外还把它喂给内核，被丢弃） |
-| `<QueryCardGrid root-class>` | 并进 `class` 交给内核 ⇒ 最终落在卡片壳 `.ant-card` 上 |
-| `<BasicCrudQuery root-class>` | 完全不生效（声明成 prop ⇒ 不进 attrs，而内核不消费它） |
-
-## 实现边界 {#limits}
-
-- **删除链路**：确认 → `service.delete` 成功 → 抛 `deleted` → **自动重新取数**；失败只 `message.error`。
-- **字典失败会连累取数**：`onPlanMounted` 先 `await loadDictionaries()` 再取数，没有 `try/catch` ⇒ 字典接口挂了，列表一片空，错误冒成未处理拒绝。
-- **取数失败不兜底**：`fetchDataSource` 只有 `try/finally`，没有 `catch`；宿主的 axios 层已统一 `message.error`，这里不重复提示、也不吞错。
-- **`refreshOnActivate` 的三条**：只在 keep-alive 内触发；任务还在跑（`running` 未清）时切回会被忽略；首次 `activated` 恒定跳过 ⇒ `immediate: false` + keep-alive 的首屏一次都不取数。函数形态返回的 Promise 只被用来置位/复位 `loading`，reject 不会被接住。
-- **`selectedKey` 在 `setup` 时绑定**：运行中从 `selectedRows` 改成 `selectedItems` 不会重绑。
-- **`plain` 下 `classes` / `styles` 静默失效**：它们是 Card 专属参数，落在裸 `div` 上无效。
-- **`plain` 下标题和工具栏不是消失**：通过 `default` 插槽作用域下发（`{title, extra}`），不消费就没人渲染。
-- **同 id 覆盖是逐字段合并**：自定义 `{id: 'add', run}` 只换 `run`，`permission` 仍是 `authority?.add` ⇒ 没配 `authority` 的话按钮依旧不显示。
-- **行内动作别用内置 id**：`onRecordAction` 只按 id 判，自定义动作叫 `edit` / `detail` / `delete` 时 `action` 事件会被静默吞掉（`run` 照常执行）。
-- **"受控"只在宿主同时给了值与 `update:*` 时成立**：只给值不接事件时，`useModel` 会留本地副本，宿主传的值只当初始值。

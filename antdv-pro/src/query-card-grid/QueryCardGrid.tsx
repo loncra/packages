@@ -272,7 +272,10 @@ const QueryCardGrid = defineComponent({
         <BasicCrudQuery
           ref={base}
           {...shellAttrs}
-          {...({classes: classSemantic.card, styles: styleSemantic.card} as Record<string, unknown>)}
+          {...({
+            classes: {card: classSemantic.card},
+            styles: {card: styleSemantic.card},
+          } as Record<string, unknown>)}
           class={shellClass}
           style={shellStyle}
           service={props.service}

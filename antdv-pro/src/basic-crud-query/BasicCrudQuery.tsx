@@ -68,6 +68,8 @@ const BasicCrudQuery = defineComponent({
     dictionaries: {type: Object as PropType<PageDictionaries>, default: () => ({})},
     prefixCls: String,
     rootClass: String,
+    classes: Object as PropType<BasicCrudQueryProps['classes']>,
+    styles: Object as PropType<BasicCrudQueryProps['styles']>,
   },
   emits: [
     'update:dataSource',
@@ -153,42 +155,57 @@ const BasicCrudQuery = defineComponent({
       return slots.extra ? slots.extra() : <ActionButton actions={toolbarActions.value} />
     }
 
-    return () => (
-      <DataLoadingCard
-        {...attrs}
-        loading={loading.value}
-        onUpdate:loading={(value: boolean) => (loading.value = value)}
-        onMounted={onPlanMounted}
-        onActivated={onPlanActivated}
-        plain={props.plain}
-        spin={false}
-        title={props.title}
-        v-slots={{
-          title: !props.plain && slots.title ? () => slots.title?.() : undefined,
-          extra: props.plain ? undefined : () => contentExtra(),
-          default: () => (
-            <>
-              {slots.default?.({
-                title: props.plain ? contentTitle.value : undefined,
-                extra: props.plain ? contentExtra() : undefined,
-              })}
-              {pagination.value === false ? null : (
-                <Pagination
-                  class={classNames(
-                    prefixCls.value,
-                    hashId.value,
-                    cssVarCls.value,
-                    `${prefixCls.value}-pagination`,
-                  )}
-                  {...(pagination.value as Record<string, unknown>)}
-                  onChange={onPageChange}
-                />
-              )}
-            </>
-          ),
-        }}
-      />
-    )
+    return () => {
+      const {class: attrClass, style: attrStyle, ...rest} = attrs
+      return (
+        <DataLoadingCard
+          {...(rest as Record<string, unknown>)}
+          class={classNames(
+            prefixCls.value,
+            hashId.value,
+            cssVarCls.value,
+            props.rootClass,
+            attrClass,
+          )}
+          style={attrStyle}
+          classes={{card: props.classes?.card, spin: props.classes?.spin}}
+          styles={{card: props.styles?.card, spin: props.styles?.spin}}
+          loading={loading.value}
+          onUpdate:loading={(value: boolean) => (loading.value = value)}
+          onMounted={onPlanMounted}
+          onActivated={onPlanActivated}
+          plain={props.plain}
+          spin={false}
+          title={props.title}
+          v-slots={{
+            title: !props.plain && slots.title ? () => slots.title?.() : undefined,
+            extra: props.plain ? undefined : () => contentExtra(),
+            default: () => (
+              <>
+                {slots.default?.({
+                  title: props.plain ? contentTitle.value : undefined,
+                  extra: props.plain ? contentExtra() : undefined,
+                })}
+                {pagination.value === false ? null : (
+                  <Pagination
+                    class={classNames(
+                      prefixCls.value,
+                      hashId.value,
+                      cssVarCls.value,
+                      `${prefixCls.value}-pagination`,
+                    )}
+                    {...(pagination.value as Record<string, unknown>)}
+                    {...(props.classes?.pagination ? {classes: props.classes.pagination} : {})}
+                    {...(props.styles?.pagination ? {styles: props.styles.pagination} : {})}
+                    onChange={onPageChange}
+                  />
+                )}
+              </>
+            ),
+          }}
+        />
+      )
+    }
   },
 }) as unknown as BasicCrudQueryConstructor
 

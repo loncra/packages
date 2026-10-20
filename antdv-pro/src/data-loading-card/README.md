@@ -92,7 +92,10 @@
 | title | 卡片头。优先级：`false` > `#title` 槽 > 本 prop > `CrudConfig.resolveDefaultTitle()`。传 `false` 时**连 `#title` 槽一起忽略**；传 `true` 等于空标题（没有意义） | `VNode \| boolean` | - | - |
 | plain | 不渲染 `Card`，只留一个裸 `div`；不消费 `title` / `#extra`。**不改变 `Spin` 行为**，是否转圈仍只看 `spin` | boolean | `false` | - |
 | spin | 内容区是否套 `Spin`。`false` 用于"内容自带加载态"（CRUD 列表） | boolean | `true` | - |
-| class / style | 未声明，走 attrs：整体落到根元素（卡片形态 = `.ant-card`，`plain` = 裸 `div`） | - | - | - |
+| rootClass | 并入根元素的类名，位置在宿主 `class` 之前 | string | - | - |
+| classes | 区域表，见 [语义化 DOM](#semantic-dom)：`card` / `spin` | `DataLoadingCardClasses` | - | - |
+| styles | 同上区域的样式表 | `DataLoadingCardStyles` | - | - |
+| class / style | 未声明，走 attrs：与 `rootClass` 一起落到根元素（卡片形态 = `.ant-card`，`plain` = 自己的 `div`） | - | - | - |
 
 `title` 的 prop 声明里 `default: undefined` **不能删**：类型带了 `Boolean`，父级「不传」会被 Vue 的布尔转换变成 `false`，那就成了「不要卡片头」，`resolveDefaultTitle` 永远不会执行。
 
@@ -128,20 +131,26 @@ const load: DataLoadingTask = async () => {
 }
 ```
 
-`DataLoadingCardProps` / `DataLoadingCardSlots` / `DataLoadingCardEmits` 与 `DataLoadingTask` 都从包根 `@loncra/antdv-pro` 导出。
+`DataLoadingCardProps` / `DataLoadingCardClasses` / `DataLoadingCardStyles` / `DataLoadingCardSlots` / `DataLoadingCardEmits` 与 `DataLoadingTask` 都从包根 `@loncra/antdv-pro` 导出。
 
 ## 语义化 DOM {#semantic-dom}
 
-两种形态，根元素不同：
+两种形态，根元素不同，但**挂类契约一致**：
 
-| 形态 | 根元素 | attrs 落点 | 自有类名 |
+| 形态 | 根元素 | attrs 落点 | 根上挂什么 |
 | --- | --- | --- | --- |
-| 默认（卡片） | `.ant-card` | `.ant-card` 根，**全量透传**：`variant` / `size` / `hoverable` / `classes` / `styles` 都真生效 | 无 —— 卡片本体不带我们的类 |
-| `plain` | 裸 `<div>` | 那个 `div` | **一个都没有**，连 `prefixCls` / `hashId` / `cssVarCls` 都不挂 |
+| 默认（卡片） | `.ant-card` | `.ant-card` 根，**全量透传**：`variant` / `size` / `hoverable` 等都真生效 | `loncra-data-loading-card` + `hashId` + `cssVarCls` + `rootClass` + 宿主 `class` |
+| `plain` | 自己的 `div` | 那个 `div` | 同上 |
 
-同一批 attrs 在两种形态下不等价：`classes` / `styles` / `variant` 这类 Card 专属参数落到 `plain` 的裸 `div` 上是**静默失效的死属性**。宿主若想靠 `classes` 调卡片（例如贴边写 `:classes="{body: 'p-0!'}"`），只在卡片形态生效。
+| 区域 | 说明 |
+| --- | --- |
+| root | 上面两种形态的根元素：`prefixCls` → `hashId` → `cssVarCls` → `rootClass` → 宿主 `class`，`style` 也落这里 |
+| card | 卡片本体 `Card` 的语义键原样透传（`classes.card.body` 之类），**只在这个形态存在**；`plain` 下没有落点 |
+| spin | 内容区 `Spin` 的语义键原样透传；`spin={false}` 时没有落点 |
 
-`prefixCls` **恒为 `loncra-data-loading-card`**：`getPrefixCls('data-loading-card', 'loncra-data-loading-card')` 的第二个参数是 customize 覆盖值（non-empty 直接返回，`antdv-next/dist/config-provider/context.js:16-19`），所以宿主 `ConfigProvider` 的 `prefixCls` 改不动它。
+两种形态下不等价的是 **`classes.card` / `styles.card`**：Card 专属参数，`plain` 下没有 `Card` 可落，静默失效。宿主若想贴边写 `:classes="{card: {body: 'p-0!'}}"`，只在卡片形态生效。
+
+`prefixCls` **恒为 `loncra-data-loading-card`**：`getPrefixCls('data-loading-card', 'loncra-data-loading-card')` 的第二个参数是 customize 覆盖值（非空直接返回，见 `antdv-next/dist/config-provider/context.js` 的 `defaultGetPrefixCls`），所以宿主 `ConfigProvider` 的 `prefixCls` 改不动它。
 
 唯一的自有类名 `${prefixCls}-spin`：
 
@@ -161,5 +170,5 @@ const load: DataLoadingTask = async () => {
 - **任务抛错不接住**：`run()` 里的异步包装只有 `try/finally`，没有 `catch` ⇒ 宿主任务 reject 会变成未处理拒绝，界面也不会给提示。宿主自己 `try/catch` 并决定提示方式。
 - **没有取消机制**：`run()` 只做"忽略"不做"中止"，任务拿不到 `AbortSignal`、卸载也不取消 ⇒ 旧请求晚到会覆盖新状态，竞态得宿主自己去重（`CrudDetailPage` 用 `useStaleCheck` 补的就是这个）。
 - **只传 `onActivated` 的首屏缺口**：首次 `activated` 恒定跳过，若同时没有 `onMounted`，首屏一次都不跑。
-- **`plain` 的可定制点为零**：该形态没有任何自有类名，要定位只能自己传 `class` / `style`。
+- **`plain` 下只剩根可定制**：`Spin` 不挂 `${prefixCls}-spin`（那条撑满规则在该形态不生效），`classes.card` / `styles.card` 也没有落点；要定位内容只能从根往下写选择器。
 - **`title` 传 `true`** 会渲染出空标题（`true` 不是 VNode），要「不要标题」请传 `false`。

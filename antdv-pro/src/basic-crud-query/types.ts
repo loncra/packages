@@ -1,5 +1,5 @@
 import type {EmitsToProps, PublicProps, VNode, VNodeChild} from 'vue'
-import type {TableProps} from 'antdv-next'
+import type {CardProps, PaginationProps, SpinProps, TableProps} from 'antdv-next'
 import {SYSTEM_CONSTANT} from '@loncra/client/commons'
 import type {
   BasicIdMetadata,
@@ -33,6 +33,18 @@ export interface EnumBucketRequest {
 export type PageDictionaries = Record<string, DataDictionaryMetadata[]>
 
 export type BasicCrudQuerySelectedKey = 'selectedRows' | 'selectedItems'
+
+export interface BasicCrudQueryClasses {
+  card?: CardProps['classes']
+  spin?: SpinProps['classes']
+  pagination?: PaginationProps['classes']
+}
+
+export interface BasicCrudQueryStyles {
+  card?: CardProps['styles']
+  spin?: SpinProps['styles']
+  pagination?: PaginationProps['styles']
+}
 
 export type RefreshOnActivate = boolean | (() => void | Promise<void>)
 
@@ -76,6 +88,8 @@ export interface BasicCrudQueryProps<
   dictionaryCodes?: (string | undefined)[]
   buckets?: EnumBucketsResponseBody
   dictionaries?: PageDictionaries
+  classes?: BasicCrudQueryClasses
+  styles?: BasicCrudQueryStyles
 }
 
 export type BasicCrudQueryEmits<

@@ -105,7 +105,12 @@ export {
 } from './_util/crud/defaultActions'
 export {useCrudDelete} from './_util/crud/useCrudDelete'
 export {default as ActionButton} from './action-button'
-export type {ActionButtonEmits, ActionButtonProps} from './action-button'
+export type {
+  ActionButtonClasses,
+  ActionButtonEmits,
+  ActionButtonProps,
+  ActionButtonStyles,
+} from './action-button'
 export {
   exportCollectionData,
   fetchCollectionData,
@@ -132,19 +137,23 @@ export {useDateFormat} from './_util/crud/useDateFormat'
 export type {DateFormatApi, DateFormatConfig} from './_util/crud/useDateFormat'
 export {default as DataLoadingCard} from './data-loading-card'
 export type {
+  DataLoadingCardClasses,
   DataLoadingCardEmits,
   DataLoadingCardProps,
   DataLoadingCardSlots,
+  DataLoadingCardStyles,
   DataLoadingTask,
 } from './data-loading-card'
 export {default as BasicCrudQuery} from './basic-crud-query'
 export type {
+  BasicCrudQueryClasses,
   BasicCrudQueryConstructor,
   BasicCrudQueryEmits,
   BasicCrudQueryExpose,
   BasicCrudQueryProps,
   BasicCrudQuerySelectedKey,
   BasicCrudQuerySlots,
+  BasicCrudQueryStyles,
   EnumBucketRequest,
   EnumRef,
   PageDictionaries,

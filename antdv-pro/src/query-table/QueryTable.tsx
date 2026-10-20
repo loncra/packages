@@ -278,13 +278,12 @@ const QueryTable = defineComponent({
           dictionaryCodes={props.dictionaryCodes}
           selectedKey="selectedRows"
           prefixCls={props.prefixCls}
-          rootClass={props.rootClass}
           plain={props.plain}
           fetch={props.fetch}
-          {...({classes: classSemantic.value.card, styles: styleSemantic.value.card} as Record<
-            string,
-            unknown
-          >)}
+          {...({
+            classes: {card: classSemantic.value.card},
+            styles: {card: styleSemantic.value.card},
+          } as Record<string, unknown>)}
           dataSource={dataSource.value}
           loading={loading.value}
           query={query.value}

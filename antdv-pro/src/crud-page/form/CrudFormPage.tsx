@@ -69,7 +69,7 @@ function withFieldCtx(
  *
  * 布局走 **`DataLoadingCard`**（卡片 + 卡片头 + body 的 `Spin`，见 `BasicCrudQuery` 的用法）：
  * 卡片头不给就用宿主拼好的 `CrudConfig.resolveDefaultTitle()`；`$attrs` 直通卡片（贴边写
- * `:classes="{body:'p-0!'}"`）。初始加载的 loading 由它编排，**提交**的 loading 复用同一个
+ * `:classes="{card: {body:'p-0!'}}"`）。初始加载的 loading 由它编排，**提交**的 loading 复用同一个
  * `loading`（表单体转圈 + 保存按钮自身转圈）。
  *
  * **出什么**
