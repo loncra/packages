@@ -162,10 +162,12 @@ export type {
 export {default as QueryTable} from './query-table'
 export type {
   ColumnSearchConfig,
+  QueryTableClasses,
   QueryTableConstructor,
   QueryTableEmits,
   QueryTableProps,
   QueryTableSlots,
+  QueryTableStyles,
   SearchableColumnType,
 } from './query-table'
 export {default as CrudTable} from './crud-table'

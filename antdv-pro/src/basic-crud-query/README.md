@@ -141,7 +141,7 @@
 | --- | --- | --- | --- |
 | default | 内容（形态组件）。`plain` 时带作用域 `{title, extra}`，非 `plain` 时作用域为空 | `(content) => VNodeChild` | - |
 | title | 页面自带标题，优先于 `title` prop（`title: false` 时连它一起忽略） | `() => VNodeChild` | - |
-| extra | 标题右侧；不给就放默认动作按钮。转发与否则看形态组件：`QueryTable` **没有** `extra` 槽，`QueryCardGrid` 有 | `() => VNodeChild` | - |
+| extra | 标题右侧；不给就放默认动作按钮。`QueryTable` 与 `QueryCardGrid` 都转发 | `() => VNodeChild` | - |
 
 ### 方法 {#methods}
 

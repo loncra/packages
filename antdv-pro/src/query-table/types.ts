@@ -24,8 +24,23 @@ import type {
   DefaultCrudEntity,
 } from '../_util/crud/useCollectionData'
 import type {DragProp} from '../_util/crud/useDrag'
-import type {EnumBucketRequest, PageDictionaries, RefreshOnActivate} from '../basic-crud-query/types'
+import type {
+  BasicCrudQueryClasses,
+  BasicCrudQueryExpose,
+  BasicCrudQueryStyles,
+  EnumBucketRequest,
+  PageDictionaries,
+  RefreshOnActivate,
+} from '../basic-crud-query/types'
 import type {EnumBucketsResponseBody} from '@loncra/client/resource'
+
+export interface QueryTableClasses extends BasicCrudQueryClasses {
+  table?: TableProps['classes']
+}
+
+export interface QueryTableStyles extends BasicCrudQueryStyles {
+  table?: TableProps['styles']
+}
 
 export interface ColumnSearchConfig {
   component?: Component
@@ -40,12 +55,6 @@ export type SearchableColumnType<RecordType extends object = DefaultCrudEntity> 
     search?: ColumnSearchConfig
   }
 
-/**
- * **内容层** props：表格自己画什么。
- *
- * 数据 / 分页 / 字典 / 标题 / 动作在 `BasicCrudQuery` 基类里，这里只是把"交给基类"的那几个
- * 原样转发（名字与基类一致），数据用 `v-model` 双向绑定。
- */
 export interface QueryTableProps<
   TId = string | number,
   TBody extends BasicIdMetadata<TId> = BasicIdMetadata<TId>,
@@ -56,32 +65,18 @@ export interface QueryTableProps<
   columns?: SearchableColumnType<TEntity>[]
   immediate?: boolean
   refreshOnActivate?: RefreshOnActivate
-  /** 卡片头，与 `DataLoadingCard` 同形：`VNode` 直接用、`false` 不要卡片头、不给走默认标题 */
   title?: VNode | boolean
   hasPermission?: (permission: string) => boolean
   authority?: AuthorityProps
-  /** 标题右侧的工具栏动作：数组 = 与默认 `add`/`deleteSelected` 合并；`false` = 整排不出 */
   toolbarActions?: ToolbarActionDefinition<TEntity>[] | false
-  /** 行内动作：数组 = 与默认 `edit`/`detail`/`delete` 合并；`false` = 不要（`操作`列也不补） */
   recordActions?: RecordActionDefinition<TEntity>[] | false
-  /** 系统字典：要加载什么（声明侧 `list.enums` / `list.dictionaryCodes`）—— 原样交给基类（枚举桶按模块分组） */
   enums?: EnumBucketRequest[]
   dictionaryCodes?: (string | undefined)[]
-  /** 字典加载结果（基类 `v-model` 回给建列的地方） */
   buckets?: EnumBucketsResponseBody
   dictionaries?: PageDictionaries
   bordered?: boolean
-  /**
-   * **内嵌形态**：不要卡片壳、也不要外层 `Spin`；标题 / 工具栏落到表格自带标题（`.ant-table-title`）。
-   * 表单 / 详情里嵌的表格用它（旧 `preview` 的等价物）。加载态归表格自己的 `loading`。
-   */
   plain?: boolean
-  /**
-   * 自定义取数：给了就**不再走 `service.find`**（列表型取数，见 `CollectionFetch`）。
-   * 用途：同一份声明在不同入口要打不同接口（如资源列表在企业侧只能走 `/resource/find/enterprise`）。
-   */
   fetch?: CollectionFetch<TEntity>
-  /** 拖拽开关 + 幽灵内容（同 `QueryCollectionProps.drag`） */
   drag?: DragProp<TEntity>
   onRow?: TableProps['onRow']
   rowKey?: TableProps['rowKey']
@@ -89,6 +84,8 @@ export interface QueryTableProps<
   pagination?: TableProps['pagination']
   prefixCls?: string
   rootClass?: string
+  classes?: QueryTableClasses
+  styles?: QueryTableStyles
   dataSource?: TEntity[]
   loading?: boolean
   query?: FilterRequest | PageRequest
@@ -122,6 +119,7 @@ export type QueryTableEmits<
 
 export interface QueryTableSlots<TEntity extends object> {
   title?: () => unknown
+  extra?: () => unknown
   bodyCell?: (args: {
     text: unknown
     record: TEntity
@@ -136,10 +134,6 @@ export interface QueryTableSlots<TEntity extends object> {
   }) => unknown
 }
 
-/**
- * Vue 3.5 的 defineComponent 函数重载接不住泛型 setup。
- * 实现用对象形 defineComponent，导出时断言成这个 constructor，调用方才能带实体泛型使用。
- */
 export type QueryTableConstructor = new <
   TBody extends BasicIdMetadata<TId>,
   TEntity extends TBody,
@@ -154,4 +148,5 @@ export type QueryTableConstructor = new <
     EmitsToProps<QueryTableEmits<TEntity, TId>> &
     PublicProps
   $slots: QueryTableSlots<TEntity>
-} & CollectionExpose<TEntity>
+} & CollectionExpose<TEntity> &
+  Pick<BasicCrudQueryExpose<TEntity, TId>, 'hasRecordActions' | 'needsBulkSelection'>
