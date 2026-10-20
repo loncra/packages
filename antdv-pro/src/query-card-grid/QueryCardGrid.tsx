@@ -186,40 +186,43 @@ const QueryCardGrid = defineComponent({
       return base.value?.resolveRecordActions(record) ?? []
     }
 
-    /** 没给 `#item` 时的兜底卡：主键当标题 + 动作行（含拖拽把手） */
     function defaultItem(slot: QueryCardGridItemSlot<TEntity>) {
-      if (props.recordActions === false) {
-        return null
-      }
+      const hasActions = slot.itemActions.length > 0
+      const hasHandle = slot.dragEnabled
       return (
         <Card
           size="small"
           title={String(resolveRowKey(props.rowKey, slot.record) ?? '')}
           v-slots={{
-            actions: () => (
-              <>
-                <div onClick={(e: Event) => e.stopPropagation()}>
-                  <ActionButton
-                    size="small"
-                    type="text"
-                    alwaysDropdown
-                    actions={slot.itemActions}
-                    onAction={(id: string) => base.value?.onRecordAction(id, slot.record)}
-                  />
-                </div>
-                {slot.dragEnabled ? (
-                  <div
-                    class={classNames(`${prefixCls.value}-drag-handle`)}
-                    draggable
-                    onClick={(e: Event) => e.stopPropagation()}
-                    onDragstart={slot.onDragStart}
-                    onDragend={slot.onDragEnd}
-                  >
-                    <Typography.Text type="secondary">::</Typography.Text>
-                  </div>
-                ) : null}
-              </>
-            ),
+            actions:
+              hasActions || hasHandle
+                ? () => (
+                    <>
+                      {hasActions ? (
+                        <div onClick={(e: Event) => e.stopPropagation()}>
+                          <ActionButton
+                            size="small"
+                            type="text"
+                            alwaysDropdown
+                            actions={slot.itemActions}
+                            onAction={(id: string) => base.value?.onRecordAction(id, slot.record)}
+                          />
+                        </div>
+                      ) : null}
+                      {hasHandle ? (
+                        <div
+                          class={classNames(`${prefixCls.value}-drag-handle`)}
+                          draggable
+                          onClick={(e: Event) => e.stopPropagation()}
+                          onDragstart={slot.onDragStart}
+                          onDragend={slot.onDragEnd}
+                        >
+                          <Typography.Text type="secondary">::</Typography.Text>
+                        </div>
+                      ) : null}
+                    </>
+                  )
+                : undefined,
           }}
         />
       )
