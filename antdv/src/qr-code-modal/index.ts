@@ -1,4 +1,10 @@
 import QrCodeModal from './QrCodeModal'
 
 export default QrCodeModal
-export type {QrCodeModalEmits, QrCodeModalProps, QrCodeModalSlots} from './types'
+export type {
+  QrCodeModalClasses,
+  QrCodeModalEmits,
+  QrCodeModalProps,
+  QrCodeModalSlots,
+  QrCodeModalStyles,
+} from './types'

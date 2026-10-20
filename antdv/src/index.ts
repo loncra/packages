@@ -7,7 +7,13 @@ export type {
 } from './tooltip-validation-form-item'
 
 export { default as QrCodeModal } from './qr-code-modal'
-export type { QrCodeModalEmits, QrCodeModalProps, QrCodeModalSlots } from './qr-code-modal'
+export type {
+  QrCodeModalClasses,
+  QrCodeModalEmits,
+  QrCodeModalProps,
+  QrCodeModalSlots,
+  QrCodeModalStyles,
+} from './qr-code-modal'
 
 export { default as BasicImage } from './basic-image'
 export type { BasicImageProps, BasicImageSlots } from './basic-image'
@@ -29,10 +35,12 @@ export { AVATAR_SCHEMES, ICON_SELECT_AVATAR_MODE_VALUE, ICON_SELECT_MODE } from 
 export { default as KeyValueTable } from './key-value-table'
 export type {
   KeyValueRow,
+  KeyValueTableClasses,
   KeyValueTableEmits,
   KeyValueTableExpose,
   KeyValueTableProps,
   KeyValueTableSlots,
+  KeyValueTableStyles,
 } from './key-value-table'
 
 export { default as Editor } from './editor'

@@ -88,8 +88,11 @@
 
 ## 语义化 DOM {#semantic-dom}
 
-- 根元素是一个 `div`：`loncra-editor` + `hashId` + `cssVarCls` + `rootClass` + 宿主 `class`；表单校验状态为 error 时再追加 `loncra-editor-status-error`。
-- 样式里把根下的 `.ant-app` 设为 `min-height: 0`、背景透明。
+| 区域 | 说明 |
+| --- | --- |
+| root | 根元素 `div`（本组件自己的）：`loncra-editor` + `hashId` + `cssVarCls` + `rootClass` + 宿主 `class`；表单校验状态为 error 时再追加 `loncra-editor-status-error` |
+| editor | 内部 `AEditor`（`antdv-next-tiptap`）：**没有**语义化 `classes` / `styles` 入口，要定制只能从 `.loncra-editor` 往下写选择器；其余 attrs 透传给 `AEditor` |
+
 - 编辑区高度落在内部 `.editor-content` 上（行内 `style` 的 `height`，跟随 `height` 属性）。
 - `-status-error` 只改边框色：选中 `.editor`、`.editor .editor-toolbar`、`.editor .editor-word-count`（这三个是编辑器自带的类名，**没有**自有类名可挂）。
 - 错误态那几条规则带 `!important`：`antdv-next-tiptap` 的样式未分层，层序管不到它；宿主想换错误色需要同等提权。

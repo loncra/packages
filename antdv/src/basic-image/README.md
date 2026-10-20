@@ -52,8 +52,11 @@
 
 ## 语义化 DOM {#semantic-dom}
 
-- 根元素是一个 `div`：`loncra-basic-image` + `hashId` + `cssVarCls` + `rootClass` + 宿主 `class`，`style` 也落在这里。
-- 根上固定 `display: block`、`width: 100%`、`height: 100%`、`overflow: hidden`。
-- 根内的 `.ant-image`、`.ant-image-img` 一律 `width: 100%`、`height: 100%`、`object-fit: cover`、`object-position: center`；`img` 本身**不在**规则里，是 `.ant-image-img` 恰好挂在 antd 渲染的那个 `img` 上才生效。宿主经插槽塞进来的裸 `img` 不受这条规则约束。
-- 内部**没有自有类名**的节点：`.ant-image`、`img`、`.ant-image-img` 以及预览层（`.ant-image-preview-*`），都只有 antd 的类名。
+| 区域 | 说明 |
+| --- | --- |
+| root | 根元素 `div`（本组件自己的）：`loncra-basic-image` + `hashId` + `cssVarCls` + `rootClass` + 宿主 `class`，`style` 也落这里；固定 `display: block`、`width/height: 100%`、`overflow: hidden` |
+| image | 内部 `Image`：`classes` / `styles` 原样透传给它的语义键，本组件不额外增加键；`src` / `alt` / `onError` 这类 attrs 也走它 |
+
+- 根内的 `.ant-image`、`.ant-image-img` 一律 `width: 100%`、`height: 100%`、`object-fit: cover`、`object-position: center`；命中的是 `.ant-image-img` 挂着的那个 `img`，宿主经插槽塞进来的裸 `img` 不受约束。
+- `.ant-image`、`img`、`.ant-image-img` 与预览层（`.ant-image-preview-*`）都**没有**自有类名。
 - 预览层传送到 `body`：根上的 `class` 与选择器都够不到它，要定制预览外观用 `classes.popup.*` / `styles.popup.*`。

@@ -46,10 +46,10 @@
 
 | 属性 | 说明 | 类型 | 默认值 | 版本 |
 | --- | --- | --- | --- | --- |
-| class / style | 未声明，走 attrs：交给 `Tooltip`。**不要指望它作用到弹层**：`Tooltip` 把弹层的类收在 `rootClass` / `classes.root` 里；要给触发元素加类，直接写在插槽里那个元素上 | - | - | - |
+| class / style | 未声明，走 attrs：交给 `Tooltip`，但**两头都不落**——弹层只认 `rootClass` / `classes.root`，触发元素只收事件、不接 `class`；要给触发元素加类，直接写在插槽里那个元素上 | - | - | - |
 | rootClass | 未声明，走 attrs：作为 `Tooltip` 的 `rootClass` 传入，与 `Tooltip` 自己的主题类合并后落在弹层根 `.ant-tooltip` | string | - | - |
-| classes | 未声明，走 attrs：`Tooltip` 的语义类，可用键 `root`（弹层根）/ `container`（内容容器）/ `arrow`（箭头） | - | - | - |
-| styles | 未声明，走 attrs：同上的语义样式 | - | - | - |
+| classes | `Tooltip` 的语义类，可用键 `root`（弹层根）/ `container`（内容容器）/ `arrow`（箭头）。只有这一个区域，所以直接是 `Tooltip` 的语义对象，不套一层壳 | `TooltipProps['classes']` | - | - |
+| styles | 同一区域的语义样式 | `TooltipProps['styles']` | - | - |
 
 `title` 由本组件接管（见下方「语义化 DOM」），宿主传的 `title` 会被覆盖。
 
@@ -61,8 +61,11 @@
 
 ## 语义化 DOM {#semantic-dom}
 
-- **没有自有根元素、没有 `prefixCls`、没有样式文件**：渲染结果就是一个 `Tooltip`，`class` / `rootClass` / `classes` / `styles` 全部按 attrs 透传。
+| 区域 | 说明 |
+| --- | --- |
+| root | **没有自有根元素、没有 `prefixCls`、没有样式文件**：渲染结果就是一个 `Tooltip`，`class` / `style` / `rootClass` 按 attrs 透传，`classes` / `styles` 是声明的 props、原样喂给它 |
+| tooltip | `Tooltip` 的语义键（`root` / `container` / `arrow`）原样可用，本组件不额外增加键；弹层在 `body` 下，宿主写在触发元素祖先上的选择器够不到它，弹层内部也拿不到宿主放在本组件上的 `class` |
+
 - 触发元素是宿主给的那个元素本身（本组件不额外包一层 `span`）。
 - `title` 取当前 `FormItem` 的 `errors[0]`：没有错误时不传 `title`，`Tooltip` 不弹出；子元素照常渲染。
 - 本组件**只读**校验结果：不调 `validate`、也不监听值变化；校验由 `FormItem` 与内部输入控件之间的原有链路触发。
-- 弹层传送到 `body`：宿主写在触发元素祖先上的选择器不影响弹层，弹层内部也拿不到宿主放在本组件上的 `class`。

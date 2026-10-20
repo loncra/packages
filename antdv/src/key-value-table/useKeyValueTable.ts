@@ -4,6 +4,7 @@ import type {KeyValueRow} from './types'
 
 interface KeyValueTableSource {
   value: KeyValueRow[]
+  multipleValue?: boolean
 }
 
 type KeyValueTableChange = (item: KeyValueRow, data: KeyValueRow[]) => void
@@ -12,7 +13,7 @@ export function useKeyValueTable(props: KeyValueTableSource, onChange: KeyValueT
   const rows = useModel(props, 'value') as unknown as Ref<KeyValueRow[]>
 
   function addRow() {
-    rows.value = [...rows.value, createRow(crypto.randomUUID())]
+    rows.value = [...rows.value, createRow(crypto.randomUUID(), props.multipleValue ? [] : '')]
   }
 
   function removeRow(record: KeyValueRow) {

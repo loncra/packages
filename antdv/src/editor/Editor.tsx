@@ -1,4 +1,4 @@
-import {computed, defineAsyncComponent, defineComponent} from 'vue'
+import {computed, defineAsyncComponent, defineComponent, type PropType} from 'vue'
 import type {OutputFormat, PluginName} from 'antdv-next-tiptap'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {useFormItemInputContext} from 'antdv-next/dist/form/context'
@@ -35,12 +35,12 @@ const Editor = defineComponent({
       type: Boolean,
       default: true,
     },
-    outputFormat: String as () => OutputFormat,
-    locale: [String, Object] as unknown as () => EditorProps['locale'],
-    disabledPlugins: Array as () => PluginName[],
-    uploadImage: Function as unknown as () => UploadFn,
-    uploadVideo: Function as unknown as () => UploadFn,
-    wordCount: [Boolean, Number] as unknown as () => true | number,
+    outputFormat: String as PropType<OutputFormat>,
+    locale: [String, Object] as PropType<EditorProps['locale']>,
+    disabledPlugins: Array as PropType<PluginName[]>,
+    uploadImage: Function as PropType<UploadFn>,
+    uploadVideo: Function as PropType<UploadFn>,
+    wordCount: [Boolean, Number] as PropType<true | number>,
     prefixCls: String,
     rootClass: String,
   },
@@ -77,7 +77,7 @@ const Editor = defineComponent({
             props.rootClass,
             attrClass,
           )}
-          style={attrStyle as string | Record<string, string> | undefined}
+          style={attrStyle as never}
         >
           <AEditor
             {...rest}

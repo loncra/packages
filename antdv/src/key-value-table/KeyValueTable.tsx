@@ -1,5 +1,15 @@
-import {computed, defineComponent, h} from 'vue'
-import {Button, Flex, FormItem, Input, Select, SpaceCompact, Table, type TableColumnType,} from 'antdv-next'
+import {computed, defineComponent, h, type PropType} from 'vue'
+import {
+  Button,
+  Flex,
+  FormItem,
+  Input,
+  Select,
+  SpaceCompact,
+  Table,
+  useFormInstance,
+  type TableColumnType,
+} from 'antdv-next'
 import {CheckOutlined, CloseOutlined, DeleteOutlined, EditOutlined, PlusOutlined} from '@antdv-next/icons'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import TooltipValidationFormItem from '../tooltip-validation-form-item'
@@ -7,7 +17,7 @@ import {classNames} from '../_util/classNames'
 import {useLocale} from '../_util/context/useLocale'
 import {KEY_VALUE_COLUMNS, TABLE_SCROLL_Y} from './constants'
 import {useKeyValueTable} from './useKeyValueTable'
-import type {KeyValueRow} from './types'
+import type {KeyValueRow, KeyValueTableProps} from './types'
 import useStyle from './style'
 
 const KeyValueTable = defineComponent({
@@ -33,6 +43,14 @@ const KeyValueTable = defineComponent({
     },
     prefixCls: String,
     rootClass: String,
+    classes: {
+      type: Object as PropType<KeyValueTableProps['classes']>,
+      default: () => ({}),
+    },
+    styles: {
+      type: Object as PropType<KeyValueTableProps['styles']>,
+      default: () => ({}),
+    },
   },
   emits: {
     'update:value': (_value: KeyValueRow[]) => true,
@@ -41,6 +59,7 @@ const KeyValueTable = defineComponent({
   setup(props, { emit, slots, attrs, expose }) {
     const locale = useLocale('KeyValueTable')
     const config = useConfig()
+    const formInstance = useFormInstance()
     const prefixCls = computed(() =>
       config.value.getPrefixCls('key-value-table', props.prefixCls ?? 'loncra-key-value-table'),
     )
@@ -64,6 +83,20 @@ const KeyValueTable = defineComponent({
 
     expose({ confirmAllEditingRows })
 
+    async function confirmAndCloseRow(index: number, record: KeyValueRow) {
+      if (formInstance) {
+        try {
+          await formInstance.validateFields([
+            [...props.formItemNamePrefix, index, 'key'],
+            [...props.formItemNamePrefix, index, 'value'],
+          ])
+        } catch {
+          return
+        }
+      }
+      confirmRow(record)
+    }
+
     function renderKeyCell(index: number, column: TableColumnType<KeyValueRow>, record: KeyValueRow) {
       if (!record.editing) {
         return record.key
@@ -78,6 +111,8 @@ const KeyValueTable = defineComponent({
         >
           <TooltipValidationFormItem>
             <Input
+              classes={props.classes?.keyInput}
+              styles={props.styles?.keyInput}
               value={record.key}
               onUpdate:value={(value: string) => {
                 record.key = value
@@ -104,15 +139,19 @@ const KeyValueTable = defineComponent({
             {props.multipleValue ? (
               <Select
                 mode="tags"
-                class={`${prefixCls.value}-value`}
+                class={`${prefixCls.value}-value-select`}
+                classes={props.classes?.valueSelect}
+                styles={props.styles?.valueSelect}
                 maxTagCount="responsive"
-                value={record.value as string[]}
+                value={Array.isArray(record.value) ? record.value : record.value ? [record.value] : []}
                 onUpdate:value={(value) => {
                   record.value = Array.isArray(value) ? value.map(String) : []
                 }}
               />
             ) : (
               <Input
+                classes={props.classes?.valueInput}
+                styles={props.styles?.valueInput}
                 value={record.value as string}
                 onUpdate:value={(value: string) => {
                   record.value = value
@@ -124,11 +163,11 @@ const KeyValueTable = defineComponent({
       )
     }
 
-    function renderActionCell(record: KeyValueRow) {
+    function renderActionCell(index: number, record: KeyValueRow) {
       if (record.editing) {
         return (
-          <SpaceCompact>
-            <Button size="small" type="primary" onClick={() => confirmRow(record)}>
+          <SpaceCompact class={props.classes?.action} style={props.styles?.action}>
+            <Button size="small" type="primary" onClick={() => void confirmAndCloseRow(index, record)}>
               {h(CheckOutlined)}
             </Button>
             <Button size="small" type="primary" danger onClick={() => cancelRow(record)}>
@@ -138,7 +177,7 @@ const KeyValueTable = defineComponent({
         )
       }
       return (
-        <SpaceCompact>
+        <SpaceCompact class={props.classes?.action} style={props.styles?.action}>
           <Button size="small" type="primary" onClick={() => startEditing(record)}>
             {h(EditOutlined)}
           </Button>
@@ -158,12 +197,15 @@ const KeyValueTable = defineComponent({
             hashId.value,
             cssVarCls.value,
             props.rootClass,
+            props.classes?.root,
             attrClass,
           )}
-          style={attrStyle as string | Record<string, string> | undefined}
+          style={props.styles?.root ? ([props.styles.root, attrStyle] as never) : (attrStyle as never)}
         >
           <Table
             {...rest}
+            classes={props.classes?.table}
+            styles={props.styles?.table}
             pagination={false}
             bordered
             scroll={{ y: TABLE_SCROLL_Y }}
@@ -174,7 +216,12 @@ const KeyValueTable = defineComponent({
               title:
                 props.title || slots.title
                   ? () => (
-                      <Flex justify="space-between" align="center">
+                      <Flex
+                        justify="space-between"
+                        align="center"
+                        class={props.classes?.title}
+                        style={props.styles?.title}
+                      >
                         {slots.title ? slots.title({ title: props.title }) : props.title}
                         {props.edit ? (
                           <Button size="small" onClick={addRow}>{h(PlusOutlined)}</Button>
@@ -198,7 +245,7 @@ const KeyValueTable = defineComponent({
                   return renderValueCell(index, column, record)
                 }
                 if (column.dataIndex === 'action') {
-                  return renderActionCell(record)
+                  return renderActionCell(index, record)
                 }
                 return null
               },

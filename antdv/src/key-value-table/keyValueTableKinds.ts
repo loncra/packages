@@ -1,7 +1,7 @@
 import type {KeyValueRow} from './types'
 
-export function createRow(id: string): KeyValueRow {
-  return {id, key: '', value: '', editing: true}
+export function createRow(id: string, value: string | string[] = ''): KeyValueRow {
+  return {id, key: '', value, editing: true}
 }
 
 export function excludeRow(rows: KeyValueRow[], id: string) {

@@ -44,10 +44,12 @@ async function submit() {
 | value | 行数据，配合 `v-model:value` | [KeyValueRow[]](#keyvaluerow) | `[]` | - |
 | formItemNamePrefix | 编辑态单元格 `FormItem` 的 `name` 前缀，完整 `name` 是 `[...前缀, index, 'key' 或 'value']` | string[] | `[]` | - |
 | title | 标题栏文案；只有标题栏存在时才有「新增」按钮（空串等同没有） | string | - | - |
-| multipleValue | 值列用 `mode="tags"` 的 `Select`，值存成 `string[]` | boolean | `false` | - |
+| multipleValue | 值列用 `mode="tags"` 的 `Select`，值存成 `string[]`；新增行的初值是空数组（单值模式给空字符串） | boolean | `false` | - |
 | edit | 是否可编辑；关掉后没有编辑 / 删除 / 新增入口。**数据行自带 `editing: true` 时不要关它**：操作列消失、单元格仍是编辑器，这一行会卡在编辑态 | boolean | `true` | - |
 | prefixCls | 改根前缀 | string | -（组件内兜底 `loncra-key-value-table`） | - |
 | rootClass | 追加到根元素 | string | - | - |
+| classes | 语义化 DOM 类名表，区域见 [语义化 DOM](#semantic-dom) | `KeyValueTableClasses` | - | - |
+| styles | 语义化 DOM 样式表，区域与 `classes` 相同 | `KeyValueTableStyles` | - | - |
 
 `prefixCls` 不传时组件内部用的是非空兜底（`loncra-key-value-table`），因此 `ConfigProvider` 的全局 `prefixCls` **不会**影响它。
 
@@ -72,7 +74,9 @@ async function submit() {
 
 | 方法 | 说明 | 类型 | 版本 |
 | --- | --- | --- | --- |
-| confirmAllEditingRows | 把仍在编辑态的行逐行确认（每行发一次 `change`）。**不发 `update:value`** | `() => void` | - |
+| confirmAllEditingRows | 把仍在编辑态的行逐行确认（每行发一次 `change`）。**不发 `update:value`**、也不做校验（提交链路上表单校验已经先跑过） | `() => void` | - |
+
+「确定」按钮（操作列的 `✓`）会先用外层 `Form` 的 `validateFields` 校验本行「名称」「值」两个单元格，未通过就留在编辑态，错误沿用 `TooltipValidationFormItem` 的提示；组件不在 `Form` 内时拿不到表单实例，按原样直接确认。
 
 ## 类型 {#types}
 
@@ -88,8 +92,16 @@ async function submit() {
 
 ## 语义化 DOM {#semantic-dom}
 
-- 根元素是一个 `div`：`loncra-key-value-table` + `hashId` + `cssVarCls` + `rootClass` + 宿主 `class`，`style` 也落在这里。
-- 内部是一个 `Table`：`bordered`、`pagination=false`、`scroll.y=275`、`rowKey="id"`；列固定为「名称（`width: 120`）/ 值 / 操作（`width: 100`、`align: center`、`fixed: right`）」，操作列只在 `edit` 为真时出现。
-- 自有类名只有一处：`multipleValue` 为真时值列的 `Select` 挂 `loncra-key-value-table-value`。列宽撑满还有一条通用规则：根内所有 `.ant-select` 都是 `width: 100%`，不区分是不是值列。
-- **没有自有类名**的节点：`.ant-table` 及其容器、编辑态的 `Input` / `Select`、操作列的三个按钮、标题栏里的「新增」按钮 —— 要定制这些只能从 `.loncra-key-value-table` 往下写选择器。
+| 区域 | 说明 |
+| --- | --- |
+| root | 根元素 `div`（本组件自己的）：`loncra-key-value-table` + `hashId` + `cssVarCls` + `rootClass` + 宿主 `class`，`style` 也落这里 |
+| table | 内部 `Table`（`bordered`、`pagination=false`、`scroll.y=275`、`rowKey="id"`） |
+| title | 表头上那一行 `Flex`：「标题 + 新增按钮」；`title` 属性与 `title` 插槽都没有时不渲染 |
+| keyInput | 编辑态名称列的 `Input` |
+| valueInput | 编辑态值列的 `Input`（`multipleValue` 为假时） |
+| valueSelect | 编辑态值列的 `Select`（`multipleValue` 为真时），自有类名 `-value-select` |
+| action | 操作列的按钮组 `SpaceCompact`（编辑态「确定 / 取消」，非编辑态「编辑 / 删除」） |
+
+- 列固定：「名称（`width: 120`）/ 值 / 操作（`width: 100`、`align: center`、`fixed: right`）」，操作列只在 `edit` 为真时出现。
+- **没有自有类名**的节点：`.ant-table` 容器、操作列的三个按钮、标题栏的「新增」按钮 —— 要定制走 `classes.table` 或从根往下写选择器。
 - 编辑态每个单元格结构是 `FormItem(noStyle, hasFeedback) > TooltipValidationFormItem > Input / Select`，必填校验由这个 `FormItem` 自己承担。

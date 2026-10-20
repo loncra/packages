@@ -1,4 +1,21 @@
-import type {ModalProps} from 'antdv-next'
+import type {CSSProperties} from 'vue'
+import type {ButtonProps, InputProps, ModalProps, QRCodeProps} from 'antdv-next'
+
+export interface QrCodeModalClasses {
+  modal?: ModalProps['classes']
+  content?: string
+  qrcode?: QRCodeProps['classes']
+  urlInput?: InputProps['classes']
+  copyButton?: ButtonProps['classes']
+}
+
+export interface QrCodeModalStyles {
+  modal?: ModalProps['styles']
+  content?: CSSProperties
+  qrcode?: QRCodeProps['styles']
+  urlInput?: InputProps['styles']
+  copyButton?: ButtonProps['styles']
+}
 
 export interface QrCodeModalProps {
   url: string
@@ -6,8 +23,8 @@ export interface QrCodeModalProps {
   class?: unknown
   rootClass?: string
   style?: unknown
-  classes?: ModalProps['classes']
-  styles?: ModalProps['styles']
+  classes?: QrCodeModalClasses
+  styles?: QrCodeModalStyles
 }
 
 export interface QrCodeModalEmits {
