@@ -126,7 +126,7 @@ const columns: SearchableColumnType<SysRoleEntity>[] = [
 
 ### QueryTableClasses / QueryTableStyles {#querytableclasses}
 
-> 区域表：基类的 `card` / `spin` / `pagination` + 本控件的 `table`（antd `Table` 的语义键）。
+> 区域表：基类的 `card` / `pagination` + 本控件自己处理的 `spin`（表格 loading 遮罩）与 `table`（antd `Table` 的语义键）。
 
 `QueryTableProps` / `QueryTableClasses` / `QueryTableStyles` / `QueryTableEmits` / `QueryTableSlots` / `QueryTableConstructor` / `ColumnSearchConfig` / `SearchableColumnType` 都从包根 `@loncra/antdv-pro` 导出。
 
@@ -146,7 +146,7 @@ const columns: SearchableColumnType<SysRoleEntity>[] = [
 | --- | --- |
 | root | 上面那个根元素（`.ant-card` 或 `plain` 的 `div`） |
 | card | 卡片形态下 `Card` 的语义键；`plain` 下没有落点 |
-| spin | 内容区 `Spin` 的语义键；本控件不关 `Spin`，卡片形态下恒存在 |
+| spin | 表格 `loading` 遮罩的语义键，落在 `Table` 内部的 `Spin` 上；`:loading="false"` 时没有落点 |
 | pagination | 分页器 `Pagination` 的语义键；`:pagination="false"` 时没有落点 |
 | table | antd `Table` 的语义键，原样透传：`root` / `section` / `title` / `footer` / `content`，嵌套的 `header.*` / `body.*`（`wrapper` / `cell` / `row`）与 `pagination.*` |
 
@@ -162,6 +162,6 @@ const columns: SearchableColumnType<SysRoleEntity>[] = [
 
 样式文件里只有 5 组规则：表格头/内容圆角归零、`.ant-table-title` 的一行 flex、筛选图标激活色、拖拽把手与幽灵、筛选面板内边距。
 
-**已知与「其余 attrs 展开在根上」的偏差**：除 `class` / `style` 之外的 attrs（`scroll` / `expandable` / `id` / `data-*` …）仍落在内部 `<Table>` 上，不是根。这样 `scroll` / `expandable` 这类未声明成 props 的表格参数不用逐个升格；要定位到根请用 `class` / `rootClass` / `classes`。
+**attrs 落点**：`class` / `style` 落根；其余 attrs（`scroll` / `expandable` / `expand-icon-column-index` …）下推给内部 `Table`，与 antd 的 `Table` → `InternalTable` 做法一致。要定位到根请用 `class` / `rootClass` / `classes`。
 
 **无落点**：`Space` / `SpaceCompact` / 筛选面板里的三个 `Button` / `Typography.Text` / 筛选图标本身都没有区域键，要改只能从上面的自有类名往下写选择器。

@@ -46,8 +46,8 @@ xxx/
 - 新增的分发组件不要叫 `XxxHost`。
 - 一个文件一个组件。
 - 类名挂法：组件内部挂类用 `class` 绑定；`rootClass` 只是宿主入参，最终并入 `class`；子节点走 `classes.*`。
-- `inheritAttrs: false` 之后 attrs 固定这样处理：取出 `class` / `style` 落到根节点，其余 `{...rest}` 透传给内部主组件。只有纯包装控件（见 [10. 样式](#10-样式)）才整体 `{...attrs}` 展开，且必须放在显式属性**之前** —— 让本组件的 `title` / `footer` / `onCancel` 覆盖宿主的同名 attrs。
-- **根节点契约**：一个控件一个稳定根 —— 同一形态下，所有渲染分支（空态、加载、错误、预览）的最外层都是同一个元素 / 组件，宿主的 `class` / `style` 与其余 attrs 只落它。形态 prop（`plain` / `mode` 这类确实要换壳的）允许每个形态各有根，但**挂类与 attrs 契约必须完全一致**（`prefixCls` / `rootClass` / `classes.root` / rest attrs 的落点规则不变），README 按形态列出根元素。分支不许改根的身份，也不许出现"某一支的 rest attrs 落到内部子件上"。
+- `inheritAttrs: false` 之后 attrs 固定这样处理：取出 `class` / `style` 并入根节点的类与样式，其余 `{...rest}` 下推给内部真正承担该职责的组件，不得丢弃；内部节点需要的参数一律声明成显式 props。只有纯包装控件（见 [10. 样式](#10-样式)）才整体 `{...attrs}` 展开，且必须放在显式属性**之前** —— 让本组件的 `title` / `footer` / `onCancel` 覆盖宿主的同名 attrs。
+- **根节点契约**：一个控件一个稳定根 —— 同一形态下，所有渲染分支（空态、加载、错误、预览）的最外层都是同一个元素 / 组件，宿主的 `class` / `style` 只落它。形态 prop（`plain` / `mode` 这类确实要换壳的）允许每个形态各有根，但**挂类与 attrs 契约必须完全一致**（`prefixCls` / `rootClass` / `classes.root` / rest attrs 的落点规则不变），README 按形态列出根元素。分支不许改根的身份，`class` / `style` 与 rest attrs 的落点也不能随分支变化。
 - **根类名**：顺序固定 `prefixCls → hashId → cssVarCls → props.rootClass → attrs.class`。没有 `useStyle` 的控件（无自有样式）跳过 `hashId` / `cssVarCls`，不许随机少片段。
 - **根 style**：一律取 `attrs.style`；需要内置默认值时写成 `{...defaultStyle, ...attrs.style}`（宿主优先）。数组 / 函数形态的 `style` 必须原样透传，不许丢。
 - **rest attrs**：拆出 `class` / `style` 之后必须 `{...rest}` 展开（`id` / `data-*` / `aria-*` 不能吞）。

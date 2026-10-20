@@ -1,7 +1,7 @@
 import {defineComponent, h, type PropType, type SlotsType} from 'vue'
 import type {TableProps} from 'antdv-next'
-import {Button, Space, SpaceCompact, Table, Typography} from 'antdv-next'
-import {DeleteOutlined, FilterOutlined, SearchOutlined, UndoOutlined} from '@antdv-next/icons'
+import {Table} from 'antdv-next'
+import {FilterOutlined} from '@antdv-next/icons'
 import {classNames} from '@loncra/antdv'
 import {type FilterRequest, type PageRequest, SYSTEM_CONSTANT} from '@loncra/client/commons'
 import type {EnumBucketsResponseBody} from '@loncra/client/resource'
@@ -14,32 +14,22 @@ import {
   type DefaultCrudEntity,
   patchQuery,
 } from '../_util/crud/useCollectionData'
-import ActionButton from '../action-button'
+import QueryTableCell from './cell/QueryTableCell'
+import QueryTableFilterDropdown from './filter/QueryTableFilterDropdown'
+import QueryTableTitle from './title/QueryTableTitle'
 import {useQueryTable} from './useQueryTable'
 import type {
   QueryTableConstructor,
-  QueryTableEmits,
   QueryTableProps,
   QueryTableSlots,
   SearchableColumnType,
 } from './types'
 
-const QUERY_TABLE_EMITS = [
-  'update:dataSource',
-  'update:loading',
-  'update:query',
-  'update:selectedRows',
-  'update:pagination',
-  'update:buckets',
-  'update:dictionaries',
-  'action',
-  'add',
-  'edit',
-  'detail',
-  'deleted',
-  'drop',
-  'treeDrop',
-] as const
+type FilterDropdownArgs = {
+  column: SearchableColumnType<DefaultCrudEntity>
+  setSelectedKeys: (keys: string[]) => void
+  confirm: () => void
+}
 
 const QueryTable = defineComponent({
   name: 'LQueryTable',
@@ -93,11 +83,24 @@ const QueryTable = defineComponent({
     buckets: {type: Object as PropType<QueryTableProps['buckets']>, default: () => ({})},
     dictionaries: {type: Object as PropType<QueryTableProps['dictionaries']>, default: () => ({})},
   },
-  emits: [...QUERY_TABLE_EMITS],
+  emits: [
+    'update:dataSource',
+    'update:loading',
+    'update:query',
+    'update:selectedRows',
+    'update:pagination',
+    'update:buckets',
+    'update:dictionaries',
+    'action',
+    'add',
+    'edit',
+    'detail',
+    'deleted',
+    'drop',
+    'treeDrop',
+  ],
   slots: Object as SlotsType<QueryTableSlots<DefaultCrudEntity>>,
   setup(props, {attrs, emit, expose, slots}) {
-    type TEntity = DefaultCrudEntity
-
     const {
       locale,
       prefixCls,
@@ -115,6 +118,7 @@ const QueryTable = defineComponent({
       tableColumns,
       mergedRowSelection,
       tablePassthroughAttrs,
+      tableLoading,
       tableOnRow,
       isDragCell,
       onDragHandleStart,
@@ -126,7 +130,7 @@ const QueryTable = defineComponent({
     } = useQueryTable(props, {attrs, emit})
 
     expose<
-      CollectionExpose<TEntity> &
+      CollectionExpose<DefaultCrudEntity> &
         Pick<BasicCrudQueryExpose<DefaultCrudEntity>, 'hasRecordActions' | 'needsBulkSelection'>
     >({
       fetchDataSource: async () => basic.value?.fetchDataSource(),
@@ -145,24 +149,14 @@ const QueryTable = defineComponent({
           return undefined
         }
         return () => (
-          <div
-            class={classNames(
-              prefixCls.value,
-              hashId.value,
-              cssVarCls.value,
-              `${prefixCls.value}-table-title`,
-            )}
-          >
-            <div>{content.title}</div>
-            {content.extra ? <div>{content.extra}</div> : null}
-          </div>
+          <QueryTableTitle
+            prefixCls={prefixCls.value}
+            hashId={hashId.value}
+            cssVarCls={cssVarCls.value}
+            title={content.title}
+            extra={content.extra}
+          />
         )
-      }
-
-      type FilterDropdownArgs = {
-        column: SearchableColumnType<TEntity>
-        setSelectedKeys: (keys: string[]) => void
-        confirm: () => void
       }
 
       const renderFilterDropdown = ({column, setSelectedKeys, confirm}: FilterDropdownArgs) => {
@@ -170,55 +164,21 @@ const QueryTable = defineComponent({
         if (!search?.component) {
           return null
         }
-        const SearchComponent = search.component
         const queryName = search.queryName ?? ''
         return (
-          <div
-            class={classNames(
-              prefixCls.value,
-              hashId.value,
-              cssVarCls.value,
-              `${prefixCls.value}-filter-dropdown`,
-            )}
-            onKeydown={(e: KeyboardEvent) => {
-              e.stopPropagation()
-              onFilterEnterKey(e, column, setSelectedKeys, confirm)
-            }}
-          >
-            <Space orientation="vertical">
-              {h(SearchComponent, {
-                ...(search.props ?? {}),
-                value: query.value[queryName],
-                'onUpdate:value': (value: FilterRequest[string]) => {
-                  patchQuery(query, {[queryName]: value})
-                },
-              })}
-              <SpaceCompact block>
-                <Button
-                  block
-                  type="primary"
-                  onClick={() => doSearch(column, setSelectedKeys, confirm)}
-                  v-slots={{icon: () => h(SearchOutlined)}}
-                >
-                  <span>{locale.value.search}</span>
-                </Button>
-                <Button
-                  block
-                  onClick={() => resetField(column, setSelectedKeys, confirm)}
-                  v-slots={{icon: () => h(UndoOutlined)}}
-                >
-                  <span>{locale.value.reset}</span>
-                </Button>
-                <Button
-                  block
-                  onClick={() => clear(confirm, setSelectedKeys)}
-                  v-slots={{icon: () => h(DeleteOutlined)}}
-                >
-                  <span>{locale.value.clear}</span>
-                </Button>
-              </SpaceCompact>
-            </Space>
-          </div>
+          <QueryTableFilterDropdown
+            prefixCls={prefixCls.value}
+            hashId={hashId.value}
+            cssVarCls={cssVarCls.value}
+            search={search}
+            query={query.value}
+            locale={locale.value}
+            onUpdateValue={(value) => patchQuery(query, {[queryName]: value})}
+            onSearch={() => doSearch(column, setSelectedKeys, confirm)}
+            onReset={() => resetField(column, setSelectedKeys, confirm)}
+            onClear={() => clear(confirm, setSelectedKeys)}
+            onEnter={(e: KeyboardEvent) => onFilterEnterKey(e, column, setSelectedKeys, confirm)}
+          />
         )
       }
 
@@ -259,18 +219,18 @@ const QueryTable = defineComponent({
           pagination={tablePagination.value}
           buckets={buckets.value}
           dictionaries={dictionaries.value}
-          onUpdate:dataSource={(value: TEntity[]) => (dataSource.value = value)}
+          onUpdate:dataSource={(value: DefaultCrudEntity[]) => (dataSource.value = value)}
           onUpdate:loading={(value: boolean) => (loading.value = value)}
           onUpdate:query={(value: FilterRequest | PageRequest) => (query.value = value)}
-          onUpdate:selectedRows={(value: TEntity[]) => (selectedRows.value = value)}
+          onUpdate:selectedRows={(value: DefaultCrudEntity[]) => (selectedRows.value = value)}
           onUpdate:pagination={(value: unknown) => (tablePagination.value = value as TableProps['pagination'])}
           onUpdate:buckets={(value: EnumBucketsResponseBody) => (buckets.value = value)}
           onUpdate:dictionaries={(value: PageDictionaries) => (dictionaries.value = value)}
           onAction={(payload) => emit('action', payload)}
           onAdd={() => emit('add')}
-          onEdit={(record: TEntity) => emit('edit', record)}
-          onDetail={(record: TEntity) => emit('detail', record)}
-          onDeleted={(records: TEntity[]) => emit('deleted', records)}
+          onEdit={(record: DefaultCrudEntity) => emit('edit', record)}
+          onDetail={(record: DefaultCrudEntity) => emit('detail', record)}
+          onDeleted={(records: DefaultCrudEntity[]) => emit('deleted', records)}
           v-slots={{
             title: slots.title ? () => slots.title?.() : undefined,
             extra: slots.extra ? () => slots.extra?.() : undefined,
@@ -285,7 +245,7 @@ const QueryTable = defineComponent({
                 rowKey={props.rowKey}
                 dataSource={dataSource.value}
                 rowSelection={mergedRowSelection.value}
-                loading={loading.value}
+                loading={tableLoading.value}
                 bordered={props.bordered}
                 onRow={tableOnRow.value}
                 v-slots={{
@@ -296,50 +256,27 @@ const QueryTable = defineComponent({
                     column,
                   }: {
                     text: unknown
-                    record: TEntity
+                    record: DefaultCrudEntity
                     index: number
-                    column: SearchableColumnType<TEntity>
+                    column: SearchableColumnType<DefaultCrudEntity>
                   }) => {
-                    if (isDragCell(column)) {
-                      return (
-                        <div
-                          class={classNames(
-                            prefixCls.value,
-                            hashId.value,
-                            cssVarCls.value,
-                            `${prefixCls.value}-drag-handle`,
-                          )}
-                          draggable
-                          onDragstart={(e: DragEvent) => onDragHandleStart(record, e)}
-                          onDragend={onDragHandleEnd}
-                        >
-                          <Typography.Text type="secondary">::</Typography.Text>
-                        </div>
-                      )
-                    }
-                    if (column.dataIndex === 'action') {
-                      return (
-                        <>
-                          {slots.bodyCell?.({
-                            text,
-                            record,
-                            index,
-                            column: column as SearchableColumnType<TEntity>,
-                          })}
-                          <ActionButton
-                            size="small"
-                            actions={basic.value?.resolveRecordActions(record) ?? []}
-                            onAction={(id: string) => basic.value?.onRecordAction(id, record)}
-                          />
-                        </>
-                      )
-                    }
-                    return slots.bodyCell?.({
-                      text,
-                      record,
-                      index,
-                      column: column as SearchableColumnType<TEntity>,
-                    })
+                    const actionable = column.dataIndex === 'action'
+                    return (
+                      <QueryTableCell
+                        prefixCls={prefixCls.value}
+                        hashId={hashId.value}
+                        cssVarCls={cssVarCls.value}
+                        isDrag={isDragCell(column)}
+                        actionable={actionable}
+                        actions={actionable ? (basic.value?.resolveRecordActions(record) ?? []) : []}
+                        onAction={(id: string) => basic.value?.onRecordAction(id, record)}
+                        onDragStart={(e: DragEvent) => onDragHandleStart(record, e)}
+                        onDragEnd={onDragHandleEnd}
+                        v-slots={{
+                          default: () => slots.bodyCell?.({text, record, index, column}),
+                        }}
+                      />
+                    )
                   },
                   filterIcon: ({filtered}: {filtered: boolean}) =>
                     h(FilterOutlined, {
@@ -352,7 +289,7 @@ const QueryTable = defineComponent({
                     }),
                   filterDropdown: renderFilterDropdown,
                   expandedRowRender: slots.expandedRowRender
-                    ? (args: {record: TEntity; index: number; indent: number; expanded: boolean}) =>
+                    ? (args: {record: DefaultCrudEntity; index: number; indent: number; expanded: boolean}) =>
                         slots.expandedRowRender?.(args)
                     : undefined,
                 }}

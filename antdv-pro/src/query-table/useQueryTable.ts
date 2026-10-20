@@ -20,6 +20,8 @@ import {isDragEnabled} from '../_util/crud/useDrag'
 import {useTableRowDrag} from '../_util/crud/useTableRowDrag'
 import {useLocale} from '../_util/useLocale'
 import useStyle from './style'
+import {toTableFieldName} from './queryTableKinds'
+import {useQueryTableFilter} from './useQueryTableFilter'
 import type {
   QueryTableEmits,
   QueryTableProps,
@@ -29,11 +31,6 @@ import type {
 
 type TEntity = DefaultCrudEntity
 type TId = string | number
-
-function toTableFieldName(key: string): string {
-  const [head = '', ...rest] = key.split('.')
-  return [head.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toLowerCase(), ...rest].join('.')
-}
 
 export function useQueryTable(
   props: QueryTableProps<TId, TEntity, TEntity>,
@@ -137,73 +134,33 @@ export function useQueryTable(
     void basic.value?.fetchDataSource()
   }
 
-  function doSearch(
-    column: SearchableColumnType<TEntity>,
-    setSelectedKeys: (keys: string[]) => void,
-    confirm: () => void,
-  ) {
-    if (column.search?.queryName) {
-      const value = query.value[column.search.queryName] ?? ''
-      const keys = value !== '' && value != null ? [String(value)] : []
-      setSelectedKeys(keys)
-    }
-    confirm()
-    fetch()
-  }
+  const {doSearch, clear, resetField, onFilterEnterKey} = useQueryTableFilter<TEntity>({
+    query,
+    tableColumns,
+    fetch,
+  })
 
-  function clear(confirm: () => void, setSelectedKeys: (keys: string[]) => void) {
-    const next: FilterRequest | PageRequest = {...query.value}
-    for (const column of tableColumns.value) {
-      if (!column.search?.queryName) {
-        continue
-      }
-      next[column.search.queryName] = ''
-      column.filteredValue = null
+  const tableLoading = computed<TableProps['loading']>(() => {
+    const spin = props.classes?.spin
+    const spinStyles = props.styles?.spin
+    if (!loading.value || (!spin && !spinStyles)) {
+      return loading.value
     }
-    query.value = next
-    setSelectedKeys([])
-    confirm()
-    fetch()
-  }
+    return {spinning: true, classes: spin, styles: spinStyles}
+  })
 
-  function resetField(
-    column: SearchableColumnType<TEntity>,
-    setSelectedKeys: (keys: string[]) => void,
-    confirm: () => void,
-  ) {
-    if (column.search?.queryName) {
-      patchQuery(query, {[column.search.queryName]: ''})
-    }
-    setSelectedKeys([])
-    confirm()
-    fetch()
-  }
-
-  function onFilterEnterKey(
-    e: KeyboardEvent,
-    column: SearchableColumnType<TEntity>,
-    setSelectedKeys: (keys: string[]) => void,
-    confirm: () => void,
-  ) {
-    if (e.key !== 'Enter' || e.shiftKey) {
+  function initSearch(column: SearchableColumnType<TEntity>): void {
+    const search = column.search
+    if (!search) {
       return
     }
-    const el = e.target as HTMLElement | null
-    if (!el || el.tagName === 'TEXTAREA' || el.isContentEditable) {
+    search.queryName ||= `filter_[${toTableFieldName(String(column.key))}_${search.expression || 'eq'}]`
+    const queryName = search.queryName
+    if (search.defaultValue === undefined || appliedDefaultValueKeys.has(queryName)) {
       return
     }
-    if (el.closest('.ant-select') || el.closest('.ant-picker')) {
-      return
-    }
-    const input = el.closest('input')
-    if (!input) {
-      return
-    }
-    if (['button', 'checkbox', 'radio'].includes(input.type)) {
-      return
-    }
-    e.preventDefault()
-    doSearch(column, setSelectedKeys, confirm)
+    appliedDefaultValueKeys.add(queryName)
+    patchQuery(query, {[queryName]: search.defaultValue})
   }
 
   function rebuildColumns() {
@@ -214,20 +171,9 @@ export function useQueryTable(
         ...(col.search ? {search: {...col.search}} : {}),
       }
       cols.push(optionsCol)
-      if (!optionsCol.search?.component) {
-        continue
-      }
-      optionsCol.filterDropdown = () => null
-      if (!optionsCol.search.queryName) {
-        optionsCol.search.queryName = `filter_[${toTableFieldName(String(col.key))}_${optionsCol.search.expression || 'eq'}]`
-      }
-      const queryName = optionsCol.search.queryName
-      if (
-        optionsCol.search.defaultValue !== undefined &&
-        !appliedDefaultValueKeys.has(queryName)
-      ) {
-        appliedDefaultValueKeys.add(queryName)
-        patchQuery(query, {[queryName]: optionsCol.search.defaultValue})
+      if (optionsCol.search?.component) {
+        optionsCol.filterDropdown = () => null
+        initSearch(optionsCol)
       }
     }
     if (hasActionsColumn.value) {
@@ -277,6 +223,7 @@ export function useQueryTable(
     tableColumns,
     mergedRowSelection,
     tablePassthroughAttrs,
+    tableLoading,
     tableOnRow,
     isDragCell,
     onDragHandleStart,
