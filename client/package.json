@@ -18,5 +18,8 @@
     "axios": {
       "optional": true
     }
+  },
+  "devDependencies": {
+    "axios": "^1.0.0"
   }
 }

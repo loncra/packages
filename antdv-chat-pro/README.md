@@ -53,6 +53,8 @@ import {createLiveKitCallMedia} from '@loncra/antdv-chat-pro/im/call/livekit'
 - **基础件复用，不复制**：`classNames` / `genStyleHooks` / `genFullSpinStyle` / `SPIN_KEYFRAMES` / `JUMP_KEYFRAMES` / `createUseLocale` / `fillLocale` / `useIsDark` 从 `@loncra/antdv` 引；`Provider` / `useAntdvConfig` / `Form` / `UserAvatar` / `AttachmentUpload` 等从 `@loncra/antdv-pro` 引；IM 与 Agent 的共性类型、纯函数从 `@loncra/chat-core` 引；后端调用经 `@loncra/client` 的子路径。
 - **不做 socket / SSE，不开长连接**：包内不出现 `EventSource` / `WebSocket`，唯一的实时连接是 `im/call/livekit` 的媒体实现会自己建媒体会话。实时数据由宿主经 host 契约推进来 —— IM 侧 `im/host.ts` 的 `ImHost` / `ImChatHost` / `ImChatCallHost` / `ImPageHost`，Agent 侧 `agent/conversation/useAgentConversations.ts` 的 `AgentConversationHost` 与 `agent/history/useAgentHistory.ts` 的 `AgentHistoryHost`；发送侧只出函数（`sendImMessage` / `sendAgentChat` / `interruptAgent`）。
 - `prefixCls` 用 `config.getPrefixCls('<名>', '<前缀常量>')`，名默认与控件同名；`FileEditor` 另有 `file-pane` / `file-tabs` / `file-conversation` 三个子前缀。
-- **有自有样式的控件**才一个 `prefixCls` 对一个 `genStyleHooks`，样式写在自己目录的 `style/index.ts`（`DraftSender` 就没有自有样式）。
-- 根节点挂类一律用 `class` 绑定，`rootClass` 只作宿主入参并入 `class`；子节点走 `classes.*`。例外是**交给 antdv-next 子组件的 `rootClass` 入参**（`ConversationList` 给 `Menu`、`useBubbleList` 经 `toAxBubbleItem` 给气泡组件），那是在替子组件传根类，不是本控件自己挂根类。
+- `DraftSender` 没有自有样式，不建 `prefixCls` / `style/index.ts`。
+- 例外：交给 antdv-next 子组件的 `rootClass` 入参（`ConversationList` 给 `Menu`、`useBubbleList` 经 `toAxBubbleItem` 给气泡组件），那是替子组件传根类，不是本控件自己挂根类。
 - 命名：IM 侧文件 `ImXxx.tsx`、Agent 侧 `AgentXxx.tsx`，两个套件共用的件不带前缀（`BubbleList` / `ConversationList` / `DraftSender`）；`file-editor` 的子域文件带 `File` 父级前缀（`FileTabs` / `FileConversation` / `FilePaneHost`）。
+
+通用规则见 [CONTRIBUTING.md](../CONTRIBUTING.md) 第 7–12 节与 [CONTRIBUTING-PACKAGES.md](../CONTRIBUTING-PACKAGES.md) 第 1–6 节。

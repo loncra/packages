@@ -57,8 +57,9 @@ import zhCN from '@loncra/antdv-pro/locale/zh_CN'
 - **基础件复用 `@loncra/antdv`**：`classNames`、`splitSemantic`、`genStyleHooks`、`createUseLocale` 都从它引，不复制。本包不用 `useIsDark`，暗色由 `config-provider` 的 `theme.darkAlgorithm` 处理。
 - **后端调用一律经 `@loncra/client` 的子路径**（`commons` / `resource`）：`AttachmentService`、`BasicCrudService`、`ResourceServerService`（字典与枚举桶）、`getClient`、`SYSTEM_CONSTANT` 与各枚举。包内不出现 URL 拼接、不自建 HTTP 客户端。
 - `prefixCls` 用 `getPrefixCls('<名>', 'loncra-<名>')`，名字默认等于目录名。`getPrefixCls` 取自 antd 深路径的 `useConfig()`，不是本包的 `useAntdvConfig`。两个例外：`crud-page/form` → `crud-form-page`，`notification` → `app-notification`。
-- 有自有样式的控件 = 一个 `prefixCls` = 一个 `genStyleHooks`，样式写在自己目录的 `style/index.ts`（本包有 9 个这样的目录；`user-avatar` / `user-select` 只用前缀，没有样式文件）。
+- 本包有 9 个带样式的控件目录；`user-avatar` / `user-select` 只用前缀，没有样式文件。
 - CSS 变量用 `--loncra-<控件>-<语义>` 手写（如 `--loncra-card-grid-columns`），不走 `getPrefixCls`。
-- 根节点挂类一律用 `class` 绑定，`rootClass` 只作宿主入参并入 `class`；子节点走 `classes.*`（经 `splitSemantic` 拆）。
 - **分层**：`basic-crud-query` 是所有内容层的底座（内部用 `data-loading-card-plan` 与 `action-button`）→ `query-table` / `query-card-grid` 做查询内容 → `crud-table` / `crud-card-grid` 是固定实体类型的门面 → `crud-page` 装配页面（`define*` 声明翻成 props，字段组件走 `registry.ts`）。
 - **Provider 层次**：`Provider`（`config-provider`）内嵌 antdv-next 的 `ConfigProvider` 与 `ClientProvider`、`CrudConfigProvider`。`Form` 与 `ConfigProviderSetting` 读 `useAntdvConfig`，CRUD 相关读 `useCrudConfig` / `useActionAuth`。
+
+通用规则见 [CONTRIBUTING.md](../CONTRIBUTING.md) 第 7–12 节与 [CONTRIBUTING-PACKAGES.md](../CONTRIBUTING-PACKAGES.md) 第 1–6 节。

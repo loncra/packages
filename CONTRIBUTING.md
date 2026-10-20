@@ -11,7 +11,7 @@ xxx/
   index.ts                 控件出口：default + 类型 re-export
   Xxx.tsx                  主组件：只编排
   XxxRenderer.tsx          可选：按类型分发渲染（见 [3. 一种契约、多种实现](./CONTRIBUTING-PACKAGES.md#3-一种契约多种实现) E 类）
-  types.ts                 横跨多文件的类型
+  types.ts                 横跨多文件的类型（含 Props / Emits / Slots / Expose）
   constants.ts             魔法值
   xxxKinds.ts              领域纯逻辑（零框架依赖）
   useXxx.ts                状态与副作用
@@ -19,6 +19,7 @@ xxx/
   <子域>/XxxSub.tsx        领域 UI 子组件
   <子域>/style/index.ts
   style/index.ts           本控件 cssinjs 样式
+  README.md                控件用法（见 [12. 控件使用说明的写法](#12-控件使用说明的写法)）
 ```
 
 **为什么**：位置固定后找东西不用靠记忆，新代码有既定落点，不必每次重新决定放哪。不是每个目录都要凑齐所有文件，但**出现某个文件就必须落在它对应的层**（见 [8. 分层与职责](#8-分层与职责)）。
@@ -44,26 +45,31 @@ xxx/
 - 目录名 = 领域名（`tabs` / `conversation` / `panes`），文件名带父级前缀（`FileTabs` / `FileConversation`）。这条**有意偏离** Vue 官方"紧耦合子组件用父名做前缀"的写法（出处见 [参考文献](#参考文献)）：每个子控件要带自己的 `style/index.ts`，摊平会撞名。
 - 新增的分发组件不要叫 `XxxHost`。
 - 一个文件一个组件。
-- 类名挂法：根节点一律用 `class`，不用 `rootClass`；子节点走 `classes.*`。
+- 类名挂法：组件内部挂类用 `class` 绑定；`rootClass` 只是宿主入参，最终并入 `class`；子节点走 `classes.*`。
+- `inheritAttrs: false` 之后 attrs 固定这样处理：取出 `class` / `style` 落到根节点，其余 `{...rest}` 透传给内部主组件。只有纯包装控件（见 [10. 样式](#10-样式)）才整体 `{...attrs}` 展开，且必须放在显式属性**之前** —— 让本组件的 `title` / `footer` / `onCancel` 覆盖宿主的同名 attrs。
 
 **为什么**：命名是唯一的"跨文件导航"。前缀统一后，按字母排序相关文件天然相邻，grep 也一次到位。
 
 ### 10. 样式
 
-- 一个控件 = 一个 `prefixCls` = 一个 `genStyleHooks`，控件目录自带 `style/index.ts`。控件自己算前缀：
+- **有自有样式的控件** = 一个 `prefixCls` = 一个 `genStyleHooks`，控件目录自带 `style/index.ts`。纯包装控件（只把 antd 组件包一层、没有自有类名与样式，如 `QrCodeModal` / `TooltipValidationFormItem`）不建 `prefixCls`、不建 `style/index.ts`，也不写空的 `genStyleHooks`。控件自己算前缀：
 
 ```ts
 const prefixCls = computed(() => config.value.getPrefixCls('xxx', 'loncra-xxx'))
 const [hashId, cssVarCls] = useStyle(prefixCls)
 ```
 
-- 控件样式一律经包内工厂 `_util/genStyleLayer.ts` 取 `genStyleHooks`（一个包一个工厂，层名只在这里写一次），不要直接 import `antdv-next/theme/internal`。
+- 控件样式一律经包内工厂 `_util/genStyleLayer.ts` 取 `genStyleHooks`（一个包一个工厂，层名只在这里写一次），`LoncraStyleToken` 也从这里取；不要直接 import `_util/style/factory`，也不要直接 import `antdv-next/theme/internal`。
+- `createStyleHooks` 只给需要自己工厂的包（`antdv-pro` / `antdv-chat`）从包出口取。
+- 其他包与宿主只从包出口取，不深路径 import `_util/`（见 [2. 文件角色](./CONTRIBUTING-PACKAGES.md#2-文件角色)）。
 - `hashId` / `cssVarCls` 不跨组件用 props 传，子部件要用就自己算一份（`hashId` 是主题级一个值，各处算出来天然一致）。**例外是纯展示子控件**：它不接 config（见 [8. 分层与职责](#8-分层与职责)），只能由父级把 `prefixCls` / `hashId` / `cssVarCls` 一起传进来。
 - 同一前缀的内部子部件，不允许把选择器片段导出到别的目录再在父级展开：要么并进同一个 `genStyleHooks`，要么给它独立前缀 + 自己的 `genStyleHooks`。
 - 覆盖 antd 交给层序（见 [11. 样式层与覆盖顺序](#11-样式层与覆盖顺序)），控件样式里**不写** `!important`；它只留给层序管不到的地方（未分层的第三方 CSS、必须压过宿主 Tailwind 工具类、宿主没开 layer 模式）。不把"自有类自重复"（`.${componentCls}-item.${componentCls}-item` 凑到 3 个类）当作要求 —— 它有压不过的场景，且与层序无关。
 - **需要跨控件共享的样式写成参数化片段**：放在 `_util/style/fragments.ts` 这类共享位置，签名 `(token, ...)`、键用 `token.componentCls` 拼，由各控件的 `genStyleHooks` 自己展开（形态对齐 `antdv-next/dist/style` 的 `genCompactItemStyle` / `getArrowStyle`）。片段可以跨包 import；**不许**从一个控件目录导出给另一个控件用（见上一条）。没有消费方的片段随定义一起删。
 - **包内不提供全局工具类**：间距、边框、宽度这类普通布局宿主用 Tailwind、包内写 `${componentCls}-xxx`；"宿主也要用"的样式（如全高容器）由宿主在自己的层里写，不从包里要。
-- **顶层键会与主题 hashId 复合**：写 `` [`${componentCls}-xxx`] `` 这种顶层键时，cssinjs 生成的是 `:where(.css-hash).<类名>`（`@antdv-next/cssinjs` 的 `injectSelectorHash`）⇒ **挂这个类的元素自己必须带 `css-hash`**。antd 组件根（`a-spin` / `a-divider` / `a-flex` / `a-menu`）带；裸 `<div>`、以及 `classes.container` / `classes.title` 这类弹层内部节点只拿到我们的 class ⇒ 不命中。传送到 body 的内容（`Popover` / `Modal` / `Drawer`）拿不到控件祖先类，只能用"顶层键 + antd 根"这一种写法，不能嵌在 `[componentCls]` 下。
+- **顶层键会与主题 hashId 复合**：写 `` [`${componentCls}-xxx`] `` 这种顶层键时，cssinjs 生成的是 `:where(.css-hash).<类名>`（`@antdv-next/cssinjs` 的 `injectSelectorHash`）⇒ **挂这个类的元素自己必须带 `css-hash`**。antd 组件根（`a-spin` / `a-divider` / `a-flex` / `a-menu`）带；裸 `<div>`、以及 `classes.container` / `classes.title` 这类弹层内部节点只拿到我们的 class ⇒ 不命中。
+- **嵌套键同样受 hashId 约束**：`[componentCls]: { '&-xxx': … }` 的编译结果是 `:where(.css-hash).<componentCls>-xxx` —— 父选择器已经带上 hash 前缀，所以挂 `-xxx` 的元素**自己也要带 `css-hash`**。挂在 antd 组件根上能命中（它们自带同一个主题 hash）；挂在裸 `<div>` 上不命中。
+- **弹层（传送到 body）的样式**：弹层内容不在控件祖先下，写在 `[componentCls]` 里的规则一律不命中。按弹层组件提供的能力二选一：① 弹层根是 antd 组件 ⇒ 用"顶层键 + antd 根"，规则独立写在 `[componentCls]` 之外；② 弹层提供 `rootClass` / `classes.root` ⇒ 把 `prefixCls + hashId + cssVarCls` 组成的作用域串挂到弹层根与内容层，再用祖先选择器区分子域。第 ② 种**不把宿主透传的 `class` 放进这串**：`w-full` 这类工具类会把整个弹层撑满。
 
 **为什么**：样式"谁调 `useStyle` 谁生成"，所以前缀与注册点必须归控件自己所有；压过 antd 归层序管，`!important` 只补层序管不到的地方。
 
@@ -126,6 +132,29 @@ const [hashId, cssVarCls] = useStyle(prefixCls)
 - **写清边界**：默认值从哪来、哪些 attrs 透传给哪个子组件、哪个 prop 形式可选而实际必填、多条规则命中时谁优先（范例：`IconSelect` 的 `preview` 优先于 `mode`；`iconRender` 不传则图标位置空白、外壳照常渲染）。
 - **「语义化 DOM」要写"拿不到什么"**：根元素是谁、`prefixCls` / `hashId` / `cssVarCls` / `class` / `rootClass` 各落在哪、内部类名清单、弹层（传送到 body）的落点与已知坑（如弹层那一串类不带宿主透传的 `class`）；**没有自有类名的节点显式点出来**，别让下一个人去猜。
 - **不写跨包指引**：包 `README.md` 不解释"为什么这样分"，控件说明里不出现"完整清单见某包"。
+
+#### 包 `README.md`
+
+必备四节，标题按包类型取用；确有包内专属内容时可再增补一节：
+
+```markdown
+# `@loncra/xxx`
+
+一句话说清这个包的边界。
+
+## 安装与引用
+
+## 控件
+
+## 目录
+
+## 本包的开发规范
+```
+
+- **第二节**：控件包用 `控件`，有套件内部件的用 `控件与套件`；`client` / `chat-core` 用 `模块` 或 `模块分层`。
+- **`目录`**：可选，纯服务包可以没有。
+- **增补节**：只写本包专属内容（例：`client` 的 `启动`、`chat-core` 的 `词槽标准的组合方式`）。
+- **`本包的开发规范`**：只写本包**独有**的约定；通用规则引用而不复制 —— 控件规则见本文件第 7–12 节，跨包规则见 [CONTRIBUTING-PACKAGES.md](./CONTRIBUTING-PACKAGES.md) 第 1–6 节。
 
 ## 参考文献
 

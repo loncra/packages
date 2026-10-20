@@ -36,6 +36,7 @@ export type {
 export { default as Editor } from './editor'
 export type {
   EditorEmits,
+  EditorLocale,
   EditorProps,
   EditorSlots,
   OutputFormat,
@@ -52,7 +53,7 @@ export type { LocaleComponentName } from './_util/context/useLocale'
 export { classNames } from './_util/classNames'
 export { splitSemantic } from './_util/splitSemantic'
 export { createStyleHooks } from './_util/style/factory'
-export type { LoncraStyleToken } from './_util/style/factory'
+export type { LoncraStyleToken } from './_util/genStyleLayer'
 export {
   genFullSpinStyle,
   genScrollAreaStyle,

@@ -21,35 +21,12 @@ import {avatarModeOptions, parseAvatarModel} from './iconSelectKinds'
 import {useIconSelect} from './useIconSelect'
 import useStyle from './style'
 import {ICON_SELECT_AVATAR_MODE_VALUE, ICON_SELECT_MODE} from './constants'
-import type {IconfontJson, IconSelectAvatarModeValueType, IconSelectModeType} from './types'
-
-export type {
-  IconfontGlyph,
+import type {
   IconfontJson,
   IconSelectAvatarModeValueType,
   IconSelectModeType,
+  IconSelectProps,
 } from './types'
-export {AVATAR_SCHEMES, ICON_SELECT_AVATAR_MODE_VALUE, ICON_SELECT_MODE} from './constants'
-
-export interface IconSelectProps {
-  value?: string
-  options?: IconfontJson[]
-  mode?: IconSelectModeType
-  preview?: boolean
-  iconRender?: (type: string) => VNodeChild
-  prefixCls?: string
-  class?: unknown
-  rootClass?: string
-  style?: unknown
-}
-
-export interface IconSelectEmits {
-  'update:value': (value: string) => void
-}
-
-export interface IconSelectSlots {
-  afterAvatar?: () => unknown
-}
 
 function renderAvatar(
   type: IconSelectAvatarModeValueType,

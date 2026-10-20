@@ -67,3 +67,5 @@ createClient({
 - 要在 Vue 组件里按 props 驱动配置，走 `configureClient`：幂等，重复调用即覆盖，配置变化后自动重配。
 - `modulePrefix(moduleName)` 返回单体 `/api`、微服务 `/api/{module}`；它依赖 `getClient()`，**必须在 `createClient` 之后调用**。各 Service 把它放在取 `BASE_URL` 的取值函数里，所以 `new XxxService()` 本身是纯的。
 - `formUrlEncoded` 在 `commons/utils`：骨架只编码，值的转换由 `createClient({formValueConvert})` 注入，单次调用也可传第三个 `valueConvert`。
+
+通用规则见 [CONTRIBUTING-PACKAGES.md](../CONTRIBUTING-PACKAGES.md) 第 1–6 节。

@@ -7,4 +7,4 @@ export type {
   KeyValueTableExpose,
   KeyValueTableProps,
   KeyValueTableSlots,
-} from './KeyValueTable'
+} from './types'

@@ -1,27 +1,9 @@
 import {computed, defineComponent} from 'vue'
 import {CheckOutlined, CopyOutlined} from '@antdv-next/icons'
-import {Button, Flex, Input, Modal, type ModalProps, QRCode, SpaceCompact, theme,} from 'antdv-next'
+import {Button, Flex, Input, Modal, QRCode, SpaceCompact, theme} from 'antdv-next'
 import {useLocale} from '../_util/context/useLocale'
 import {QRCODE_SIZE_RATIO} from './constants'
 import {useQrCodeModal} from './useQrCodeModal'
-
-export interface QrCodeModalProps {
-  url: string
-  open?: boolean
-  class?: unknown
-  rootClass?: string
-  style?: unknown
-  classes?: ModalProps['classes']
-  styles?: ModalProps['styles']
-}
-
-export interface QrCodeModalEmits {
-  'update:open': (open: boolean) => void
-}
-
-export interface QrCodeModalSlots {
-  copyIcon?: (ctx: { copied: boolean }) => unknown
-}
 
 const QrCodeModal = defineComponent({
   name: 'LQrCodeModal',

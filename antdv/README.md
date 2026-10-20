@@ -8,7 +8,7 @@ peer：`vue`、`antdv-next`、`@antdv-next/icons`、`antdv-next-tiptap`（只有
 
 | 路径 | 内容 |
 | --- | --- |
-| `@loncra/antdv` | 全部控件 + 基础件（`classNames` / `splitSemantic` / `genStyleHooks` / `useLocale` / `useIsDark` / `useFormItemTrigger`）+ 共享样式片段（`genFullSpinStyle` / `SPIN_KEYFRAMES` / `JUMP_KEYFRAMES`）+ locale 默认包 + 类型；完整清单以 `src/index.ts` 为准 |
+| `@loncra/antdv` | 全部控件 + 基础件（`classNames` / `splitSemantic` / `genStyleHooks` / `createStyleHooks` / `useLocale` / `createUseLocale` / `fillLocale` / `useIsDark` / `useFormItemTrigger`）+ 共享样式片段（`genFullSpinStyle` / `genScrollAreaStyle` / `SPIN_KEYFRAMES` / `JUMP_KEYFRAMES`）+ locale 默认包 + 类型；完整清单以 `src/index.ts` 为准 |
 | `@loncra/antdv/locale/zh_CN` | 简体中文语言包 |
 | `@loncra/antdv/locale/en_US` | 英文语言包 |
 
@@ -34,12 +34,11 @@ import zhCN from '@loncra/antdv/locale/zh_CN'
 | --- | --- |
 | `<控件>/` | 一个控件一个目录。骨架 `index.ts` / 主组件 `.tsx` / `types.ts` / `style/index.ts` 见 [CONTRIBUTING.md](../CONTRIBUTING.md) 第 7 节 |
 | `locale/` | 本包 locale 与 `Locale` 类型 |
-| `_util/` | 共用基础件：纯函数 `classNames`、`splitSemantic`、`genStyleHooks`、`isEmptyRichText` / `normalizeRichTextValue`，依赖 vue / antdv-next 的 composable 集中在 `context/`（`useLocale` / `createUseLocale` / `fillLocale`、`useIsDark`），样式机制与共享片段在 `style/`（工厂 `createStyleHooks`、`genFullSpinStyle`、`SPIN_KEYFRAMES` / `JUMP_KEYFRAMES`） |
+| `_util/` | 共用基础件：纯函数 `classNames`、`splitSemantic`、`genStyleHooks`、`isEmptyRichText` / `normalizeRichTextValue`，依赖 vue / antdv-next 的 composable（`useFormItemTrigger`，以及 `context/` 下的 `useLocale` / `createUseLocale` / `fillLocale` / `useIsDark`），样式机制与共享片段在 `style/`（工厂 `createStyleHooks`、`genFullSpinStyle`、`genScrollAreaStyle`、`SPIN_KEYFRAMES` / `JUMP_KEYFRAMES`） |
 
 ## 本包的开发规范
 
 - **写法对标 `antdv-next` 源码**：`.tsx` + `defineComponent` + JSX，不写管理端 SFC。
-- 组件名 `L` 前缀，`inheritAttrs: false`；**根节点挂类一律用 `class` 绑定，`rootClass` 只作宿主入参并入 `class`**；子节点走 `classes.*`。
-- 有自有样式的控件 = 一个 `prefixCls` = 一个 `genStyleHooks`，样式只写在自己目录的 `style/index.ts`，不写内联 `style`，更不写管理端的全局 css。
 - **图标渲染归宿主**：包内不解析宿主的全局 `IconFont`、不渲染宿主的图标字体。要画图标的地方一律由宿主注入 —— `IconSelect` 的 `iconRender`、`KeyValueTable` 的 `#title` 插槽；包内自带外观只用官方 `@antdv-next/icons`。
-- **跨控件共享的样式写成参数化片段**（`_util/style/fragments.ts`），由各控件的 `genStyleHooks` 自己展开；包内不提供全局工具类。
+
+命名、类名挂法、样式与层的规则见 [CONTRIBUTING.md](../CONTRIBUTING.md) 第 9–11 节。

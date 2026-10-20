@@ -36,6 +36,6 @@ import zhCN from '@loncra/antdv-chat/locale/zh_CN'
 ## 本包的开发规范
 
 - **基础件复用 `@loncra/antdv`，不复制**：`classNames`、`genStyleHooks`、`useIsDark`、`createUseLocale` 都从 `@loncra/antdv` 引；本包的 `useLocale` 是用该工厂自建的，`locale` 与 `Locale` 类型才是本包自己的。
-- 写法对标 `antdv-next` 源码：`.tsx` + `defineComponent` + JSX。组件名 `L` 前缀，`inheritAttrs: false`；根节点挂类一律用 `class` 绑定，`rootClass` 只作宿主入参并入 `class`；子节点走 `classes.*`。
-- 有自有样式的控件 = 一个 `prefixCls` = 一个 `genStyleHooks`，样式只写在自己目录的 `style/index.ts`。
 - 本包 peer 里的 X 生态（`@antdv-next/x`、`@antdv-next/x-markdown`）只在本包内用。
+
+通用规则见 [CONTRIBUTING.md](../CONTRIBUTING.md) 第 7–12 节与 [CONTRIBUTING-PACKAGES.md](../CONTRIBUTING-PACKAGES.md) 第 1–6 节。

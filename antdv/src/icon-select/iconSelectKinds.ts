@@ -1,3 +1,4 @@
+import type {IconSelectLocale} from '../locale'
 import {AVATAR_SCHEMES, ICON_SELECT_AVATAR_MODE_VALUE} from './constants'
 import type {IconfontGlyph, IconfontJson, IconSelectAvatarModeValueType} from './types'
 
@@ -19,13 +20,10 @@ export function toAvatarModel(type: IconSelectAvatarModeValueType, payload: stri
   return text ? `${type}${text}` : ''
 }
 
-interface IconSelectAvatarLocale {
-  link: string
-  name: string
-  icon: string
-}
-
-export function avatarModeOptions(options: IconfontJson[], locale: IconSelectAvatarLocale) {
+export function avatarModeOptions(
+  options: IconfontJson[],
+  locale: Pick<IconSelectLocale, 'link' | 'name' | 'icon'>,
+) {
   const result: { label: string; value: IconSelectAvatarModeValueType }[] = [
     { label: locale.link, value: ICON_SELECT_AVATAR_MODE_VALUE.AVATAR },
     { label: locale.name, value: ICON_SELECT_AVATAR_MODE_VALUE.INPUT },

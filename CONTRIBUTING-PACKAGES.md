@@ -22,10 +22,12 @@
 | `index.ts` | 包出口：default + 类型 re-export | 实现细节 |
 | `types.ts` | 横跨多文件的类型 | 运行时值、组件内联的领域类型 |
 | `constants.ts` | 魔法值 | 派生自其它常量的再计算结果 |
-| `_util/` | 包内共用基础件：与框架无关的纯函数，以及依赖 vue / antdv-next 的 composable | 业务逻辑、组件本体；跨包只允许 `import type` |
+| `_util/` | 包内共用基础件：与框架无关的纯函数，以及依赖 vue / antdv-next 的 composable | 业务逻辑、组件本体 |
 | `useXxx.ts`（仅 Vue 包） | 状态 + 副作用 | JSX |
 
 每个包自己的目录怎么分，写在 [`packages/README.md`](./README.md) 对应的小节里（例：`client` 按 `enumerate` / `constants` / `domain` / `service` 分模块目录）。
+
+`_util/` 是包内实现，不构成跨包契约：其他包要用只能从包出口（`@loncra/xxx`）import，不得深路径 import `@loncra/xxx/src/_util/...`。经包出口导出的项一旦被其他包使用，就按公共 API 维护 —— 改名或改签名要同步改调用方。
 
 包文档回答同一组问题：**这个包的边界、禁止项、peer、入口、对外 API 清单**。粒度上：宿主直接使用的控件单独建 `src/<控件>/README.md`；套件内部件只在包文档里列一行；`_util/*` 只列名。
 
@@ -40,6 +42,8 @@
 3. 实现要按 key 被宿主替换 / 扩展吗？→ 是 = **C**
 4. 只是"运行时要换一个实现 / 算法"，由调用方或宿主传进来？→ 是 = **A**
 5. 只是把宿主的能力（取头像、格式化、跳转）灌进包？→ 是 = **B**
+
+A 与 B 的分界：**A 换掉的是包内的算法 / 实现**（替换后包的控制流不变，典型是 `HttpClient`）；**B 灌进来的是宿主环境的能力**（包只调用、不拥有，典型是 `iconRender` / `getAccessToken` / `i18nResolver`）。拿不准时问"换掉它，包里的分支逻辑会不会变"：会变 ⇒ A；不会、只是结果的来源变了 ⇒ B。
 
 | 类 | 契约长什么样 | 落点 | 本仓实例 |
 |---|---|---|---|
@@ -98,7 +102,7 @@
 
 **人工判定的条目（审计项）**：
 
-1. 跨文件复用的类型是否都在 `types.ts`，没有内联在实现文件里。
+1. 跨文件复用的类型是否都在 `types.ts`：控件的 `XxxProps` / `XxxEmits` / `XxxSlots` / `XxxExpose` 与由它们派生的联合类型一律定义在 `types.ts`，实现文件只 import，不在 `.tsx` 里内联。
 2. 魔法值是否都在 `constants.ts`。
 3. 配置型数据（表格列、表单 schema、菜单、映射表）是否外提成同目录 `.ts`。
 4. 组件本体超 200 行而未拆的，是否写明理由。
@@ -111,6 +115,8 @@
 - **`vue` 版本以 `packages` 为准、管理端跟随**：具体数字只在包自己的 `devDependencies.vue` 里钉死（不用 `^`；`antdv-chat-pro` 不装 vue，只声明 peer），管理端 `vue-basic-admin/package.json` 的 `vue` 必须与它逐字一致，且不得超出 `peerDependencies.vue` 声明的兼容范围。管理端是宿主、实际运行的那份 vue 在它手里，但版本号由 packages 定 —— 管理端不能装到 packages 还没支持的版本上。
 - 管理端与 packages 是**各自独立的安装**，而管理端的 `vue-tsc` 会把包源码一起编译：两处 vue 版本不同就会出现两份 d.ts，报一屏看起来一模一样的类型错误。升级时两边同时改，装完核对各自 `node_modules/vue` 与 `@vue/runtime-core` 的版本号。
 - 包之间由管理端按 `"@loncra/xxx": "file:../packages/xxx"` 引用。包的 `exports` 一律直指 `./src/*.ts`（源码直连，无构建产物），除 `.` 之外按需开子路径入口 —— 有哪些子路径看各包 `package.json`，不要在这里另记一份清单。**新增子路径时，包的 `exports` 与管理端 `vue-basic-admin/tsconfig.app.json` 的 `paths` 必须同时加** —— 管理端靠 `paths` 把包源码拉进编译，漏一处就报解析不到。若将来要发布或被第二个项目引用，必须先补构建管线（tsup 或 tsc + dts）与版本发布流程。
+- **依赖归属**：由宿主提供的运行时依赖（`antdv-next`、`@antdv-next/icons`、`antdv-next-tiptap`、`dayjs`、`axios`、`dexie`、`livekit-client` 等）写进 `peerDependencies`，**同时按同版本写进 `devDependencies`** —— 只写 peer 的话包管理器不会安装，包在管理端之外做编译或类型检查时会直接报解析失败。两个例外：`vue` 只在直接使用它的包（`antdv` / `antdv-pro` / `antdv-chat`）里进 dev，`antdv-chat-pro` 不装；包间依赖（`@loncra/*`）由管理端的 `file:` 安装提供，不进 peer / dev。只有包内部真正使用的工具库才进 `dependencies`。
+- **每个包自带 `tsconfig.json`**：`extends` 与管理端同一条链（`@vue/tsconfig/tsconfig.dom.json`），再补上管理端额外开启的 `noUncheckedIndexedAccess`；`include` 只列 `src`，`noEmit: true`。不要逐项抄 `compilerOptions` —— 链会随 `@vue/tsconfig` 升级，逐项抄必然漂；也不要写 `declaration`（与 `noEmit` 冲突，是死配置）。缺这一份时，该包源码一旦脱离管理端的编译单元，就会报一屏与代码无关的错误。
 
 **为什么**：源码直连换来的是"改包源码 → 管理端立刻生效"，这是单人维护下最省时间的形态；代价就是上面那条版本必须钉死。
 

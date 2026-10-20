@@ -1,18 +1,7 @@
 import {computed, defineComponent} from 'vue'
-import {Tooltip, type TooltipProps} from 'antdv-next'
+import {Tooltip} from 'antdv-next'
 import {useFormItemInputContext} from 'antdv-next/dist/form/context'
-
-export interface TooltipValidationFormItemProps {
-  class?: unknown
-  rootClass?: string
-  style?: unknown
-  classes?: TooltipProps['classes']
-  styles?: TooltipProps['styles']
-}
-
-export interface TooltipValidationFormItemSlots {
-  default?: () => unknown
-}
+import type {TooltipValidationFormItemProps} from './types'
 
 const TooltipValidationFormItem = defineComponent(
   (_props: TooltipValidationFormItemProps, { slots, attrs }) => {

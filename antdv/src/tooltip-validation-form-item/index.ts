@@ -4,4 +4,4 @@ export default TooltipValidationFormItem
 export type {
   TooltipValidationFormItemProps,
   TooltipValidationFormItemSlots,
-} from './TooltipValidationFormItem'
+} from './types'

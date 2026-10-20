@@ -1,26 +1,9 @@
 import {computed, defineComponent} from 'vue'
-import {Image, type ImageProps} from 'antdv-next'
+import {Image} from 'antdv-next'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {classNames} from '../_util/classNames'
 import useStyle from './style'
 import defaultFallback from './ImageNotFound.svg'
-
-export interface BasicImageProps {
-  preview?: boolean
-  fallback?: string
-  prefixCls?: string
-  class?: unknown
-  rootClass?: string
-  style?: unknown
-  classes?: ImageProps['classes']
-  styles?: ImageProps['styles']
-}
-
-export interface BasicImageSlots {
-  cover?: () => unknown
-  fallback?: () => unknown
-  placeholder?: () => unknown
-}
 
 const BasicImage = defineComponent({
   name: 'LBasicImage',

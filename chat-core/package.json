@@ -14,5 +14,8 @@
     "dexie": {
       "optional": true
     }
+  },
+  "devDependencies": {
+    "dexie": "^4.4.6"
   }
 }

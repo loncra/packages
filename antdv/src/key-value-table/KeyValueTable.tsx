@@ -10,33 +10,6 @@ import {useKeyValueTable} from './useKeyValueTable'
 import type {KeyValueRow} from './types'
 import useStyle from './style'
 
-export type { KeyValueRow } from './types'
-
-export interface KeyValueTableProps {
-  value?: KeyValueRow[]
-  formItemNamePrefix?: string[]
-  title?: string
-  multipleValue?: boolean
-  edit?: boolean
-  prefixCls?: string
-  class?: unknown
-  rootClass?: string
-  style?: unknown
-}
-
-export interface KeyValueTableEmits {
-  'update:value': (value: KeyValueRow[]) => void
-  change: (item: KeyValueRow, data: KeyValueRow[]) => void
-}
-
-export interface KeyValueTableSlots {
-  title?: (ctx: { title?: string }) => unknown
-}
-
-export interface KeyValueTableExpose {
-  confirmAllEditingRows: () => void
-}
-
 const KeyValueTable = defineComponent({
   name: 'LKeyValueTable',
   inheritAttrs: false,

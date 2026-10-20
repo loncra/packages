@@ -6,7 +6,7 @@ import {classNames} from '../_util/classNames'
 import {useFormItemTrigger} from '../_util/useFormItemTrigger'
 import {isEditorEditable, resolveEditorLocale} from './editorKinds'
 import {useEditor} from './useEditor'
-import type {EditorLocale, UploadFn} from './types'
+import type {EditorProps, UploadFn} from './types'
 import useStyle from './style'
 
 const AEditor = defineAsyncComponent(async () => {
@@ -14,36 +14,6 @@ const AEditor = defineAsyncComponent(async () => {
   const {AEditor: Comp} = await import('antdv-next-tiptap')
   return Comp
 })
-
-export type { OutputFormat, PluginName }
-export type { EditorLocale, UploadFn } from './types'
-
-export interface EditorProps {
-  value?: string
-  height?: number
-  disabled?: boolean
-  editable?: boolean
-  outputFormat?: OutputFormat
-  locale?: EditorLocale
-  disabledPlugins?: PluginName[]
-  uploadImage?: UploadFn
-  uploadVideo?: UploadFn
-  wordCount?: true | number
-  prefixCls?: string
-  class?: unknown
-  rootClass?: string
-  style?: unknown
-}
-
-export interface EditorEmits {
-  'update:value': (value: string) => void
-  change: (value: string) => void
-  blur: (value: string) => void
-}
-
-export interface EditorSlots {
-  'word-count'?: (ctx: { count: number; limit: true | number }) => unknown
-}
 
 const Editor = defineComponent({
   name: 'LEditor',

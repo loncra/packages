@@ -9,5 +9,5 @@ export type {
   IconSelectModeType,
   IconSelectProps,
   IconSelectSlots,
-} from './IconSelect'
-export { AVATAR_SCHEMES, ICON_SELECT_AVATAR_MODE_VALUE, ICON_SELECT_MODE } from './IconSelect'
+} from './types'
+export {AVATAR_SCHEMES, ICON_SELECT_AVATAR_MODE_VALUE, ICON_SELECT_MODE} from './constants'

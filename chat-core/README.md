@@ -44,3 +44,5 @@ Agent 侧比 IM 多一条支：`AgentContentBlock = SharedContentBlock | AgentDe
 - 不含 Vue、DOM 与组件侧类型：气泡列表只描述回调用到的签名（`BubbleListCallbacks`），具体类型留在实现层。
 - **每个接口都写来源**：新增或迁移类型时在头注释里写 `来源：` 管理端（或后端）的对应定义，便于回溯这套标准是从哪份实现里抽出来的。
 - 类型扩展走继承，不复制字段：子接口只写自己多出来的字段，公共字段留在基类。
+
+通用规则见 [CONTRIBUTING-PACKAGES.md](../CONTRIBUTING-PACKAGES.md) 第 1–6 节。
