@@ -15,6 +15,7 @@ import {
   patchQuery,
 } from '../_util/crud/useCollectionData'
 import QueryTableCell from './cell/QueryTableCell'
+import {ACTION_COLUMN_KEY} from './constants'
 import QueryTableFilterDropdown from './filter/QueryTableFilterDropdown'
 import QueryTableTitle from './title/QueryTableTitle'
 import {useQueryTable} from './useQueryTable'
@@ -182,7 +183,6 @@ const QueryTable = defineComponent({
         )
       }
 
-      const DataTable = Table
       return (
         <BasicCrudQuery
           ref={basic}
@@ -235,7 +235,7 @@ const QueryTable = defineComponent({
             title: slots.title ? () => slots.title?.() : undefined,
             extra: slots.extra ? () => slots.extra?.() : undefined,
             default: (content: BasicCrudQueryContentProps) => (
-              <DataTable
+              <Table
                 {...(tablePassthroughAttrs.value as Record<string, unknown>)}
                 title={tableTitle(content)}
                 classes={props.classes?.table}
@@ -260,7 +260,7 @@ const QueryTable = defineComponent({
                     index: number
                     column: SearchableColumnType<DefaultCrudEntity>
                   }) => {
-                    const actionable = column.dataIndex === 'action'
+                    const actionable = column.dataIndex === ACTION_COLUMN_KEY
                     return (
                       <QueryTableCell
                         prefixCls={prefixCls.value}

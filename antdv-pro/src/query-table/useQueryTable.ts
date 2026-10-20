@@ -20,6 +20,7 @@ import {isDragEnabled} from '../_util/crud/useDrag'
 import {useTableRowDrag} from '../_util/crud/useTableRowDrag'
 import {useLocale} from '../_util/useLocale'
 import useStyle from './style'
+import {ACTION_COLUMN_KEY} from './constants'
 import {toTableFieldName} from './queryTableKinds'
 import {useQueryTableFilter} from './useQueryTableFilter'
 import type {
@@ -92,10 +93,7 @@ export function useQueryTable(
   const hasActionsColumn = computed(() => basic.value?.hasRecordActions ?? false)
 
   const externalRowSelection = computed((): TableProps['rowSelection'] | false | null => {
-    const raw = (props.rowSelection ?? attrs.rowSelection) as
-      | TableProps['rowSelection']
-      | false
-      | undefined
+    const raw = props.rowSelection as TableProps['rowSelection'] | false | undefined
     if (raw === false) {
       return null
     }
@@ -179,8 +177,8 @@ export function useQueryTable(
     if (hasActionsColumn.value) {
       cols.push({
         title: locale.value.action,
-        dataIndex: 'action',
-        key: 'action',
+        dataIndex: ACTION_COLUMN_KEY,
+        key: ACTION_COLUMN_KEY,
         align: 'center',
         width: 80,
         fixed: 'right',

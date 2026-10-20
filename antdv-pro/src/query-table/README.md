@@ -44,7 +44,7 @@ const columns: SearchableColumnType<SysRoleEntity>[] = [
 | 属性 | 说明 | 类型 | 默认值 | 版本 |
 | --- | --- | --- | --- | --- |
 | service | 取数服务（走它自己的 `find`），必需 | `CollectionService` | - | - |
-| columns | 列声明；带 `search.component` 的列会变成可筛选列（见[列筛选](#column-search)） | `SearchableColumnType[]` | `[]` | - |
+| columns | 列声明；带 `search.component` 的列会变成可筛选列（规则见下方「列筛选」） | `SearchableColumnType[]` | `[]` | - |
 | immediate | 挂载后立即取数 | boolean | `true` | - |
 | refreshOnActivate | keep-alive 激活时的刷新策略，语义同基类 | `RefreshOnActivate` | `true` | - |
 | title | 卡片头：`VNode` 直接用、`false` 不要卡片头、不给走默认标题 | `VNode \| boolean` | - | - |
@@ -57,7 +57,7 @@ const columns: SearchableColumnType<SysRoleEntity>[] = [
 | bordered | 透给 `Table` 的 `bordered` | boolean | `true` | - |
 | plain | 内嵌形态：不要卡片壳、不要外层 `Spin`，标题与工具栏落到表格自带标题 `.ant-table-title` | boolean | `false` | - |
 | fetch | 自定义取数，给了就不再走 `service.find` | `CollectionFetch` | - | - |
-| drag | 拖拽开关 + 幽灵内容：`true` = 可拖、`(record) => 内容` = 可拖且它就是幽灵 | `DragProp` | - | - |
+| drag | 拖拽开关 + 幽灵内容：`true` = 可拖、`(record) => 内容` = 可拖且它就是幽灵；开启后最前面会插入一列 40px 宽的拖拽把手（也计入 `scroll.x` 求和） | `DragProp` | - | - |
 | onRow | 透给 `Table` 的 `onRow`（与拖拽接线合并，不是覆盖） | `TableProps['onRow']` | - | - |
 | rowKey | 行主键 | `TableProps['rowKey']` | `id` | - |
 | rowSelection | 行选择配置；`false` 不出选择列 | `TableProps['rowSelection'] \| false` | - | - |
@@ -71,19 +71,25 @@ const columns: SearchableColumnType<SysRoleEntity>[] = [
 | query | 当前查询（`v-model`），筛选与翻页都往里写 | `FilterRequest \| PageRequest` | `{}` | - |
 | selectedRows | 选中集合（`v-model`） | `TEntity[]` | `[]` | - |
 
-三条与声明形态有关的边界：
+属性层面的四条边界：
 
 - **`title` / `toolbarActions` / `recordActions` 不能省 `default: undefined`**：三者类型里都带 `Boolean`，父级「不传」时 Vue 的布尔转换会把它变成 `false`，语义立刻翻转（不要卡片头 / 整排按钮不出 / 「操作」列整列不补）。
 - **行选择列会自动开**：没传 `rowSelection` 且基类 `needsBulkSelection` 为真（工具栏里存在当前用户有权限的内置批量动作）时，补一个 `{fixed: true, type: 'checkbox'}`；传 `false` 才彻底关掉。
-- **「操作」列会自动补**：基类 `hasRecordActions` 为真（有行内动作且有权限）时追加一列 `action`（`fixed: right`，宽 80），单元格里画 `bodyCell` 槽 + `ActionButton`。
+- **「操作」列会自动补**：基类 `hasRecordActions` 为真（有行内动作且有权限）时追加一列 `action`（`fixed: right`，宽 80），单元格里画 `bodyCell` 槽 + `ActionButton`。判定只看 id 合并后的 `permission`，**不看每条动作的 `visible`**：传 `[{id: 'delete', visible: () => false}]` 这种全隐藏写法仍会补出一列空「操作」列，要整列不出请用 `recordActions: false`。
 - **`scroll` 有默认值**：所有列都带 `width` 时求和成 `{x: 总数}`，否则 `{x: 'max-content'}`；宿主传了 `scroll` 就用宿主的。
+
+**列筛选**：列上写 `search.component` 就变成可筛选列，本控件把 antd 原生的筛选下拉（`filterDropdown = () => null`）换成自绘的一张卡：搜索组件 + 三个按钮（搜索 / 重置 / 清空）。
+
+- **`queryName` 不写会自动生成**：`filter_[<表字段名>_<expression || 'eq'>]`。表字段名只把列 `key` 的**第一段**做 camelCase → snake_case（`authMode` → `auth_mode`），点后面的段不转（后端嵌套段走实体 / JSON 属性，本来就是 camelCase）。已经有显式 `queryName` 的列不做映射。
+- **`defaultValue` 只在第一次建列时写进 `query`**，之后重建列不会覆盖用户改过的值。
+- **回车即搜索**：焦点在 `input` 上按 Enter 触发（`textarea`、可编辑元素、`ant-select` / `ant-picker` 内部的输入、`button` / `checkbox` / `radio` 都不算），`Shift+Enter` 不触发。
 
 ### 事件 {#events}
 
 | 事件 | 说明 | 类型 | 版本 |
 | --- | --- | --- | --- |
 | update:dataSource / update:loading / update:query / update:selectedRows / update:pagination / update:buckets / update:dictionaries | 各 `v-model` 的回写 | 对应属性类型 | - |
-| action | 动作被点（工具栏自定义动作 / 行内自定义动作），payload 由基类组装 | `(payload) => void` | - |
+| action | 动作被点（工具栏自定义动作 / 行内自定义动作），payload 由基类组装。**行内动作只收自定义 `id`**：内置 `edit` / `detail` / `delete` 不发这个事件（各自走 `edit` / `detail` 与删除流程）；工具栏内置 `add` 会同时发 `add` 与 `action({id: 'add'})` | `(payload) => void` | - |
 | add | 工具栏「新增」被点 | `() => void` | - |
 | edit / detail | 行内「编辑」/「详情」被点，回传记录（`dataIndex === 'action'` 的列由本控件处理） | `(record: TEntity) => void` | - |
 | deleted | 删除成功后抛 | `(records: TEntity[]) => void` | - |
@@ -129,14 +135,6 @@ const columns: SearchableColumnType<SysRoleEntity>[] = [
 > 区域表：基类的 `card` / `pagination` + 本控件自己处理的 `spin`（表格 loading 遮罩）与 `table`（antd `Table` 的语义键）。
 
 `QueryTableProps` / `QueryTableClasses` / `QueryTableStyles` / `QueryTableEmits` / `QueryTableSlots` / `QueryTableConstructor` / `ColumnSearchConfig` / `SearchableColumnType` 都从包根 `@loncra/antdv-pro` 导出。
-
-## 列筛选 {#column-search}
-
-列上写 `search.component` 就变成可筛选列，本控件把 antd 原生的筛选下拉（`filterDropdown = () => null`）换成自绘的一张卡：搜索组件 + 三个按钮（搜索 / 重置 / 清空）。
-
-- **`queryName` 不写会自动生成**：`filter_[<表字段名>_<expression || 'eq'>]`。表字段名只把列 `key` 的**第一段**做 camelCase → snake_case（`authMode` → `auth_mode`），点后面的段不转（后端嵌套段走实体 / JSON 属性，本来就是 camelCase）。已经有显式 `queryName` 的列不做映射。
-- **`defaultValue` 只在第一次建列时写进 `query`**，之后重建列不会覆盖用户改过的值。
-- **回车即搜索**：焦点在 `input` 上按 Enter 触发（`textarea`、可编辑元素、`ant-select` / `ant-picker` 内部的输入、`button` / `checkbox` / `radio` 都不算），`Shift+Enter` 不触发。
 
 ## 语义化 DOM {#semantic-dom}
 
