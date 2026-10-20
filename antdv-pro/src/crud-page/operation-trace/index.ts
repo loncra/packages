@@ -6,5 +6,5 @@ export type {
   OperationTraceEntity,
   OperationTraceTableProps,
   OperationTraceTableSlots,
-} from './OperationTraceTable'
+} from './types'
 export {createOperationTracePage, OPERATION_TRACE_VARIANT} from './page'

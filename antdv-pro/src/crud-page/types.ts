@@ -876,12 +876,12 @@ export interface CrudFormPageProps<
    */
   buttonAlign?: 'start' | 'center' | 'end'
   /**
-   * 卡片头标题（透传 `DataLoadingCardPlan.title`）：**`false` = 不渲染卡片头**。
+   * 卡片头标题（透传 `DataLoadingCard.title`）：**`false` = 不渲染卡片头**。
    * 弹层壳（`CrudFormModal`）传 `false` —— 标题归弹层自己（与 `CrudHomePageProps.title` 同形）。
    */
   title?: VNode | boolean
   /**
-   * **内嵌形态**（透传 `DataLoadingCardPlan.plain`）：不要卡片壳（弹层里不该再套一张卡）。
+   * **内嵌形态**（透传 `DataLoadingCard.plain`）：不要卡片壳（弹层里不该再套一张卡）。
    *
    * 与列表那份的差别：列表内嵌时**连 `Spin` 一起关**（`BasicCrudQuery` 传 `spin: false` —— 表格
    * 自带 `loading`），表单没有"自带 loading"的内容 ⇒ 这里**保留 `Spin`**（取数 / 提交仍要转圈）。

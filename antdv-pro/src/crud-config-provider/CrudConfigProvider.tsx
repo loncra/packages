@@ -3,12 +3,6 @@ import type {FieldComponentSpec, ValueFormatter} from '../crud-page/types'
 import type {CrudNavigateTarget} from '../_util/crud/navigate'
 import {CRUD_CONFIG_KEY, type CrudConfig} from './types'
 
-export interface CrudConfigProviderProps extends CrudConfig {}
-
-export interface CrudConfigProviderSlots {
-  default?: () => unknown
-}
-
 const CrudConfigProvider = defineComponent({
   name: 'LCrudConfigProvider',
   inheritAttrs: false,

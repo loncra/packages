@@ -1,7 +1,7 @@
 import type {CSSInterpolation} from '@antdv-next/cssinjs'
 import type {LoncraStyleToken} from '@loncra/antdv'
 import {genStyleHooks} from '../../_util/genStyleLayer'
-import {genDragGhostStyle, genDragStyle} from '../../_util/crud/genDragStyle'
+import {genDragGhostStyle, genDragRowStyle} from '../../_util/style/fragments'
 
 function genQueryTableStyle(token: LoncraStyleToken): CSSInterpolation {
   const {antCls, componentCls, colorPrimary, padding, paddingXS} = token
@@ -18,7 +18,7 @@ function genQueryTableStyle(token: LoncraStyleToken): CSSInterpolation {
           [`${antCls}-typography`]: {marginBottom: 0},
         },
         [`${componentCls}-filter-icon-active`]: {color: colorPrimary},
-        ...genDragStyle(token, componentCls),
+        ...genDragRowStyle(token, componentCls),
       },
     },
     {

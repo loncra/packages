@@ -6,19 +6,6 @@ import type {PlatformUser, UserMetadata} from '@loncra/client/auth'
 import {AuthServerService} from '@loncra/client/auth'
 import {AttachmentService} from '@loncra/client/resource'
 
-export interface UserAvatarProps {
-  user?: PlatformUser | UserMetadata
-  fallback?: string
-  prefixCls?: string
-  class?: unknown
-  rootClass?: string
-  style?: unknown
-}
-
-export interface UserAvatarSlots {
-  text?: () => unknown
-}
-
 const UserAvatar = defineComponent({
   name: 'LUserAvatar',
   inheritAttrs: false,

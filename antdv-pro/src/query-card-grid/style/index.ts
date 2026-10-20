@@ -1,7 +1,7 @@
 import type {CSSInterpolation} from '@antdv-next/cssinjs'
 import type {LoncraStyleToken} from '@loncra/antdv'
 import {genStyleHooks} from '../../_util/genStyleLayer'
-import {genDragGhostStyle, genDragStyle} from '../../_util/crud/genDragStyle'
+import {genDragGhostStyle, genDragRowStyle} from '../../_util/style/fragments'
 
 function genQueryCardGridStyle(token: LoncraStyleToken): CSSInterpolation {
   const {antCls, componentCls, colorInfoBg} = token
@@ -35,7 +35,7 @@ function genQueryCardGridStyle(token: LoncraStyleToken): CSSInterpolation {
         [`${antCls}-card-grid${componentCls}-item-selected`]: {
           backgroundColor: colorInfoBg,
         },
-        ...genDragStyle(token, componentCls),
+        ...genDragRowStyle(token, componentCls),
       },
     },
     genDragGhostStyle(token, componentCls),

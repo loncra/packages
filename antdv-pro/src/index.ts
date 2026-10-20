@@ -40,11 +40,7 @@ export { default as UserSelect } from './user-select'
 export type { UserSelectEmits, UserSelectOption, UserSelectProps, UserSelectSlots } from './user-select'
 
 export { default as AttachmentMasonry } from './attachment-masonry'
-export type {
-  AttachmentMasonryEmits,
-  AttachmentMasonryProps,
-  AttachmentMasonrySlots,
-} from './attachment-masonry'
+export type { AttachmentMasonryEmits, AttachmentMasonryProps } from './attachment-masonry'
 
 export { default as AttachmentUpload } from './attachment-upload'
 export type {
@@ -134,13 +130,13 @@ export {disableDate, disableTime, dayjsFormat} from './_util/crud/dateUtils'
 export type {DateLike} from './_util/crud/dateUtils'
 export {useDateFormat} from './_util/crud/useDateFormat'
 export type {DateFormatApi, DateFormatConfig} from './_util/crud/useDateFormat'
-export {default as DataLoadingCardPlan} from './data-loading-card-plan'
+export {default as DataLoadingCard} from './data-loading-card'
 export type {
-  DataLoadingCardPlanEmits,
-  DataLoadingCardPlanProps,
-  DataLoadingCardPlanSlots,
+  DataLoadingCardEmits,
+  DataLoadingCardProps,
+  DataLoadingCardSlots,
   DataLoadingTask,
-} from './data-loading-card-plan'
+} from './data-loading-card'
 export {default as BasicCrudQuery} from './basic-crud-query'
 export type {
   BasicCrudQueryConstructor,

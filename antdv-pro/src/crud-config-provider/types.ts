@@ -45,3 +45,9 @@ export interface CrudConfig {
 }
 
 export const CRUD_CONFIG_KEY: InjectionKey<ComputedRef<CrudConfig>> = Symbol('loncraCrudConfig')
+
+export type CrudConfigProviderProps = CrudConfig
+
+export interface CrudConfigProviderSlots {
+  default?: () => unknown
+}

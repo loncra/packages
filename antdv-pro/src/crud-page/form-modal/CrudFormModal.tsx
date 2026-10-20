@@ -102,7 +102,7 @@ const CrudFormModal = defineComponent({
         onCancel={onCancel}
         onUpdate:open={(value: boolean) => emit('update:open', value)}
         v-slots={{
-          // `title` 走**槽**而不是 prop：`false` / 不给 = 连标题栏一起不出（与 `DataLoadingCardPlan` 同一口径）
+          // `title` 走**槽**而不是 prop：`false` / 不给 = 连标题栏一起不出（与 `DataLoadingCard` 同一口径）
           title:
             props.title == null || props.title === false
               ? undefined

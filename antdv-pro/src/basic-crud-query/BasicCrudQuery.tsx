@@ -38,7 +38,7 @@ import {
   patchQuery,
 } from '../_util/crud/useCollectionData'
 import {useCrudDelete} from '../_util/crud/useCrudDelete'
-import DataLoadingCardPlan from '../data-loading-card-plan'
+import DataLoadingCard from '../data-loading-card'
 import ActionButton from '../action-button'
 import type {EnumBucketsResponseBody} from '@loncra/client/resource'
 import {fetchDataDictionaries, fetchEnumBuckets} from './dictionaries'
@@ -58,7 +58,7 @@ import type {
  * - 数据：`dataSource` / `loading` / `query` / `pagination` / 选中集合（`selectedKey` 指定挂在哪个 prop 上）
  * - 字典：`list.enums` / `list.dictionaryCodes` 在这里拉，结果用 `v-model` 回给建列的地方
  * - 动作：默认定义（add / deleteSelected / edit·detail·delete）+ 声明的合并、解析
- * - 布局：套 `DataLoadingCardPlan`；**标题右侧放权限按钮**；**统一分页由本组件渲染**
+ * - 布局：套 `DataLoadingCard`；**标题右侧放权限按钮**；**统一分页由本组件渲染**
  *
  * 内容（表格 / 卡片网格 / 以后别的展示件）由自己填默认插槽，参数里拿到内核（数据 + 动作）。
  */
@@ -358,7 +358,7 @@ const BasicCrudQuery = defineComponent({
     })
 
     return () => (
-      <DataLoadingCardPlan
+      <DataLoadingCard
         {...attrs}
         class={attrs.class as string | undefined}
         loading={loading.value}

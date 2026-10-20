@@ -3,12 +3,6 @@ import type {ClientConfig, FormValueConvert, HttpClient, RuntimeMode} from '@lon
 import {configureClient} from '@loncra/client'
 import {CLIENT_CONFIG_KEY} from './types'
 
-export interface ClientProviderProps extends ClientConfig {}
-
-export interface ClientProviderSlots {
-  default?: () => unknown
-}
-
 /**
  * HTTP / 运行时配置 Provider。
  *

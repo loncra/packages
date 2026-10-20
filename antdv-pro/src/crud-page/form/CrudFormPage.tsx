@@ -6,7 +6,7 @@ import {classNames} from '@loncra/antdv'
 import {isBusinessSuccess, type RestResult} from '@loncra/client/commons'
 import type {EnumBucketsResponseBody} from '@loncra/client/resource'
 import {useCrudConfig} from '../../crud-config-provider'
-import DataLoadingCardPlan from '../../data-loading-card-plan'
+import DataLoadingCard from '../../data-loading-card'
 import Form from '../../form'
 import {useStaleCheck} from '../../_util/crud/useStaleCheck'
 import {readPath, writePath} from '../../_util/crud/readPath'
@@ -67,7 +67,7 @@ function withFieldCtx(
 /**
  * 表单页（新增 / 编辑）：**渲染 + 数据壳**一体，与 `CrudHomePage` 同构。
  *
- * 布局走 **`DataLoadingCardPlan`**（卡片 + 卡片头 + body 的 `Spin`，见 `BasicCrudQuery` 的用法）：
+ * 布局走 **`DataLoadingCard`**（卡片 + 卡片头 + body 的 `Spin`，见 `BasicCrudQuery` 的用法）：
  * 卡片头不给就用宿主拼好的 `CrudConfig.resolveDefaultTitle()`；`$attrs` 直通卡片（贴边写
  * `:classes="{body:'p-0!'}"`）。初始加载的 loading 由它编排，**提交**的 loading 复用同一个
  * `loading`（表单体转圈 + 保存按钮自身转圈）。
@@ -310,7 +310,7 @@ const CrudFormPage = defineComponent({
       return mergeRemote(result.data)
     }
 
-    /** 初始加载：loading 交给 `DataLoadingCardPlan`（它 `try/finally` 包住，并做 in-flight 去重） */
+    /** 初始加载：loading 交给 `DataLoadingCard`（它 `try/finally` 包住，并做 in-flight 去重） */
     async function load(): Promise<void> {
       // 先拉来源（枚举桶 / 数据字典）：下拉的 options 由 `buildFormFields` 从它们算出来
       await loadSources()
@@ -432,7 +432,7 @@ const CrudFormPage = defineComponent({
     }
 
     return () => (
-      <DataLoadingCardPlan
+      <DataLoadingCard
         {...(attrs as Record<string, unknown>)}
         // 内嵌形态（弹层）：不要卡片壳 —— `Spin` 不跟着关（表单没有"自带 loading"的内容）
         plain={props.plain}
@@ -531,7 +531,7 @@ const CrudFormPage = defineComponent({
             <Space>{renderButtons()}</Space>
           </Flex>
         </Form>
-      </DataLoadingCardPlan>
+      </DataLoadingCard>
     )
   },
 }) as unknown as CrudFormPageConstructor

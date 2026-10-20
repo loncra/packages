@@ -59,7 +59,7 @@ export interface QueryCollectionProps<
   service: CollectionService<TBody, TEntity, TPage, TId>
   immediate?: boolean
   refreshOnActivate?: RefreshOnActivate
-  /** 卡片头，与 `DataLoadingCardPlan` 同形：`VNode` 直接用、`false` 不要卡片头、不给走默认标题 */
+  /** 卡片头，与 `DataLoadingCard` 同形：`VNode` 直接用、`false` 不要卡片头、不给走默认标题 */
   title?: VNode | boolean
   hasPermission?: (permission: string) => boolean
   authority?: AuthorityProps
@@ -98,7 +98,7 @@ export interface BasicCrudQueryProps<
   TEntity extends TBody = TBody,
   TPage extends ScrollPageResult<TEntity> = ScrollPageResult<TEntity>,
 > extends QueryCollectionProps<TBody, TEntity, TPage, TId> {
-  /** 卡片头，与 `DataLoadingCardPlan` 同形：`VNode` 直接用、`false` 不要卡片头、不给走默认标题 */
+  /** 卡片头，与 `DataLoadingCard` 同形：`VNode` 直接用、`false` 不要卡片头、不给走默认标题 */
   title?: VNode | boolean
   /**
    * 标题右侧的工具栏动作，与 `title` 同形：给数组就用（先与默认的 `add` / `deleteSelected` 合并）；

@@ -70,7 +70,7 @@ chat-core     ← antdv-chat-pro
 | `UserSelect` | 用户选择 | [说明](./antdv-pro/src/user-select/README.md) |
 | `AttachmentUpload` | 附件上传：分片、进度、模式常量 | [说明](./antdv-pro/src/attachment-upload/README.md) |
 | `AttachmentMasonry` | 附件瀑布流展示 | [说明](./antdv-pro/src/attachment-masonry/README.md) |
-| `DataLoadingCardPlan` | 取数过程中的加载卡片 | [说明](./antdv-pro/src/data-loading-card-plan/README.md) |
+| `DataLoadingCard` | 取数过程中的加载卡片 | [说明](./antdv-pro/src/data-loading-card/README.md) |
 | `BasicCrudQuery` | 查询底座：搜索区 + 取数 + 分页 + 动作解析 | [说明](./antdv-pro/src/basic-crud-query/README.md) |
 | `QueryTable` | 查询内容的表格形态 | [说明](./antdv-pro/src/query-table/README.md) |
 | `QueryCardGrid` | 查询内容的卡片形态 | [说明](./antdv-pro/src/query-card-grid/README.md) |

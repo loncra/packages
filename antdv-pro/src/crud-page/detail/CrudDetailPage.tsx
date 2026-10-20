@@ -5,7 +5,7 @@ import {isBusinessSuccess, type RestResult} from '@loncra/client/commons'
 import type {EnumBucketsResponseBody} from '@loncra/client/resource'
 import {useAntdvConfig} from '../../config-provider/useAntdvConfig'
 import {useCrudConfig} from '../../crud-config-provider'
-import DataLoadingCardPlan from '../../data-loading-card-plan'
+import DataLoadingCard from '../../data-loading-card'
 import {isOperationTraceVisible, OperationTraceTable} from '../operation-trace'
 import {useStaleCheck} from '../../_util/crud/useStaleCheck'
 import type {DefaultCrudEntity} from '../../_util/crud/useCollectionData'
@@ -29,7 +29,7 @@ const DEFAULT_COLUMN = {xxxl: 2, xxl: 2, xl: 2, lg: 2, md: 2, sm: 1, xs: 1}
 /**
  * 详情页：**渲染 + 数据壳**一体（与 `CrudHomePage` / `CrudFormPage` 同构）。
  *
- * 布局走 **`DataLoadingCardPlan`**（卡片 + 卡片头 + body 的 `Spin`）：卡片头不给就用宿主拼好的
+ * 布局走 **`DataLoadingCard`**（卡片 + 卡片头 + body 的 `Spin`）：卡片头不给就用宿主拼好的
  * `CrudConfig.resolveDefaultTitle()`；`$attrs` 直通卡片；loading 由它编排（取数在它的 `onMounted`）。
  *
  * **出什么**
@@ -151,7 +151,7 @@ const CrudDetailPage = defineComponent({
       return ((await props.page.detail.postGetEntity?.(merged, ctx.value)) ?? merged) as TEntity
     }
 
-    /** 首屏取数：loading 交给 `DataLoadingCardPlan`（它 `try/finally` 包住，并做 in-flight 去重） */
+    /** 首屏取数：loading 交给 `DataLoadingCard`（它 `try/finally` 包住，并做 in-flight 去重） */
     async function load(): Promise<void> {
       try {
         // 先拉来源（声明了才有）：`afterDescriptions` 的附表要用它翻「是/否」这类显示
@@ -194,7 +194,7 @@ const CrudDetailPage = defineComponent({
     })
 
     return () => (
-      <DataLoadingCardPlan
+      <DataLoadingCard
         {...(attrs as Record<string, unknown>)}
         onMounted={load}
         onActivated={checkStale}

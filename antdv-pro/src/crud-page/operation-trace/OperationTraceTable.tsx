@@ -1,12 +1,11 @@
 import {computed, defineComponent, type PropType, type SlotsType} from 'vue'
 import {CrudHomePage} from '../home'
 import {createOperationTracePage, OPERATION_TRACE_VARIANT} from './page'
-
-/** 渲染条件要读的实体字段（后端契约字段） */
-export interface OperationTraceEntity {
-  id?: unknown
-  creationTime?: number
-}
+import type {
+  OperationTraceEntity,
+  OperationTraceTableProps,
+  OperationTraceTableSlots,
+} from './types'
 
 /**
  * **渲染条件（唯一判定）**：`target` + 实体 `id` + 实体 `creationTime` 三者齐才渲染。
@@ -17,21 +16,6 @@ export interface OperationTraceEntity {
  */
 export function isOperationTraceVisible(target?: string, entity?: OperationTraceEntity): boolean {
   return !!target && entity?.id != null && entity?.creationTime != null
-}
-
-export interface OperationTraceTableProps {
-  /** 页面声明的 `CrudPageCore.operationDataTraceTarget`（审计表标识） */
-  target?: string
-  /**
-   * 当前实体：从它读 `id` 与 `creationTime`（都是后端契约字段）。
-   * **三个值缺一就不渲染**（后端不接受空 target / 空 id）⇒ 宿主用"不给值"来表达"这里不要操作记录"。
-   */
-  entity?: OperationTraceEntity
-}
-
-export interface OperationTraceTableSlots {
-  /** 操作记录表**下方**：宿主业务自己的内容（作用域给当前实体） */
-  default?: (arg: {entity: unknown}) => unknown
 }
 
 /**

@@ -33,7 +33,7 @@ import zhCN from '@loncra/antdv-pro/locale/zh_CN'
 | `UserSelect` | 用户选择（含 `UserSelectOption`），内部用 `BasicCrudQuery` | [说明](./src/user-select/README.md) |
 | `AttachmentUpload` | 附件上传：分片、进度、模式常量 `ATTACHMENT_UPLOAD_MODE` / `ATTACHMENT_PREVIEW_MODE` | [说明](./src/attachment-upload/README.md) |
 | `AttachmentMasonry` | 附件瀑布流展示 | [说明](./src/attachment-masonry/README.md) |
-| `DataLoadingCardPlan` | 取数过程中的加载卡片（`DataLoadingTask`），被 `BasicCrudQuery` 使用 | [说明](./src/data-loading-card-plan/README.md) |
+| `DataLoadingCard` | 取数过程中的加载卡片（`DataLoadingTask`），被 `BasicCrudQuery` 使用 | [说明](./src/data-loading-card/README.md) |
 | `BasicCrudQuery` | 查询底座：搜索区 + 取数 + 分页 + 动作解析。`fetchDataDictionaries` / `fetchEnumBuckets` 只在控件出口 | [说明](./src/basic-crud-query/README.md) |
 | `QueryTable` | 查询内容的表格形态（列搜索 `ColumnSearchConfig`） | [说明](./src/query-table/README.md) |
 | `QueryCardGrid` | 查询内容的卡片形态（拖拽排序） | [说明](./src/query-card-grid/README.md) |
@@ -59,7 +59,7 @@ import zhCN from '@loncra/antdv-pro/locale/zh_CN'
 - `prefixCls` 用 `getPrefixCls('<名>', 'loncra-<名>')`，名字默认等于目录名。`getPrefixCls` 取自 antd 深路径的 `useConfig()`，不是本包的 `useAntdvConfig`。两个例外：`crud-page/form` → `crud-form-page`，`notification` → `app-notification`。
 - 本包有 9 个带样式的控件目录；`user-avatar` / `user-select` 只用前缀，没有样式文件。
 - CSS 变量用 `--loncra-<控件>-<语义>` 手写（如 `--loncra-card-grid-columns`），不走 `getPrefixCls`。
-- **分层**：`basic-crud-query` 是所有内容层的底座（内部用 `data-loading-card-plan` 与 `action-button`）→ `query-table` / `query-card-grid` 做查询内容 → `crud-table` / `crud-card-grid` 是固定实体类型的门面 → `crud-page` 装配页面（`define*` 声明翻成 props，字段组件走 `registry.ts`）。
+- **分层**：`basic-crud-query` 是所有内容层的底座（内部用 `data-loading-card` 与 `action-button`）→ `query-table` / `query-card-grid` 做查询内容 → `crud-table` / `crud-card-grid` 是固定实体类型的门面 → `crud-page` 装配页面（`define*` 声明翻成 props，字段组件走 `registry.ts`）。
 - **Provider 层次**：`Provider`（`config-provider`）内嵌 antdv-next 的 `ConfigProvider` 与 `ClientProvider`、`CrudConfigProvider`。`Form` 与 `ConfigProviderSetting` 读 `useAntdvConfig`，CRUD 相关读 `useCrudConfig` / `useActionAuth`。
 
 通用规则见 [CONTRIBUTING.md](../CONTRIBUTING.md) 第 7–12 节与 [CONTRIBUTING-PACKAGES.md](../CONTRIBUTING-PACKAGES.md) 第 1–6 节。

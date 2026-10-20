@@ -1,7 +1,7 @@
 import type {CSSObject} from '@antdv-next/cssinjs'
 import type {LoncraStyleToken} from '@loncra/antdv'
 
-export function genDragStyle(token: LoncraStyleToken, componentCls: string): CSSObject {
+export function genDragRowStyle(token: LoncraStyleToken, componentCls: string): CSSObject {
   const {antCls, colorInfoBg} = token
   const insetShadow = (offset: string) => `inset ${offset} ${colorInfoBg}`
 

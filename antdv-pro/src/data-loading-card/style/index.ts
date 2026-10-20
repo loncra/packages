@@ -2,7 +2,7 @@ import type {CSSInterpolation} from '@antdv-next/cssinjs'
 import type {LoncraStyleToken} from '@loncra/antdv'
 import {genStyleHooks} from '../../_util/genStyleLayer'
 
-function genDataLoadingCardPlanStyle(token: LoncraStyleToken): CSSInterpolation {
+function genDataLoadingCardStyle(token: LoncraStyleToken): CSSInterpolation {
   const {antCls, componentCls} = token
 
   return [
@@ -17,4 +17,4 @@ function genDataLoadingCardPlanStyle(token: LoncraStyleToken): CSSInterpolation 
   ]
 }
 
-export default genStyleHooks('DataLoadingCardPlan', genDataLoadingCardPlanStyle, {order: 2})
+export default genStyleHooks('DataLoadingCard', genDataLoadingCardStyle, {order: 2})

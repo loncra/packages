@@ -56,7 +56,7 @@ export interface QueryTableProps<
   columns?: SearchableColumnType<TEntity>[]
   immediate?: boolean
   refreshOnActivate?: RefreshOnActivate
-  /** 卡片头，与 `DataLoadingCardPlan` 同形：`VNode` 直接用、`false` 不要卡片头、不给走默认标题 */
+  /** 卡片头，与 `DataLoadingCard` 同形：`VNode` 直接用、`false` 不要卡片头、不给走默认标题 */
   title?: VNode | boolean
   hasPermission?: (permission: string) => boolean
   authority?: AuthorityProps
