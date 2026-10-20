@@ -1,24 +1,7 @@
 {
+  "extends": "@vue/tsconfig/tsconfig.dom.json",
   "compilerOptions": {
-    "target": "ES2022",
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "types": [],
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "moduleDetection": "force",
-    "resolveJsonModule": true,
-    "allowImportingTsExtensions": true,
-    "jsx": "preserve",
-    "jsxImportSource": "vue",
-    "useDefineForClassFields": true,
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "verbatimModuleSyntax": true,
-    "strict": true,
-    "noUncheckedIndexedAccess": true,
-    "noEmit": true,
-    "skipLibCheck": true,
-    "isolatedModules": true
+    "noUncheckedIndexedAccess": true
   },
   "include": ["src"]
 }
