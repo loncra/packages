@@ -73,7 +73,7 @@ const KeyValueTable = defineComponent({
       confirmRow,
       cancelRow,
       confirmAllEditingRows,
-    } = useKeyValueTable(props, (item, data) => emit('change', item, data))
+    } = useKeyValueTable(props, emit)
 
     const columns = computed<TableColumnType<KeyValueRow>[]>(() => [
       {...KEY_VALUE_COLUMNS.key, title: locale.value.name},

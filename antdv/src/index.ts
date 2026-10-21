@@ -73,5 +73,6 @@ export {
 export { useIsDark } from './_util/context/useIsDark'
 export { useFormItemTrigger } from './_util/useFormItemTrigger'
 export { useTwoWayModel } from './_util/useTwoWayModel'
+export type { ModelEmit } from './_util/useTwoWayModel'
 
 export type { VNode, VNodeChild } from 'vue'

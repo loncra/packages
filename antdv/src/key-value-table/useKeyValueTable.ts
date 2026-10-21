@@ -1,4 +1,5 @@
-import {type Ref, useModel} from 'vue'
+import {type Ref} from 'vue'
+import {type ModelEmit, useTwoWayModel} from '../_util/useTwoWayModel'
 import {cancelEditing, confirmEditing, createRow, excludeRow, startEditing,} from './keyValueTableKinds'
 import type {KeyValueRow} from './types'
 
@@ -7,10 +8,8 @@ interface KeyValueTableSource {
   multipleValue?: boolean
 }
 
-type KeyValueTableChange = (item: KeyValueRow, data: KeyValueRow[]) => void
-
-export function useKeyValueTable(props: KeyValueTableSource, onChange: KeyValueTableChange) {
-  const rows = useModel(props, 'value') as unknown as Ref<KeyValueRow[]>
+export function useKeyValueTable(props: KeyValueTableSource, emit: ModelEmit) {
+  const rows = useTwoWayModel(props, 'value', emit) as unknown as Ref<KeyValueRow[]>
 
   function addRow() {
     rows.value = [...rows.value, createRow(crypto.randomUUID(), props.multipleValue ? [] : '')]
@@ -18,17 +17,17 @@ export function useKeyValueTable(props: KeyValueTableSource, onChange: KeyValueT
 
   function removeRow(record: KeyValueRow) {
     rows.value = excludeRow(rows.value, record.id)
-    onChange(record, rows.value)
+    emit('change', record, rows.value)
   }
 
   function confirmRow(record: KeyValueRow) {
     confirmEditing(record)
-    onChange(record, rows.value)
+    emit('change', record, rows.value)
   }
 
   function cancelRow(record: KeyValueRow) {
     cancelEditing(record)
-    onChange(record, rows.value)
+    emit('change', record, rows.value)
   }
 
   function confirmAllEditingRows() {

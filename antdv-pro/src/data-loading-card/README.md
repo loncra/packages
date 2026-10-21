@@ -98,11 +98,10 @@
 
 `title` 的 prop 声明里 `default: undefined` **不能删**：类型带了 `Boolean`，父级「不传」会被 Vue 的布尔转换变成 `false`，那就成了「不要卡片头」，`resolveDefaultTitle` 永远不会执行。
 
-`loading` 的受控规则（Vue `useModel`）：
+`loading` 的绑定规则（`useTwoWayModel`）：
 
-- **同时**传 `loading` 与 `onUpdate:loading`（含 `v-model:loading`）= 受控：内部只 emit，宿主不回写就一次都不会转。
-- 只传 `loading`、不接事件 = 非受控：内部写自己的工作副本，宿主传的值只当初始值。
-- `BasicCrudQuery` / `CrudFormPage` 是受控写法，`CrudDetailPage` 是非受控。
+- 同时传 `loading` 与 `onUpdate:loading`（含 `v-model:loading`）= 双向：内部写本地立即生效并同步 `emit`，宿主回写再经 props 回流。
+- 只传 `loading`、不接事件：内部照常写本地，事件没有监听方 —— 转圈行为与上面一致。
 
 ### 事件 {#events}
 

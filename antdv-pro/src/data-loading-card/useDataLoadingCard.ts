@@ -3,18 +3,22 @@ import {
   onActivated,
   onMounted,
   type Ref,
-  useModel,
   type VNodeChild,
 } from 'vue'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
+import {type ModelEmit, useTwoWayModel} from '@loncra/antdv'
 import {useCrudConfig} from '../crud-config-provider'
 import useStyle from './style'
 import type {DataLoadingCardProps, DataLoadingCardSlots, DataLoadingTask} from './types'
 
-export function useDataLoadingCard(props: DataLoadingCardProps, slots: DataLoadingCardSlots) {
+export function useDataLoadingCard(
+  props: DataLoadingCardProps,
+  slots: DataLoadingCardSlots,
+  emit: ModelEmit,
+) {
   const config = useCrudConfig()
   const antdConfig = useConfig()
-  const loading = useModel(props, 'loading') as unknown as Ref<boolean>
+  const loading = useTwoWayModel(props, 'loading', emit) as unknown as Ref<boolean>
   const prefixCls = computed(() =>
     antdConfig.value.getPrefixCls('data-loading-card', 'loncra-data-loading-card'),
   )

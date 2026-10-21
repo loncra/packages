@@ -1,4 +1,4 @@
-import {defineComponent, type PropType, type Ref, ref, type SlotsType, useModel} from 'vue'
+import {defineComponent, type PropType, ref, type SlotsType} from 'vue'
 import type {TableProps} from 'antdv-next'
 import {type FilterRequest, type PageRequest} from '@loncra/client/commons'
 import type {AuthorityProps} from '../_util/crud/actions'
@@ -107,15 +107,6 @@ const CrudTable = defineComponent({
     type TEntity = DefaultCrudEntity
     const queryTable = ref<CollectionExpose<TEntity>>()
 
-    // 双向绑定：透传给 QueryTable 时同时传值与 onUpdate，由最远端统一持有状态
-    const loading = useModel(props, 'loading') as unknown as Ref<boolean>
-    const selectedRows = useModel(props, 'selectedRows') as unknown as Ref<TEntity[]>
-    const dataSource = useModel(props, 'dataSource') as unknown as Ref<TEntity[]>
-    const query = useModel(props, 'query') as unknown as Ref<FilterRequest | PageRequest>
-    const pagination = useModel(props, 'pagination') as unknown as Ref<TableProps['pagination']>
-    const buckets = useModel(props, 'buckets') as unknown as Ref<EnumBucketsResponseBody>
-    const dictionaries = useModel(props, 'dictionaries') as unknown as Ref<PageDictionaries>
-
     expose<CollectionExpose<TEntity>>({
       fetchDataSource: () => queryTable.value?.fetchDataSource() ?? Promise.resolve(),
       remove: (records) => queryTable.value?.remove(records),
@@ -145,20 +136,20 @@ const CrudTable = defineComponent({
         rowSelection={props.rowSelection}
         prefixCls={props.prefixCls}
         rootClass={props.rootClass}
-        dataSource={dataSource.value}
-        loading={loading.value}
-        query={query.value}
-        selectedRows={selectedRows.value}
-        pagination={pagination.value}
-        buckets={buckets.value}
-        dictionaries={dictionaries.value}
-        onUpdate:dataSource={(value: TEntity[]) => (dataSource.value = value)}
-        onUpdate:loading={(value: boolean) => (loading.value = value)}
-        onUpdate:query={(value: FilterRequest | PageRequest) => (query.value = value)}
-        onUpdate:selectedRows={(value: TEntity[]) => (selectedRows.value = value)}
-        onUpdate:pagination={(value: unknown) => (pagination.value = value as TableProps['pagination'])}
-        onUpdate:buckets={(value: EnumBucketsResponseBody) => (buckets.value = value)}
-        onUpdate:dictionaries={(value: PageDictionaries) => (dictionaries.value = value)}
+        dataSource={props.dataSource}
+        loading={props.loading}
+        query={props.query}
+        selectedRows={props.selectedRows}
+        pagination={props.pagination}
+        buckets={props.buckets}
+        dictionaries={props.dictionaries}
+        onUpdate:dataSource={(value: TEntity[]) => emit('update:dataSource', value)}
+        onUpdate:loading={(value: boolean) => emit('update:loading', value)}
+        onUpdate:query={(value: FilterRequest | PageRequest) => emit('update:query', value)}
+        onUpdate:selectedRows={(value: TEntity[]) => emit('update:selectedRows', value)}
+        onUpdate:pagination={(value: unknown) => emit('update:pagination', value)}
+        onUpdate:buckets={(value: EnumBucketsResponseBody) => emit('update:buckets', value)}
+        onUpdate:dictionaries={(value: PageDictionaries) => emit('update:dictionaries', value)}
         onAction={(payload) => emit('action', payload)}
         onAdd={() => emit('add')}
         onEdit={(record: TEntity) => emit('edit', record)}

@@ -1,9 +1,9 @@
-import {computed, defineComponent, h, type PropType, type Ref, useModel} from 'vue'
+import {computed, defineComponent, h, type PropType, type Ref} from 'vue'
 import type {UploadChangeParam} from 'antdv-next'
 import {Space, TypographyText, TypographyTitle, UploadDragger} from 'antdv-next'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {UploadOutlined} from '@antdv-next/icons'
-import {classNames} from '@loncra/antdv'
+import {classNames, useTwoWayModel} from '@loncra/antdv'
 import type {ObjectWriteResult} from '@loncra/client/resource'
 import type {UploadFile} from 'antdv-next/dist/upload/interface'
 import {useLocale} from '../../_util/useLocale'
@@ -69,8 +69,7 @@ const AttachmentDraggerUpload = defineComponent({
     )
     const [hashId, cssVarCls] = useStyle(prefixCls)
 
-    // 双向绑定：父级未监听 update:fileList 时写本地值，否则由父级回流
-    const fileList = useModel(props, 'fileList') as unknown as Ref<AttachmentFileItem[]>
+    const fileList = useTwoWayModel(props, 'fileList', emit) as unknown as Ref<AttachmentFileItem[]>
     const {uploadFiles, antdFileList, onAntdFileListChange} = useAttachmentUploadFiles(fileList)
 
     function onChange(info: UploadChangeParam) {

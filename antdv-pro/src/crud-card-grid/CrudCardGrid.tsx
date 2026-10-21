@@ -1,4 +1,4 @@
-import {defineComponent, type PropType, type Ref, ref, type SlotsType, useModel} from 'vue'
+import {defineComponent, type PropType, ref, type SlotsType} from 'vue'
 import type {TableProps} from 'antdv-next'
 import type {FilterRequest, PageRequest} from '@loncra/client/commons'
 import QueryCardGrid from '../query-card-grid/QueryCardGrid'
@@ -90,13 +90,6 @@ const CrudCardGrid = defineComponent({
     type TEntity = DefaultCrudEntity
     const grid = ref<CollectionExpose<TEntity>>()
 
-    // 双向绑定：本层持有值（宿主不绑 v-model 时也有本地值），往下一层同时传值与 onUpdate
-    const loading = useModel(props, 'loading') as unknown as Ref<boolean>
-    const selectedItems = useModel(props, 'selectedItems') as unknown as Ref<TEntity[]>
-    const dataSource = useModel(props, 'dataSource') as unknown as Ref<TEntity[]>
-    const query = useModel(props, 'query') as unknown as Ref<FilterRequest | PageRequest>
-    const pagination = useModel(props, 'pagination') as unknown as Ref<TableProps['pagination']>
-
     expose<CollectionExpose<TEntity>>({
       fetchDataSource: async () => grid.value?.fetchDataSource(),
       remove: (records) => grid.value?.remove(records),
@@ -118,28 +111,18 @@ const CrudCardGrid = defineComponent({
         gridColumns={props.gridColumns}
         selectable={props.selectable}
         rowKey={props.rowKey}
-        pagination={pagination.value}
+        pagination={props.pagination}
         prefixCls={props.prefixCls}
         rootClass={props.rootClass}
-        dataSource={dataSource.value}
-        loading={loading.value}
-        query={query.value}
-        selectedItems={selectedItems.value}
-        onUpdate:dataSource={(value) => {
-          dataSource.value = value
-        }}
-        onUpdate:loading={(value) => {
-          loading.value = value
-        }}
-        onUpdate:query={(value) => {
-          query.value = value
-        }}
-        onUpdate:selectedItems={(value) => {
-          selectedItems.value = value
-        }}
-        onUpdate:pagination={(value) => {
-          pagination.value = value
-        }}
+        dataSource={props.dataSource}
+        loading={props.loading}
+        query={props.query}
+        selectedItems={props.selectedItems}
+        onUpdate:dataSource={(value: TEntity[]) => emit('update:dataSource', value)}
+        onUpdate:loading={(value: boolean) => emit('update:loading', value)}
+        onUpdate:query={(value: FilterRequest | PageRequest) => emit('update:query', value)}
+        onUpdate:selectedItems={(value: TEntity[]) => emit('update:selectedItems', value)}
+        onUpdate:pagination={(value: TableProps['pagination']) => emit('update:pagination', value)}
         onAdd={() => emit('add')}
         onEdit={(record: TEntity) => emit('edit', record)}
         onDetail={(record: TEntity) => emit('detail', record)}

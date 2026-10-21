@@ -1,9 +1,11 @@
 import {shallowRef, watch, type Ref} from 'vue'
 
+export type ModelEmit = (event: any, ...args: any[]) => void
+
 export function useTwoWayModel<P extends object, K extends keyof P & string>(
   props: P,
   name: K,
-  emit: (event: any, value: any) => void,
+  emit: ModelEmit,
 ): Ref<P[K]> {
   const local = shallowRef<P[K]>(props[name]) as Ref<P[K]>
   let syncing = false

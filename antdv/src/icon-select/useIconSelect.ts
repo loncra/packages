@@ -1,4 +1,5 @@
-import {computed, type Ref, ref, useModel, watch} from 'vue'
+import {computed, type Ref, ref, watch} from 'vue'
+import {type ModelEmit, useTwoWayModel} from '../_util/useTwoWayModel'
 import {glyphType, parseAvatarModel, toAvatarModel} from './iconSelectKinds'
 import type {IconfontJson, IconSelectAvatarModeValueType} from './types'
 
@@ -7,8 +8,8 @@ interface IconSelectSource {
   options: IconfontJson[]
 }
 
-export function useIconSelect(props: IconSelectSource) {
-  const modelValue = useModel(props, 'value') as unknown as Ref<string>
+export function useIconSelect(props: IconSelectSource, emit: ModelEmit) {
+  const modelValue = useTwoWayModel(props, 'value', emit) as unknown as Ref<string>
 
   const state = ref({
     search: {

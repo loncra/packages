@@ -6,12 +6,11 @@ import {
   type Ref,
   ref,
   type SlotsType,
-  useModel,
 } from 'vue'
 import {Card, CardGrid, Empty, Typography} from 'antdv-next'
 import type {TableProps} from 'antdv-next'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
-import {classNames, splitSemantic} from '@loncra/antdv'
+import {classNames, splitSemantic, useTwoWayModel} from '@loncra/antdv'
 import {type FilterRequest, type PageRequest} from '@loncra/client/commons'
 import BasicCrudQuery from '../basic-crud-query'
 import type {AuthorityProps} from '../_util/crud/actions'
@@ -127,12 +126,8 @@ const QueryCardGrid = defineComponent({
     /** 内核（数据 / 标题 / 分页 / 动作解析）在基类，这里只读它的 expose */
     const base = ref<BasicCrudQueryExpose<TEntity, TId>>()
 
-    // 与基类共用同一份值：父级 v-model 时纯受控（写操作 emit 回流），未绑时写本地值并 emit
-    const dataSource = useModel(props, 'dataSource') as unknown as Ref<TEntity[]>
-    const loading = useModel(props, 'loading') as unknown as Ref<boolean>
-    const query = useModel(props, 'query') as unknown as Ref<FilterRequest | PageRequest>
-    const selectedItems = useModel(props, 'selectedItems') as unknown as Ref<TEntity[]>
-    const pagination = useModel(props, 'pagination') as unknown as Ref<TableProps['pagination']>
+    const dataSource = useTwoWayModel(props, 'dataSource', emit) as unknown as Ref<TEntity[]>
+    const selectedItems = useTwoWayModel(props, 'selectedItems', emit) as unknown as Ref<TEntity[]>
 
     /** `drag` 两种形态归一：对象形态才关心方向，否则按横向 */
     const dragPreview = computed((): DragProp<TEntity> | undefined =>
@@ -291,25 +286,15 @@ const QueryCardGrid = defineComponent({
           recordActions={props.recordActions}
           selectedKey="selectedItems"
           dataSource={dataSource.value}
-          loading={loading.value}
-          query={query.value}
+          loading={props.loading}
+          query={props.query}
           selectedItems={selectedItems.value}
-          pagination={pagination.value}
-          onUpdate:dataSource={(value) => {
-            dataSource.value = value
-          }}
-          onUpdate:loading={(value) => {
-            loading.value = value
-          }}
-          onUpdate:query={(value) => {
-            query.value = value
-          }}
-          onUpdate:selectedItems={(value) => {
-            selectedItems.value = value
-          }}
-          onUpdate:pagination={(value) => {
-            pagination.value = value
-          }}
+          pagination={props.pagination}
+          onUpdate:dataSource={(value: TEntity[]) => (dataSource.value = value)}
+          onUpdate:loading={(value: boolean) => emit('update:loading', value)}
+          onUpdate:query={(value: FilterRequest | PageRequest) => emit('update:query', value)}
+          onUpdate:selectedItems={(value: TEntity[]) => emit('update:selectedItems', value)}
+          onUpdate:pagination={(value: TableProps['pagination']) => emit('update:pagination', value)}
           onAdd={() => emit('add')}
           onEdit={(record: TEntity) => emit('edit', record)}
           onDetail={(record: TEntity) => emit('detail', record)}
@@ -335,7 +320,7 @@ const QueryCardGrid = defineComponent({
                     <Empty />
                   )
                 ) : (
-                  dataSource.value.map((record, index) => {
+                  (dataSource.value || []).map((record, index) => {
                     const itemSlot: QueryCardGridItemSlot<TEntity> = {
                       record,
                       index,

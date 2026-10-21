@@ -1,8 +1,8 @@
-import {computed, defineComponent, h, type PropType, type Ref, ref, Teleport, useModel, watch} from 'vue'
+import {computed, defineComponent, h, type PropType, type Ref, ref, Teleport, watch} from 'vue'
 import {Alert, Button, Flex, ImagePreviewGroup, Modal, Progress, theme, TypographyText,} from 'antdv-next'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {DeleteOutlined, DownloadOutlined} from '@antdv-next/icons'
-import {BasicImage, classNames} from '@loncra/antdv'
+import {BasicImage, classNames, useTwoWayModel} from '@loncra/antdv'
 import type {RestResult} from '@loncra/client/commons'
 import type {ObjectWriteResult} from '@loncra/client/resource'
 import {AttachmentService} from '@loncra/client/resource'
@@ -129,9 +129,9 @@ const AttachmentPreview = defineComponent({
       open: false,
     })
 
-    // 双向绑定：父级未监听 update:fileList 时写本地值，否则纯受控由父级回流。
-    // 原来只 emit 不写本地，父级没接 v-model 时删除、生成缩略图等操作全部丢失。
-    const fileList = useModel(props, 'fileList') as unknown as Ref<UploadFile<ObjectWriteResult>[]>
+    const fileList = useTwoWayModel(props, 'fileList', emit) as unknown as Ref<
+      UploadFile<ObjectWriteResult>[]
+    >
 
     const imageFiles = computed(() => (fileList.value ?? []).filter(isImageFile))
 

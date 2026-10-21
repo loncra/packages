@@ -22,10 +22,11 @@ const DataLoadingCard = defineComponent({
     'update:loading': (_value: boolean) => true,
   },
   slots: Object as SlotsType<DataLoadingCardSlots>,
-  setup(props, {attrs, slots}) {
+  setup(props, {attrs, emit, slots}) {
     const {loading, prefixCls, hashId, cssVarCls, resolveTitleSlot} = useDataLoadingCard(
       props,
       slots,
+      emit,
     )
 
     return () => {

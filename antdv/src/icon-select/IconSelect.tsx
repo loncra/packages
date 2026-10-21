@@ -218,7 +218,7 @@ const IconSelect = defineComponent({
     },
   },
   emits: ['update:value'],
-  setup(props, { slots, attrs }) {
+  setup(props, { slots, attrs, emit }) {
     const locale = useLocale('IconSelect')
     useFormItemTrigger(() => props.value)
     const config = useConfig()
@@ -235,7 +235,7 @@ const IconSelect = defineComponent({
       selectedPackName,
       avatarType,
       avatarPayload,
-    } = useIconSelect(props)
+    } = useIconSelect(props, emit)
 
     const avatarOptions = computed(() => avatarModeOptions(props.options, locale.value))
 

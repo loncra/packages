@@ -1,10 +1,10 @@
-import {computed, defineComponent, type PropType, type Ref, ref, useModel} from 'vue'
+import {computed, defineComponent, type PropType, type Ref, ref, toRef} from 'vue'
 import {Checkbox, Divider, Empty, Flex, Input, Space, TypographyText} from 'antdv-next'
 import {SearchOutlined, UsergroupAddOutlined} from '@antdv-next/icons'
 import type {ConversationItemType, DividerItemType} from '@antdv-next/x'
 import {Conversations} from '@antdv-next/x'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
-import {classNames} from '@loncra/antdv'
+import {classNames, useTwoWayModel} from '@loncra/antdv'
 import type {PlatformUser} from '@loncra/client/auth'
 import {AuthServerService} from '@loncra/client/auth'
 import {useLocale} from '../_util/useLocale'
@@ -103,9 +103,10 @@ const SystemUserPanel = defineComponent({
     )
     const [hashId, cssVarCls] = useStyle(prefixCls)
 
-    // 双向绑定：父级 v-model 时纯受控，未绑时写本地值并 emit
-    const dataSource = useModel(props, 'dataSource') as unknown as Ref<SystemUserContactItem[]>
-    const selectedValue = useModel(props, 'value') as unknown as Ref<SystemUserContactItem[]>
+    const dataSource = toRef(props, 'dataSource') as unknown as Ref<SystemUserContactItem[]>
+    const selectedValue = useTwoWayModel(props, 'value', emit) as unknown as Ref<
+      SystemUserContactItem[]
+    >
 
     const searchValue = ref('')
 
