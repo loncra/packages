@@ -1,4 +1,9 @@
 import AttachmentMasonry from './AttachmentMasonry'
 
 export default AttachmentMasonry
-export type {AttachmentMasonryEmits, AttachmentMasonryProps} from './types'
+export type {
+  AttachmentMasonryClasses,
+  AttachmentMasonryEmits,
+  AttachmentMasonryProps,
+  AttachmentMasonryStyles,
+} from './types'

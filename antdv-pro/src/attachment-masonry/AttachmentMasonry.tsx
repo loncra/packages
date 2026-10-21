@@ -1,4 +1,4 @@
-import {computed, defineComponent, h, type PropType} from 'vue'
+import {computed, defineComponent, type PropType} from 'vue'
 import {Card, CardMeta, Checkbox, Empty, Flex, Masonry, theme, Tooltip} from 'antdv-next'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {FileTextOutlined} from '@antdv-next/icons'
@@ -8,6 +8,8 @@ import {AttachmentService} from '@loncra/client/resource'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import {byteFormat} from '../_util/format'
+import {useDateFormat} from '../_util/crud/useDateFormat'
+import type {AttachmentMasonryClasses, AttachmentMasonryStyles} from './types'
 import useStyle from './style'
 
 dayjs.extend(relativeTime)
@@ -30,9 +32,10 @@ const AttachmentMasonry = defineComponent({
     },
     prefixCls: String,
     rootClass: String,
+    classes: Object as PropType<AttachmentMasonryClasses>,
+    styles: Object as PropType<AttachmentMasonryStyles>,
   },
   emits: {
-    'update:dataSource': (_value: ObjectItemInfo[]) => true,
     'update:checkValue': (_value: ObjectItemInfo[]) => true,
   },
   setup(props, {emit, attrs}) {
@@ -45,6 +48,7 @@ const AttachmentMasonry = defineComponent({
       ),
     )
     const [hashId, cssVarCls] = useStyle(prefixCls)
+    const {dateTimeFormat: formatDateTime} = useDateFormat()
 
     function onCheckChange(id: string, checked: boolean) {
       const selected = props.checkValue ?? []
@@ -63,20 +67,22 @@ const AttachmentMasonry = defineComponent({
     }
 
     return () => {
-      const {class: attrClass, style: attrStyle} = attrs
+      const {class: attrClass, style: attrStyle, ...rest} = attrs
       const hashedClass = classNames(
         prefixCls.value,
         hashId.value,
         cssVarCls.value,
         props.rootClass,
+        props.classes?.root,
         attrClass,
       )
+      const rootStyle = [props.styles?.root, attrStyle]
       const source = props.dataSource ?? []
       const selected = props.checkValue ?? []
       if (source.length === 0) {
         return (
-          <div class={hashedClass} style={attrStyle as never}>
-            <Empty />
+          <div {...rest} class={hashedClass} style={rootStyle as never}>
+            <Empty classes={props.classes?.empty} styles={props.styles?.empty} />
           </div>
         )
       }
@@ -87,17 +93,21 @@ const AttachmentMasonry = defineComponent({
       }))
 
       return (
-        <div class={hashedClass} style={attrStyle as never}>
+        <div {...rest} class={hashedClass} style={rootStyle as never}>
           <Masonry
             columns={{xs: 1, sm: 2, md: 3, lg: 4}}
             gutter={token.value.sizeMD}
             items={items}
+            classes={props.classes?.masonry}
+            styles={props.styles?.masonry}
             v-slots={{
               itemRender: (info: {data: ObjectItemInfo}) => {
                 const item = info.data
                 return (
                   <Card
                     size="small"
+                    classes={props.classes?.card}
+                    styles={props.styles?.card}
                     v-slots={{
                       cover: () =>
                         (item.userMetadata?.['content-type'] || '').startsWith('image/') ? (
@@ -105,8 +115,10 @@ const AttachmentMasonry = defineComponent({
                             class={classNames(
                               hashId.value,
                               cssVarCls.value,
+                              props.classes?.cover,
                               `${prefixCls.value}-cover`,
                             )}
+                            style={props.styles?.cover as never}
                             {...({
                               src: AttachmentService.query(props.bucket, item.objectName),
                             } as Record<string, unknown>)}
@@ -116,12 +128,19 @@ const AttachmentMasonry = defineComponent({
                             class={classNames(
                               hashId.value,
                               cssVarCls.value,
+                              props.classes?.placeholder,
                               `${prefixCls.value}-placeholder`,
                             )}
+                            style={props.styles?.placeholder as never}
                           >
-                            {h(FileTextOutlined, {
-                              class: classNames(hashId.value, `${prefixCls.value}-file-icon`),
-                            })}
+                            <FileTextOutlined
+                              class={classNames(
+                                hashId.value,
+                                props.classes?.fileIcon,
+                                `${prefixCls.value}-file-icon`,
+                              )}
+                              style={props.styles?.fileIcon as never}
+                            />
                           </div>
                         ),
                     }}
@@ -140,7 +159,7 @@ const AttachmentMasonry = defineComponent({
                             >
                               {byteFormat(item.size)}
                             </Checkbox>
-                            <Tooltip title={dayjs(item.lastModified).format('YYYY-MM-DD HH:mm:ss')}>
+                            <Tooltip title={formatDateTime(item.lastModified)}>
                               <span>{dayjs(item.lastModified).fromNow()}</span>
                             </Tooltip>
                           </Flex>

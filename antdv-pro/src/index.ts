@@ -22,8 +22,10 @@ export type {
 } from './config-provider'
 export { default as ConfigProviderSetting } from './config-provider-setting'
 export type {
+  ConfigProviderSettingClasses,
   ConfigProviderSettingProps,
   ConfigProviderSettingSlots,
+  ConfigProviderSettingStyles,
 } from './config-provider-setting'
 
 export { default as Form } from './form'
@@ -40,7 +42,12 @@ export { default as UserSelect } from './user-select'
 export type { UserSelectEmits, UserSelectOption, UserSelectProps, UserSelectSlots } from './user-select'
 
 export { default as AttachmentMasonry } from './attachment-masonry'
-export type { AttachmentMasonryEmits, AttachmentMasonryProps } from './attachment-masonry'
+export type {
+  AttachmentMasonryClasses,
+  AttachmentMasonryEmits,
+  AttachmentMasonryProps,
+  AttachmentMasonryStyles,
+} from './attachment-masonry'
 
 export { default as AttachmentUpload } from './attachment-upload'
 export type {

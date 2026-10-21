@@ -16,7 +16,7 @@ xxx/
   xxxKinds.ts              领域纯逻辑（零框架依赖）
   useXxx.ts                状态与副作用
   _util/                   包内共用基础件（纯函数 / composable / 样式机制与片段）
-  <子域>/XxxSub.tsx        领域 UI 子组件
+  <子域>/Xxx.tsx        领域 UI 子组件
   <子域>/style/index.ts
   style/index.ts           本控件 cssinjs 样式
   README.md                控件用法（见 [12. 控件使用说明的写法](#12-控件使用说明的写法)）

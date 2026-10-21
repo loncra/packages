@@ -1,2 +1,7 @@
 export {default} from './ConfigProviderSetting'
-export type {ConfigProviderSettingProps, ConfigProviderSettingSlots} from './types'
+export type {
+  ConfigProviderSettingClasses,
+  ConfigProviderSettingProps,
+  ConfigProviderSettingSlots,
+  ConfigProviderSettingStyles,
+} from './types'

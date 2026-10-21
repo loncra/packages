@@ -6,9 +6,12 @@ function genConfigProviderSettingStyle(token: LoncraStyleToken): CSSInterpolatio
   const {componentCls, fontSizeSM} = token
 
   return {
-    [`${componentCls}-row-label`]: {whiteSpace: 'nowrap'},
-    [`${componentCls}-row-sub`]: {fontSize: fontSizeSM},
-    [`${componentCls}-token-input`]: {width: 420},
+    [componentCls]: {
+      [`${componentCls}-row-label`]: {whiteSpace: 'nowrap'},
+      [`${componentCls}-row-sub`]: {fontSize: fontSizeSM},
+      [`${componentCls}-token-input`]: {width: 420},
+      [`${componentCls}-panel-block`]: {width: '100%'},
+    },
   }
 }
 
