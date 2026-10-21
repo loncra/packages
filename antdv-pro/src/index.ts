@@ -258,4 +258,4 @@ export type {
   ValueFormatter,
 } from './crud-page'
 
-export {useAppNotification} from './notification/useAppNotification'
+export {useAppNotification} from './notification'

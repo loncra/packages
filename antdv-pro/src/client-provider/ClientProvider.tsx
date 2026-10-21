@@ -1,16 +1,8 @@
-import {computed, defineComponent, type PropType, provide, watchEffect} from 'vue'
+import {computed, defineComponent, type PropType, provide, type SlotsType, watchEffect} from 'vue'
 import type {ClientConfig, FormValueConvert, HttpClient, RuntimeMode} from '@loncra/client'
 import {configureClient} from '@loncra/client'
-import {CLIENT_CONFIG_KEY} from './types'
+import {CLIENT_CONFIG_KEY, type ClientProviderSlots} from './types'
 
-/**
- * HTTP / 运行时配置 Provider。
- *
- * 与 CrudConfigProvider 分层：本组件只负责客户端配置（http、runtimeMode、token、
- * 附件路径、上传分片等），权限 / 标题 / 导出仍由 CrudConfigProvider 负责。
- *
- * setup 中即完成配置，因此早于应用内任何请求；props 变更（如切换企业）会自动重配。
- */
 const ClientProvider = defineComponent({
   name: 'LClientProvider',
   inheritAttrs: false,
@@ -23,6 +15,7 @@ const ClientProvider = defineComponent({
     formValueConvert: Function as PropType<FormValueConvert>,
     uploadBlockSize: Number,
   },
+  slots: Object as SlotsType<ClientProviderSlots>,
   setup(props, {slots}) {
     const toConfig = (): ClientConfig => ({
       http: props.http,

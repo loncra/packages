@@ -40,7 +40,7 @@ import zhCN from '@loncra/antdv-pro/locale/zh_CN'
 | `CrudTable` | 表格形态门面：固定实体类型（`DefaultCrudEntity`）后把宿主给的参数透传给 `QueryTable` | [说明](./src/crud-table/README.md) |
 | `CrudCardGrid` | 卡片形态门面：同样透传给 `QueryCardGrid` | [说明](./src/crud-card-grid/README.md) |
 | `crud-page` 套件 | 页面装配：`CrudHomePage` / `CrudFormPage` / `CrudFormModal` / `CrudDetailPage` / `CrudCardGridPage`、`OperationTraceTable` / `createOperationTracePage` / `isOperationTraceVisible` / `OPERATION_TRACE_VARIANT`，声明入口 `defineHomePage` / `defineFormPage` / `defineDetailPage` / `defineCardGridPage` | [说明](./src/crud-page/README.md) |
-| `useAppNotification` | hook：通知。需要宿主的 `<a-app>` 提供上下文 | - |
+| `useAppNotification` | hook：按分组去重的通知。需要宿主的 `<a-app>` 提供上下文 | [说明](./src/notification/README.md) |
 
 ## 目录
 
@@ -50,7 +50,7 @@ import zhCN from '@loncra/antdv-pro/locale/zh_CN'
 | `crud-page/` | 页面装配套件：`home/`、`form/`、`form-modal/`、`detail/`、`card-grid/`、`operation-trace/`，以及 `define.ts`（声明入口）、`registryKinds.ts` / `usePageRegistry.ts`（字段组件注册表）、`fieldSourcesKinds.ts`（枚举 / 字典来源 → props）、`types.ts` + `pageTypes.ts`（声明模型与页面壳契约） |
 | `_util/` | 包内共用基础件：`format.ts`（单元格格式化）、`attachmentList.ts` / `uploadFile.ts` / `media.ts`（附件）、`useLocale.ts`，以及 `crud/`（`actions.ts` 动作解析、`defaultActions.ts` 默认动作、`useCollectionData.ts` 取数、`useCollectionModels.ts`（集合的四个受控模型）、`useCrudDelete.ts`、`useDrag.ts` / `useFlatDragDrop.ts` / `useTableRowDrag.ts`、`genDragStyle.ts`、`useMergeRowSelection.ts`、`dateUtils.ts` / `useDateFormat.ts`、`useStaleCheck.ts`、`navigate.ts`、`rowKey.ts`、`readPath.ts`、`sources.ts`、`collectionExpose.ts`） |
 | `locale/` | 本包 locale 与 `Locale` 类型 |
-| `notification/` | `useAppNotification`（**有意例外**：这个目录没有 `index.ts`，根入口直接从文件导出） |
+| `notification/` | `useAppNotification` |
 
 ## 本包的开发规范
 

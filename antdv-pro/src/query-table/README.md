@@ -80,7 +80,7 @@ const columns: SearchableColumnType<RoleEntity>[] = [
 - **`title` / `toolbarActions` / `recordActions` 不能省 `default: undefined`**：三者类型里都带 `Boolean`，父级「不传」时 Vue 的布尔转换会把它变成 `false`，语义立刻翻转（不要卡片头 / 整排按钮不出 / 「操作」列整列不补）。
 - **行选择列会自动开**：没传 `rowSelection` 且基类 `needsBulkSelection` 为真（工具栏里存在当前用户有权限的内置批量动作）时，补一个 `{fixed: true, type: 'checkbox'}`；传 `false` 才彻底关掉。
 - **「操作」列会自动补**：基类 `hasRecordActions` 为真（有行内动作且有权限）时追加一列 `action`（`fixed: right`，宽 80），单元格里画 `bodyCell` 槽 + `ActionButton`。判定只看 id 合并后的 `permission`，**不看每条动作的 `visible`**：传 `[{id: 'delete', visible: () => false}]` 这种全隐藏写法仍会补出一列空「操作」列，要整列不出请用 `recordActions: false`。
-- **`scroll` 有默认值**：所有列都带 `width` 时求和成 `{x: 总数}`，否则 `{x: 'max-content'}`；宿主传了 `scroll` 就用宿主的。
+- **`scroll` 有默认值**：`{x: 'max-content'}`；宿主传了 `scroll` 就用宿主的。
 
 **列筛选**：列上写 `search.component` 就变成可筛选列，本控件把 antd 原生的筛选下拉（`filterDropdown = () => null`）换成自绘的一张卡：搜索组件 + 三个按钮（搜索 / 重置 / 清空）。
 

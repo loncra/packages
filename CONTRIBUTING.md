@@ -39,7 +39,7 @@ xxx/
 
 **为什么**：主组件一旦长出请求和业务分支就再也拆不动。状态、判定、展示分开后，任一层都能单独替换或单测。
 
-**受控模型**（宿主要双向绑定的值）一律走 `@loncra/antdv` 的 `useTwoWayModel`，写本地立即生效并同步 `emit`，宿主回写再经 props 回流。据此两条附加规则 —— 写完必须在同一 tick 内读得到新值（不得用 `nextTick` 绕过）；`update:*` 一律由写 ref 触发，不手写 `emit('update:x')`（没有对应 ref 的意图事件除外，如 `update:open`）。
+**受控模型**（宿主要双向绑定的值）按「**本层会不会写它**」三选一，全仓只有这三种写法：**本层会写**（本层产生新值）→ `@loncra/antdv` 的 `useTwoWayModel`：写本地立即生效并同步 `emit`，宿主回写再经 props 回流，且写完必须在同一 tick 内读得到新值（不得用 `nextTick` 绕过）；**只读、但要交给需要 `Ref` 的地方**（composable 参数 / 子组件 / watch 源）→ `toRef(props, 'x')`：活引用，不产生副本、不 emit；**纯转发**（写只发生在子组件的 `onUpdate` 回调里，本层从不读自己刚写的值）→ 直接 `props.x` + `emit('update:x')`，**不建 ref、不留本地副本**（门面层就是这一类）。据此 `update:*` 一律由上面的写口触发，不手写 `emit('update:x')`（没有对应 ref 的意图事件除外，如 `update:open`）。
 
 ### 9. 命名与类名
 
@@ -114,6 +114,8 @@ const [hashId, cssVarCls] = useStyle(prefixCls)
 ### 12. 控件使用说明的写法
 
 控件说明落在控件自己的目录：`src/<控件>/README.md`。只给**宿主直接使用的控件**单独建文件；套件内部件在包 `README.md` 的控件表里列一行；`_util/*` 只列名。样板：[`antdv/src/icon-select/README.md`](./antdv/src/icon-select/README.md)。
+
+**代码里不写注释**：注释承载的知识（坑、约定、为什么）一律写进对应 README —— 本节就是它们的落点。删注释不是删知识，是换地方。
 
 分节、标题与锚点固定如下，没有的部分直接不写：
 

@@ -21,7 +21,6 @@ const DEFAULT_STATE: AntdvConfigState = {
   detailLayout: 'vertical',
 }
 
-/** 系统主题查询（SSR / 无 matchMedia 时给个恒亮的假实现） */
 function darkMediaQuery(): MediaQueryList | undefined {
   if (typeof window === 'undefined' || !window.matchMedia) {
     return undefined
@@ -29,17 +28,9 @@ function darkMediaQuery(): MediaQueryList | undefined {
   return window.matchMedia('(prefers-color-scheme: dark)')
 }
 
-/**
- * 建一份 antdv 配置实例（**纯内存**）。
- *
- * - 宿主决定初值从哪来（`createAntdvConfig(readStored())`）、怎么存回去（自己 `watch`）；
- * - 唯一的副作用是 `mode: 'system'` 时跟随系统主题（`matchMedia` 监听，应用级生命周期）；
- * - 派生值 `theme` / `themeConfig` 都是 computed，`compact` 会合并进 algorithm。
- */
 export function createAntdvConfig(initial?: AntdvConfigInitial): AntdvConfig {
   const state = reactive<AntdvConfigState>({...DEFAULT_STATE, ...initial})
 
-  /** 系统偏好：只有 `mode: 'system'` 时才参与解析；监听是应用级生命周期（无 scope 依赖） */
   const prefersDark = ref(darkMediaQuery()?.matches ?? false)
   darkMediaQuery()?.addEventListener('change', (event) => {
     prefersDark.value = event.matches
@@ -54,7 +45,6 @@ export function createAntdvConfig(initial?: AntdvConfigInitial): AntdvConfig {
       resolvedTheme.value === 'dark' ? theme.darkAlgorithm : theme.defaultAlgorithm
     return {
       algorithm: state.compact ? [algorithm, theme.compactAlgorithm] : algorithm,
-      // 覆盖值是标量白名单（见 setTokenValue），断言成 antdv 的 token 类型
       token: state.token as ThemeConfig['token'],
     }
   })
@@ -94,14 +84,10 @@ export function createAntdvConfig(initial?: AntdvConfigInitial): AntdvConfig {
   }
 }
 
-/** `LProvider` 里注入配置实例（宿主若传了自己的实例，注入的就是那一份） */
 export function provideAntdvConfig(config: AntdvConfig): void {
   provide(ANTDV_CONFIG_KEY, config)
 }
 
-/**
- * 读当前配置实例。拿不到就抛（在 `LProvider` 之外用，是写错了 —— 别静默给一份临时实例）。
- */
 export function useAntdvConfig(): AntdvConfig {
   const config = inject(ANTDV_CONFIG_KEY, undefined)
   if (!config) {

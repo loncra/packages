@@ -1,23 +1,11 @@
-import {defineComponent, type PropType} from 'vue'
+import {defineComponent, type PropType, type SlotsType} from 'vue'
 import {ConfigProvider as AntdvNextConfigProvider} from 'antdv-next'
 import ClientProvider, {type ClientProviderProps} from '../client-provider'
 import CrudConfigProvider, {type CrudConfigProviderProps} from '../crud-config-provider'
 import {createAntdvConfig, provideAntdvConfig} from './useAntdvConfig'
-import type {AntdvConfig} from './types'
+import type {AntdvConfig, AntdvConfigProviderSlots} from './types'
 
-/**
- * 统一入口：一层顶原来的「客户端配置 + antdv 主题 + CRUD 配置」。
- *
- * 分工与旧件一一对应：
- * - `ClientProvider`（setup 里同步 `configureClient`）——HTTP / 运行时；
- * - antdv 的 `ConfigProvider`——locale / componentSize / theme；
- * - `CrudConfigProvider`——权限 / i18n / 标题 / 跳转 / 字段组件表。
- *
- * antdv 配置（主题 / 语言 / 尺寸 / token / formLayout / detailLayout）来自 `antdvConfig`：
- * 宿主传自己初始化的那份（就能自己决定从哪读、往哪存），不传就用内部默认实例。
- */
 export const antdvConfigProviderProps = {
-  // ── 客户端（ClientProvider） ──
   http: {type: Object as PropType<ClientProviderProps['http']>, required: true as const},
   runtimeMode: {type: String as PropType<ClientProviderProps['runtimeMode']>, required: true as const},
   getAccessToken: Function as PropType<ClientProviderProps['getAccessToken']>,
@@ -25,7 +13,6 @@ export const antdvConfigProviderProps = {
   openAttachmentUrl: Function as PropType<ClientProviderProps['openAttachmentUrl']>,
   formValueConvert: Function as PropType<ClientProviderProps['formValueConvert']>,
   uploadBlockSize: Number,
-  // ── CRUD 配置（CrudConfigProvider） ──
   hasPermission: Function as PropType<CrudConfigProviderProps['hasPermission']>,
   i18nResolver: Function as PropType<CrudConfigProviderProps['i18nResolver']>,
   resolveDefaultTitle: Function as PropType<CrudConfigProviderProps['resolveDefaultTitle']>,
@@ -34,9 +21,7 @@ export const antdvConfigProviderProps = {
   formatters: Object as PropType<CrudConfigProviderProps['formatters']>,
   dateFormat: String,
   dateTimeFormat: String,
-  // ── antdv 配置 ──
   antdvConfig: Object as PropType<AntdvConfig>,
-  /** antdv 的 locale 对象（宿主从自己的 i18n 里取；pro 不猜 i18n） */
   localeMessage: Object as PropType<object>,
 }
 
@@ -44,6 +29,7 @@ const AntdvConfigProvider = defineComponent({
   name: 'LProvider',
   inheritAttrs: false,
   props: antdvConfigProviderProps,
+  slots: Object as SlotsType<AntdvConfigProviderSlots>,
   setup(props, {slots}) {
     const config = props.antdvConfig ?? createAntdvConfig()
     provideAntdvConfig(config)
@@ -61,8 +47,6 @@ const AntdvConfigProvider = defineComponent({
         {{
           default: () => (
             <AntdvNextConfigProvider
-              // antdv 的 locale 对象由宿主保证形状（`localeMessage` 声明成 `object`，
-              // 免得把 antdv 的 Locale 类型透进宿主的 i18n 层）
               locale={props.localeMessage as never}
               theme={config.themeConfig.value}
               componentSize={config.state.componentSize}
