@@ -14,6 +14,7 @@ import {
 } from '@loncra/client/commons'
 import {fetchEnumBuckets} from '../basic-crud-query'
 import {useLocale} from '../_util/useLocale'
+import useStyle from './style'
 import type {UserSelectOption} from './types'
 
 const UserSelect = defineComponent({
@@ -40,7 +41,7 @@ const UserSelect = defineComponent({
   },
   emits: {
     'update:value': (_value: string | string[]) => true,
-    change: (_value: string, _option: Record<string, unknown>) => true,
+    change: (_value: string | string[], _option: Record<string, unknown>) => true,
   },
   setup(props, {emit, slots, attrs}) {
     const locale = useLocale('UserSelect')
@@ -48,9 +49,9 @@ const UserSelect = defineComponent({
     const prefixCls = computed(() =>
       config.value.getPrefixCls('user-select', props.prefixCls ?? 'loncra-user-select'),
     )
+    const [hashId, cssVarCls] = useStyle(prefixCls)
 
     const userTypeOptions = ref<UserSelectOption[]>([])
-    const loading = ref(false)
     const options = ref<UserSelectOption[]>([])
     const currentIgnoreTypes = ref<string[]>([])
 
@@ -101,7 +102,6 @@ const UserSelect = defineComponent({
     }
 
     async function mounted() {
-      // 枚举桶走的是 pro 统一入口（`fetchEnumBuckets`：模块 + id，别自己调 client 的接口）
       const buckets = await fetchEnumBuckets([
         {
           module: SYSTEM_MODULE_NAME.RESOURCE_SERVER,
@@ -124,18 +124,20 @@ const UserSelect = defineComponent({
 
     return () => {
       const {class: attrClass, style: attrStyle, ...rest} = attrs
-      const mergedStyle =
-        attrStyle && typeof attrStyle === 'object'
-          ? {width: '100%', ...(attrStyle as Record<string, unknown>)}
-          : {width: '100%'}
       return (
         <Select
           {...rest}
-          class={classNames(prefixCls.value, props.rootClass, attrClass)}
-          style={mergedStyle as never}
+          class={classNames(
+            prefixCls.value,
+            hashId.value,
+            cssVarCls.value,
+            props.rootClass,
+            attrClass,
+          )}
+          style={attrStyle}
           filterOption={false}
           maxTagCount="responsive"
-          notFoundContent={loading.value ? undefined : null}
+          notFoundContent={null}
           mode={props.mode}
           showSearch
           value={props.value}

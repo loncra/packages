@@ -1,7 +1,8 @@
-import {computed, defineComponent, type PropType, provide, type VNodeChild} from 'vue'
+import {computed, defineComponent, type PropType, provide, type SlotsType, type VNodeChild} from 'vue'
 import type {FieldComponentSpec, ValueFormatter} from '../crud-page/types'
 import type {CrudNavigateTarget} from '../_util/crud/navigate'
-import {CRUD_CONFIG_KEY, type CrudConfig} from './types'
+import type {StaleCheckMode} from '../_util/crud/useStaleCheck'
+import {CRUD_CONFIG_KEY, type CrudConfig, type CrudConfigProviderSlots} from './types'
 
 const CrudConfigProvider = defineComponent({
   name: 'LCrudConfigProvider',
@@ -17,7 +18,9 @@ const CrudConfigProvider = defineComponent({
     formatters: Object as PropType<Record<string, ValueFormatter>>,
     dateFormat: String,
     dateTimeFormat: String,
+    staleCheck: Object as PropType<StaleCheckMode>,
   },
+  slots: Object as SlotsType<CrudConfigProviderSlots>,
   setup(props, {slots}) {
     provide(
       CRUD_CONFIG_KEY,
@@ -30,6 +33,7 @@ const CrudConfigProvider = defineComponent({
         formatters: props.formatters,
         dateFormat: props.dateFormat,
         dateTimeFormat: props.dateTimeFormat,
+        staleCheck: props.staleCheck,
       })),
     )
     return () => slots.default?.()

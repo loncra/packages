@@ -30,7 +30,7 @@ import zhCN from '@loncra/antdv-pro/locale/zh_CN'
 | `Form` | 受 ConfigProvider 布局（`layout` / `detailLayout`）驱动的表单 | [说明](./src/form/README.md) |
 | `ActionButton` | 把已解析的动作（`ResolvedAction`）渲染成按钮 / 下拉 | [说明](./src/action-button/README.md) |
 | `UserAvatar` | 用户头像（只用前缀，没有自有样式） | [说明](./src/user-avatar/README.md) |
-| `UserSelect` | 用户选择（含 `UserSelectOption`），内部用 `BasicCrudQuery` | [说明](./src/user-select/README.md) |
+| `UserSelect` | 用户选择（远程搜索 + 来源类型分组，内部 antd `Select`），含 `UserSelectOption` | [说明](./src/user-select/README.md) |
 | `AttachmentUpload` | 附件上传：分片、进度、模式常量 `ATTACHMENT_UPLOAD_MODE` / `ATTACHMENT_PREVIEW_MODE` | [说明](./src/attachment-upload/README.md) |
 | `AttachmentMasonry` | 附件瀑布流展示 | [说明](./src/attachment-masonry/README.md) |
 | `DataLoadingCard` | 取数过程中的加载卡片（`DataLoadingTask`），被 `BasicCrudQuery` 使用 | [说明](./src/data-loading-card/README.md) |

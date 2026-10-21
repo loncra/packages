@@ -26,7 +26,7 @@ export interface UserSelectProps {
 
 export interface UserSelectEmits {
   'update:value': (value: string | string[]) => void
-  change: (value: string, option: Record<string, unknown>) => void
+  change: (value: string | string[], option: Record<string, unknown>) => void
 }
 
 export interface UserSelectSlots {

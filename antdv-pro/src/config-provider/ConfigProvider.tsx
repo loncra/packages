@@ -21,6 +21,7 @@ export const antdvConfigProviderProps = {
   formatters: Object as PropType<CrudConfigProviderProps['formatters']>,
   dateFormat: String,
   dateTimeFormat: String,
+  staleCheck: Object as PropType<CrudConfigProviderProps['staleCheck']>,
   antdvConfig: Object as PropType<AntdvConfig>,
   localeMessage: Object as PropType<object>,
 }
@@ -60,6 +61,7 @@ const AntdvConfigProvider = defineComponent({
                 formatters={props.formatters}
                 dateFormat={props.dateFormat}
                 dateTimeFormat={props.dateTimeFormat}
+                staleCheck={props.staleCheck}
               >
                 {slots.default?.()}
               </CrudConfigProvider>
