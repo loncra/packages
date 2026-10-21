@@ -46,7 +46,7 @@ const CrudTable = defineComponent({
       default: true,
     },
     bordered: {type: Boolean, default: true},
-    /** 内嵌形态：不要卡片壳与外层 `Spin`（透传给基类，标题落到表格自带标题） */
+    /** 内嵌形态：不要卡片壳（透传给基类，标题落到表格自带标题） */
     plain: {type: Boolean, default: false},
     /** 自定义取数：给了就不再走 `service.find`（与内容层同名透传，见 `CollectionFetch`） */
     fetch: {type: Function as PropType<QueryTableProps['fetch']>, default: undefined},

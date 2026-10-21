@@ -698,7 +698,7 @@ export interface CrudHomePageProps<
    */
   query?: QueryTableProps['query']
   /**
-   * **内嵌形态**（透传给表格）：不要卡片壳、也不要外层 `Spin`；标题 / 工具栏落到表格自带标题
+   * **内嵌形态**（透传给表格）：不要卡片壳；标题 / 工具栏落到表格自带标题
    * （`.ant-table-title`）。嵌在表单 / 详情 / **表格展开行**里的列表用。
    *
    * 为什么要"不留壳"而不是"留壳去样式"：卡片壳嵌在别人的表格里时，antd 的嵌套表规则
@@ -780,7 +780,7 @@ export interface CrudCardGridPageProps<
    * —— 如"每种类型一个 tab，每个 tab 一个卡片网格"（carousel 就是这么用的）。
    */
   query?: QueryCardGridProps['query']
-  /** 内嵌形态（透传给基类）：不要卡片壳、也不要外层 `Spin` */
+  /** 内嵌形态（透传给基类）：不要卡片壳 */
   plain?: boolean
 }
 

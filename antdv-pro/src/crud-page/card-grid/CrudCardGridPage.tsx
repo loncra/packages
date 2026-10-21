@@ -46,7 +46,7 @@ const CrudCardGridPage = defineComponent({
     title: {type: [Object, Boolean] as PropType<CrudCardGridPageProps['title']>, default: undefined},
     /** 预置查询条件：同一个声明给多个实例（如"每种 type 一个 tab"）时靠它区分 */
     query: {type: Object as PropType<CrudCardGridPageProps['query']>, default: undefined},
-    /** 内嵌形态：透传给基类（不要卡片壳与外层 `Spin`） */
+    /** 内嵌形态：透传给基类（不要卡片壳） */
     plain: {type: Boolean, default: false},
   },
   slots: Object as SlotsType<CrudCardGridPageSlots<DefaultCrudEntity>>,

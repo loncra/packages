@@ -23,12 +23,6 @@ function genQueryCardGridStyle(token: LoncraStyleToken): CSSInterpolation {
             minHeight: 160,
           },
         },
-        [`${componentCls}-spin`]: {
-          display: 'block',
-          width: '100%',
-          height: '100%',
-          [`${antCls}-spin-container`]: {height: '100%'},
-        },
         [`${antCls}-card-grid${componentCls}-item`]: {
           width: 'calc(100% / var(--loncra-card-grid-columns, 5))',
         },

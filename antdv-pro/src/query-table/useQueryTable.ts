@@ -138,15 +138,6 @@ export function useQueryTable(
     fetch,
   })
 
-  const tableLoading = computed<TableProps['loading']>(() => {
-    const spin = props.classes?.spin
-    const spinStyles = props.styles?.spin
-    if (!loading.value || (!spin && !spinStyles)) {
-      return loading.value
-    }
-    return {spinning: true, classes: spin, styles: spinStyles}
-  })
-
   function initSearch(column: SearchableColumnType<TEntity>): void {
     const search = column.search
     if (!search) {
@@ -221,7 +212,6 @@ export function useQueryTable(
     tableColumns,
     mergedRowSelection,
     tablePassthroughAttrs,
-    tableLoading,
     tableOnRow,
     isDragCell,
     onDragHandleStart,

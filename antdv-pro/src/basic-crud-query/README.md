@@ -77,7 +77,7 @@
 </BasicCrudQuery>
 ```
 
-`plain` 时没有卡片壳、也不会自动转圈（内核恒传 `spin={false}`），加载态由内容表达。注意**分页仍然会渲染**：默认 `pagination` 是对象，只有显式 `:pagination="false"` 才不出。
+`plain` 时没有卡片壳，但遮罩照旧由基类出：`loading` 为真时 `DataLoadingCard` 的 `Spin` 包住整块内容（含分页）。注意**分页仍然会渲染**：默认 `pagination` 是对象，只有显式 `:pagination="false"` 才不出。
 
 ## API
 
@@ -97,7 +97,7 @@
 | plain | 不要卡片壳，标题 / 工具栏改由默认插槽作用域下发 | boolean | `false` | - |
 | selectedKey | 选中集合挂哪个 prop（形态组件固定传） | `'selectedRows' \| 'selectedItems'` | `'selectedRows'` | - |
 | dataSource | 当前数据（`v-model`） | `TEntity[]` | `[]` | - |
-| loading | 加载态（`v-model`），受控判定同 `DataLoadingCard` | boolean | `false` | - |
+| loading | 加载态（`v-model`），为真时内容区 `Spin` 遮住内容 + 分页；受控判定同 `DataLoadingCard` | boolean | `false` | - |
 | query | 当前查询（`v-model`），翻页会往里写 `number` / `size` | `FilterRequest \| PageRequest` | `{}` | - |
 | pagination | 分页对象（`v-model`）；`false` 不渲染分页。里面的 `onChange` 会被内核覆盖 | `TableProps['pagination']` | `{hideOnSinglePage: true, align: 'center'}` | - |
 | selectedRows / selectedItems | 选中集合（`v-model`），按 `selectedKey` 取其中一个 | `TEntity[]` | `[]` | - |
@@ -188,7 +188,7 @@
 | --- | --- |
 | root | 上面那个根元素（`.ant-card` 或 `plain` 的 `div`） |
 | card | 转手给 `DataLoadingCard` 的 `classes.card` / `styles.card`：卡片形态下生效，`plain` 下没有落点 |
-| spin | 转手给 `DataLoadingCard` 的 `classes.spin` / `styles.spin`：内容区那个 `Spin`（本组件恒传 `spin={false}`，所以**目前总是没有落点**） |
+| spin | 内容区那个 `Spin` 的语义键（`DataLoadingCard` 的 `spin` 默认开）：`loading` 为真时遮住内容 + 分页，`plain` 下同样有 |
 | pagination | 分页器 `Pagination` 的语义键原样透传；`:pagination="false"` 时没有落点 |
 
 自有类名两处，样式规则只有一条 `marginTop`：

@@ -175,7 +175,6 @@ const BasicCrudQuery = defineComponent({
           onMounted={onPlanMounted}
           onActivated={onPlanActivated}
           plain={props.plain}
-          spin={false}
           title={props.title}
           v-slots={{
             title: !props.plain && slots.title ? () => slots.title?.() : undefined,

@@ -8,7 +8,7 @@ import {
   type SlotsType,
   useModel,
 } from 'vue'
-import {Card, CardGrid, Empty, Spin, Typography} from 'antdv-next'
+import {Card, CardGrid, Empty, Typography} from 'antdv-next'
 import type {TableProps} from 'antdv-next'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {classNames, splitSemantic} from '@loncra/antdv'
@@ -319,81 +319,72 @@ const QueryCardGrid = defineComponent({
             title: slots.title ? () => slots.title?.() : undefined,
             extra: slots.extra ? () => slots.extra?.() : undefined,
             default: () => (
-              // 基类不再出 `Spin`（`plain` 用不上、表格自带 `loading`）⇒ 卡片网格自己出，
-              // 遮罩仍只盖网格区（分页在外），与表格形态一致
-              <Spin
-                class={classNames(hashId.value, cssVarCls.value, `${prefixCls.value}-spin`)}
-                spinning={loading.value}
+              <div
+                class={classNames(
+                  hashId.value,
+                  `${prefixCls.value}-grid`,
+                  (dataSource.value || []).length <= 0 && `${prefixCls.value}-grid-empty`,
+                  gridClasses?.root,
+                )}
+                style={gridStyles?.root as CSSProperties | undefined}
               >
-                <div
-                  class={classNames(
-                    hashId.value,
-                    `${prefixCls.value}-grid`,
-                    // 空状态时多挂一个类：让 `<Empty>` 在**可用高度里居中**（见 style/index.ts）。
-                    // 不给的话它就是个 flex item ⇒ 贴左上角 ✗（2026-09-29 用户截图报）
-                    (dataSource.value || []).length <= 0 && `${prefixCls.value}-grid-empty`,
-                    gridClasses?.root,
-                  )}
-                  style={gridStyles?.root as CSSProperties | undefined}
-                >
-                  {(dataSource.value || []).length <= 0 ? (
-                    slots.empty ? (
-                      slots.empty()
-                    ) : (
-                      <Empty />
-                    )
+                {(dataSource.value || []).length <= 0 ? (
+                  slots.empty ? (
+                    slots.empty()
                   ) : (
-                    dataSource.value.map((record, index) => {
-                      const itemSlot: QueryCardGridItemSlot<TEntity> = {
-                        record,
-                        index,
-                        selected: isSelected(record),
-                        dragEnabled: dragEnabled.value,
-                        onDragStart: (event: DragEvent) => onDragHandleStart(record, event),
-                        onDragEnd: onDragHandleEnd,
-                        itemActions: itemActionsOf(record),
-                      }
-                      const itemActionsSlot: QueryCardGridItemActionsSlot<TEntity> = {
-                        record,
-                        index,
-                        dragEnabled: itemSlot.dragEnabled,
-                        onDragStart: itemSlot.onDragStart,
-                        onDragEnd: onDragHandleEnd,
-                        itemActions: itemSlot.itemActions,
-                      }
-                      return (
-                        <CardGrid
-                          key={String(resolveRowKey(props.rowKey, record) ?? index)}
-                          class={classNames(
-                            hashId.value,
-                            `${prefixCls.value}-item`,
-                            isSelected(record) && `${prefixCls.value}-item-selected`,
-                            dropTargetClass(record),
-                            gridClasses?.item,
-                          )}
-                          style={gridStyles?.item as CSSProperties | undefined}
+                    <Empty />
+                  )
+                ) : (
+                  dataSource.value.map((record, index) => {
+                    const itemSlot: QueryCardGridItemSlot<TEntity> = {
+                      record,
+                      index,
+                      selected: isSelected(record),
+                      dragEnabled: dragEnabled.value,
+                      onDragStart: (event: DragEvent) => onDragHandleStart(record, event),
+                      onDragEnd: onDragHandleEnd,
+                      itemActions: itemActionsOf(record),
+                    }
+                    const itemActionsSlot: QueryCardGridItemActionsSlot<TEntity> = {
+                      record,
+                      index,
+                      dragEnabled: itemSlot.dragEnabled,
+                      onDragStart: itemSlot.onDragStart,
+                      onDragEnd: onDragHandleEnd,
+                      itemActions: itemSlot.itemActions,
+                    }
+                    return (
+                      <CardGrid
+                        key={String(resolveRowKey(props.rowKey, record) ?? index)}
+                        class={classNames(
+                          hashId.value,
+                          `${prefixCls.value}-item`,
+                          isSelected(record) && `${prefixCls.value}-item-selected`,
+                          dropTargetClass(record),
+                          gridClasses?.item,
+                        )}
+                        style={gridStyles?.item as CSSProperties | undefined}
+                      >
+                        <div
+                          {...buildDropZoneProps(record)}
+                          onClick={() => onSelect(record)}
                         >
-                          <div
-                            {...buildDropZoneProps(record)}
-                            onClick={() => onSelect(record)}
-                          >
-                            {slots.item ? slots.item(itemSlot) : defaultItem(itemSlot)}
-                            {slots.itemActions ? (
-                              <div
-                                onClick={(e: Event) => {
-                                  e.stopPropagation()
-                                }}
-                              >
-                                {slots.itemActions(itemActionsSlot)}
-                              </div>
-                            ) : null}
-                          </div>
-                        </CardGrid>
-                      )
-                    })
-                  )}
-                </div>
-              </Spin>
+                          {slots.item ? slots.item(itemSlot) : defaultItem(itemSlot)}
+                          {slots.itemActions ? (
+                            <div
+                              onClick={(e: Event) => {
+                                e.stopPropagation()
+                              }}
+                            >
+                              {slots.itemActions(itemActionsSlot)}
+                            </div>
+                          ) : null}
+                        </div>
+                      </CardGrid>
+                    )
+                  })
+                )}
+              </div>
             ),
           }}
         />

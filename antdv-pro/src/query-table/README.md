@@ -43,7 +43,7 @@ const columns: SearchableColumnType<SysRoleEntity>[] = [
 
 | 属性 | 说明 | 类型 | 默认值 | 版本 |
 | --- | --- | --- | --- | --- |
-| service | 取数服务（走它自己的 `find`），必需 | `CollectionService` | - | - |
+| service | 取数服务：有 `page` 走 `page`（`number` 缺省补 1），否则走 `find`；两者都没有则返回空、不报错 | `CollectionService` | - | - |
 | columns | 列声明；带 `search.component` 的列会变成可筛选列（规则见下方「列筛选」） | `SearchableColumnType[]` | `[]` | - |
 | immediate | 挂载后立即取数 | boolean | `true` | - |
 | refreshOnActivate | keep-alive 激活时的刷新策略，语义同基类 | `RefreshOnActivate` | `true` | - |
@@ -55,8 +55,8 @@ const columns: SearchableColumnType<SysRoleEntity>[] = [
 | enums / dictionaryCodes | 要预载的枚举桶（按模块分组）/ 数据字典 code | `EnumBucketRequest[]` / `(string \| undefined)[]` | - | - |
 | buckets / dictionaries | 预载结果（`v-model` 回给建列的地方） | `EnumBucketsResponseBody` / `PageDictionaries` | `{}` | - |
 | bordered | 透给 `Table` 的 `bordered` | boolean | `true` | - |
-| plain | 内嵌形态：不要卡片壳、不要外层 `Spin`，标题与工具栏落到表格自带标题 `.ant-table-title` | boolean | `false` | - |
-| fetch | 自定义取数，给了就不再走 `service.find` | `CollectionFetch` | - | - |
+| plain | 内嵌形态：不要卡片壳（`Card` 换成裸 `div`），标题与工具栏落到表格自带标题 `.ant-table-title` | boolean | `false` | - |
+| fetch | 自定义取数，给了就不看 `service`（`page` / `find` 都不走），分页按返回行数推 | `CollectionFetch` | - | - |
 | drag | 拖拽开关 + 幽灵内容：`true` = 可拖、`(record) => 内容` = 可拖且它就是幽灵；开启后最前面会插入一列 40px 宽的拖拽把手（也计入 `scroll.x` 求和） | `DragProp` | - | - |
 | onRow | 透给 `Table` 的 `onRow`（与拖拽接线合并，不是覆盖） | `TableProps['onRow']` | - | - |
 | rowKey | 行主键 | `TableProps['rowKey']` | `id` | - |
@@ -67,7 +67,7 @@ const columns: SearchableColumnType<SysRoleEntity>[] = [
 | classes | 区域表，见 [语义化 DOM](#semantic-dom)：`card` / `spin` / `pagination` / `table` | `QueryTableClasses` | - | - |
 | styles | 同上区域的样式表 | `QueryTableStyles` | - | - |
 | dataSource | 当前数据（`v-model`） | `TEntity[]` | `[]` | - |
-| loading | 加载态（`v-model`） | boolean | `false` | - |
+| loading | 加载态（`v-model`）：为真时基类的 `Spin` 遮住表格 + 分页。宿主必须接住 `v-model:loading`，否则内核回写的加载态被 props 拉回初值，界面不会转圈 | boolean | `false` | - |
 | query | 当前查询（`v-model`），筛选与翻页都往里写 | `FilterRequest \| PageRequest` | `{}` | - |
 | selectedRows | 选中集合（`v-model`） | `TEntity[]` | `[]` | - |
 
@@ -100,8 +100,8 @@ const columns: SearchableColumnType<SysRoleEntity>[] = [
 
 | 插槽 | 说明 | 类型 | 版本 |
 | --- | --- | --- | --- |
-| title | 卡片头（`plain` 时落到表格自带标题），优先于 `title` prop | `() => VNodeChild` | - |
-| extra | 卡片头右侧；不给就放默认动作按钮 | `() => VNodeChild` | - |
+| title | 卡片头（`plain` 时落到表格自带标题），优先于 `title` prop；`title` 为 `false` 时插槽也不渲染 | `() => VNodeChild` | - |
+| extra | 卡片头右侧（`plain` 时落到表格自带标题右侧）；不给就放默认动作按钮；`title` 或 `toolbarActions` 为 `false` 时恒不渲染 | `() => VNodeChild` | - |
 | bodyCell | 单元格；「操作」列会先渲染它再追加动作按钮 | `(args: {text, record, index, column}) => VNodeChild` | - |
 | expandedRowRender | 展开行内容 | `(args: {record, index, indent, expanded}) => VNodeChild` | - |
 
@@ -132,19 +132,19 @@ const columns: SearchableColumnType<SysRoleEntity>[] = [
 
 ### QueryTableClasses / QueryTableStyles {#querytableclasses}
 
-> 区域表：基类的 `card` / `pagination` + 本控件自己处理的 `spin`（表格 loading 遮罩）与 `table`（antd `Table` 的语义键）。
+> 区域表：基类的 `card` / `spin` / `pagination` + 本控件的 `table`（antd `Table` 的语义键）。`spin` 落到基类那个包住表格与分页的 `Spin` 上。
 
 `QueryTableProps` / `QueryTableClasses` / `QueryTableStyles` / `QueryTableEmits` / `QueryTableSlots` / `QueryTableConstructor` / `ColumnSearchConfig` / `SearchableColumnType` 都从包根 `@loncra/antdv-pro` 导出。
 
 ## 语义化 DOM {#semantic-dom}
 
-根元素是 `BasicCrudQuery` 的根：默认形态 `.ant-card`，`plain` 形态它自己的 `div`。根类顺序 `${prefixCls}` → `hashId` → `cssVarCls` → `rootClass` → 宿主 `class`，`style` 也落这里；根上同时还有基类的 `loncra-basic-crud-query` 与 `loncra-data-loading-card`（它是那一层的根）。
+根元素由 `DataLoadingCard`（`BasicCrudQuery` 的壳）渲染：默认形态 `.ant-card`，`plain` 形态裸 `div`。三层前缀依次拼在同一个元素上，顺序是 `loncra-data-loading-card`（+ `hashId` + `cssVarCls`）→ `loncra-basic-crud-query`（+ `hashId` + `cssVarCls`）→ `loncra-query-table`（+ `hashId` + `cssVarCls`）→ `rootClass` → 宿主 `class`，`style` 也落这里。
 
 | 区域 | 说明 |
 | --- | --- |
 | root | 上面那个根元素（`.ant-card` 或 `plain` 的 `div`） |
 | card | 卡片形态下 `Card` 的语义键；`plain` 下没有落点 |
-| spin | 表格 `loading` 遮罩的语义键，落在 `Table` 内部的 `Spin` 上；`:loading="false"` 时没有落点 |
+| spin | 内容区 `Spin` 的语义键（基类出的那个，包住表格 + 分页）；`:loading="false"` 时没有落点 |
 | pagination | 分页器 `Pagination` 的语义键；`:pagination="false"` 时没有落点 |
 | table | antd `Table` 的语义键，原样透传：`root` / `section` / `title` / `footer` / `content`，嵌套的 `header.*` / `body.*`（`wrapper` / `cell` / `row`）与 `pagination.*` |
 
@@ -158,7 +158,7 @@ const columns: SearchableColumnType<SysRoleEntity>[] = [
 | 拖拽把手 | `${prefixCls}` + `hashId` + `cssVarCls` + `${prefixCls}-drag-handle` |
 | 拖拽幽灵 | `${prefixCls}` + `hashId` + `cssVarCls` + `${prefixCls}-drag-ghost` |
 
-样式文件里只有 5 组规则：表格头/内容圆角归零、`.ant-table-title` 的一行 flex、筛选图标激活色、拖拽把手与幽灵、筛选面板内边距。
+样式文件里只有 6 组规则：`.ant-table-content` 圆角归零、`-table-title` 一行 flex（含内部 `.ant-typography` 去下边距）、`-filter-icon-active` 取主色、拖拽（把手 `grab` + 落位行 `before` / `after` / `inner` / `invalid`；共享片段还带卡片四向 `-drag-card-*`，表格场景没有落点）、`-filter-dropdown` 内边距、`-drag-ghost` 幽灵。
 
 **attrs 落点**：`class` / `style` 落根；其余 attrs（`scroll` / `expandable` / `expand-icon-column-index` …）下推给内部 `Table`，与 antd 的 `Table` → `InternalTable` 做法一致。要定位到根请用 `class` / `rootClass` / `classes`。
 

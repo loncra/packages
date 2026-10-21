@@ -56,10 +56,10 @@ export function useBasicCrudQuery(
     loading.value = true
     try {
       dataSource.value = await fetchCollectionData({
-        service: props.service as never,
+        service: props.service,
         query: query.value,
-        pagination: pagination as never,
-        fetch: props.fetch as never,
+        pagination: pagination,
+        fetch: props.fetch,
       })
       emit('update:pagination', pagination.value)
     } finally {

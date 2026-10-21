@@ -48,6 +48,7 @@ const DataLoadingCard = defineComponent({
           >
             {props.spin ? (
               <Spin
+                class={classNames(hashId.value, cssVarCls.value, `${prefixCls.value}-spin`)}
                 spinning={loading.value}
                 classes={props.classes?.spin}
                 styles={props.styles?.spin}

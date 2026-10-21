@@ -119,7 +119,6 @@ const QueryTable = defineComponent({
       tableColumns,
       mergedRowSelection,
       tablePassthroughAttrs,
-      tableLoading,
       tableOnRow,
       isDragCell,
       onDragHandleStart,
@@ -245,7 +244,6 @@ const QueryTable = defineComponent({
                 rowKey={props.rowKey}
                 dataSource={dataSource.value}
                 rowSelection={mergedRowSelection.value}
-                loading={tableLoading.value}
                 bordered={props.bordered}
                 onRow={tableOnRow.value}
                 v-slots={{

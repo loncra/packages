@@ -22,7 +22,6 @@
   onMounted={onPlanMounted}
   onActivated={onPlanActivated}
   plain={props.plain}
-  spin={false}
   title={props.title}
   v-slots={{
     title: !props.plain && slots.title ? () => slots.title?.() : undefined,
@@ -32,7 +31,7 @@
 />
 ```
 
-列表自带 `loading`，所以 `spin={false}`，避免两层遮罩。`plain` 时标题与工具栏不再进卡片头，而是通过默认插槽的作用域参数交给内容（`QueryTable` 把它们落到 `Table.title`）—— 所以示例里的 `content` 不是"什么都没有的裸内容"。
+列表底座的遮罩由它统一出：`Spin` 包住默认插槽里的内容（表格 + 分页），所以不再传 `spin={false}`。`plain` 时标题与工具栏不再进卡片头，而是通过默认插槽的作用域参数交给内容（`QueryTable` 把它们落到 `Table.title`）—— 所以示例里的 `content` 不是"什么都没有的裸内容"。
 
 ### 表单页（`CrudFormPage`）
 
@@ -157,7 +156,7 @@ const load: DataLoadingTask = async () => {
 | 落点 | 规则 |
 | --- | --- |
 | 卡片形态里的 `Spin` 根（同时带 `hashId` / `cssVarCls`） | `display:block; width:100%; height:100%`，内部 `.ant-spin-container` **显式设为** `height:100%`（不是继承）。真正"撑满"要宿主给卡片/body 高度，否则只有 `display:block; width:100%` 生效 |
-| `plain` 形态里的 `Spin` | **不挂**这个类，也不带 `hashId` / `cssVarCls` ⇒ 撑满规则在该形态下不生效 |
+| `plain` 形态里的 `Spin` | 与卡片形态一致，同样挂 `${prefixCls}-spin` + `hashId` / `cssVarCls` |
 
 其它 DOM 事实：
 
@@ -170,5 +169,5 @@ const load: DataLoadingTask = async () => {
 - **任务抛错不接住**：`run()` 里的异步包装只有 `try/finally`，没有 `catch` ⇒ 宿主任务 reject 会变成未处理拒绝，界面也不会给提示。宿主自己 `try/catch` 并决定提示方式。
 - **没有取消机制**：`run()` 只做"忽略"不做"中止"，任务拿不到 `AbortSignal`、卸载也不取消 ⇒ 旧请求晚到会覆盖新状态，竞态得宿主自己去重（`CrudDetailPage` 用 `useStaleCheck` 补的就是这个）。
 - **只传 `onActivated` 的首屏缺口**：首次 `activated` 恒定跳过，若同时没有 `onMounted`，首屏一次都不跑。
-- **`plain` 下只剩根可定制**：`Spin` 不挂 `${prefixCls}-spin`（那条撑满规则在该形态不生效），`classes.card` / `styles.card` 也没有落点；要定位内容只能从根往下写选择器。
+- **`plain` 下 `classes.card` / `styles.card` 没有落点**：要定位内容从根或 `${prefixCls}-spin` 往下写选择器。
 - **`title` 传 `true`** 会渲染出空标题（`true` 不是 VNode），要「不要标题」请传 `false`。
