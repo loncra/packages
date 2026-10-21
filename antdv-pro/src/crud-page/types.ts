@@ -1,38 +1,30 @@
-import type {Component, PublicProps, Ref, VNode, VNodeChild} from 'vue'
+import type {Component, Ref, VNode, VNodeChild} from 'vue'
 import type {ColProps, FormItemProps, TableProps} from 'antdv-next'
 import type {
-    BasicIdMetadata,
-    NameValueEnumMetadata,
-    RestResult,
-    ScrollPageResult,
-    SYSTEM_CONSTANT,
-    TreeSortMetadata,
+  BasicIdMetadata,
+  NameValueEnumMetadata,
+  RestResult,
+  ScrollPageResult,
+  SYSTEM_CONSTANT,
+  TreeSortMetadata,
 } from '@loncra/client/commons'
 import type {
-    ActionAppApis,
-    AuthorityProps,
-    RecordActionDefinition,
-    ToolbarActionDefinition,
+  ActionAppApis,
+  AuthorityProps,
+  RecordActionDefinition,
+  ToolbarActionDefinition,
 } from '../_util/crud/actions'
 import type {CollectionService} from '../_util/crud/useCollectionData'
 import type {DragProp} from '../_util/crud/useDrag'
 import type {CrudNavigateTarget} from '../_util/crud/navigate'
 import type {StaleCheckMode} from '../_util/crud/useStaleCheck'
-import type {ColumnSearchConfig, QueryTableProps, SearchableColumnType} from '../query-table/types'
-import type {
-    CardGridDragProp,
-    QueryCardGridItemActionsSlot,
-    QueryCardGridItemSlot,
-    QueryCardGridProps,
-} from '../query-card-grid/types'
+import type {ColumnSearchConfig} from '../query-table/types'
+import type {CardGridDragProp} from '../query-card-grid/types'
 import type {EnumBucketRequest, EnumRef, PageDictionaries} from '../basic-crud-query/types'
 import type {EnumBucketsResponseBody} from '@loncra/client/resource'
 
-export type {CrudStaleInfo, StaleCheckMode} from '../_util/crud/useStaleCheck'
+export type {CrudStaleInfo} from '../_util/crud/useStaleCheck'
 
-// #region 声明：核心（三种形态共用）
-
-/** 页面声明的路由名（真值在宿主，pro 只负责取出来交给跳转实现） */
 export interface CrudPageRoutes {
   home?: string
   add?: string
@@ -40,306 +32,113 @@ export interface CrudPageRoutes {
   detail?: string
 }
 
-/**
- * 三种形态**共享的那部分**声明。放页面的 `xxx.page.ts` 里只写一次，
- * 再由 `defineHomePage`（以后的 defineFormPage / defineDetailPage）合进各自的形态声明。
- */
 export interface CrudPageCore<
   TBody extends BasicIdMetadata<TId>,
   TEntity extends TBody = TBody,
   TId = TEntity[typeof SYSTEM_CONSTANT.ID_NAME],
 > {
-  /**
-   * 列表只需要"读得到数据"：与 `QueryTable` / `CrudTable` 吃的是**同一个联合**
-   * （只读的 `find` / `page` 服务也能用）。`save` 是表单形态的事，别在这里要求。
-   * `TPage` 固定用 `ScrollPageResult<TEntity>`：只读服务自己的 `TotalPage<T>` 是它的子类型，
-   * 在 `page()` 的返回位置协变 ⇒ 不必要再往声明层透一个类型参数。
-   */
   service: CollectionService<TBody, TEntity, ScrollPageResult<TEntity>, TId>
-  /** 主键字段名；不传时表格用 `SYSTEM_CONSTANT.ID_NAME` */
   rowKey?: keyof TEntity & string
-  /** 列/字段 label 的 i18n 前缀，如 'authServer.role' */
   i18nPrefix: string
   routes?: CrudPageRoutes
-  /** 操作轨迹表名（宿主自己的审计表标识）；列表不用，表单/详情壳以后用 */
   operationDataTraceTarget?: string
-  /**
-   * 陈旧检查（切回页签时重拉 + 跟基线比）：`false` 关掉、`'overwrite'` 变了就覆盖、`'prompt'`
-   * 本地动过才问。不给就落到 `CrudConfig.staleCheck`，再不给用形态默认（表单 `'prompt'` / 详情 `'overwrite'`）。
-   * 冲突时壳会 `emit('stale', {reason, remote})` 让宿主收尾（关 tab / 回列表）。
-   */
   staleCheck?: StaleCheckMode
-  /**
-   * 字段字典：`labelKey` / `format`（本体）与 `enumRef` / `dictId`（来源）的唯一事实来源。
-   * 来源的**加载清单按形态从这里推导**（列表只收"列上有搜索项"的那些，见 `collectTableSources`）
-   * ⇒ 页面不必再写一份 `enums` / `dictionaryCodes`。
-   */
   fields?: PageFieldsDictionary<TEntity>
-  /**
-   * label 解析：key → 文案（宿主声明层给一行 `(k, n) => i18n.global.t(k, n)`）。
-   * 缺省回退 `${i18nPrefix}.${key}`（可见、可调试，不静默变空）。
-   */
   i18nResolver?: (key: string, named?: Record<string, unknown>) => string
-  /**
-   * 本页自己的跳转实现：给了就用它，否则落到 `CrudConfig.onNavigate` 兜底。
-   * 泛型在这一层成立，页面能直接读业务字段决定跳转参数
-   * （某个页面要用 name / 其它值当参数时，不必去全局配置里堆 if/else）。
-   * 内嵌场景（宿主给了形态名，如 `'picker'`）应当直接 return。
-   */
   onNavigate?: (target: CrudNavigateTarget<TEntity>) => void
 }
 
-// #endregion
-
-// #region 字段与声明上下文（三种形态共用）
-
-/** 注册表 key：内置值有补全提示，同时允许自定义（见 `defineFormatter` / `defineFieldComponent`） */
 type BuiltinKey<T extends string> = T | (string & {})
 
-/**
- * 值格式名：**只断言"值是什么形状 / 怎么显示"**，与"取值来源"无关（来源见 `PageLookupFieldSpec`）。
- *
- * 内置七个：`'enum'` / `'enumList'`（值是 `{name, value}` 枚举元数据，显示取 `name`）、
- * `'dict'` / `'dictList'`（值是整条字典项，或裸 code）、
- * `'date'` / `'dateTime'`（显示用，格式串来自 `CrudConfigProvider.dateFormat` / `dateTimeFormat`）、
- * `'byte'`（字节数 → 可读大小）。
- *
- * ⚠️ "值是**裸 code/id**、却要显示名称"是另一件事：`enum` **不做形状断言**，裸值就原样显示
- * （要按来源查名得另加格式，如以后可能加的 `enumCode`）—— 别把"要求来源"加到 `enum` 上。
- */
 export type PageValueFormat = BuiltinKey<
   'enum' | 'enumList' | 'dict' | 'dictList' | 'date' | 'dateTime' | 'byte'
 >
 
-/**
- * `format` 的**带参写法**：名字 + 该 formatter 自己的参数。
- *
- * `args` 是"**宿主写、宿主读**"的透传位 —— pro 只在 `formatValue` 里把它取出来原样递给注册的
- * formatter，**不认识、不读、不索引**里面的 key（形状由注册方与声明方自己约定，同 `formatters`
- * 注册表本身）。反例是被删掉的 `actionContextExtras`：那是 pro **主动去读业务 key**。
- *
- * 典型的宿主用法：`format: {name: 'iconName', args: {size: 'large'}}`。
- */
 export interface PageValueFormatSpec {
   name: PageValueFormat
   args?: unknown
 }
 
-/** 字段组件名（内置 input/password/textarea/number/select/date/dateRange，见 registry） */
 export type PageFieldComponent = BuiltinKey<
   'input' | 'password' | 'textarea' | 'number' | 'select' | 'date' | 'dateRange'
 >
 
-/**
- * 字段**本体**：叫什么（i18n）+ 值是什么形状 / 怎么显示。三种形态共用。
- * 形态条目里写了就以条目为准（`buildTableColumns` 用 `{...fields[key], ...column}` 合并）。
- */
 export interface PageFieldSpec {
   labelKey?: string
-  /**
-   * formatter：**只断言值的形状**（见 `PageValueFormat`），不要求任何来源。
-   * 两种写法 —— 光名字（`'dateTime'`），或名字 + 参数（`{name: 'iconName', args: {…}}`，
-   * 见 `PageValueFormatSpec`）。
-   */
   format?: PageValueFormat | PageValueFormatSpec
 }
 
-/**
- * 字段的**取值来源**：值是裸 code/id、或组件要靠它喂 options 时才写。
- *
- * 与 `format` **正交** —— `format` 说"值长什么样"，来源说"值/选项从哪来"。两个用途：
- * ① 给搜索下拉 / 表单选择组件喂 options（桶 → 组件 `mapOptions`、字典 → `dictOptions`）；
- * ② 值是裸 code 时按它查名（字典会回查；枚举的裸值格式以后再加，见 `PageValueFormat`）。
- *
- * 加载清单**按形态从字段推导**（列表见 `collectTableSources`），页面不必再抄一份 `enums` /
- * `dictionaryCodes`。只有"详情"不吃来源：它的值自带 `{name, value}`，显示不需要桶。
- */
 export interface PageLookupFieldSpec extends PageFieldSpec {
-  /** 枚举桶定位（模块 + 枚举 id） */
   enumRef?: EnumRef
-  /** 数据字典 code */
   dictId?: string
 }
 
-/** 字段字典（按实体字段名索引）：写在 core 的 `xxx.page.ts` 里，页面只写一次 */
 export type PageFieldsDictionary<TEntity> = Partial<
   Record<keyof TEntity & string, PageLookupFieldSpec>
 >
 
-/**
- * 声明里的函数拿到的**声明级**上下文。故意很小：**没有 router / i18n / 弹层**——
- * 那些是宿主环境，声明文件本身是宿主代码，要用就直接 import。
- */
 export interface PageDeclContext {
-  /** 宿主形态名：宿主自己起名（如 `'picker'`）；不传 = 宿主没给形态名（整页） */
   variant?: string
-  /** 壳传进来的宿主数据（子表 ref、查询条件等声明管不到的东西） */
   extra: Record<string, unknown>
 }
 
-/**
- * **字段级**上下文：表单的 `props` / `rules` 这类"按字段求值、要读当前实体"的函数拿它。
- * 与声明级上下文分开 —— 那种函数必须有 `entity`，而声明级的 `visible` / `recordActions` 不需要。
- * （对齐宿主旧 kit 的 `PageFieldRenderContext`；form 形态落地时启用。）
- */
 export interface PageFieldRenderContext<TBody> {
-  /** 当前实体（只读用法；写初值走页级钩子） */
   entity: TBody
-  /** label 解析：与页面声明的 `i18nResolver` 同一份 */
   t: (key: string, named?: Record<string, unknown>) => string
-  /**
-   * 本页**已经加载好**的枚举桶 / 数据字典 —— 就是壳按字段声明的 `enumRef` / `dictId`
-   * 统一收清单、拉一次的那份结果（`collectFormSources` + `loadSources`）。
-   *
-   * 主要是给 **`render` 逃生字段**用的：它是宿主自绘的（复合控件之类），**拿不到注册表解析出来的
-   * props**（`sourceProps` 只进 `component` 那条路）⇒ 没有这份递进来，宿主只能自己再拉一次同一个桶，
-   * 于是"同一份来源两处请求、散在两个文件里" ✗。递进来之后：声明里照旧只写 `enumRef`（加载清单
-   * 归 pro 统一算），逃生从 `buckets[module]?.[id] ?? []` 取同一份结果自己喂控件。
-   */
   buckets: EnumBucketsResponseBody
   dictionaries: PageDictionaries
   variant?: string
   extra: Record<string, unknown>
 }
 
-// #endregion
-
-// #region 声明：集合形态（表格 / 卡片网格）
-
-/**
- * 声明式搜索项：`QueryTable` 的 `ColumnSearchConfig` 再放宽两点 ——
- * `component` 可以是注册表 key（构建列时由 `resolveFieldSpec` 解析成组件），
- * `props` 可以是函数（构建列时求值，跟随语言/形态）。
- * 其余字段（`expression` / `queryName` / `defaultValue`）原样透传给 `QueryTable`。
- */
 export interface PageSearchConfig extends Omit<ColumnSearchConfig, 'component' | 'props'> {
   component: PageFieldComponent | Component
   props?: Record<string, unknown> | ((ctx: PageDeclContext) => Record<string, unknown>)
 }
 
-/**
- * 表格列：**字段本体与来源**都从字段字典继承（`extends PageLookupFieldSpec`），条目里写了就以条目为准
- * （`buildTableColumns` 用 `{...fields[key], ...column}` 合并）。
- */
 export interface PageTableColumn<TEntity> extends PageLookupFieldSpec {
-  /**
-   * 列标识。**优先写实体字段名**（label 兜底用它；搜索项没给 `queryName` 时也按它拼查询名）。
-   *
-   * 拼查询名会把**第一段**从实体字段名转成**表字段名**（`realName` → `filter_[real_name_like]`）：
-   * 后端 `filter_[]` 的顶层字段要的是表字段，而列 `key` 必须是实体字段名（`readPath` 按它取值）。
-   * 点后面的路径段不转（后端嵌套段就是 camelCase）；要跟表字段不一致就写显式 `queryName`。
-   *
-   * 两种例外：
-   * ① **路径**：写 `a.b.c`（数据不在顶层字段时，如 `data.details.x`），pro 按路径取值（见 `readPath`）；
-   * ② **虚拟列名**：数据根本不在实体上，随便起，但必须自带 `labelKey`，搜索要写显式 `queryName`。
-   */
   key: string
-  /**
-   * 直接写死的列标题：**不查字典、不过翻译**，给了它就不再走 `labelKey` / `${i18nPrefix}.${key}`。
-   * 要跟着语言切换就别用它（写 `labelKey`）。
-   */
   title?: string
   width?: number
   ellipsis?: boolean
-  /** 声明式搜索项 */
   search?: PageSearchConfig
-  /**
-   * 逃生：自定义这一格的内容。返回 `undefined` 表示不认领，交回表格渲染它自己算好的内容。
-   */
   render?: (value: unknown, record: TEntity) => unknown
-  /** 该形态下是否显示这一列；缺省显示 */
   visible?: (ctx: PageDeclContext) => boolean
 }
 
-/** 表格条目：裸 key 或完整列 */
 export type PageTableEntry<TEntity> = (keyof TEntity & string) | PageTableColumn<TEntity>
 
-/**
- * 表格与卡片网格**公共**的那部分声明：权限、预加载来源、动作 —— 两边**同名同义**、宿主写法一致。
- *
- * 不进来的两样正是两种形态的"分道处"：`columns`（表格必须有；卡片外观由壳的 `#item` 自己画）
- * 与 `drag`（表格 `DragProp` / 卡片 `CardGridDragProp`，后者多"方向"）。
- */
 export interface PageCommonDefinition<TEntity extends BasicIdMetadata<unknown>> {
   authority?: AuthorityProps
-  /**
-   * 需要预加载的枚举桶：**按模块分组**（桶 = 模块 + 枚举 id 索引，见 `EnumBucketRequest`）。
-   * module 写 `SYSTEM_MODULE_NAME.*`、id 写 `SYSTEM_ENUM_TYPE.*`，别写字符串字面量。
-   *
-   * 表格那半能从"带搜索项的列"推（`collectTableSources`）；**卡片没有列可推** ⇒ 卡片要用就显式写。
-   */
   enums?: EnumBucketRequest[]
-  /**
-   * 需要预加载的**数据字典 code**（写宿主常量，如 `SKILL_GROUP_CODE_PREFIX`）。
-   * 与 `enums` 同构：pro 自己走 client 拉（`findDataDictionariesByCodes`），宿主不接线；
-   * 字段上写 `dictId` 消费它。**名字与内容层/基类的 `dictionaryCodes` 一致**（加载结果叫 `dictionaries`）。
-   */
   dictionaryCodes?: string[]
-  /**
-   * 项内动作（表格 = 行内、卡片 = 项内；名字与内容层/基类的 `recordActions` 一致）：
-   * **`false` = 不要**（表格那半就不给 `resolveRecordActions`、也不补"操作"列 ——
-   * 与 `CrudTable` 的语义一字不差）；函数形态用于按 `variant` 裁剪动作集合（可以返回 `false`）。
-   */
   recordActions?:
     | RecordActionDefinition<TEntity>[]
     | false
     | ((ctx: PageDeclContext) => RecordActionDefinition<TEntity>[] | false)
-  /**
-   * 标题栏动作（名字与内容层/基类的 `toolbarActions` 一致）：与 pro 内置的新增按钮**合并**
-   * （同 id 后者覆盖）。业务自己的导出、批量动作都写这里 —— pro 不预置任何业务动作；
-   * **`false` = 连默认的"新增 / 删除选中"都不要**（表格：审计这类只读表用；卡片：整排不出）。
-   */
   toolbarActions?: ToolbarActionDefinition<TEntity>[] | false
 }
 
-/** 表格形态的声明 = 公共那部分（`PageCommonDefinition`）+ **表格自己的三样** */
 export interface PageTableDefinition<TEntity extends BasicIdMetadata<unknown>>
   extends PageCommonDefinition<TEntity> {
-  /** 列顺序 = 数组顺序；按形态显隐用列自己的 `visible` */
   columns: PageTableEntry<TEntity>[]
-  /**
-   * 行拖拽排序 + 幽灵内容（一个口两件事）：
-   * `true` = 可拖（幽灵缺省是主键）；`(record) => 内容` = 可拖且它就是幽灵（推荐 `(record) => record.name`）。
-   */
   drag?: DragProp<TEntity>
   rowSelection?: TableProps['rowSelection'] | false
 }
 
-/** `Home.vue`（表格布局）的声明 = 核心 + 表格形态（`defineHomePage` 产出） */
 export interface CrudTableDefinition<
   TBody extends BasicIdMetadata<TId>,
   TEntity extends TBody = TBody,
   TId = TEntity[typeof SYSTEM_CONSTANT.ID_NAME],
 > extends CrudPageCore<TBody, TEntity, TId> {
-  /** 表格形态块。key 与类型同名（原名 `list` 太宽 —— 卡片网格也是列表，2026-09-30 改） */
   table: PageTableDefinition<TEntity>
 }
 
-/**
- * 卡片网格页的声明（`Home.vue` 的**卡片布局**）= 公共那部分（`PageCommonDefinition`）+ **卡片自己的两样**。
- *
- * 与 `PageTableDefinition` 不合成一份的两处分道：① 表格必须有 `columns`（卡片不需要：外观由壳的
- * `#item` 插槽自己画）；② `drag` 的类型不同（`CardGridDragProp` 多一个"方向"）+ 卡片有落库口 `onDrop`。
- */
 export interface PageCardGridDefinition<TEntity extends BasicIdMetadata<unknown>>
   extends PageCommonDefinition<TEntity> {
-  /**
-   * 卡片拖拽排序 + 幽灵内容（与 `CrudCardGrid.drag` 同形，**方向也在这里**）：
-   * `true` = 可拖（幽灵缺省主键）；`(record) => 内容` = 可拖且它就是幽灵；
-   * 要给方向（缺省横向）才写对象形态 `{dragPreview, direction}`。
-   */
   drag?: CardGridDragProp<TEntity>
-  /**
-   * 拖拽落库：`CrudCardGrid` 的 `drop` 事件原样交到这里（**pro 不替业务落库**）。
-   * 参数与 `useFlatDragDrop` 的 `onFlatDrop` 同形 —— "方向"归 `drag`，这里只管结果。
-   *
-   * 第二个参数与动作上下文里的 `app` **同一个形状**（动作有 `ctx.app`，落库口没有上下文
-   * ⇒ 直接给它一个）：落库完要提示、要刷新网格都靠它。
-   */
   onDrop?: (
     payload: {
-      /** ⚠️ `NonNullable`：实体主键是可选字段（`BasicIdMetadata.id?`），而真正拖动的记录一定有 id
-       *  —— 不这么写，动作里拿着 `sorts` 去调 `xxxService.sort(TreeSortMetadata<number>[])` 会差一个 `undefined` */
       sorts: TreeSortMetadata<NonNullable<TEntity[typeof SYSTEM_CONSTANT.ID_NAME]>>[]
       target: TEntity
       fromIndex: number
@@ -349,177 +148,56 @@ export interface PageCardGridDefinition<TEntity extends BasicIdMetadata<unknown>
   ) => void | Promise<void>
 }
 
-/** `Home.vue`（卡片布局）的声明 = 核心 + 卡片网格（`defineCardGridPage` 产出） */
 export interface CrudCardGridDefinition<
   TBody extends BasicIdMetadata<TId>,
   TEntity extends TBody = TBody,
   TId = TEntity[typeof SYSTEM_CONSTANT.ID_NAME],
 > extends CrudPageCore<TBody, TEntity, TId> {
-  /** 卡片网格形态块。key 与类型同名（原名 `list`，2026-09-30 与表格形态一起改成精确名） */
   cardGrid: PageCardGridDefinition<TEntity>
 }
 
-// #endregion
-
-// #region 声明：表单形态
-
-/**
- * 表单字段：**字段本体与来源**都从字段字典继承（`extends PageLookupFieldSpec`），条目里写了就以条目为准
- * （`buildFormFields` 用 `{...fields[key], ...field}` 合并）。
- *
- * 所以"表单要用枚举 options"只需在字段上写 `enumRef` / `dictId` —— `collectFormSources`
- * 按形态收成加载清单，页面不必再写一份 `enums` / `dictionaryCodes`。
- */
-/**
- * 表单字段 key：实体字段名，或**以实体字段名开头的点路径**（`a.b.c`）。
- *
- * 第一段仍受 `keyof TBody` 约束（`metadata.templateCode` ✓ / `metdata.templateCode` ✗ 报红），
- * 之后的段不校验 —— 与列表列 / 详情项同一个口径（见 `readPath`）。
- */
 export type PageFormFieldKey<TBody> = keyof TBody & string | `${keyof TBody & string}.${string}`
 
-/**
- * 声明级**插槽**：控件内部有"一块内容"要宿主画时用它（选项行长什么样、附件项的标题与说明、
- * 键值表的标题栏…）。
- *
- * 与 `PageFormField.render` 的分工 —— `render` = **控件整个由宿主实例化**（自己接 `value` /
- * `update:value` / 来源 props）；`slots` = **控件仍由注册表实例化**（defaults / 来源 / 值绑定都归
- * pro），宿主只交代"里面那一块长什么样" ⇒ 字段的 label / 栅格 / 校验 / form-item 名照旧由 DSL 管。
- *
- * 参数写成 `(...args: never[]) => …` 是**故意的**：宿主在声明里能自己标注真实形状
- * （`({option}: {option: UserSelectOption}) => …` 可赋值给它），既拿回类型提示，
- * 又不必在 pro 里为每个组件的插槽各写一套泛型。
- *
- * **参数末尾会多一个字段 ctx**（`PageFieldRenderContext`：实体 / `buckets` / `dictionaries` / `t` /
- * `extra`，与 `render` 逃生、壳的 `#default` 槽作用域是**同一份**上下文）⇒ 插槽里要读实体（如封面卡
- * 显示表单里的标题 / 正文）直接多标一个参数：
- * `(_file: unknown, ctx: PageFieldRenderContext<TBody>) => …`；**只关心控件自己那个参数的写法一字不用改**
- * （多收一个参数不影响既有标注）。
- */
 export type PageFormFieldSlots = Record<string, (...args: never[]) => VNodeChild>
 
 export interface PageFormField<TBody> extends PageLookupFieldSpec {
-  /**
-   * 实体字段名，**支持 `a.b.c` 点路径**（数据不在顶层字段时用，同列表列 / 详情项，见 `readPath`）。
-   *
-   * ⚠️ 写路径的字段**不查字段字典**（`fields` 按顶层字段名索引）⇒ `labelKey` / `enumRef` / `dictId`
-   * 要在**这个条目上**写全；表单 `name` 由 pro 按 `.` 拆成数组交给 `a-form-item`，校验照常生效。
-   */
   key: PageFormFieldKey<TBody>
-  /** 注册表 key（内置 input / password / textarea / number / select / date / dateRange），或直接给组件 */
   component?: PageFieldComponent | Component
-  /**
-   * `false` = 这条 form-item **不出 label**（控件独占整宽）。
-   *
-   * 缺省会照 `labelKey` > `${i18nPrefix}.${key}` 兜底（pro 的既有口径：宁可显示 key 也不要空着）
-   * ⇒ "没有值就不出 label" 这件事必须**显式**写出来 —— 给旧 kit 里那种"只有控件、没有标签"的块
-   * （封面、纯插槽块）。`Col` 栅格与 `rules` 校验都不受影响，只是 `a-form-item` 不再渲染 label 区。
-   */
   label?: false
-  /**
-   * 校验规则。函数形态拿得到实体，用于"按当前值变化"的规则
-   * （如资源分类是插件时某字段不必填）。
-   */
   rules?: FormItemProps['rules'] | ((ctx: PageFieldRenderContext<TBody>) => FormItemProps['rules'])
-  /**
-   * 该字段所在 `<a-col>` 的 props：**整包透传**给 antd 的 `Col`（官方类型 `ColProps`）——
-   * `span` / `offset` / `order` / `pull` / `push` / `flex` / `xs` ~ `xxxl`，官方语义原样生效，
-   * pro 不加工、不加自己的规则。
-   *
-   * **不传** = pro 的默认断点（`FORM_FIELD_DEFAULT_COL`：`span: 12` + `xs`/`sm` 24 +
-   * `md`~`xxxl` 12 ⇒ 手机一列、平板起两列）；**传了就整包替换默认**（不与默认合并）
-   * ⇒ 想让手机一列、`md` 起三列，`xs`/`sm` 也要写出来：
-   * `{xs: 24, sm: 24, md: 8, lg: 8, xl: 8, xxl: 8}`。
-   */
   col?: ColProps
-  /** 组件 props。函数形态拿得到实体（编辑态 disabled、选项来自异步 ref 这类） */
   props?:
     | Record<string, unknown>
     | ((ctx: PageFieldRenderContext<TBody>) => Record<string, unknown>)
-  /**
-   * 声明级插槽：控件内部"一块内容"交宿主画（见 `PageFormFieldSlots`）。
-   * 与 `render` 的分工看那边 —— 这里是"控件仍由注册表实例化，只把里面一块交出去"。
-   */
   slots?: PageFormFieldSlots
-  /** 逃生：完全自定义这个控件（与 `component` 二选一） */
   render?: (ctx: PageFieldRenderContext<TBody>) => unknown
-  /** 该形态下是否显示；缺省显示（新增/编辑两态不一致时用它） */
   visible?: (ctx: PageDeclContext) => boolean
 }
 
-/**
- * 表单**页级钩子**拿到的上下文：与声明级上下文只差一点 —— `entity` 是 **Ref**（钩子要写初值）。
- *
- * 照旧**不带** router / modal / message：那些是宿主环境，声明文件本身是宿主代码，要用就直接 import。
- */
 export interface PageFormContext<TBody> extends PageDeclContext {
-  /** 表单实体（`preMounted` 里写初值用，写完表单立刻可见） */
   entity: Ref<TBody>
-  /** label 解析：与页面声明的 `i18nResolver` 同一份 */
   t: (key: string, named?: Record<string, unknown>) => string
-  /**
-   * 本页**已经加载好**的枚举桶 / 数据字典 —— 与字段级 ctx 那两个同源（见 `PageFieldRenderContext.buckets`）。
-   *
-   * 页级钩子（`preMounted` / `preSubmit` / `postSubmit` / `postGetEntity` / `onReset`）拿不到字段级 ctx
-   * ⇒ 需要"统一加载好的那份"时**从这里读**，别自己再发一遍同样的请求。可用性有保证：壳的 `load()`
-   * 是先 `loadSources()` 再 `preMounted()`。
-   */
   buckets: EnumBucketsResponseBody
   dictionaries: PageDictionaries
 }
 
-/**
- * 表单形态声明。钩子名与宿主旧 kit（`components/basic/page/types.ts`）**一字不改**；
- * 只有上下文从旧 `PageContext` 换成 `PageFormContext` / `PageFieldRenderContext`（宿主环境不进上下文）。
- *
- * ⚠️ **标题不在这里**：怎么写标题（面包屑 / tab 名 / `(${entity.name})` 这类拼装）是**宿主的事**，
- * pro 既不解析标题、也不提供 `titleText` 口 —— 宿主在自己的页壳里实现，用得到实体就写在
- * `postMounted` / `postGetEntity` 里（需要壳里的东西就从 `ctx.extra` 拿）。
- */
 export interface PageFormDefinition<TBody, TEntity> {
-  /** 字段顺序 = 数组顺序；按形态显隐用字段自己的 `visible` */
   fields: PageFormField<TBody>[]
-  /**
-   * 显式声明的预载来源 —— **逃生口**，与列表的 `list.enums` / `list.dictionaryCodes` 同一用途：
-   * 给"**没有任何字段引用、但壳 / 页级钩子要用**"的桶与字典（常规情况一律写 `enumRef` / `dictId`，
-   * 由 `collectFormSources` 推导）。与推导结果合并去重，见 `mergeSources`。
-   */
   enums?: EnumBucketRequest[]
   dictionaryCodes?: string[]
-  /** 实体初值：等价于页面原来手写的那坨 `ref({...})` */
   createEntity: () => TBody
   preMounted?: (ctx: PageFormContext<TBody>) => void | Promise<void>
   postMounted?: () => void | Promise<void>
   preSubmit?: (ctx: PageFormContext<TBody>) => void | Promise<void>
-  /**
-   * **自定义提交**：写了它，壳就**不调 `service.save`** —— "发送"这类页面的提交自成一件事，
-   * 与 CRUD 的"保存"不是同一个动作（也没有可保存的实体）。
-   *
-   * 返回值与 `save` 同形，走同一条链路（`isBusinessSuccess` → `postSubmit` → `emit('success')`）
-   * ⇒ 成功提示与跳转策略照旧写在 `postSubmit` 里。
-   */
   submit?: (entity: TBody, ctx: PageFormContext<TBody>) => Promise<RestResult<unknown>>
-  /**
-   * 提交之后（`save` 已成功）。**返回真值 = 调用方接管**：壳跳过自己的成功行为、只 emit `success`
-   * —— 宿主"回列表 / 关 tab / 记住偏好"这类策略走这条路（与旧 `BasicForm` 的语义一致）。
-   */
   postSubmit?: (
     result: unknown,
     ctx: PageFormContext<TBody>,
   ) => boolean | void | Promise<boolean | void>
-  /** 拿到服务端实体后、写回表单前（可改值） */
   postGetEntity?: (entity: TEntity, ctx: PageFormContext<TBody>) => TEntity | Promise<TEntity>
-  /** 表单"重置"之后：清掉**不在表单字段里**的残留（如内嵌选择器写回的 `ids`） */
   onReset?: (ctx: PageFormContext<TBody>) => void
 }
 
-/**
- * 表单页的核心：与 `CrudPageCore` 只差一点 —— **`service` 可省**。
- *
- * "发送"这类提交型页面既不取数也不编辑（宿主不传 `id` ⇒ 壳里 `get` / 陈旧检查都不会跑），
- * 提交自成一件事（`form.submit`）⇒ 强迫它给一个读侧服务只会逼出假方法。
- * 缺 `service` 而壳真要取数 / 保存时**当场抛**（不静默）。
- */
 export type CrudFormCore<
   TBody extends BasicIdMetadata<TId>,
   TEntity extends TBody = TBody,
@@ -528,7 +206,6 @@ export type CrudFormCore<
   service?: CollectionService<TBody, TEntity, ScrollPageResult<TEntity>, TId>
 }
 
-/** `Form.vue` 的声明 = 核心 + 表单（`defineFormPage` 产出） */
 export interface CrudFormDefinition<
   TBody extends BasicIdMetadata<TId>,
   TEntity extends TBody = TBody,
@@ -537,69 +214,24 @@ export interface CrudFormDefinition<
   form: PageFormDefinition<TBody, TEntity>
 }
 
-// #endregion
-
-// #region 声明：详情形态
-
-/**
- * 详情项：**只有字段本体，没有来源**（`extends PageFieldSpec`，写 `enumRef` / `dictId` 会报错）
- * —— 详情不喂组件 options、也不拉桶查名：值自带 `{name, value}` 时 `format: 'enum'` 直接显示。
- */
 export interface PageDetailItem<TEntity> extends PageFieldSpec {
-  /** 实体字段名；支持 `a.b` **嵌套路径**（如 `initialization.randomPassword`） */
   key: string
-  /**
-   * `a-descriptions` 的跨列数。允许 antdv-next 自带的两种形态：**数字**（跨 N 列）或
-   * **`'filled'`（独占整行）**。
-   *
-   * `'filled'` 是"这一项占满整行"的正解：它在**任何断点都成立**；而写数字时，若页面在窄断点把
-   * `column` 收到 1，`span: 2|3` 就超过列数 ⇒ antd 会**自己夹到剩余格**并在 dev 打
-   * `Sum of column 'span' in a line not match 'column' of Descriptions`（配置不自洽的提示）。
-   * pro 只是**原样透传**（`buildDetailItems` 里 `span: item.span`）—— 不判断、不修正、不吞错误。
-   */
   span?: number | 'filled'
-  /** 逃生：自定义这一项的内容（string / VNode）；返回 `undefined` 交回默认渲染 */
   render?: (value: unknown, record: TEntity) => unknown
 }
 
-/** 详情条目：裸 key 或完整项 */
 export type PageDetailEntry<TEntity> = (keyof TEntity & string) | PageDetailItem<TEntity>
 
-/**
- * 详情形态声明。与表单形态同一条纪律：**标题不在这里**（宿主自己在页壳 / 钩子里实现）。
- */
 export interface PageDetailDefinition<TEntity, TId = string | number> {
-  /** 顺序 = 数组顺序；裸 key 从字段字典取 labelKey / format */
   fields: PageDetailEntry<TEntity>[]
-  /**
-   * 显式声明的预载来源 —— **逃生口**，与 `form.enums` / `list.enums` 同一用途：给
-   * "**详情字段本身不引用、但宿主插槽（`afterDescriptions` 那张附表）要用**"的桶与字典。
-   *
-   * ⚠️ 详情**不从字段推导**来源（这点别于 form / list）：详情的枚举显示靠值自带的元数据
-   * （`format: 'enum'` → `getEnumName`），本来用不上桶 ⇒ 推导只会白发请求。**声明了才拉**，
-   * 拉到的结果有两个出口：`afterDescriptions` 的槽作用域、`CrudDetailPageExpose`。
-   */
   enums?: EnumBucketRequest[]
   dictionaryCodes?: string[]
-  /**
-   * 实体初值（**与表单形态的 `createEntity` 同名同义**）：取数之前先用它渲染。
-   *
-   * 旧 kit 的详情页是"页面自己 `ref({...初值...})` + `v-model:entity`"⇒ 加载期间宿主插槽
-   * （`#afterDescriptions` 附表）看到的是**初值**；不写这个就是空对象 `{}`，
-   * 插槽里 `entity.metadata.xxx` 这类**深层取值会直接抛**（2026-09-28 踩过）。
-   */
   createEntity?: () => TEntity
-  /** `a-descriptions` 的响应式列数；省略用内置默认 */
   column?: Record<string, number>
   postGetEntity?: (entity: TEntity, ctx: PageDeclContext) => TEntity | Promise<TEntity>
-  /**
-   * 自定义取数：不写就 `service.get(id)`。
-   * 宿主的路由约定（`queryFields` 400、`after` 这类）**不进 pro** —— 要那种行为就写这个钩子。
-   */
   getDetail?: (id: TId, ctx: PageDeclContext) => Promise<TEntity | undefined>
 }
 
-/** `Detail.vue` 的声明 = 核心 + 详情（`defineDetailPage` 产出） */
 export interface CrudDetailDefinition<
   TBody extends BasicIdMetadata<TId>,
   TEntity extends TBody = TBody,
@@ -608,467 +240,32 @@ export interface CrudDetailDefinition<
   detail: PageDetailDefinition<TEntity, TId>
 }
 
-// #endregion
-
-// #region 注册表（扩展点）
-
-/**
- * 字段组件注册表的一项。**组件专属的约定全收在这里**
- * （默认 props、枚举选项怎么喂、只给搜索项用的外观），builder 里不写 `component === 'x'` 分支。
- */
 export interface FieldComponentSpec {
   component: Component
-  /** 通用默认 props */
   defaults?: Record<string, unknown>
-  /** 枚举桶 → 组件 props；默认 `{options, fieldNames: {label: 'name'}}` */
   mapOptions?: (options: NameValueEnumMetadata<number | string>[]) => Record<string, unknown>
-  /**
-   * 组件**自带 `a-form-item`**（自己画标题栏、内部行自己管校验，如 `keyValueTable`）⇒ 表单壳
-   * 不再包一层（包了就是双标题）。置 true 的字段**不吃声明里的 `rules`**：校验归组件自己。
-   */
   ownFormItem?: boolean
-  /**
-   * 提交前的**机械准备**：壳在"校验通过之后、声明层 `preSubmit` 之前"**按字段顺序**调用，
-   * 参数是该字段的组件实例（壳用函数 ref 收的；字段没渲染时是 `undefined`，实现要容错）。
-   *
-   * 为什么要有它：这两件事"不做就丢数据"—— 附件的本地文件要先 `upload()` 成 `ObjectWriteResult`
-   * （否则落库 `bucketName` / `objectName` 为空），键值表的行要先 `confirmAllEditingRows()`
-   * （否则正在编辑的那行不进值）。pro 不认具体组件 ⇒ 由注册方（本 spec）自己收窄 `expose`。
-   */
   beforeSubmit?: (expose: unknown) => void | Promise<void>
 }
 
 export interface FormatContext {
   key: string
   record: unknown
-  /** 该条目生效的枚举桶定位（条目 `enumRef` ?? 字典 `enumRef`）—— 值自带元数据时用不到 */
   enumRef?: EnumRef
-  /** 该条目生效的数据字典 code（条目 `dictId` ?? 字典 `dictId`）—— 值是裸 code 时才用得到 */
   dictId?: string
   buckets: EnumBucketsResponseBody
-  /** 声明里 `dictionaries` 预载回来的字典 */
   dictionaries: PageDictionaries
 }
 
-/**
- * formatter：返回值直接当单元格内容渲染（string 或 VNode）。
- *
- * `args` = 声明里 `format` 写了对象形态时带的参数（`undefined` = 声明只写了名字）。
- * **pro 不认识它的内容**，只把它原样递进来 ⇒ 注册方（宿主）自己收窄成约定好的形状。
- * 不做成泛型是因为函数参数是**逆变**的：注册方按自己的参数形状特化后，塞不进
- * `Record<string, ValueFormatter>`（同 `CollectionExpose.remove` 当年那个坑）。
- */
 export type ValueFormatter = (
   value: unknown,
   ctx: FormatContext,
   args?: unknown,
 ) => string | VNode
 
-/**
- * 两张注册表。内置表见 `registry.ts` 的 `DEFAULT_*`；
- * 宿主 `CrudConfig.fieldComponents` / `formatters` 在它们之上**逐 key 覆盖**。
- */
 export interface PageRegistry {
   fieldComponents: Record<string, FieldComponentSpec>
   formatters: Record<string, ValueFormatter>
 }
 
-// #endregion
-
-// #region 组件契约
-
-export interface CrudHomePageProps<
-  TId = string | number,
-  TBody extends BasicIdMetadata<TId> = BasicIdMetadata<TId>,
-  TEntity extends TBody = TBody,
-> {
-  page: CrudTableDefinition<TBody, TEntity, TId>
-  /** 宿主形态名：宿主自己起名（如 `'picker'`）；不传 = 宿主没给形态名（整页） */
-  variant?: string
-  /** 宿主数据，透传给声明里的 `visible` / `recordActions`（见 `PageDeclContext.extra`） */
-  extra?: Record<string, unknown>
-  /**
-   * 表格标题（与 `CrudTable.title` 同形）：**`false` = 不渲染标题**（嵌入到别的页面里的表用，
-   * 否则会顶出宿主默认的页面标题）。不给就交给表格自己（页面槽 `#title` 优先）。
-   */
-  title?: VNode | boolean
-  /**
-   * 预置查询条件（与 `CrudTable.query` 同形）：嵌入表用 —— 如操作记录块按"审计目标 + 关联业务 id +
-   * 该记录创建之后"过滤；不传就是"无预置条件"。
-   */
-  query?: QueryTableProps['query']
-  /**
-   * **内嵌形态**（透传给表格）：不要卡片壳；标题 / 工具栏落到表格自带标题
-   * （`.ant-table-title`）。嵌在表单 / 详情 / **表格展开行**里的列表用。
-   *
-   * 为什么要"不留壳"而不是"留壳去样式"：卡片壳嵌在别人的表格里时，antd 的嵌套表规则
-   * （`.ant-table-wrapper:only-child .ant-table`）会把里面的表整体偏移（左 32px / 上下 −16px），
-   * 而卡片头留在原地 ⇒ 标题与表格错位。标题挂到表格自己身上才会跟表格同进同退。
-   */
-  plain?: boolean
-  /**
-   * 自定义取数（透传给表格，见 `CollectionFetch`）：给了就不再走 `service.find`。
-   * 用途：同一份声明在不同入口要打不同接口 —— 如「独立资源」在企业侧只能走
-   * `/resource/find/enterprise`（`resource/find` 只给运营后台）⇒ 壳换这一个函数即可，不必造 service 类。
-   */
-  fetch?: QueryTableProps['fetch']
-}
-
-/**
- * 表格页壳暴露给宿主的能力。
- *
- * ⚠️ **一律是"值"不是 ref**：Vue 对 `expose` 出来的 ref 会自动解包（`proxyRefs`）⇒ 宿主写
- * `table.value?.buckets` 就是当前值，写成 `table.value?.buckets.value` 只会得到 `undefined`。
- */
-export interface CrudHomePageExpose<TEntity> {
-  fetchDataSource: () => Promise<void | undefined> | undefined
-  clearDataSource: () => void
-  /** 当前数据（`v-model:data-source` 回流的那份） */
-  dataSource: TEntity[]
-  /**
-   * 页面声明里 `list.enums` 加载回来的枚举桶：壳里的弹层 / 条件判断要用同一份
-   * （声明已经拉了，别在壳里再发一次同样的请求）。
-   */
-  buckets: EnumBucketsResponseBody
-}
-
-export interface CrudHomePageSlots<TEntity extends object> {
-  title?: () => unknown
-  bodyCell?: (args: {
-    text: unknown
-    record: TEntity
-    index: number
-    column: SearchableColumnType<TEntity>
-  }) => unknown
-  expandedRowRender?: (args: {
-    record: TEntity
-    index: number
-    indent: number
-    expanded: boolean
-  }) => unknown
-}
-
-/**
- * Vue 3.5 的 `defineComponent` 函数重载接不住泛型 setup。
- * 实现用对象形 `defineComponent`，导出时断言成这个 constructor，调用方才能带实体泛型使用。
- */
-export type CrudHomePageConstructor = new <
-  TBody extends BasicIdMetadata<TId>,
-  TEntity extends TBody = TBody,
-  TId = TEntity[typeof SYSTEM_CONSTANT.ID_NAME],
->(
-  props: CrudHomePageProps<TId, TBody, TEntity> & PublicProps,
-) => {
-  $props: CrudHomePageProps<TId, TBody, TEntity> & PublicProps
-  $slots: CrudHomePageSlots<TEntity>
-} & CrudHomePageExpose<TEntity>
-
-export interface CrudCardGridPageProps<
-  TId = string | number,
-  TBody extends BasicIdMetadata<TId> = BasicIdMetadata<TId>,
-  TEntity extends TBody = TBody,
-> {
-  page: CrudCardGridDefinition<TBody, TEntity, TId>
-  /** 宿主形态名（同 `CrudHomePageProps.variant`） */
-  variant?: string
-  /** 宿主数据，透传给声明里的 `visible` / `recordActions`（见 `PageDeclContext.extra`） */
-  extra?: Record<string, unknown>
-  /** 卡片头标题（与 `CrudCardGrid.title` 同形）：`false` = 不渲染卡片头 */
-  title?: VNode | boolean
-  /**
-   * 预置查询条件（与 `CrudCardGrid.query` 同形）：同一份声明给多个实例时靠它区分
-   * —— 如"每种类型一个 tab，每个 tab 一个卡片网格"（carousel 就是这么用的）。
-   */
-  query?: QueryCardGridProps['query']
-  /** 内嵌形态（透传给基类）：不要卡片壳 */
-  plain?: boolean
-}
-
-/**
- * 卡片网格页壳暴露给宿主的能力。
- *
- * ⚠️ 与 `CrudHomePageExpose` 一样：**都是"值"不是 ref**（Vue 会 `proxyRefs` 解包）。
- */
-export interface CrudCardGridPageExpose<TEntity> {
-  fetchDataSource: () => Promise<void | undefined> | undefined
-  clearDataSource: () => void
-  dataSource: TEntity[]
-  /**
-   * 声明里 `list.enums` 加载回来的枚举桶。
-   *
-   * ⚠️ **与表格页的来源不同**：表格那半由基类经 `CrudTable` 拉、再 `update:buckets` 回传；
-   * 卡片网格不上报桶（`CrudCardGrid` 没有这个 emit）⇒ 这份是**门面自己拉的**（见
-   * `CrudCardGridPage` 的注释）⇒ 壳直接读它，**不要另发一次同样的请求**。
-   */
-  buckets: EnumBucketsResponseBody
-  /** 同上：声明里 `list.dictionaryCodes` 加载回来的那份字典 */
-  dictionaries: PageDictionaries
-}
-
-export interface CrudCardGridPageSlots<TEntity extends object> {
-  title?: () => unknown
-  extra?: () => unknown
-  empty?: () => unknown
-  /**
-   * 卡片本体。
-   *
-   * ⚠️ 给了它，网格内置那张卡（含**动作行与拖拽柄**）就不会再渲染 ⇒ 这两样要自己画：
-   * `itemActions` / `dragEnabled` / `onDragStart` / `onDragEnd` 都在插槽参数里给好了
-   * （见 `QueryCardGrid` 的 `defaultItem` 与 `slots.itemActions` 分支）。
-   */
-  item?: (slot: QueryCardGridItemSlot<TEntity>) => unknown
-  /** 只想换动作行时用它（没给 `#item` 时 = 内置卡片 + 你的动作行） */
-  itemActions?: (slot: QueryCardGridItemActionsSlot<TEntity>) => unknown
-}
-
-export type CrudCardGridPageConstructor = new <
-  TBody extends BasicIdMetadata<TId>,
-  TEntity extends TBody = TBody,
-  TId = TEntity[typeof SYSTEM_CONSTANT.ID_NAME],
->(
-  props: CrudCardGridPageProps<TId, TBody, TEntity> & PublicProps,
-) => {
-  $props: CrudCardGridPageProps<TId, TBody, TEntity> & PublicProps
-  $slots: CrudCardGridPageSlots<TEntity>
-} & CrudCardGridPageExpose<TEntity>
-
-/**
- * 表单壳要的服务：**取数 + 保存**。
- *
- * `CrudPageCore.service` 只保证"读得到数据"（表格形态共用，只读服务也能用）⇒ 表单壳按**事实**窄化：
- * 用这个类型收 props，别去污染 `CrudPageCore`。声明层给的服务满足它（`BasicCrudService`）时
- * 零成本；不满足也没关系 —— 报错点会落在"哪里用了 save"上。
- */
-export type FormService<
-  TBody extends BasicIdMetadata<TId>,
-  TEntity extends TBody,
-  TId = TEntity[typeof SYSTEM_CONSTANT.ID_NAME],
-> = CollectionService<TBody, TEntity, ScrollPageResult<TEntity>, TId> & {
-  save: (body: TBody) => Promise<RestResult<TId>>
-}
-
-export interface CrudFormPageProps<
-  TId = string | number,
-  TBody extends BasicIdMetadata<TId> = BasicIdMetadata<TId>,
-  TEntity extends TBody = TBody,
-> {
-  page: CrudFormDefinition<TBody, TEntity, TId>
-  /**
-   * 要编辑的记录主键；不传 = 新增。
-   *
-   * **pro 不认路由**：宿主页壳自己从 `route.query` 里取出来传进来（旧 `BasicForm` 是直接读
-   * `$route.query.id` 的，那属于宿主环境）。
-   */
-  id?: TId
-  /**
-   * 壳交给声明里钩子 / 字段函数的宿主数据（子表 ref、查询条件等声明管不到的东西）——
-   * 就是 `PageDeclContext.extra` 与 `PageFieldRenderContext.extra` 那一份。
-   */
-  contextExtra?: Record<string, unknown>
-  /** 宿主形态名：宿主自己起名（如 `'picker'`）；不传 = 宿主没给形态名（整页） */
-  variant?: string
-  /**
-   * 按钮区对齐：`start`（默认 = 现状）/ `center` / `end`。**值就是 antd `Flex` 的 `justify` 语义**。
-   *
-   * 页面形态不传即保持现状（左对齐）；**弹层形态（`CrudFormModal`）传 `end`** —— 旧的
-   * `ModalForm` 把「保存 / 重置」放在 `a-modal` 的 footer（右下角），弹层里没有 footer 栏，
-   * 就靠这个把**同一套按钮**贴到右下 ⇒ 不为弹层另写一套按钮（2026-09-30 用户定的口径）。
-   */
-  buttonAlign?: 'start' | 'center' | 'end'
-  /**
-   * 卡片头标题（透传 `DataLoadingCard.title`）：**`false` = 不渲染卡片头**。
-   * 弹层壳（`CrudFormModal`）传 `false` —— 标题归弹层自己（与 `CrudHomePageProps.title` 同形）。
-   */
-  title?: VNode | boolean
-  /**
-   * **内嵌形态**（透传 `DataLoadingCard.plain`）：不要卡片壳（弹层里不该再套一张卡）。
-   *
-   * 与列表那份的差别：列表内嵌时**连 `Spin` 一起关**（`BasicCrudQuery` 传 `spin: false` —— 表格
-   * 自带 `loading`），表单没有"自带 loading"的内容 ⇒ 这里**保留 `Spin`**（取数 / 提交仍要转圈）。
-   */
-  plain?: boolean
-}
-
-/**
- * 表单页壳暴露给宿主的能力。
- *
- * ⚠️ 同 `CrudHomePageExpose`：**一律是"值"不是 ref**（Vue 对 `expose` 出来的 ref 自动解包）。
- * 标题不在这里：怎么写标题是宿主的事（见 `PageFormDefinition` 的说明）。
- */
-export interface CrudFormPageExpose<TBody> {
-  /**
-   * 本页**已经加载好**的枚举桶 / 数据字典 —— 与 `CrudHomePageExpose.buckets` 同一口径：
-   * 声明已经拉了，**别在壳里再发一次同样的请求**（壳的插槽逃生读它）。
-   */
-  buckets: EnumBucketsResponseBody
-  dictionaries: PageDictionaries
-  /** 当前表单实体：宿主做标题、陈旧判断、子表联动时读它（写值走声明钩子） */
-  entity: TBody
-  /**
-   * 程序化重置：**与壳上"重置"按钮同一条路径**（antd `resetFields()` + 声明的 `onReset` + `emit('resetFields')`）。
-   *
-   * ⚠️ 它清的是**表单字段**：`createEntity` 里那些**不是 `FormItem`** 的键（典型是 `id`、`version`）
-   * 不会被清掉 ⇒ 保存成功后想"再来一条"**别用它**（会拿旧 `id` 变成 update），换 `:key` 重挂壳
-   * （宿主 `useFormSuccessBack` 就是那么做的）。
-   */
-  resetFields: () => void
-}
-
-export interface CrudFormPageSlots<TBody extends object> {
-  /**
-   * 字段行之后、按钮之前（放操作轨迹块、子表这类宿主内容）。
-   *
-   * 作用域 = 当前实体 + `extra` + **本页已经加载好的来源**（`buckets` / `dictionaries`，与字段级
-   * `PageFieldRenderContext`、`CrudFormPageExpose` 是**同一份**结果）⇒ 逃生块要喂枚举 / 字典下拉时
-   * **直接从这儿取**：既不用在壳里另发一次请求，也不用让声明导出模块级 ref 去"中转"
-   * （声明只管"来源清单"：`enums` / `dictionaryCodes`）。
-   */
-  default?: (arg: {
-    entity: TBody
-    extra: Record<string, unknown>
-    buckets: EnumBucketsResponseBody
-    dictionaries: PageDictionaries
-  }) => unknown
-  /**
-   * 按钮区：**给了就整排用你的**（不给就是壳自己的「保存 / 重置」）。
-   *
-   * 参数里带着壳那两颗按钮的 VNode 与当前 `loading`（照 `a-modal` 的 `footer: ({extra}) => …`
-   * 那个路子）：想留哪颗就把哪颗放回去 —— 它的提交 / 重置 / loading 逻辑照旧，只是位置由你定。
-   * 例：只要「重置」、把「保存」换成自己的「发送」：
-   * `({resetButton, loading}) => [h(发送, {loading, htmlType: 'submit'}), resetButton]`
-   */
-  buttons?: (arg: {
-    entity: TBody
-    extra: Record<string, unknown>
-    loading: boolean
-    /**
-     * 壳那两颗按钮 —— 给的是**渲染函数**（不是 VNode）：模板里 `<component :is="resetButton" />`
-     * 就能直接放，不用再包一层；`h` / tsx 那边写 `h(resetButton)`。
-     * 它们的提交 / 重置 / loading 逻辑照旧，只有"放哪、留不留"由你定。
-     */
-    submitButton: () => VNodeChild
-    resetButton: () => VNodeChild
-  }) => unknown
-}
-
-export type CrudFormPageConstructor = new <
-  TBody extends BasicIdMetadata<TId>,
-  TEntity extends TBody = TBody,
-  TId = TEntity[typeof SYSTEM_CONSTANT.ID_NAME],
->(
-  props: CrudFormPageProps<TId, TBody, TEntity> & PublicProps,
-) => {
-  $props: CrudFormPageProps<TId, TBody, TEntity> & PublicProps
-  $slots: CrudFormPageSlots<TBody>
-} & CrudFormPageExpose<TBody>
-
-/**
- * 弹层表单壳（`CrudFormModal`）的 props = **表单壳的全套** + 弹层的两样。
- *
- * ⚠️ **这里没有"新形态"**：弹层吃的就是 `CrudFormDefinition`（`defineFormPage` 的产物）
- * ⇒ 同一份 `.form.page.ts` 既能给路由 Form 页用、也能给弹层用。所以本类型的两个别名
- * （`CrudFormModalSlots` / `CrudFormModalExpose`）直接等于表单壳那两个。
- *
- * 弹层壳只负责四件事：开关（`v-model:open`）、标题、`:footer="null"` + `mask={{closable: false}}`
- * （与旧 `ModalForm` 一致）、关闭时 `emit('cancel')`；**取数 / 提交 / 按钮 / 操作记录块全归表单壳**。
- */
-export interface CrudFormModalProps<
-  TId = string | number,
-  TBody extends BasicIdMetadata<TId> = BasicIdMetadata<TId>,
-  TEntity extends TBody = TBody,
-> extends Omit<CrudFormPageProps<TId, TBody, TEntity>, 'title'> {
-  /**
-   * 开关（`v-model:open`）。**弹层控件常挂、内容 `v-if` 重挂载**：每次打开都是全新的表单实例
-   * ⇒ `onMounted` 里 `load()` 自然重跑、实体从 `createEntity()` 重新来（等价旧壳
-   * `watch(open) → mounted()`）⇒ 关掉再开不会有上一次的脏数据，**宿主不必复位实体**。
-   */
-  open?: boolean
-  /**
-   * 弹层标题（同 `a-modal`；`false` / 不给 = **连标题栏一起不出**）。标题是宿主的策略，pro 不拼。
-   *
-   * ⚠️ 比 `CrudFormPageProps.title` 宽：收 `VNodeChild` —— 弹层标题常是 i18n 出来的**字符串**
-   * （旧 `ModalForm` 的 `:title` 就是字符串），所以这里 `Omit` 掉表单壳那个再声明一次。
-   */
-  title?: VNodeChild
-  /**
-   * 弹层宽度（透传 `a-modal` 的 `width`）。**默认 520**（= antd 自己的默认值，写在这儿是为了
-   * "弹层壳有一份自己的口径"，宿主不用去记 antd 的默认）；要改就传 `:width`（数字 = px）。
-   */
-  width?: string | number
-}
-
-/** 槽与表单壳**同一套**（`default` / `buttons` 原样转发给内层表单壳） */
-export type CrudFormModalSlots<TBody extends object> = CrudFormPageSlots<TBody>
-
-/** expose 与表单壳**同一套**（转发内层表单壳的 `entity` / `buckets` / `dictionaries` / `resetFields`） */
-export type CrudFormModalExpose<TBody> = CrudFormPageExpose<TBody>
-
-export type CrudFormModalConstructor = new <
-  TId = string | number,
-  TBody extends BasicIdMetadata<TId> = BasicIdMetadata<TId>,
-  TEntity extends TBody = TBody,
->(
-  props: CrudFormModalProps<TId, TBody, TEntity> & PublicProps,
-) => {
-  $props: CrudFormModalProps<TId, TBody, TEntity> & PublicProps
-  $slots: CrudFormModalSlots<TBody>
-} & CrudFormModalExpose<TBody>
-
-export interface CrudDetailPageProps<
-  TId = string | number,
-  TBody extends BasicIdMetadata<TId> = BasicIdMetadata<TId>,
-  TEntity extends TBody = TBody,
-> {
-  page: CrudDetailDefinition<TBody, TEntity, TId>
-  /** 要看的主键；不传就不取数（`pro` 不认路由，宿主页壳从 `route.query` 取出来传进来） */
-  id?: TId
-  /** 交给声明里钩子的宿主数据（附表 ref、查询条件…），同 `CrudFormPageProps.contextExtra` */
-  contextExtra?: Record<string, unknown>
-  /** 宿主形态名：宿主自己起名（如 `'picker'`）；不传 = 宿主没给形态名（整页） */
-  variant?: string
-}
-
-/** 详情页壳暴露给宿主的能力（`expose` 出来的都是"值"，见 `CrudHomePageExpose` 的说明） */
-export interface CrudDetailPageExpose<TEntity> {
-  /** 当前实体：宿主做标题、附表联动时读它 */
-  entity: TEntity
-  /**
-   * 本页**已经加载好**的枚举桶 / 数据字典（**只有在 `detail.enums` / `detail.dictionaryCodes`
-   * 里声明过的才有值**）—— 与 `CrudFormPageExpose.buckets` 同一口径：声明已经拉了，
-   * **别在壳里再发一次同样的请求**（壳的插槽逃生读它）。
-   */
-  buckets: EnumBucketsResponseBody
-  dictionaries: PageDictionaries
-}
-
-export interface CrudDetailPageSlots<TEntity extends object> {
-  /** `a-descriptions` 的右侧操作区 */
-  extra?: () => unknown
-  /**
-   * 描述列表之后（附表、资源树这类宿主内容）。
-   *
-   * 作用域 = 实体 + `extra` + **本页已经加载好的来源**（`buckets` / `dictionaries`，只有
-   * `detail.enums` / `detail.dictionaryCodes` 声明过的才有值）—— 与表单壳 `#default` 槽同一口径。
-   */
-  afterDescriptions?: (arg: {
-    entity: TEntity
-    extra: Record<string, unknown>
-    buckets: EnumBucketsResponseBody
-    dictionaries: PageDictionaries
-  }) => unknown
-  /** 操作轨迹块之后（宿主壳放"操作轨迹表"那类内容的位置之一） */
-  afterOperationDataTrace?: () => unknown
-}
-
-export type CrudDetailPageConstructor = new <
-  TBody extends BasicIdMetadata<TId>,
-  TEntity extends TBody = TBody,
-  TId = TEntity[typeof SYSTEM_CONSTANT.ID_NAME],
->(
-  props: CrudDetailPageProps<TId, TBody, TEntity> & PublicProps,
-) => {
-  $props: CrudDetailPageProps<TId, TBody, TEntity> & PublicProps
-  $slots: CrudDetailPageSlots<TEntity>
-} & CrudDetailPageExpose<TEntity>
-
-// #endregion
+export type * from './pageTypes'

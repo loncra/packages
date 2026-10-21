@@ -19,22 +19,6 @@ import type {
     PageDeclContext,
 } from '../types'
 
-/**
- * 卡片网格页渲染器：把 `page.cardGrid` 的声明翻成 `CrudCardGrid` 的 props。
- *
- * 与 `CrudHomePage` **同一条纪律**（不认路由、不认 i18n、不认弹层；跳转交给 `page.onNavigate` /
- * `CrudConfig.onNavigate`；文案交给 `page.i18nResolver`），差别只有三点：
- *
- * 1. 渲染的是**卡片网格门面**（`CrudCardGrid`）而不是表格；
- * 2. 卡片外观由宿主的 `#item` 插槽画 —— 给了 `#item` 之后，网格内置那张卡（含**动作行与拖拽柄**）
- *    就不会再渲染（见 `QueryCardGrid` 的 `defaultItem` 分支）⇒ 这两样要由 `#item` 自己画，
- *    `itemActions` / `dragEnabled` / `onDragStart` / `onDragEnd` 都在插槽参数里给好了；
- * 3. **来源（枚举桶 / 数据字典）自己拉**：表格那半是基类经 `CrudTable` 拉完再 `update:buckets`
- *    回传的，而 `CrudCardGrid` 不上报桶（`QueryCardGrid` 里连 `buckets` 都没有）⇒ 这里照
- *    `CrudFormPage` 的做法自己拉，并 `expose` 出去给壳用（壳里的 tab / 弹层要用同一份，
- *    别在壳里再发一次同样的请求）。卡片没有"列"，所以来源只能靠声明**显式**给
- *    （`list.enums` / `list.dictionaryCodes`），不做列推导。
- */
 const CrudCardGridPage = defineComponent({
   name: 'LCrudCardGridPage',
   inheritAttrs: false,
@@ -42,11 +26,8 @@ const CrudCardGridPage = defineComponent({
     page: {type: Object as PropType<CrudCardGridPageProps['page']>, required: true},
     variant: String,
     extra: {type: Object as PropType<Record<string, unknown>>, default: () => ({})},
-    /** `false` = 不渲染卡片头；`default: undefined` 不能删（同 `CrudHomePage.title` 那个坑） */
     title: {type: [Object, Boolean] as PropType<CrudCardGridPageProps['title']>, default: undefined},
-    /** 预置查询条件：同一个声明给多个实例（如"每种 type 一个 tab"）时靠它区分 */
     query: {type: Object as PropType<CrudCardGridPageProps['query']>, default: undefined},
-    /** 内嵌形态：透传给基类（不要卡片壳） */
     plain: {type: Boolean, default: false},
   },
   slots: Object as SlotsType<CrudCardGridPageSlots<DefaultCrudEntity>>,
@@ -54,12 +35,10 @@ const CrudCardGridPage = defineComponent({
     const config = useCrudConfig()
     const {message, modal} = App.useApp()
     const gridRef = ref<CollectionExpose<DefaultCrudEntity>>()
-    /** 当前数据（`v-model:data-source` 回流的那份；`clearDataSource` 清它） */
     const dataSource = ref([]) as Ref<DefaultCrudEntity[]>
     const buckets = ref<EnumBucketsResponseBody>({})
     const dictionaries = ref<PageDictionaries>({})
 
-    /** 门面自己持有的"集合能力"：与动作上下文里的 `app.collection` 是同一个东西 */
     const collection: CollectionExpose<DefaultCrudEntity> = {
       fetchDataSource: async () => gridRef.value?.fetchDataSource(),
       remove: (records) => gridRef.value?.remove(records),
@@ -85,10 +64,6 @@ const CrudCardGridPage = defineComponent({
       return typeof declared === 'function' ? declared(ctx.value) : declared ?? []
     })
 
-    /**
-     * 跳转：与 `CrudHomePage` 一字不差 —— 页面声明给了 `onNavigate` 就用它（`record` 是精确实体），
-     * 否则落到 app 级兜底；都没有就什么都不做（内嵌列表安全）。
-     */
     function go(kind: CrudNavigateKind, record?: DefaultCrudEntity): void {
       const target = {kind, name: props.page.routes?.[kind], record, variant: props.variant}
       if (props.page.onNavigate) {
@@ -103,7 +78,6 @@ const CrudCardGridPage = defineComponent({
       clearDataSource: () => {
         dataSource.value = []
       },
-      // 同 `CrudHomePage`：expose 出去的一律是"值"（Vue 会解包 ref），用 getter 读 ref 保响应式
       get dataSource() {
         return dataSource.value
       },
@@ -133,16 +107,12 @@ const CrudCardGridPage = defineComponent({
           onUpdate:dataSource={(value: DefaultCrudEntity[]) => {
             dataSource.value = value
           }}
-          // 拖拽落库归**声明**（`list.onDrop`）：门面只做转发，pro 不替业务落库
           onDrop={(sorts, target, fromIndex, toIndex) =>
             props.page.cardGrid?.onDrop?.({sorts, target, fromIndex, toIndex}, app)
           }
           onAdd={() => go('add')}
           onEdit={(record: DefaultCrudEntity) => go('edit', record)}
           onDetail={(record: DefaultCrudEntity) => go('detail', record)}
-          // `$attrs` **排在最后**（与 `CrudHomePage` 的 `tableAttrs` 同一用意）：门面只认声明，
-          // 其余原名透传（`:grid-columns` / `:selectable` / `:row-selection` / `:pagination` …）；
-          // 宿主真传了同名项（如 `:toolbar-actions` / `:drag`）就是**接管**声明里的那份。
           {...(attrs as Record<string, unknown>)}
           v-slots={{
             title: slots.title ? () => slots.title?.() : undefined,

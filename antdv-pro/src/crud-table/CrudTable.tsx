@@ -7,13 +7,15 @@ import {DEFAULT_COLLECTION_PAGINATION, type DefaultCrudEntity,} from '../_util/c
 import QueryTable from '../query-table/QueryTable'
 import type {EnumBucketsResponseBody} from '@loncra/client/resource'
 import type {PageDictionaries, RefreshOnActivate} from '../basic-crud-query'
-import type {QueryTableProps, QueryTableSlots, SearchableColumnType} from '../query-table/types'
+import type {
+  QueryTableBodyCellArgs,
+  QueryTableExpandedRowArgs,
+  QueryTableProps,
+  QueryTableSlots,
+  SearchableColumnType,
+} from '../query-table/types'
 import type {CrudTableConstructor} from './types'
 
-/**
- * CRUD 表格门面：**只把宿主给的东西原样转给 `QueryTable`**（它再交给 `BasicCrudQuery` 基类）。
- * 不造名字、不做合成 —— `toolbarActions` / `recordActions` 与内容层同名同形。
- */
 const CrudTable = defineComponent({
   name: 'LCrudTable',
   inheritAttrs: false,
@@ -26,43 +28,23 @@ const CrudTable = defineComponent({
       default: true,
     },
     bordered: {type: Boolean, default: true},
-    /** 内嵌形态：不要卡片壳（透传给基类，标题落到表格自带标题） */
     plain: {type: Boolean, default: false},
-    /** 自定义取数：给了就不再走 `service.find`（与内容层同名透传，见 `CollectionFetch`） */
     fetch: {type: Function as PropType<QueryTableProps['fetch']>, default: undefined},
-    /**
-     * 卡片头，与 `DataLoadingCard` 同形：`VNode` 直接用、`false` 不要卡片头、不给走默认标题。
-     *
-     * ⚠️ **`default: undefined` 不能删**：类型里带了 `Boolean`，父级"不传"时 Vue 的布尔转换会把
-     * 它变成 `false`（Vue 的既定行为，不是 bug）—— 那就等于"不要卡片头"：默认标题不出现，
-     * 工具栏也会整排消失（见 `BasicCrudQuery` 的 `extra`）。
-     */
     title: {type: [Object, Boolean] as PropType<QueryTableProps['title']>, default: undefined},
     hasPermission: Function as PropType<(permission: string) => boolean>,
     authority: Object as PropType<AuthorityProps>,
-    /**
-     * 标题右侧的工具栏动作：与内容层同名透传（数组 = 与默认 `add` / `deleteSelected` 合并；
-     * `false` = 整排不出）。
-     *
-     * ⚠️ **`default: undefined` 不能删**（与 `title` 同一个坑）：类型里带 `Boolean` 时"不传"会被
-     * Vue 转成 `false`，那语义就成了"整排不出"。
-     */
     toolbarActions: {
       type: [Array, Boolean] as PropType<QueryTableProps['toolbarActions']>,
       default: undefined,
     },
-    /** 行内动作：与内容层同名透传（数组 = 与默认 `edit`/`detail`/`delete` 合并；`false` = 不要行内动作、操作列也不补） */
     recordActions: {
       type: [Array, Boolean] as PropType<QueryTableProps['recordActions']>,
       default: undefined,
     },
-    /** 系统字典：要加载什么（声明侧 `list.enums` / `list.dictionaryCodes`）—— 原样交给基类 */
     enums: Array as PropType<QueryTableProps['enums']>,
     dictionaryCodes: Array as PropType<QueryTableProps['dictionaryCodes']>,
-    /** 字典加载结果（基类 `v-model` 回来） */
     buckets: {type: Object as PropType<QueryTableProps['buckets']>, default: () => ({})},
     dictionaries: {type: Object as PropType<QueryTableProps['dictionaries']>, default: () => ({})},
-    /** 拖拽开关 + 幽灵内容：`true` = 可拖（幽灵缺省主键）；`(record) => 内容` = 可拖且它就是幽灵 */
     drag: [Boolean, Function] as PropType<QueryTableProps['drag']>,
     onRow: Function as PropType<TableProps['onRow']>,
     rowKey: [String, Function] as PropType<TableProps['rowKey']>,
@@ -145,7 +127,7 @@ const CrudTable = defineComponent({
         onUpdate:loading={(value: boolean) => emit('update:loading', value)}
         onUpdate:query={(value: FilterRequest | PageRequest) => emit('update:query', value)}
         onUpdate:selectedRows={(value: DefaultCrudEntity[]) => emit('update:selectedRows', value)}
-        onUpdate:pagination={(value: unknown) => emit('update:pagination', value)}
+        onUpdate:pagination={(value: TableProps['pagination']) => emit('update:pagination', value)}
         onUpdate:buckets={(value: EnumBucketsResponseBody) => emit('update:buckets', value)}
         onUpdate:dictionaries={(value: PageDictionaries) => emit('update:dictionaries', value)}
         onAction={(payload) => emit('action', payload)}
@@ -157,22 +139,12 @@ const CrudTable = defineComponent({
         onTreeDrop={(sorts, drag, target, payload) => emit('treeDrop', sorts, drag, target, payload)}
         v-slots={{
           title: slots.title ? () => slots.title?.() : undefined,
+          extra: slots.extra ? () => slots.extra?.() : undefined,
           expandedRowRender: slots.expandedRowRender
-            ? (args: {record: DefaultCrudEntity; index: number; indent: number; expanded: boolean}) =>
-                slots.expandedRowRender?.(args)
+            ? (args: QueryTableExpandedRowArgs) => slots.expandedRowRender?.(args)
             : undefined,
           bodyCell: slots.bodyCell
-            ? ({
-                text,
-                record,
-                index,
-                column,
-              }: {
-                text: unknown
-                record: DefaultCrudEntity
-                index: number
-                column: SearchableColumnType<DefaultCrudEntity>
-              }) => slots.bodyCell?.({text, record, index, column})
+            ? (args: QueryTableBodyCellArgs) => slots.bodyCell?.(args)
             : undefined,
         }}
       />

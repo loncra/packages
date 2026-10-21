@@ -4,13 +4,13 @@ import type {FilterRequest, PageRequest} from '@loncra/client/commons'
 import QueryCardGrid from '../query-card-grid/QueryCardGrid'
 import type {AuthorityProps} from '../_util/crud/actions'
 import type {CollectionExpose} from '../_util/crud/collectionExpose'
-import type {DefaultCrudEntity} from '../_util/crud/useCollectionData'
+import {DEFAULT_COLLECTION_PAGINATION, type DefaultCrudEntity,} from '../_util/crud/useCollectionData'
 import type {RefreshOnActivate} from '../basic-crud-query/types'
 import type {
-  QueryCardGridItemActionsSlot,
-  QueryCardGridItemSlot,
-  QueryCardGridProps,
-  QueryCardGridSlots,
+    QueryCardGridItemActionsSlot,
+    QueryCardGridItemSlot,
+    QueryCardGridProps,
+    QueryCardGridSlots,
 } from '../query-card-grid/types'
 import type {CrudCardGridConstructor} from './types'
 
@@ -35,13 +35,15 @@ const CrudCardGrid = defineComponent({
       type: [Array, Boolean] as PropType<QueryCardGridProps['recordActions']>,
       default: undefined,
     },
+    plain: {type: Boolean, default: false},
+    fetch: {type: Function as PropType<QueryCardGridProps['fetch']>, default: undefined},
     drag: [Boolean, Function, Object] as PropType<QueryCardGridProps['drag']>,
     gridColumns: {type: Number, default: 5},
     selectable: {type: Boolean, default: true},
     rowKey: [String, Function] as PropType<QueryCardGridProps['rowKey']>,
     pagination: {
       type: [Object, Boolean] as PropType<TableProps['pagination']>,
-      default: () => ({hideOnSinglePage: true}),
+      default: () => ({...DEFAULT_COLLECTION_PAGINATION}),
     },
     prefixCls: String,
     rootClass: String,
@@ -73,7 +75,7 @@ const CrudCardGrid = defineComponent({
     const grid = ref<CollectionExpose<DefaultCrudEntity>>()
 
     expose<CollectionExpose<DefaultCrudEntity>>({
-      fetchDataSource: async () => grid.value?.fetchDataSource(),
+      fetchDataSource: () => grid.value?.fetchDataSource() ?? Promise.resolve(),
       remove: (records) => grid.value?.remove(records),
     })
 
@@ -89,6 +91,8 @@ const CrudCardGrid = defineComponent({
         authority={props.authority}
         toolbarActions={props.toolbarActions}
         recordActions={props.recordActions}
+        plain={props.plain}
+        fetch={props.fetch}
         drag={props.drag}
         gridColumns={props.gridColumns}
         selectable={props.selectable}

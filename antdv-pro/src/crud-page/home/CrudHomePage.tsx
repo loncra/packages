@@ -5,7 +5,7 @@ import type {CrudNavigateKind} from '../../_util/crud/navigate'
 import CrudTable from '../../crud-table/CrudTable'
 import type {CollectionExpose} from '../../_util/crud/collectionExpose'
 import type {DefaultCrudEntity} from '../../_util/crud/useCollectionData'
-import type {SearchableColumnType} from '../../query-table/types'
+import type {QueryTableBodyCellArgs, QueryTableExpandedRowArgs,} from '../../query-table/types'
 import {usePageRegistry} from '../registry'
 import {buildTableColumns, renderCell, toCellVNode} from './columns'
 import {collectTableSources, mergeSources} from '../../_util/crud/sources.ts'
@@ -19,16 +19,6 @@ import type {
   PageTableEntry,
 } from '../types'
 
-/**
- * 表格页渲染器：把 `page.table` 的声明翻成 `CrudTable` 的 props。
- *
- * 它只做"声明 → pro 既有 props"的映射：不认路由、不认 i18n、不认弹层。
- * 跳转交给 `page.onNavigate`（页面自己实现）或 `CrudConfig.onNavigate`（app 级兜底），
- * 文案交给 `page.i18nResolver`，枚举桶自己加载（client 直连）。
- *
- * 逃生：`$attrs` 直通 `CrudTable`（hide-title / record-actions / query / row-selection / scroll …）；
- * 页面插槽 `#title` / `#bodyCell` / `#expandedRowRender` 优先。
- */
 const CrudHomePage = defineComponent({
   name: 'LCrudHomePage',
   inheritAttrs: false,
@@ -36,49 +26,27 @@ const CrudHomePage = defineComponent({
     page: {type: Object as PropType<CrudHomePageProps['page']>, required: true},
     variant: String,
     extra: {type: Object as PropType<Record<string, unknown>>, default: () => ({})},
-    /** `false` = 不渲染表格标题（嵌入用的表）；`default: undefined` 不能删，同 `CrudTable.title` 的坑 */
     title: {type: [Object, Boolean] as PropType<CrudHomePageProps['title']>, default: undefined},
-    /** 预置查询条件（嵌入表用：操作记录块就是靠它按实体过滤） */
     query: {type: Object as PropType<CrudHomePageProps['query']>, default: undefined},
-    /** 内嵌形态：不要卡片壳（嵌在表单 / 详情 / 展开行里的表格用） */
     plain: {type: Boolean, default: false},
   },
   slots: Object as SlotsType<CrudHomePageSlots<DefaultCrudEntity>>,
   setup(props, {attrs, expose, slots}) {
     const config = useCrudConfig()
     const tableRef = ref<CollectionExpose<DefaultCrudEntity>>()
-    /**
-     * 宿主拿它按新的查询条件重刷（如 role 表单里的资源选择器跟着 sources 变）；
-     * `clearDataSource` 用于"条件不成立时干脆不查、留空"。
-     */
     const dataSource = ref([]) as Ref<DefaultCrudEntity[]>
 
-    /**
-     * 系统字典（枚举桶 + 数据字典）由 `CrudTable` → 基类在挂载时统一拉：
-     * 这里只把声明里的 id/code 交下去，结果 `v-model` 回来喂给建列 / 单元格。
-     */
     const buckets = ref<EnumBucketsResponseBody>({})
     const dictionaries = ref<PageDictionaries>({})
-    /** 字段组件表 + 值格式表（内置 + 宿主 CrudConfig 覆盖） */
     const registry = usePageRegistry()
 
     const ctx = computed<PageDeclContext>(() => ({variant: props.variant, extra: props.extra}))
 
-    /**
-     * i18n key → 文案。三级兜底，谁都没有才原样返回 key（可见、可调试，不静默变空）：
-     * 页面声明的 `i18nResolver` > `CrudConfig.i18nResolver`（app 级默认 i18n）> key 本身。
-     * 列自己写了 `title` 的话，连这里都不走（见 `buildTableColumns`）。
-     */
     const t = (key: string) =>
       props.page.i18nResolver?.(key) ?? config.value.i18nResolver?.(key) ?? key
 
     const columnDefs = computed<PageTableEntry<DefaultCrudEntity>[]>(() => props.page.table?.columns ?? [])
 
-    /**
-     * 要预载的来源（枚举桶 + 数据字典）：**从字段字典 + 列上的搜索项推导**
-     * （来源在 `fields` 里写一处就够了）；页面显式写的 `list.enums` / `list.dictionaryCodes`
-     * 只作逃生口合并进来（如 `enterprise-invitation` 的壳要从 `buckets` 取选项）。
-     */
     const sources = computed(() =>
       mergeSources(collectTableSources(columnDefs.value, props.page.fields ?? {}), props.page.table),
     )
@@ -101,10 +69,6 @@ const CrudHomePage = defineComponent({
       return typeof declared === 'function' ? declared(ctx.value) : declared ?? []
     })
 
-    /**
-     * 跳转：页面声明给了 `onNavigate` 就用它（`record` 是精确实体），否则落到 app 级兜底；
-     * 都没有就什么都不做 —— 内嵌列表（宿主给了形态名）安全。
-     */
     function go(kind: CrudNavigateKind, record?: DefaultCrudEntity): void {
       const target = {kind, name: props.page.routes?.[kind], record, variant: props.variant}
       if (props.page.onNavigate) {
@@ -114,11 +78,6 @@ const CrudHomePage = defineComponent({
       config.value.onNavigate?.(target)
     }
 
-    /**
-     * 单元格内容，统一收敛成 VNode 交给表格：
-     * 声明里认领的列（`render` / `format`）用 `renderCell` 的结果，不认领的用表格给的 `text`
-     * （它可能是渲染好的 VNode，见 `toCellVNode` 的注释）。
-     */
     function cellContent(slotProps: {
       column?: {key?: unknown}
       text: unknown
@@ -141,7 +100,6 @@ const CrudHomePage = defineComponent({
       clearDataSource: () => {
         dataSource.value = []
       },
-      // 同 `BasicCrudQuery`：expose 出去的一律是"值"（Vue 会解包 ref），用 getter 读 ref 保响应式
       get dataSource() {
         return dataSource.value
       },
@@ -150,11 +108,6 @@ const CrudHomePage = defineComponent({
       },
     })
 
-    /**
-     * 转给表格的透传属性：`scroll` **缺省 `{x: 'max-content'}`** —— 列表几乎都要横向铺开，
-     * 没必要让每个页面壳（`*.home.page.ts` 的壳）都写一遍；宿主自己传了 `scroll` 就用宿主的
-     * （`...attrs` 在后，天然覆盖默认）。有特殊需求（如再加 `y`）就自己传。
-     */
     const tableAttrs = computed(() => ({scroll: {x: 'max-content'}, ...attrs}))
 
     return () => {
@@ -191,20 +144,12 @@ const CrudHomePage = defineComponent({
           onDetail={(record: DefaultCrudEntity) => go('detail', record)}
           v-slots={{
             title: slots.title ? () => slots.title?.() : undefined,
-            bodyCell: (slotProps: {
-              text: unknown
-              record: DefaultCrudEntity
-              index: number
-              column: SearchableColumnType<DefaultCrudEntity>
-            }) => (slots.bodyCell ? slots.bodyCell(slotProps) : cellContent(slotProps)),
+            bodyCell: (slotProps: QueryTableBodyCellArgs) =>
+              slots.bodyCell ? slots.bodyCell(slotProps) : cellContent(slotProps),
             expandedRowRender: slots.expandedRowRender
-              ? (args: {record: DefaultCrudEntity; index: number; indent: number; expanded: boolean}) =>
-                  slots.expandedRowRender?.(args)
+              ? (args: QueryTableExpandedRowArgs) => slots.expandedRowRender?.(args)
               : undefined,
           }}
-          // `$attrs` 直通（宿主的 `:record-actions` / `:drag` / `:query` … 从这里转给 CrudTable），
-          // 其中 `scroll` 上面给了 `{x: 'max-content'}` 的默认值。
-          // add / edit / detail 的默认语义是"跳转"（见上面的 `go()`）；宿主真在组件上绑同名事件，就是接管跳转。
           {...tableAttrs.value}
         />
       )

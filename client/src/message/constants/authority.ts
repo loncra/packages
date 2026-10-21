@@ -1,7 +1,7 @@
 export const MESSAGE_SERVER_BATCH_AUTHORITY = {
-  DELETE: 'perms[message_server_batch:delete]',
-  GET: 'perms[message_server_batch:get]',
-  EXPORT: 'perms[message_server_batch:export]',
+  DELETE: 'perms[message_server_batch_message:delete]',
+  GET: 'perms[message_server_batch_message:get]',
+  EXPORT: 'perms[message_server_batch_message:export]',
 } as const
 
 export const MESSAGE_SERVER_EMAIL_AUTHORITY = {
