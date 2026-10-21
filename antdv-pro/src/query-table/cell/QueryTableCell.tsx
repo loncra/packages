@@ -18,38 +18,46 @@ const QueryTableCell = defineComponent({
     onDragStart: Function as PropType<(event: DragEvent) => void>,
     onDragEnd: Function as PropType<() => void>,
   },
-  setup(props, {slots}) {
+  setup(props, {attrs, slots}) {
     return () => {
+      const {class: attrClass, style: attrStyle, ...rest} = attrs
+      const cellClass = classNames(
+        props.prefixCls,
+        props.hashId,
+        props.cssVarCls,
+        `${props.prefixCls}-cell`,
+        attrClass,
+      )
       if (props.isDrag) {
         return (
-          <div
-            class={classNames(
-              props.prefixCls,
-              props.hashId,
-              props.cssVarCls,
-              `${props.prefixCls}-drag-handle`,
-            )}
-            draggable
-            onDragstart={(e: DragEvent) => props.onDragStart?.(e)}
-            onDragend={() => props.onDragEnd?.()}
-          >
-            <Typography.Text type="secondary">::</Typography.Text>
+          <div {...rest} class={cellClass} style={attrStyle}>
+            <div
+              class={classNames(
+                props.prefixCls,
+                props.hashId,
+                props.cssVarCls,
+                `${props.prefixCls}-drag-handle`,
+              )}
+              draggable
+              onDragstart={(e: DragEvent) => props.onDragStart?.(e)}
+              onDragend={() => props.onDragEnd?.()}
+            >
+              <Typography.Text type="secondary">::</Typography.Text>
+            </div>
           </div>
         )
       }
-      const content = slots.default?.()
-      if (!props.actionable) {
-        return content
-      }
       return (
-        <>
-          {content}
-          <ActionButton
-            size="small"
-            actions={props.actions}
-            onAction={(id: string) => props.onAction?.(id)}
-          />
-        </>
+        <span {...rest} class={cellClass} style={attrStyle}>
+          {slots.default?.()}
+          {props.actionable ? (
+            <ActionButton
+              size="small"
+              actions={props.actions}
+              onAction={(id: string) => props.onAction?.(id)}
+            />
+          ) : null}
+        </span>
       )
     }
   },

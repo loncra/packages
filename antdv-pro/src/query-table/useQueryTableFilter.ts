@@ -28,16 +28,23 @@ export function useQueryTableFilter<TEntity extends object>(
     fetch()
   }
 
+  function updateField(column: SearchableColumnType<TEntity>, value: unknown): void {
+    const queryName = column.search?.queryName
+    if (queryName) {
+      patchQuery(query, {[queryName]: value})
+    }
+  }
+
   function clear(confirm: () => void, setSelectedKeys: (keys: string[]) => void) {
-    const next: FilterRequest | PageRequest = {...query.value}
+    const patch: FilterRequest = {}
     for (const column of tableColumns.value) {
       if (!column.search?.queryName) {
         continue
       }
-      next[column.search.queryName] = ''
+      patch[column.search.queryName] = ''
       column.filteredValue = null
     }
-    query.value = next
+    patchQuery(query, patch)
     setSelectedKeys([])
     confirm()
     fetch()
@@ -48,9 +55,7 @@ export function useQueryTableFilter<TEntity extends object>(
     setSelectedKeys: (keys: string[]) => void,
     confirm: () => void,
   ) {
-    if (column.search?.queryName) {
-      patchQuery(query, {[column.search.queryName]: ''})
-    }
+    updateField(column, '')
     setSelectedKeys([])
     confirm()
     fetch()
@@ -83,5 +88,5 @@ export function useQueryTableFilter<TEntity extends object>(
     doSearch(column, setSelectedKeys, confirm)
   }
 
-  return {doSearch, clear, resetField, onFilterEnterKey}
+  return {doSearch, clear, resetField, onFilterEnterKey, updateField}
 }

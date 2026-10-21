@@ -5,22 +5,20 @@ import {FilterOutlined} from '@antdv-next/icons'
 import {classNames} from '@loncra/antdv'
 import {type FilterRequest, type PageRequest, SYSTEM_CONSTANT} from '@loncra/client/commons'
 import type {EnumBucketsResponseBody} from '@loncra/client/resource'
+import type {BasicCrudQueryExpose, PageDictionaries, RefreshOnActivate} from '../basic-crud-query'
 import BasicCrudQuery, {type BasicCrudQueryContentProps} from '../basic-crud-query'
 import type {AuthorityProps} from '../_util/crud/actions'
 import type {CollectionExpose} from '../_util/crud/collectionExpose'
-import type {BasicCrudQueryExpose, PageDictionaries, RefreshOnActivate} from '../basic-crud-query'
-import {
-  DEFAULT_COLLECTION_PAGINATION,
-  type DefaultCrudEntity,
-  patchQuery,
-} from '../_util/crud/useCollectionData'
+import {DEFAULT_COLLECTION_PAGINATION, type DefaultCrudEntity} from '../_util/crud/useCollectionData'
 import QueryTableCell from './cell/QueryTableCell'
 import {ACTION_COLUMN_KEY} from './constants'
 import QueryTableFilterDropdown from './filter/QueryTableFilterDropdown'
 import QueryTableTitle from './title/QueryTableTitle'
 import {useQueryTable} from './useQueryTable'
 import type {
+  QueryTableBodyCellArgs,
   QueryTableConstructor,
+  QueryTableExpandedRowArgs,
   QueryTableProps,
   QueryTableSlots,
   SearchableColumnType,
@@ -127,6 +125,7 @@ const QueryTable = defineComponent({
       clear,
       resetField,
       onFilterEnterKey,
+      updateField,
     } = useQueryTable(props, {attrs, emit})
 
     expose<
@@ -164,7 +163,6 @@ const QueryTable = defineComponent({
         if (!search?.component) {
           return null
         }
-        const queryName = search.queryName ?? ''
         return (
           <QueryTableFilterDropdown
             prefixCls={prefixCls.value}
@@ -173,7 +171,7 @@ const QueryTable = defineComponent({
             search={search}
             query={query.value}
             locale={locale.value}
-            onUpdateValue={(value) => patchQuery(query, {[queryName]: value})}
+            onUpdateValue={(value) => updateField(column, value)}
             onSearch={() => doSearch(column, setSelectedKeys, confirm)}
             onReset={() => resetField(column, setSelectedKeys, confirm)}
             onClear={() => clear(confirm, setSelectedKeys)}
@@ -247,17 +245,7 @@ const QueryTable = defineComponent({
                 bordered={props.bordered}
                 onRow={tableOnRow.value}
                 v-slots={{
-                  bodyCell: ({
-                    text,
-                    record,
-                    index,
-                    column,
-                  }: {
-                    text: unknown
-                    record: DefaultCrudEntity
-                    index: number
-                    column: SearchableColumnType<DefaultCrudEntity>
-                  }) => {
+                  bodyCell: ({text, record, index, column}: QueryTableBodyCellArgs) => {
                     const actionable = column.dataIndex === ACTION_COLUMN_KEY
                     return (
                       <QueryTableCell
@@ -287,8 +275,7 @@ const QueryTable = defineComponent({
                     }),
                   filterDropdown: renderFilterDropdown,
                   expandedRowRender: slots.expandedRowRender
-                    ? (args: {record: DefaultCrudEntity; index: number; indent: number; expanded: boolean}) =>
-                        slots.expandedRowRender?.(args)
+                    ? (args: QueryTableExpandedRowArgs) => slots.expandedRowRender?.(args)
                     : undefined,
                 }}
               />

@@ -2,35 +2,31 @@ import type {Component, EmitsToProps, PublicProps, VNode} from 'vue'
 import type {TableProps} from 'antdv-next'
 import type {ColumnType} from 'antdv-next/dist/table/interface'
 import {
-  type BasicIdMetadata,
-  type DropPosition,
-  type FilterRequest,
-  type PageRequest,
-  type ScrollPageResult,
-  SYSTEM_CONSTANT,
-  type TreeSortMetadata,
+    type BasicIdMetadata,
+    type DropPosition,
+    type FilterRequest,
+    type PageRequest,
+    type ScrollPageResult,
+    SYSTEM_CONSTANT,
+    type TreeSortMetadata,
 } from '@loncra/client/commons'
 import type {
-  AuthorityProps,
-  RecordActionDefinition,
-  RecordActionPayload,
-  ToolbarActionDefinition,
-  ToolbarActionPayload,
+    AuthorityProps,
+    RecordActionDefinition,
+    RecordActionPayload,
+    ToolbarActionDefinition,
+    ToolbarActionPayload,
 } from '../_util/crud/actions'
 import type {CollectionExpose} from '../_util/crud/collectionExpose'
-import type {
-  CollectionFetch,
-  CollectionService,
-  DefaultCrudEntity,
-} from '../_util/crud/useCollectionData'
+import type {CollectionFetch, CollectionService, DefaultCrudEntity,} from '../_util/crud/useCollectionData'
 import type {DragProp} from '../_util/crud/useDrag'
 import type {
-  BasicCrudQueryClasses,
-  BasicCrudQueryExpose,
-  BasicCrudQueryStyles,
-  EnumBucketRequest,
-  PageDictionaries,
-  RefreshOnActivate,
+    BasicCrudQueryClasses,
+    BasicCrudQueryExpose,
+    BasicCrudQueryStyles,
+    EnumBucketRequest,
+    PageDictionaries,
+    RefreshOnActivate,
 } from '../basic-crud-query/types'
 import type {EnumBucketsResponseBody} from '@loncra/client/resource'
 
@@ -116,6 +112,14 @@ export type QueryTableEmits<
     payload: {dropPosition: DropPosition; tree: TEntity[]},
   ]
 }
+
+export type QueryTableBodyCellArgs<TEntity extends object = DefaultCrudEntity> = Parameters<
+  NonNullable<QueryTableSlots<TEntity>['bodyCell']>
+>[0]
+
+export type QueryTableExpandedRowArgs<TEntity extends object = DefaultCrudEntity> = Parameters<
+  NonNullable<QueryTableSlots<TEntity>['expandedRowRender']>
+>[0]
 
 export interface QueryTableSlots<TEntity extends object> {
   title?: () => unknown

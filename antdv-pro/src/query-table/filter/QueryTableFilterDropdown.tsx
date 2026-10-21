@@ -22,21 +22,25 @@ const QueryTableFilterDropdown = defineComponent({
     onClear: Function as PropType<() => void>,
     onEnter: Function as PropType<(event: KeyboardEvent) => void>,
   },
-  setup(props) {
+  setup(props, {attrs}) {
     return () => {
       const SearchComponent = props.search.component
       if (!SearchComponent) {
         return null
       }
       const value = props.query[props.search.queryName ?? '']
+      const {class: attrClass, style: attrStyle, ...rest} = attrs
       return (
         <div
+          {...rest}
           class={classNames(
             props.prefixCls,
             props.hashId,
             props.cssVarCls,
             `${props.prefixCls}-filter-dropdown`,
+            attrClass,
           )}
+          style={attrStyle}
           onKeydown={(e: KeyboardEvent) => {
             e.stopPropagation()
             props.onEnter?.(e)

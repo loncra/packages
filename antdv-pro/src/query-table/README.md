@@ -67,7 +67,7 @@ const columns: SearchableColumnType<SysRoleEntity>[] = [
 | classes | 区域表，见 [语义化 DOM](#semantic-dom)：`card` / `spin` / `pagination` / `table` | `QueryTableClasses` | - | - |
 | styles | 同上区域的样式表 | `QueryTableStyles` | - | - |
 | dataSource | 当前数据（`v-model`） | `TEntity[]` | `[]` | - |
-| loading | 加载态（`v-model`）：为真时基类的 `Spin` 遮住表格 + 分页。宿主必须接住 `v-model:loading`，否则内核回写的加载态被 props 拉回初值，界面不会转圈 | boolean | `false` | - |
+| loading | 加载态（`v-model`）：为真时基类的 `Spin` 遮住表格 + 分页。写本地立即生效并同步 `emit`，宿主不接事件也照样转圈 | boolean | `false` | - |
 | query | 当前查询（`v-model`），筛选与翻页都往里写 | `FilterRequest \| PageRequest` | `{}` | - |
 | selectedRows | 选中集合（`v-model`） | `TEntity[]` | `[]` | - |
 
@@ -155,6 +155,7 @@ const columns: SearchableColumnType<SysRoleEntity>[] = [
 | `plain` 时的表格自带标题 | `${prefixCls}` + `hashId` + `cssVarCls` + `${prefixCls}-table-title` |
 | 筛选下拉面板 | `${prefixCls}` + `hashId` + `cssVarCls` + `${prefixCls}-filter-dropdown` |
 | 筛选图标的激活态 | `${prefixCls}` + `hashId` + `cssVarCls` + `${prefixCls}-filter-icon-active` |
+| 每个单元格的内容根 | 类名是 `${prefixCls}` + `hashId` + `cssVarCls` + `${prefixCls}-cell`；元素按形态不同：拖拽把手列是 `div`，其余（含「操作」列）是 `span` —— 内容形态必须是行内元素，否则会另起一个块盒、把 `td` 的行内内容掏空，`ellipsis` 列的 `text-overflow` 就失效（只剩硬裁剪、没有省略号） |
 | 拖拽把手 | `${prefixCls}` + `hashId` + `cssVarCls` + `${prefixCls}-drag-handle` |
 | 拖拽幽灵 | `${prefixCls}` + `hashId` + `cssVarCls` + `${prefixCls}-drag-ghost` |
 

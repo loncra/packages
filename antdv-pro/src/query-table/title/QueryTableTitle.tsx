@@ -11,20 +11,26 @@ const QueryTableTitle = defineComponent({
     title: {type: [String, Number, Array, Object] as PropType<VNodeChild>, default: undefined},
     extra: {type: [String, Number, Array, Object] as PropType<VNodeChild>, default: undefined},
   },
-  setup(props) {
-    return () => (
-      <div
-        class={classNames(
-          props.prefixCls,
-          props.hashId,
-          props.cssVarCls,
-          `${props.prefixCls}-table-title`,
-        )}
-      >
-        <div>{props.title}</div>
-        {props.extra ? <div>{props.extra}</div> : null}
-      </div>
-    )
+  setup(props, {attrs}) {
+    return () => {
+      const {class: attrClass, style: attrStyle, ...rest} = attrs
+      return (
+        <div
+          {...rest}
+          class={classNames(
+            props.prefixCls,
+            props.hashId,
+            props.cssVarCls,
+            `${props.prefixCls}-table-title`,
+            attrClass,
+          )}
+          style={attrStyle}
+        >
+          <div>{props.title}</div>
+          {props.extra ? <div>{props.extra}</div> : null}
+        </div>
+      )
+    }
   },
 })
 

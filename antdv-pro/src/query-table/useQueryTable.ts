@@ -1,33 +1,20 @@
-import {
-  computed,
-  ref,
-  type Ref,
-  type SetupContext,
-  type SlotsType,
-  toRef,
-  watch,
-} from 'vue'
+import {computed, ref, type Ref, type SetupContext, type SlotsType, toRef, watch,} from 'vue'
 import type {TableProps} from 'antdv-next'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {classNames, useTwoWayModel} from '@loncra/antdv'
 import type {FilterRequest, PageRequest} from '@loncra/client/commons'
 import type {EnumBucketsResponseBody} from '@loncra/client/resource'
 import type {BasicCrudQueryExpose, PageDictionaries} from '../basic-crud-query'
-import {patchQuery, type DefaultCrudEntity} from '../_util/crud/useCollectionData'
+import {type DefaultCrudEntity, patchQuery} from '../_util/crud/useCollectionData'
 import {useMergeRowSelection} from '../_util/crud/useMergeRowSelection'
 import {isDragEnabled} from '../_util/crud/useDrag'
 import {useTableRowDrag} from '../_util/crud/useTableRowDrag'
 import {useLocale} from '../_util/useLocale'
 import useStyle from './style'
 import {ACTION_COLUMN_KEY} from './constants'
-import {toTableFieldName} from './queryTableKinds'
+import {buildSearchQueryName} from './queryTableKinds'
 import {useQueryTableFilter} from './useQueryTableFilter'
-import type {
-  QueryTableEmits,
-  QueryTableProps,
-  QueryTableSlots,
-  SearchableColumnType,
-} from './types'
+import type {QueryTableEmits, QueryTableProps, QueryTableSlots, SearchableColumnType,} from './types'
 
 type TEntity = DefaultCrudEntity
 type TId = string | number
@@ -131,7 +118,7 @@ export function useQueryTable(
     void basic.value?.fetchDataSource(nextQuery)
   }
 
-  const {doSearch, clear, resetField, onFilterEnterKey} = useQueryTableFilter<TEntity>({
+  const {doSearch, clear, resetField, onFilterEnterKey, updateField} = useQueryTableFilter<TEntity>({
     query,
     tableColumns,
     fetch,
@@ -142,7 +129,7 @@ export function useQueryTable(
     if (!search) {
       return
     }
-    search.queryName ||= `filter_[${toTableFieldName(String(column.key))}_${search.expression || 'eq'}]`
+    search.queryName ||= buildSearchQueryName(column)
     const queryName = search.queryName
     if (search.defaultValue === undefined || appliedDefaultValueKeys.has(queryName)) {
       return
@@ -219,5 +206,6 @@ export function useQueryTable(
     clear,
     resetField,
     onFilterEnterKey,
+    updateField,
   }
 }
