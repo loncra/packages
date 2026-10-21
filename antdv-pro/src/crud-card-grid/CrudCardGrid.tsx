@@ -14,24 +14,6 @@ import type {
 } from '../query-card-grid/types'
 import type {CrudCardGridConstructor} from './types'
 
-const CRUD_CARD_GRID_EMITS = [
-  'update:dataSource',
-  'update:loading',
-  'update:query',
-  'update:selectedItems',
-  'update:pagination',
-  'action',
-  'add',
-  'edit',
-  'detail',
-  'deleted',
-  'drop',
-] as const
-
-/**
- * 卡片网格的**门面**：**只把宿主给的东西原样转给 `QueryCardGrid`**（数据、标题、分页、
- * 动作解析都在基类里，这里不做事）；不自造名字 —— `toolbarActions` / `recordActions` 与内容层同名同形。
- */
 const CrudCardGrid = defineComponent({
   name: 'LCrudCardGrid',
   inheritAttrs: false,
@@ -42,30 +24,17 @@ const CrudCardGrid = defineComponent({
       type: [Boolean, Function] as PropType<RefreshOnActivate>,
       default: true,
     },
-    /**
-     * 卡片头：`VNode` 直接用、`false` 不要卡片头、不给走 `CrudConfig.resolveDefaultTitle`。
-     *
-     * ⚠️ **`default: undefined` 不能删**：类型里带了 `Boolean`，父级"不传"会被 Vue 的布尔转换变成
-     * `false`（= "不要卡片头"）⇒ 默认标题与工具栏都没了。
-     */
     title: {type: [Object, Boolean] as PropType<QueryCardGridProps['title']>, default: undefined},
     hasPermission: Function as PropType<(permission: string) => boolean>,
     authority: Object as PropType<AuthorityProps>,
-    /**
-     * 标题右侧的工具栏动作：与内容层同名透传（数组 = 与默认合并；`false` = 整排不出）。
-     *
-     * ⚠️ **`default: undefined` 不能删**（与 `title` 同一个坑）：不传会被转成 `false` ⇒ 整排不出。
-     */
     toolbarActions: {
       type: [Array, Boolean] as PropType<QueryCardGridProps['toolbarActions']>,
       default: undefined,
     },
-    /** 项内动作：与内容层同名透传（数组 = 与默认合并；`false` = 不要项内动作） */
     recordActions: {
       type: [Array, Boolean] as PropType<QueryCardGridProps['recordActions']>,
       default: undefined,
     },
-    /** 拖拽开关 + 幽灵内容：`true` = 可拖（幽灵缺省主键）；`(record) => 内容` = 可拖且它就是幽灵 */
     drag: [Boolean, Function, Object] as PropType<QueryCardGridProps['drag']>,
     gridColumns: {type: Number, default: 5},
     selectable: {type: Boolean, default: true},
@@ -76,6 +45,8 @@ const CrudCardGrid = defineComponent({
     },
     prefixCls: String,
     rootClass: String,
+    classes: Object as PropType<QueryCardGridProps['classes']>,
+    styles: Object as PropType<QueryCardGridProps['styles']>,
     dataSource: {type: Array as PropType<DefaultCrudEntity[]>, default: () => []},
     loading: {type: Boolean, default: false},
     query: {
@@ -84,13 +55,24 @@ const CrudCardGrid = defineComponent({
     },
     selectedItems: {type: Array as PropType<DefaultCrudEntity[]>, default: () => []},
   },
-  emits: [...CRUD_CARD_GRID_EMITS],
+  emits: [
+    'update:dataSource',
+    'update:loading',
+    'update:query',
+    'update:selectedItems',
+    'update:pagination',
+    'action',
+    'add',
+    'edit',
+    'detail',
+    'deleted',
+    'drop',
+  ],
   slots: Object as SlotsType<QueryCardGridSlots<DefaultCrudEntity>>,
   setup(props, {attrs, emit, expose, slots}) {
-    type TEntity = DefaultCrudEntity
-    const grid = ref<CollectionExpose<TEntity>>()
+    const grid = ref<CollectionExpose<DefaultCrudEntity>>()
 
-    expose<CollectionExpose<TEntity>>({
+    expose<CollectionExpose<DefaultCrudEntity>>({
       fetchDataSource: async () => grid.value?.fetchDataSource(),
       remove: (records) => grid.value?.remove(records),
     })
@@ -114,19 +96,21 @@ const CrudCardGrid = defineComponent({
         pagination={props.pagination}
         prefixCls={props.prefixCls}
         rootClass={props.rootClass}
+        classes={props.classes}
+        styles={props.styles}
         dataSource={props.dataSource}
         loading={props.loading}
         query={props.query}
         selectedItems={props.selectedItems}
-        onUpdate:dataSource={(value: TEntity[]) => emit('update:dataSource', value)}
+        onUpdate:dataSource={(value: DefaultCrudEntity[]) => emit('update:dataSource', value)}
         onUpdate:loading={(value: boolean) => emit('update:loading', value)}
         onUpdate:query={(value: FilterRequest | PageRequest) => emit('update:query', value)}
-        onUpdate:selectedItems={(value: TEntity[]) => emit('update:selectedItems', value)}
+        onUpdate:selectedItems={(value: DefaultCrudEntity[]) => emit('update:selectedItems', value)}
         onUpdate:pagination={(value: TableProps['pagination']) => emit('update:pagination', value)}
         onAdd={() => emit('add')}
-        onEdit={(record: TEntity) => emit('edit', record)}
-        onDetail={(record: TEntity) => emit('detail', record)}
-        onDeleted={(records: TEntity[]) => emit('deleted', records)}
+        onEdit={(record: DefaultCrudEntity) => emit('edit', record)}
+        onDetail={(record: DefaultCrudEntity) => emit('detail', record)}
+        onDeleted={(records: DefaultCrudEntity[]) => emit('deleted', records)}
         onAction={(payload) => emit('action', payload)}
         onDrop={(sorts, target, fromIndex, toIndex) => emit('drop', sorts, target, fromIndex, toIndex)}
         v-slots={{
@@ -134,10 +118,10 @@ const CrudCardGrid = defineComponent({
           extra: slots.extra ? () => slots.extra?.() : undefined,
           empty: slots.empty ? () => slots.empty?.() : undefined,
           item: slots.item
-            ? (slot: QueryCardGridItemSlot<TEntity>) => slots.item?.(slot)
+            ? (slot: QueryCardGridItemSlot<DefaultCrudEntity>) => slots.item?.(slot)
             : undefined,
           itemActions: slots.itemActions
-            ? (slot: QueryCardGridItemActionsSlot<TEntity>) => slots.itemActions?.(slot)
+            ? (slot: QueryCardGridItemActionsSlot<DefaultCrudEntity>) => slots.itemActions?.(slot)
             : undefined,
         }}
       />

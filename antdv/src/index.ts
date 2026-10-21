@@ -61,7 +61,6 @@ export type { Locale } from './locale'
 export { createUseLocale, fillLocale, useLocale } from './_util/context/useLocale'
 export type { LocaleComponentName } from './_util/context/useLocale'
 export { classNames } from './_util/classNames'
-export { splitSemantic } from './_util/splitSemantic'
 export { createStyleHooks } from './_util/style/factory'
 export type { LoncraStyleToken } from './_util/genStyleLayer'
 export {

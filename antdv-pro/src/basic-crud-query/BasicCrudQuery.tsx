@@ -1,20 +1,10 @@
-import {
-  computed,
-  defineComponent,
-  type PropType,
-  type SlotsType,
-  type VNode,
-  type VNodeChild,
-} from 'vue'
+import {computed, defineComponent, type PropType, type SlotsType, type VNode, type VNodeChild,} from 'vue'
 import type {TableProps} from 'antdv-next'
 import {Pagination} from 'antdv-next'
 import {classNames} from '@loncra/antdv'
 import type {FilterRequest, PageRequest} from '@loncra/client/commons'
 import type {EnumBucketsResponseBody} from '@loncra/client/resource'
-import {
-  DEFAULT_COLLECTION_PAGINATION,
-  type DefaultCrudEntity,
-} from '../_util/crud/useCollectionData'
+import {DEFAULT_COLLECTION_PAGINATION, type DefaultCrudEntity,} from '../_util/crud/useCollectionData'
 import DataLoadingCard from '../data-loading-card'
 import ActionButton from '../action-button'
 import {useBasicCrudQuery} from './useBasicCrudQuery'
@@ -88,9 +78,6 @@ const BasicCrudQuery = defineComponent({
   ],
   slots: Object as SlotsType<BasicCrudQuerySlots>,
   setup(props, {attrs, emit, expose, slots}) {
-    type TEntity = DefaultCrudEntity
-    type TId = string | number
-
     const {
       message,
       modal,
@@ -124,7 +111,7 @@ const BasicCrudQuery = defineComponent({
         query,
       })
 
-    expose<BasicCrudQueryExpose<TEntity, TId>>({
+    expose<BasicCrudQueryExpose<DefaultCrudEntity, string | number>>({
       ...collection,
       resolveRecordActions,
       onRecordAction,

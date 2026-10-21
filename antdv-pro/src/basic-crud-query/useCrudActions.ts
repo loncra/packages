@@ -1,18 +1,13 @@
-import {computed} from 'vue'
 import type {ComputedRef, Ref, SetupContext, SlotsType} from 'vue'
+import {computed} from 'vue'
 import type {FilterRequest, PageRequest} from '@loncra/client/commons'
 import type {CrudLocale} from '../locale'
-import type {
-  ActionAppApis,
-  ActionAuth,
-  ActionResolver,
-  ToolbarActionContext,
-} from '../_util/crud/actions'
+import type {ActionAppApis, ActionAuth, ActionResolver, ToolbarActionContext,} from '../_util/crud/actions'
 import {
-  BUILTIN_BULK_ACTION_IDS,
-  BUILTIN_RECORD_ACTION_IDS,
   buildRecordActionContext,
   buildToolbarActionContext,
+  BUILTIN_BULK_ACTION_IDS,
+  BUILTIN_RECORD_ACTION_IDS,
   mergeDefinitionsNewFirst,
 } from '../_util/crud/actions'
 import {
@@ -23,28 +18,24 @@ import {
 import type {DefaultCrudEntity} from '../_util/crud/useCollectionData'
 import type {BasicCrudQueryEmits, BasicCrudQueryProps, BasicCrudQuerySlots} from './types'
 
-type TEntity = DefaultCrudEntity
-type TBody = DefaultCrudEntity
-type TId = string | number
-
 export interface UseCrudActionsOptions {
   emit: Pick<
-    SetupContext<BasicCrudQueryEmits<TEntity, TId>, SlotsType<BasicCrudQuerySlots>>,
+    SetupContext<BasicCrudQueryEmits<DefaultCrudEntity, string | number>, SlotsType<BasicCrudQuerySlots>>,
     'emit'
   >['emit']
   locale: ComputedRef<CrudLocale>
   auth: ActionAuth
   resolver: ActionResolver
-  app: ActionAppApis<TEntity>
-  dataSource: Ref<TEntity[]>
-  selected: Ref<TEntity[]>
+  app: ActionAppApis<DefaultCrudEntity>
+  dataSource: Ref<DefaultCrudEntity[]>
+  selected: Ref<DefaultCrudEntity[]>
   query: Ref<FilterRequest | PageRequest>
 }
 
 export function useCrudActions(props: BasicCrudQueryProps, options: UseCrudActionsOptions) {
   const {emit, locale, auth, resolver, app, dataSource, selected, query} = options
 
-  const actionContext = computed<ToolbarActionContext<TEntity>>(() =>
+  const actionContext = computed<ToolbarActionContext<DefaultCrudEntity>>(() =>
     buildToolbarActionContext({
       items: dataSource.value,
       selectedItems: selected.value,
@@ -59,7 +50,7 @@ export function useCrudActions(props: BasicCrudQueryProps, options: UseCrudActio
     }
     return mergeDefinitionsNewFirst(
       [
-        ...createDefaultToolbarActions<TEntity>({
+        ...createDefaultToolbarActions<DefaultCrudEntity>({
           authority: props.authority,
           locale: locale.value,
           iconClass: 'align',
@@ -68,7 +59,7 @@ export function useCrudActions(props: BasicCrudQueryProps, options: UseCrudActio
             emit('action', {id: 'add', context: ctx})
           },
         }),
-        ...createDefaultBulkActions<TBody, TEntity, TId>({
+        ...createDefaultBulkActions<DefaultCrudEntity, DefaultCrudEntity, string | number>({
           authority: props.authority,
           service: props.service,
           locale: locale.value,
@@ -93,7 +84,7 @@ export function useCrudActions(props: BasicCrudQueryProps, options: UseCrudActio
 
   const recordDefinitions = computed(() =>
     mergeDefinitionsNewFirst(
-      createDefaultRecordActions<TBody, TEntity, TId>({
+      createDefaultRecordActions<DefaultCrudEntity, DefaultCrudEntity, string | number>({
         authority: props.authority,
         service: props.service,
         locale: locale.value,
@@ -105,16 +96,16 @@ export function useCrudActions(props: BasicCrudQueryProps, options: UseCrudActio
     ),
   )
 
-  function recordContext(record: TEntity) {
+  function recordContext(record: DefaultCrudEntity) {
     return buildRecordActionContext({record, app})
   }
 
-  const resolveRecordActions = (record: TEntity) =>
+  const resolveRecordActions = (record: DefaultCrudEntity) =>
     props.recordActions === false
       ? []
       : resolver.resolveRecordActions(recordDefinitions.value, recordContext(record), auth)
 
-  function onRecordAction(id: string, record: TEntity) {
+  function onRecordAction(id: string, record: DefaultCrudEntity) {
     if (BUILTIN_RECORD_ACTION_IDS.includes(id as (typeof BUILTIN_RECORD_ACTION_IDS)[number])) {
       return
     }

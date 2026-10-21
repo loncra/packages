@@ -16,13 +16,10 @@ import {buildSearchQueryName} from './queryTableKinds'
 import {useQueryTableFilter} from './useQueryTableFilter'
 import type {QueryTableEmits, QueryTableProps, QueryTableSlots, SearchableColumnType,} from './types'
 
-type TEntity = DefaultCrudEntity
-type TId = string | number
-
 export function useQueryTable(
-  props: QueryTableProps<TId, TEntity, TEntity>,
+  props: QueryTableProps<string | number, DefaultCrudEntity, DefaultCrudEntity>,
   {attrs, emit}: Pick<
-    SetupContext<QueryTableEmits<TEntity, TId>, SlotsType<QueryTableSlots<TEntity>>>,
+    SetupContext<QueryTableEmits<DefaultCrudEntity, string | number>, SlotsType<QueryTableSlots<DefaultCrudEntity>>>,
     'attrs' | 'emit'
   >,
 ) {
@@ -32,16 +29,16 @@ export function useQueryTable(
     config.value.getPrefixCls('query-table', props.prefixCls ?? 'loncra-query-table'),
   )
   const [hashId, cssVarCls] = useStyle(prefixCls)
-  const basic = ref<BasicCrudQueryExpose<TEntity, TId>>()
+  const basic = ref<BasicCrudQueryExpose<DefaultCrudEntity, string | number>>()
 
-  const dataSource = useTwoWayModel(props, 'dataSource', emit) as unknown as Ref<TEntity[]>
+  const dataSource = useTwoWayModel(props, 'dataSource', emit) as unknown as Ref<DefaultCrudEntity[]>
   const loading = useTwoWayModel(props, 'loading', emit) as unknown as Ref<boolean>
   const query = useTwoWayModel(props, 'query', emit) as unknown as Ref<FilterRequest | PageRequest>
-  const selectedRows = useTwoWayModel(props, 'selectedRows', emit) as unknown as Ref<TEntity[]>
+  const selectedRows = useTwoWayModel(props, 'selectedRows', emit) as unknown as Ref<DefaultCrudEntity[]>
   const tablePagination = useTwoWayModel(props, 'pagination', emit) as unknown as Ref<TableProps['pagination']>
   const buckets = useTwoWayModel(props, 'buckets', emit) as unknown as Ref<EnumBucketsResponseBody>
   const dictionaries = useTwoWayModel(props, 'dictionaries', emit) as unknown as Ref<PageDictionaries>
-  const tableColumns = ref<SearchableColumnType<TEntity>[]>([])
+  const tableColumns = ref<SearchableColumnType<DefaultCrudEntity>[]>([])
   const appliedDefaultValueKeys = new Set<string>()
 
   const rootClass = computed(() =>
@@ -61,10 +58,10 @@ export function useQueryTable(
     onDragHandleStart,
     onDragHandleEnd,
     syncPlacementBaseline,
-  } = useTableRowDrag<TEntity, TId>({
+  } = useTableRowDrag<DefaultCrudEntity, string | number>({
     drag: toRef(props, 'drag'),
     idKey: (typeof props.rowKey === 'string' ? props.rowKey : undefined) as
-      | (keyof TEntity & string)
+      | (keyof DefaultCrudEntity & string)
       | undefined,
     dataSource,
     onRow: toRef(props, 'onRow'),
@@ -89,7 +86,7 @@ export function useQueryTable(
     return raw ?? {fixed: true, type: 'checkbox' as const}
   })
 
-  const {rowSelection: mergedRowSelection} = useMergeRowSelection<TEntity, TId>(
+  const {rowSelection: mergedRowSelection} = useMergeRowSelection<DefaultCrudEntity, string | number>(
     externalRowSelection,
     selectedRows,
     props.rowKey,
@@ -118,13 +115,13 @@ export function useQueryTable(
     void basic.value?.fetchDataSource(nextQuery)
   }
 
-  const {doSearch, clear, resetField, onFilterEnterKey, updateField} = useQueryTableFilter<TEntity>({
+  const {doSearch, clear, resetField, onFilterEnterKey, updateField} = useQueryTableFilter<DefaultCrudEntity>({
     query,
     tableColumns,
     fetch,
   })
 
-  function initSearch(column: SearchableColumnType<TEntity>): void {
+  function initSearch(column: SearchableColumnType<DefaultCrudEntity>): void {
     const search = column.search
     if (!search) {
       return
@@ -139,9 +136,9 @@ export function useQueryTable(
   }
 
   function rebuildColumns() {
-    const cols: SearchableColumnType<TEntity>[] = []
+    const cols: SearchableColumnType<DefaultCrudEntity>[] = []
     for (const col of props.columns ?? []) {
-      const optionsCol: SearchableColumnType<TEntity> = {
+      const optionsCol: SearchableColumnType<DefaultCrudEntity> = {
         ...col,
         ...(col.search ? {search: {...col.search}} : {}),
       }

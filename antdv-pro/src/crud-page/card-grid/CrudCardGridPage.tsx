@@ -12,11 +12,11 @@ import {fetchDataDictionaries, fetchEnumBuckets} from '../../basic-crud-query'
 import type {PageDictionaries} from '../../basic-crud-query/types'
 import type {QueryCardGridItemActionsSlot, QueryCardGridItemSlot} from '../../query-card-grid/types'
 import type {
-  CrudCardGridPageConstructor,
-  CrudCardGridPageExpose,
-  CrudCardGridPageProps,
-  CrudCardGridPageSlots,
-  PageDeclContext,
+    CrudCardGridPageConstructor,
+    CrudCardGridPageExpose,
+    CrudCardGridPageProps,
+    CrudCardGridPageSlots,
+    PageDeclContext,
 } from '../types'
 
 /**
@@ -51,17 +51,16 @@ const CrudCardGridPage = defineComponent({
   },
   slots: Object as SlotsType<CrudCardGridPageSlots<DefaultCrudEntity>>,
   setup(props, {attrs, expose, slots}) {
-    type TEntity = DefaultCrudEntity
     const config = useCrudConfig()
     const {message, modal} = App.useApp()
-    const gridRef = ref<CollectionExpose<TEntity>>()
+    const gridRef = ref<CollectionExpose<DefaultCrudEntity>>()
     /** 当前数据（`v-model:data-source` 回流的那份；`clearDataSource` 清它） */
-    const dataSource = ref([]) as Ref<TEntity[]>
+    const dataSource = ref([]) as Ref<DefaultCrudEntity[]>
     const buckets = ref<EnumBucketsResponseBody>({})
     const dictionaries = ref<PageDictionaries>({})
 
     /** 门面自己持有的"集合能力"：与动作上下文里的 `app.collection` 是同一个东西 */
-    const collection: CollectionExpose<TEntity> = {
+    const collection: CollectionExpose<DefaultCrudEntity> = {
       fetchDataSource: async () => gridRef.value?.fetchDataSource(),
       remove: (records) => gridRef.value?.remove(records),
     }
@@ -90,7 +89,7 @@ const CrudCardGridPage = defineComponent({
      * 跳转：与 `CrudHomePage` 一字不差 —— 页面声明给了 `onNavigate` 就用它（`record` 是精确实体），
      * 否则落到 app 级兜底；都没有就什么都不做（内嵌列表安全）。
      */
-    function go(kind: CrudNavigateKind, record?: TEntity): void {
+    function go(kind: CrudNavigateKind, record?: DefaultCrudEntity): void {
       const target = {kind, name: props.page.routes?.[kind], record, variant: props.variant}
       if (props.page.onNavigate) {
         props.page.onNavigate(target)
@@ -99,7 +98,7 @@ const CrudCardGridPage = defineComponent({
       config.value.onNavigate?.(target)
     }
 
-    expose<CrudCardGridPageExpose<TEntity>>({
+    expose<CrudCardGridPageExpose<DefaultCrudEntity>>({
       fetchDataSource: collection.fetchDataSource,
       clearDataSource: () => {
         dataSource.value = []
@@ -117,7 +116,7 @@ const CrudCardGridPage = defineComponent({
     })
 
     return () => {
-      const app: ActionAppApis<TEntity> = {message, modal, collection}
+      const app: ActionAppApis<DefaultCrudEntity> = {message, modal, collection}
       return (
         <CrudCardGrid
           ref={gridRef}
@@ -131,7 +130,7 @@ const CrudCardGridPage = defineComponent({
           recordActions={recordActions.value}
           drag={props.page.cardGrid?.drag}
           dataSource={dataSource.value}
-          onUpdate:dataSource={(value: TEntity[]) => {
+          onUpdate:dataSource={(value: DefaultCrudEntity[]) => {
             dataSource.value = value
           }}
           // 拖拽落库归**声明**（`list.onDrop`）：门面只做转发，pro 不替业务落库
@@ -139,8 +138,8 @@ const CrudCardGridPage = defineComponent({
             props.page.cardGrid?.onDrop?.({sorts, target, fromIndex, toIndex}, app)
           }
           onAdd={() => go('add')}
-          onEdit={(record: TEntity) => go('edit', record)}
-          onDetail={(record: TEntity) => go('detail', record)}
+          onEdit={(record: DefaultCrudEntity) => go('edit', record)}
+          onDetail={(record: DefaultCrudEntity) => go('detail', record)}
           // `$attrs` **排在最后**（与 `CrudHomePage` 的 `tableAttrs` 同一用意）：门面只认声明，
           // 其余原名透传（`:grid-columns` / `:selectable` / `:row-selection` / `:pagination` …）；
           // 宿主真传了同名项（如 `:toolbar-actions` / `:drag`）就是**接管**声明里的那份。
@@ -150,10 +149,10 @@ const CrudCardGridPage = defineComponent({
             extra: slots.extra ? () => slots.extra?.() : undefined,
             empty: slots.empty ? () => slots.empty?.() : undefined,
             item: slots.item
-              ? (slot: QueryCardGridItemSlot<TEntity>) => slots.item?.(slot)
+              ? (slot: QueryCardGridItemSlot<DefaultCrudEntity>) => slots.item?.(slot)
               : undefined,
             itemActions: slots.itemActions
-              ? (slot: QueryCardGridItemActionsSlot<TEntity>) => slots.itemActions?.(slot)
+              ? (slot: QueryCardGridItemActionsSlot<DefaultCrudEntity>) => slots.itemActions?.(slot)
               : undefined,
           }}
         />

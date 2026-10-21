@@ -45,14 +45,13 @@ const CrudHomePage = defineComponent({
   },
   slots: Object as SlotsType<CrudHomePageSlots<DefaultCrudEntity>>,
   setup(props, {attrs, expose, slots}) {
-    type TEntity = DefaultCrudEntity
     const config = useCrudConfig()
-    const tableRef = ref<CollectionExpose<TEntity>>()
+    const tableRef = ref<CollectionExpose<DefaultCrudEntity>>()
     /**
      * 宿主拿它按新的查询条件重刷（如 role 表单里的资源选择器跟着 sources 变）；
      * `clearDataSource` 用于"条件不成立时干脆不查、留空"。
      */
-    const dataSource = ref([]) as Ref<TEntity[]>
+    const dataSource = ref([]) as Ref<DefaultCrudEntity[]>
 
     /**
      * 系统字典（枚举桶 + 数据字典）由 `CrudTable` → 基类在挂载时统一拉：
@@ -73,7 +72,7 @@ const CrudHomePage = defineComponent({
     const t = (key: string) =>
       props.page.i18nResolver?.(key) ?? config.value.i18nResolver?.(key) ?? key
 
-    const columnDefs = computed<PageTableEntry<TEntity>[]>(() => props.page.table?.columns ?? [])
+    const columnDefs = computed<PageTableEntry<DefaultCrudEntity>[]>(() => props.page.table?.columns ?? [])
 
     /**
      * 要预载的来源（枚举桶 + 数据字典）：**从字段字典 + 列上的搜索项推导**
@@ -106,7 +105,7 @@ const CrudHomePage = defineComponent({
      * 跳转：页面声明给了 `onNavigate` 就用它（`record` 是精确实体），否则落到 app 级兜底；
      * 都没有就什么都不做 —— 内嵌列表（宿主给了形态名）安全。
      */
-    function go(kind: CrudNavigateKind, record?: TEntity): void {
+    function go(kind: CrudNavigateKind, record?: DefaultCrudEntity): void {
       const target = {kind, name: props.page.routes?.[kind], record, variant: props.variant}
       if (props.page.onNavigate) {
         props.page.onNavigate(target)
@@ -123,7 +122,7 @@ const CrudHomePage = defineComponent({
     function cellContent(slotProps: {
       column?: {key?: unknown}
       text: unknown
-      record: TEntity
+      record: DefaultCrudEntity
     }) {
       const declared = renderCell(
         columnDefs.value,
@@ -137,7 +136,7 @@ const CrudHomePage = defineComponent({
       return toCellVNode(declared === undefined ? slotProps.text : declared)
     }
 
-    expose<CrudHomePageExpose<TEntity>>({
+    expose<CrudHomePageExpose<DefaultCrudEntity>>({
       fetchDataSource: () => tableRef.value?.fetchDataSource(),
       clearDataSource: () => {
         dataSource.value = []
@@ -178,7 +177,7 @@ const CrudHomePage = defineComponent({
           dataSource={dataSource.value}
           buckets={buckets.value}
           dictionaries={dictionaries.value}
-          onUpdate:dataSource={(value: TEntity[]) => {
+          onUpdate:dataSource={(value: DefaultCrudEntity[]) => {
             dataSource.value = value
           }}
           onUpdate:buckets={(value: EnumBucketsResponseBody) => {
@@ -188,18 +187,18 @@ const CrudHomePage = defineComponent({
             dictionaries.value = value
           }}
           onAdd={() => go('add')}
-          onEdit={(record: TEntity) => go('edit', record)}
-          onDetail={(record: TEntity) => go('detail', record)}
+          onEdit={(record: DefaultCrudEntity) => go('edit', record)}
+          onDetail={(record: DefaultCrudEntity) => go('detail', record)}
           v-slots={{
             title: slots.title ? () => slots.title?.() : undefined,
             bodyCell: (slotProps: {
               text: unknown
-              record: TEntity
+              record: DefaultCrudEntity
               index: number
-              column: SearchableColumnType<TEntity>
+              column: SearchableColumnType<DefaultCrudEntity>
             }) => (slots.bodyCell ? slots.bodyCell(slotProps) : cellContent(slotProps)),
             expandedRowRender: slots.expandedRowRender
-              ? (args: {record: TEntity; index: number; indent: number; expanded: boolean}) =>
+              ? (args: {record: DefaultCrudEntity; index: number; indent: number; expanded: boolean}) =>
                   slots.expandedRowRender?.(args)
               : undefined,
           }}

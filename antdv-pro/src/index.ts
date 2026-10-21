@@ -176,12 +176,14 @@ export {default as QueryCardGrid} from './query-card-grid'
 export type {
   CardGridDragDirection,
   CardGridDragProp,
+  QueryCardGridClasses,
   QueryCardGridConstructor,
   QueryCardGridEmits,
   QueryCardGridItemActionsSlot,
   QueryCardGridItemSlot,
   QueryCardGridProps,
   QueryCardGridSlots,
+  QueryCardGridStyles,
 } from './query-card-grid'
 export {default as CrudCardGrid} from './crud-card-grid'
 export type {CrudCardGridConstructor} from './crud-card-grid'

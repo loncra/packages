@@ -1,6 +1,6 @@
 import {computed, type Ref, type SetupContext, type SlotsType, toRef} from 'vue'
-import {App} from 'antdv-next'
 import type {TableProps} from 'antdv-next'
+import {App} from 'antdv-next'
 import type {FilterRequest, PageRequest} from '@loncra/client/commons'
 import type {EnumBucketsResponseBody} from '@loncra/client/resource'
 import {useTwoWayModel} from '@loncra/antdv'
@@ -13,23 +13,14 @@ import {type DefaultCrudEntity, fetchCollectionData, patchQuery} from '../_util/
 import {useCrudDelete} from '../_util/crud/useCrudDelete'
 import {fetchDataDictionaries, fetchEnumBuckets} from './dictionaries'
 import useStyle from './style'
-import type {
-  BasicCrudQueryEmits,
-  BasicCrudQueryProps,
-  BasicCrudQuerySlots,
-  PageDictionaries,
-} from './types'
-
-type TEntity = DefaultCrudEntity
-type TBody = DefaultCrudEntity
-type TId = string | number
+import type {BasicCrudQueryEmits, BasicCrudQueryProps, BasicCrudQuerySlots, PageDictionaries,} from './types'
 
 export function useBasicCrudQuery(
   props: BasicCrudQueryProps,
   {
     emit,
   }: Pick<
-    SetupContext<BasicCrudQueryEmits<TEntity, TId>, SlotsType<BasicCrudQuerySlots>>,
+    SetupContext<BasicCrudQueryEmits<DefaultCrudEntity, string | number>, SlotsType<BasicCrudQuerySlots>>,
     'emit'
   >,
 ) {
@@ -45,11 +36,11 @@ export function useBasicCrudQuery(
   )
   const [hashId, cssVarCls] = useStyle(prefixCls)
 
-  const dataSource = useTwoWayModel(props, 'dataSource', emit) as unknown as Ref<TEntity[]>
+  const dataSource = useTwoWayModel(props, 'dataSource', emit) as unknown as Ref<DefaultCrudEntity[]>
   const loading = useTwoWayModel(props, 'loading', emit) as unknown as Ref<boolean>
   const query = useTwoWayModel(props, 'query', emit) as unknown as Ref<FilterRequest | PageRequest>
   const pagination = useTwoWayModel(props, 'pagination', emit) as unknown as Ref<TableProps['pagination']>
-  const selected = toRef(props, props.selectedKey ?? 'selectedRows') as unknown as Ref<TEntity[]>
+  const selected = toRef(props, props.selectedKey ?? 'selectedRows') as unknown as Ref<DefaultCrudEntity[]>
   const buckets = useTwoWayModel(props, 'buckets', emit) as unknown as Ref<EnumBucketsResponseBody>
   const dictionaries = useTwoWayModel(props, 'dictionaries', emit) as unknown as Ref<PageDictionaries>
 
@@ -97,7 +88,7 @@ export function useBasicCrudQuery(
     return fetchDataSource()
   }
 
-  const {remove} = useCrudDelete<TBody, TEntity, TId>({
+  const {remove} = useCrudDelete<DefaultCrudEntity, DefaultCrudEntity, string | number>({
     service: props.service,
     locale: () => locale.value,
     modal,
@@ -107,7 +98,7 @@ export function useBasicCrudQuery(
     refresh: () => fetchDataSource(),
   })
 
-  const collection: CollectionExpose<TEntity> = {fetchDataSource, remove}
+  const collection: CollectionExpose<DefaultCrudEntity> = {fetchDataSource, remove}
 
   return {
     message,

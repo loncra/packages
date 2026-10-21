@@ -15,12 +15,12 @@ import {useLocale} from '../../_util/useLocale'
 import {usePageRegistry} from '../registry'
 import {buildDetailItems} from './items'
 import type {
-  CrudDetailPageConstructor,
-  CrudDetailPageExpose,
-  CrudDetailPageProps,
-  CrudDetailPageSlots,
-  CrudStaleInfo,
-  PageDeclContext,
+    CrudDetailPageConstructor,
+    CrudDetailPageExpose,
+    CrudDetailPageProps,
+    CrudDetailPageSlots,
+    CrudStaleInfo,
+    PageDeclContext,
 } from '../types'
 
 /** `a-descriptions` 的响应式列数（声明没给 `column` 就用它） */
@@ -63,7 +63,6 @@ const CrudDetailPage = defineComponent({
     stale: (_info: CrudStaleInfo) => true,
   },
   setup(props, {attrs, emit, expose, slots}) {
-    type TEntity = DefaultCrudEntity
     const config = useCrudConfig()
     const antdv = useAntdvConfig()
     const locale = useLocale('Crud')
@@ -94,7 +93,7 @@ const CrudDetailPage = defineComponent({
 
     // 初值来自声明（同表单形态的 `createEntity`）：取数前就用它渲染 —— 宿主插槽里的
     // `entity.metadata.xxx` 这类深层取值必须有个能站住的对象，否则一进页面就抛
-    const entity = ref((props.page.detail.createEntity?.() ?? {}) as TEntity) as Ref<TEntity>
+    const entity = ref((props.page.detail.createEntity?.() ?? {}) as DefaultCrudEntity) as Ref<DefaultCrudEntity>
     /** 陈旧检查：默认 `'overwrite'`（详情无本地编辑 ⇒ 变了直接覆盖；被删才提示） */
     const stale = useStaleCheck({
       pageMode: props.page.staleCheck,
@@ -130,25 +129,25 @@ const CrudDetailPage = defineComponent({
      * 或默认 `service.get(id)`（这里解包）；然后过一遍 `postGetEntity`。
      * **不写回表单/实体**，交给调用方（首屏直接赋值，陈旧检查只拿去比对）。
      */
-    async function fetchRemote(): Promise<TEntity | undefined> {
+    async function fetchRemote(): Promise<DefaultCrudEntity | undefined> {
       if (props.id == null) {
         return
       }
-      let value: TEntity | undefined
+      let value: DefaultCrudEntity | undefined
       if (props.page.detail.getDetail) {
         value = await props.page.detail.getDetail(props.id, ctx.value)
       } else {
-        const result = (await props.page.service.get(props.id as never)) as RestResult<TEntity>
+        const result = (await props.page.service.get(props.id as never)) as RestResult<DefaultCrudEntity>
         if (!isBusinessSuccess(result)) {
           throw new Error(result.message)
         }
-        value = result.data as TEntity | undefined
+        value = result.data as DefaultCrudEntity | undefined
       }
       if (value == null) {
         return
       }
-      const merged = {...entity.value, ...value} as TEntity
-      return ((await props.page.detail.postGetEntity?.(merged, ctx.value)) ?? merged) as TEntity
+      const merged = {...entity.value, ...value} as DefaultCrudEntity
+      return ((await props.page.detail.postGetEntity?.(merged, ctx.value)) ?? merged) as DefaultCrudEntity
     }
 
     /** 首屏取数：loading 交给 `DataLoadingCard`（它 `try/finally` 包住，并做 in-flight 去重） */
@@ -179,7 +178,7 @@ const CrudDetailPage = defineComponent({
       }
     }
 
-    expose<CrudDetailPageExpose<TEntity>>({
+    expose<CrudDetailPageExpose<DefaultCrudEntity>>({
       // 同 `CrudFormPage`：expose 出去的一律是"值"（Vue 会解包 ref），用 getter 读 ref 保响应式
       get entity() {
         return entity.value

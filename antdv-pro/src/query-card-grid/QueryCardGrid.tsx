@@ -1,32 +1,18 @@
-import {
-  computed,
-  type CSSProperties,
-  defineComponent,
-  type PropType,
-  type Ref,
-  ref,
-  type SlotsType,
-} from 'vue'
-import {Card, CardGrid, Empty, Typography} from 'antdv-next'
+import {defineComponent, type PropType, type SlotsType} from 'vue'
 import type {TableProps} from 'antdv-next'
-import {useConfig} from 'antdv-next/dist/config-provider/context'
-import {classNames, splitSemantic, useTwoWayModel} from '@loncra/antdv'
+import {CardGrid, Empty} from 'antdv-next'
+import {classNames} from '@loncra/antdv'
 import {type FilterRequest, type PageRequest} from '@loncra/client/commons'
 import BasicCrudQuery from '../basic-crud-query'
 import type {AuthorityProps} from '../_util/crud/actions'
 import type {CollectionExpose} from '../_util/crud/collectionExpose'
-import {
-  DEFAULT_COLLECTION_PAGINATION,
-  type DefaultCrudEntity,
-} from '../_util/crud/useCollectionData'
-import type {BasicCrudQueryExpose, RefreshOnActivate} from '../basic-crud-query/types'
+import {DEFAULT_COLLECTION_PAGINATION, type DefaultCrudEntity,} from '../_util/crud/useCollectionData'
+import type {RefreshOnActivate} from '../basic-crud-query/types'
 import {resolveRowKey} from '../_util/crud/rowKey'
-import {isDragEnabled, type DragProp} from '../_util/crud/useDrag'
-import {useFlatDragDrop} from '../_util/crud/useFlatDragDrop'
-import ActionButton from '../action-button'
-import useStyle from './style'
+import {CARD_GRID_COLUMNS_VAR} from './constants'
+import QueryCardGridDefaultItem from './item/QueryCardGridDefaultItem'
+import {useQueryCardGrid} from './useQueryCardGrid'
 import type {
-  CardGridDragDirection,
   QueryCardGridConstructor,
   QueryCardGridEmits,
   QueryCardGridItemActionsSlot,
@@ -35,30 +21,6 @@ import type {
   QueryCardGridSlots,
 } from './types'
 
-const QUERY_CARD_GRID_EMITS = [
-  'update:dataSource',
-  'update:loading',
-  'update:query',
-  'update:selectedItems',
-  'update:pagination',
-  'action',
-  'add',
-  'edit',
-  'detail',
-  'deleted',
-  'drop',
-] as const
-
-/** 语义 map 的部件表（键前缀）：`cardGrid.` 是网格容器/项，不带前缀的算卡片本体（见 `splitSemantic`） */
-const SEMANTIC_PARTS = ['card', 'cardGrid'] as const
-
-/**
- * **内容层**：只负责"卡片网格怎么画" —— 网格排布、选中、拖拽落点、`item` / `itemActions` 槽。
- *
- * 数据 / 标题 / 统一分页 / 工具条·批量·项内动作的解析都在 `BasicCrudQuery` 基类里：
- * 本组件把"交给基类"的那几个 props 原样转发，并用 `v-model` 与基类共用同一份数据；
- * 需要基类的能力（行内动作解析、删除）走它 expose 的口。
- */
 const QueryCardGrid = defineComponent({
   name: 'LQueryCardGrid',
   inheritAttrs: false,
@@ -69,42 +31,31 @@ const QueryCardGrid = defineComponent({
       type: [Boolean, Function] as PropType<RefreshOnActivate>,
       default: true,
     },
-    /**
-     * 卡片头（转发给基类）：`VNode` 直接用、`false` 不要卡片头、不给走 `CrudConfig.resolveDefaultTitle`。
-     *
-     * ⚠️ **`default: undefined` 不能删**：类型里带了 `Boolean`，父级"不传"会被 Vue 的布尔转换变成
-     * `false`（= "不要卡片头"）⇒ 默认标题与工具栏都没了。
-     */
     title: {type: [Object, Boolean] as PropType<QueryCardGridProps['title']>, default: undefined},
     hasPermission: Function as PropType<(permission: string) => boolean>,
     authority: Object as PropType<AuthorityProps>,
-    /**
-     * 标题右侧的工具栏动作（转发给基类）：数组 = 与默认合并；`false` = 整排不出。
-     *
-     * ⚠️ **`default: undefined` 不能删**（与 `title` 同一个坑）：不传会被 Vue 的布尔转换变成 `false`。
-     */
     toolbarActions: {
       type: [Array, Boolean] as PropType<QueryCardGridProps['toolbarActions']>,
       default: undefined,
     },
-    /** 项内动作（转发给基类）：数组 = 与默认合并；`false` = 不要（同样不能删 `default: undefined`） */
     recordActions: {
       type: [Array, Boolean] as PropType<QueryCardGridProps['recordActions']>,
       default: undefined,
     },
-    /**
-     * 拖拽开关 + 幽灵内容（同表格）；要给方向就写对象形态 `{dragPreview, direction}`，那时 `direction` 才生效
-     */
     drag: [Boolean, Function, Object] as PropType<QueryCardGridProps['drag']>,
+    plain: {type: Boolean, default: false},
+    fetch: {type: Function as PropType<QueryCardGridProps['fetch']>, default: undefined},
     gridColumns: {type: Number, default: 5},
     selectable: {type: Boolean, default: true},
-    rowKey: [String, Function] as PropType<QueryCardGridProps['rowKey']>,
+    rowKey: [String, Function] as PropType<TableProps['rowKey']>,
     pagination: {
       type: [Object, Boolean] as PropType<TableProps['pagination']>,
       default: () => ({...DEFAULT_COLLECTION_PAGINATION}),
     },
     prefixCls: String,
     rootClass: String,
+    classes: Object as PropType<QueryCardGridProps['classes']>,
+    styles: Object as PropType<QueryCardGridProps['styles']>,
     dataSource: {type: Array as PropType<DefaultCrudEntity[]>, default: () => []},
     loading: {type: Boolean, default: false},
     query: {
@@ -113,146 +64,49 @@ const QueryCardGrid = defineComponent({
     },
     selectedItems: {type: Array as PropType<DefaultCrudEntity[]>, default: () => []},
   },
-  emits: [...QUERY_CARD_GRID_EMITS],
+  emits: [
+    'update:dataSource',
+    'update:loading',
+    'update:query',
+    'update:selectedItems',
+    'update:pagination',
+    'action',
+    'add',
+    'edit',
+    'detail',
+    'deleted',
+    'drop',
+  ],
   slots: Object as SlotsType<QueryCardGridSlots<DefaultCrudEntity>>,
   setup(props, {attrs, emit, expose, slots}) {
-    type TEntity = DefaultCrudEntity
-    type TId = string | number
-    const config = useConfig()
-    const prefixCls = computed(() =>
-      config.value.getPrefixCls('query-card-grid', props.prefixCls ?? 'loncra-query-card-grid'),
-    )
-    const [hashId, cssVarCls] = useStyle(prefixCls)
-    /** 内核（数据 / 标题 / 分页 / 动作解析）在基类，这里只读它的 expose */
-    const base = ref<BasicCrudQueryExpose<TEntity, TId>>()
-
-    const dataSource = useTwoWayModel(props, 'dataSource', emit) as unknown as Ref<TEntity[]>
-    const selectedItems = useTwoWayModel(props, 'selectedItems', emit) as unknown as Ref<TEntity[]>
-
-    /** `drag` 两种形态归一：对象形态才关心方向，否则按横向 */
-    const dragPreview = computed((): DragProp<TEntity> | undefined =>
-      typeof props.drag === 'object' ? props.drag.dragPreview : props.drag,
-    )
-    const dragDirection = computed((): CardGridDragDirection =>
-      typeof props.drag === 'object' ? props.drag.direction : 'horizontal',
-    )
-    const dragEnabled = computed(() => isDragEnabled(dragPreview.value))
-    const ghostClass = computed(() =>
-      classNames(hashId.value, cssVarCls.value, `${prefixCls.value}-drag-ghost`),
-    )
-    const dropClassPrefix = computed(() => classNames(hashId.value, prefixCls.value))
-
-    const {onDragHandleStart, onDragHandleEnd, buildDropZoneProps, dropTargetClass} = useFlatDragDrop<
-      TEntity,
-      TId
-    >({
-      drag: dragPreview,
-      // 拖拽的同一性判断也要跟 rowKey 对齐（rowKey 是函数时拿不到字段名，回退 id）
-      idKey: (typeof props.rowKey === 'string' ? props.rowKey : undefined) as keyof TEntity & string | undefined,
+    const {
+      prefixCls,
+      hashId,
+      cssVarCls,
+      base,
       dataSource,
-      direction: dragDirection.value,
-      ghostClass,
-      dropClassPrefix,
-      onFlatDrop: ({sorts, target, fromIndex, toIndex}) =>
-        emit('drop', sorts, target, fromIndex, toIndex),
-    })
+      selectedItems,
+      baseClasses,
+      baseStyles,
+      dragEnabled,
+      buildDropZoneProps,
+      dropTargetClass,
+      isSelected,
+      onSelect,
+      itemActionsOf,
+      onDragHandleStart,
+      onDragHandleEnd,
+    } = useQueryCardGrid(props, emit)
 
-    function isSelected(record: TEntity) {
-      const id = resolveRowKey(props.rowKey, record)
-      return selectedItems.value.some((item) => resolveRowKey(props.rowKey, item) === id)
-    }
-
-    function onSelect(record: TEntity) {
-      if (!props.selectable) {
-        return
-      }
-      if (isSelected(record)) {
-        const id = resolveRowKey(props.rowKey, record)
-        selectedItems.value = selectedItems.value.filter(
-          (item) => resolveRowKey(props.rowKey, item) !== id,
-        )
-      } else {
-        selectedItems.value = [...selectedItems.value, record]
-      }
-    }
-
-    /** 项内动作：解析在基类（它持有 `remove` / 权限 / 运行态），这里只取结果放进槽参数 */
-    function itemActionsOf(record: TEntity) {
-      return base.value?.resolveRecordActions(record) ?? []
-    }
-
-    function defaultItem(slot: QueryCardGridItemSlot<TEntity>) {
-      const hasActions = slot.itemActions.length > 0
-      const hasHandle = slot.dragEnabled
-      return (
-        <Card
-          size="small"
-          title={String(resolveRowKey(props.rowKey, slot.record) ?? '')}
-          v-slots={{
-            actions:
-              hasActions || hasHandle
-                ? () => (
-                    <>
-                      {hasActions ? (
-                        <div onClick={(e: Event) => e.stopPropagation()}>
-                          <ActionButton
-                            size="small"
-                            type="text"
-                            alwaysDropdown
-                            actions={slot.itemActions}
-                            onAction={(id: string) => base.value?.onRecordAction(id, slot.record)}
-                          />
-                        </div>
-                      ) : null}
-                      {hasHandle ? (
-                        <div
-                          class={classNames(`${prefixCls.value}-drag-handle`)}
-                          draggable
-                          onClick={(e: Event) => e.stopPropagation()}
-                          onDragstart={slot.onDragStart}
-                          onDragend={slot.onDragEnd}
-                        >
-                          <Typography.Text type="secondary">::</Typography.Text>
-                        </div>
-                      ) : null}
-                    </>
-                  )
-                : undefined,
-          }}
-        />
-      )
-    }
-
-    expose<CollectionExpose<TEntity>>({
+    expose<CollectionExpose<DefaultCrudEntity>>({
       fetchDataSource: async () => base.value?.fetchDataSource(),
       remove: (records) => base.value?.remove(records),
     })
 
     return () => {
-      const {
-        class: attrClass,
-        style: attrStyle,
-        classes: attrClasses,
-        styles: attrStyles,
-        ...restAttrs
-      } = attrs
-      /**
-       * 语义样式按部件拆（键前缀见 `SEMANTIC_PARTS`）：`cardGrid.` 落我们自己的网格容器与每一项
-       * （`CardGrid` 官方没有语义类，只能挂自己的节点上）。
-       */
-      const classSemantic = splitSemantic(
-        attrClasses as Record<string, string> | undefined,
-        SEMANTIC_PARTS,
-        'card',
-      )
-      const styleSemantic = splitSemantic(
-        attrStyles as Record<string, unknown> | undefined,
-        SEMANTIC_PARTS,
-        'card',
-      )
-      const gridClasses = classSemantic.cardGrid
-      const gridStyles = styleSemantic.cardGrid
-      // 壳（Card）在基类那侧：尺寸、类名、CSS 变量都经 attrs 通道挂到 Card 上（宿主自给的以宿主为准）
+      const {class: attrClass, style: attrStyle, ...restAttrs} = attrs
+      const gridClasses = props.classes?.cardGrid
+      const gridStyles = props.styles?.cardGrid
       const shellAttrs = {size: 'small', ...restAttrs}
       const shellClass = classNames(
         prefixCls.value,
@@ -261,19 +115,14 @@ const QueryCardGrid = defineComponent({
         props.rootClass,
         attrClass,
       )
-      const shellStyle = {
-        ...(typeof attrStyle === 'object' && attrStyle ? attrStyle : {}),
-        '--loncra-card-grid-columns': String(props.gridColumns ?? 5),
-      }
+      const shellStyle = [attrStyle, {[CARD_GRID_COLUMNS_VAR]: String(props.gridColumns)}]
 
       return (
         <BasicCrudQuery
           ref={base}
           {...shellAttrs}
-          {...({
-            classes: {card: classSemantic.card},
-            styles: {card: styleSemantic.card},
-          } as Record<string, unknown>)}
+          classes={baseClasses.value}
+          styles={baseStyles.value}
           class={shellClass}
           style={shellStyle}
           service={props.service}
@@ -284,21 +133,23 @@ const QueryCardGrid = defineComponent({
           authority={props.authority}
           toolbarActions={props.toolbarActions}
           recordActions={props.recordActions}
+          plain={props.plain}
+          fetch={props.fetch}
           selectedKey="selectedItems"
           dataSource={dataSource.value}
           loading={props.loading}
           query={props.query}
           selectedItems={selectedItems.value}
           pagination={props.pagination}
-          onUpdate:dataSource={(value: TEntity[]) => (dataSource.value = value)}
+          onUpdate:dataSource={(value: DefaultCrudEntity[]) => (dataSource.value = value)}
           onUpdate:loading={(value: boolean) => emit('update:loading', value)}
           onUpdate:query={(value: FilterRequest | PageRequest) => emit('update:query', value)}
-          onUpdate:selectedItems={(value: TEntity[]) => emit('update:selectedItems', value)}
+          onUpdate:selectedItems={(value: DefaultCrudEntity[]) => emit('update:selectedItems', value)}
           onUpdate:pagination={(value: TableProps['pagination']) => emit('update:pagination', value)}
           onAdd={() => emit('add')}
-          onEdit={(record: TEntity) => emit('edit', record)}
-          onDetail={(record: TEntity) => emit('detail', record)}
-          onDeleted={(records: TEntity[]) => emit('deleted', records)}
+          onEdit={(record: DefaultCrudEntity) => emit('edit', record)}
+          onDetail={(record: DefaultCrudEntity) => emit('detail', record)}
+          onDeleted={(records: DefaultCrudEntity[]) => emit('deleted', records)}
           onAction={(payload) => emit('action', payload)}
           v-slots={{
             title: slots.title ? () => slots.title?.() : undefined,
@@ -306,12 +157,14 @@ const QueryCardGrid = defineComponent({
             default: () => (
               <div
                 class={classNames(
+                  prefixCls.value,
                   hashId.value,
+                  cssVarCls.value,
                   `${prefixCls.value}-grid`,
                   (dataSource.value || []).length <= 0 && `${prefixCls.value}-grid-empty`,
                   gridClasses?.root,
                 )}
-                style={gridStyles?.root as CSSProperties | undefined}
+                style={gridStyles?.root}
               >
                 {(dataSource.value || []).length <= 0 ? (
                   slots.empty ? (
@@ -321,7 +174,7 @@ const QueryCardGrid = defineComponent({
                   )
                 ) : (
                   (dataSource.value || []).map((record, index) => {
-                    const itemSlot: QueryCardGridItemSlot<TEntity> = {
+                    const itemSlot: QueryCardGridItemSlot<DefaultCrudEntity> = {
                       record,
                       index,
                       selected: isSelected(record),
@@ -330,7 +183,7 @@ const QueryCardGrid = defineComponent({
                       onDragEnd: onDragHandleEnd,
                       itemActions: itemActionsOf(record),
                     }
-                    const itemActionsSlot: QueryCardGridItemActionsSlot<TEntity> = {
+                    const itemActionsSlot: QueryCardGridItemActionsSlot<DefaultCrudEntity> = {
                       record,
                       index,
                       dragEnabled: itemSlot.dragEnabled,
@@ -342,19 +195,32 @@ const QueryCardGrid = defineComponent({
                       <CardGrid
                         key={String(resolveRowKey(props.rowKey, record) ?? index)}
                         class={classNames(
+                          prefixCls.value,
                           hashId.value,
+                          cssVarCls.value,
                           `${prefixCls.value}-item`,
                           isSelected(record) && `${prefixCls.value}-item-selected`,
                           dropTargetClass(record),
                           gridClasses?.item,
                         )}
-                        style={gridStyles?.item as CSSProperties | undefined}
+                        style={gridStyles?.item}
                       >
-                        <div
-                          {...buildDropZoneProps(record)}
-                          onClick={() => onSelect(record)}
-                        >
-                          {slots.item ? slots.item(itemSlot) : defaultItem(itemSlot)}
+                        <div {...buildDropZoneProps(record)} onClick={() => onSelect(record)}>
+                          {slots.item ? (
+                            slots.item(itemSlot)
+                          ) : (
+                            <QueryCardGridDefaultItem
+                              prefixCls={prefixCls.value}
+                              hashId={hashId.value}
+                              cssVarCls={cssVarCls.value}
+                              title={String(resolveRowKey(props.rowKey, record) ?? '')}
+                              itemActions={itemSlot.itemActions}
+                              dragEnabled={itemSlot.dragEnabled}
+                              onDragStart={itemSlot.onDragStart}
+                              onDragEnd={itemSlot.onDragEnd}
+                              onAction={(id: string) => base.value?.onRecordAction(id, record)}
+                            />
+                          )}
                           {slots.itemActions ? (
                             <div
                               onClick={(e: Event) => {

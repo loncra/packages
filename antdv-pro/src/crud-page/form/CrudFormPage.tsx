@@ -20,16 +20,16 @@ import {fetchDataDictionaries, fetchEnumBuckets} from '../../basic-crud-query'
 import {buildFormFields} from './fields'
 import useStyle from './style'
 import type {
-  CrudFormPageConstructor,
-  CrudFormPageExpose,
-  CrudFormPageProps,
-  CrudFormPageSlots,
-  CrudStaleInfo,
-  FormService,
-  PageDeclContext,
-  PageFieldRenderContext,
-  PageFormContext,
-  PageFormFieldSlots,
+    CrudFormPageConstructor,
+    CrudFormPageExpose,
+    CrudFormPageProps,
+    CrudFormPageSlots,
+    CrudStaleInfo,
+    FormService,
+    PageDeclContext,
+    PageFieldRenderContext,
+    PageFormContext,
+    PageFormFieldSlots,
 } from '../types'
 
 /**
@@ -121,7 +121,6 @@ const CrudFormPage = defineComponent({
     stale: (_info: CrudStaleInfo) => true,
   },
   setup(props, {attrs, emit, expose, slots}) {
-    type TBody = DefaultCrudEntity
     const config = useCrudConfig()
     const locale = useLocale('Crud')
     const {message} = App.useApp()
@@ -168,7 +167,7 @@ const CrudFormPage = defineComponent({
     /** 初始加载 + 提交共用的加载态（卡片壳的 `Spin` 与保存按钮都读它） */
     const spinning = ref(false)
     /** 实体初值来自声明，随后与服务端数据合并 */
-    const entity = ref(props.page.form.createEntity()) as Ref<TBody>
+    const entity = ref(props.page.form.createEntity()) as Ref<DefaultCrudEntity>
     /**
      * 读侧服务：表单壳要 `get` / `save` ⇒ 按**事实**窄化（声明层只保证"读得到数据"，
      * 不污染 `CrudPageCore`）。
@@ -177,7 +176,7 @@ const CrudFormPage = defineComponent({
      * 那种情况这里其实是 `undefined` —— 只有**编辑态取数**会踩到它（而编辑页必然给了 `service`）；
      * 提交那条路走下面的 `submitEntity()`，那里有明确的守卫。
      */
-    const service = computed(() => props.page.service as unknown as FormService<TBody, TBody>)
+    const service = computed(() => props.page.service as unknown as FormService<DefaultCrudEntity, DefaultCrudEntity>)
 
     /**
      * 提交：声明写了 `form.submit` 就用它（"发送"这类页面的提交自成一件事），否则走 `service.save`。
@@ -215,7 +214,7 @@ const CrudFormPage = defineComponent({
       props.page.i18nResolver?.(key, named) ?? config.value.i18nResolver?.(key, named) ?? key
 
     /** 页级钩子的上下文：与声明级只差 `entity` 是 **Ref**（钩子要写初值） */
-    const formCtx = (): PageFormContext<TBody> => ({
+    const formCtx = (): PageFormContext<DefaultCrudEntity> => ({
       ...ctx.value,
       entity,
       t,
@@ -264,14 +263,14 @@ const CrudFormPage = defineComponent({
     }
 
     /** 服务端实体 → 与首屏同口径的实体（`createEntity` 的默认值打底 + `postGetEntity`） */
-    async function mergeRemote(data?: TBody): Promise<TBody> {
-      const value = {...entity.value, ...(data ?? {})} as TBody
-      return ((await props.page.form.postGetEntity?.(value, formCtx())) ?? value) as TBody
+    async function mergeRemote(data?: DefaultCrudEntity): Promise<DefaultCrudEntity> {
+      const value = {...entity.value, ...(data ?? {})} as DefaultCrudEntity
+      return ((await props.page.form.postGetEntity?.(value, formCtx())) ?? value) as DefaultCrudEntity
     }
 
     /** 取数并写回表单（首屏）：只写回"初值里存在的键"（`createEntity` 定的就是表单键集） */
-    async function fetchEntity(id: unknown): Promise<TBody | undefined> {
-      const result = (await service.value.get(id as never)) as RestResult<TBody>
+    async function fetchEntity(id: unknown): Promise<DefaultCrudEntity | undefined> {
+      const result = (await service.value.get(id as never)) as RestResult<DefaultCrudEntity>
       if (!isBusinessSuccess(result)) {
         message.warning(result.message)
         return
@@ -299,11 +298,11 @@ const CrudFormPage = defineComponent({
      * 重新取数（陈旧检查用）：与首屏同口径，但**不写回表单**。
      * 取不到返回 `undefined`；业务失败 `throw`（宿主 http 层已经提示过，这里不再弹第二遍）。
      */
-    async function fetchRemote(): Promise<TBody | undefined> {
+    async function fetchRemote(): Promise<DefaultCrudEntity | undefined> {
       if (props.id == null) {
         return
       }
-      const result = (await service.value.get(props.id as never)) as RestResult<TBody>
+      const result = (await service.value.get(props.id as never)) as RestResult<DefaultCrudEntity>
       if (!isBusinessSuccess(result)) {
         throw new Error(result.message)
       }
@@ -378,7 +377,7 @@ const CrudFormPage = defineComponent({
       emit('resetFields')
     }
 
-    expose<CrudFormPageExpose<TBody>>({
+    expose<CrudFormPageExpose<DefaultCrudEntity>>({
       // 同 `CrudHomePage`：expose 出去的一律是"值"（Vue 会解包 ref），用 getter 读 ref 保响应式
       get entity() {
         return entity.value

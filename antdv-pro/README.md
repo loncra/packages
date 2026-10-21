@@ -54,7 +54,7 @@ import zhCN from '@loncra/antdv-pro/locale/zh_CN'
 
 ## 本包的开发规范
 
-- **基础件复用 `@loncra/antdv`**：`classNames`、`splitSemantic`、`genStyleHooks`、`createUseLocale` 都从它引，不复制。本包不用 `useIsDark`，暗色由 `config-provider` 的 `theme.darkAlgorithm` 处理。
+- **基础件复用 `@loncra/antdv`**：`classNames`、`genStyleHooks`、`createUseLocale` 都从它引，不复制。本包不用 `useIsDark`，暗色由 `config-provider` 的 `theme.darkAlgorithm` 处理。
 - **后端调用一律经 `@loncra/client` 的子路径**（`commons` / `resource`）：`AttachmentService`、`BasicCrudService`、`ResourceServerService`（字典与枚举桶）、`getClient`、`SYSTEM_CONSTANT` 与各枚举。包内不出现 URL 拼接、不自建 HTTP 客户端。
 - `prefixCls` 用 `getPrefixCls('<名>', 'loncra-<名>')`，名字默认等于目录名。`getPrefixCls` 取自 antd 深路径的 `useConfig()`，不是本包的 `useAntdvConfig`。两个例外：`crud-page/form` → `crud-form-page`，`notification` → `app-notification`。
 - 本包有 9 个带样式的控件目录；`user-avatar` / `user-select` 只用前缀，没有样式文件。

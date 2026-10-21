@@ -3,32 +3,12 @@ import type {TableProps} from 'antdv-next'
 import {type FilterRequest, type PageRequest} from '@loncra/client/commons'
 import type {AuthorityProps} from '../_util/crud/actions'
 import type {CollectionExpose} from '../_util/crud/collectionExpose'
-import {
-  DEFAULT_COLLECTION_PAGINATION,
-  type DefaultCrudEntity,
-} from '../_util/crud/useCollectionData'
+import {DEFAULT_COLLECTION_PAGINATION, type DefaultCrudEntity,} from '../_util/crud/useCollectionData'
 import QueryTable from '../query-table/QueryTable'
 import type {EnumBucketsResponseBody} from '@loncra/client/resource'
 import type {PageDictionaries, RefreshOnActivate} from '../basic-crud-query'
 import type {QueryTableProps, QueryTableSlots, SearchableColumnType} from '../query-table/types'
 import type {CrudTableConstructor} from './types'
-
-const CRUD_TABLE_EMITS = [
-  'update:dataSource',
-  'update:loading',
-  'update:query',
-  'update:selectedRows',
-  'update:pagination',
-  'update:buckets',
-  'update:dictionaries',
-  'action',
-  'add',
-  'edit',
-  'detail',
-  'deleted',
-  'drop',
-  'treeDrop',
-] as const
 
 /**
  * CRUD 表格门面：**只把宿主给的东西原样转给 `QueryTable`**（它再交给 `BasicCrudQuery` 基类）。
@@ -101,13 +81,27 @@ const CrudTable = defineComponent({
     },
     selectedRows: {type: Array as PropType<DefaultCrudEntity[]>, default: () => []},
   },
-  emits: [...CRUD_TABLE_EMITS],
+  emits: [
+    'update:dataSource',
+    'update:loading',
+    'update:query',
+    'update:selectedRows',
+    'update:pagination',
+    'update:buckets',
+    'update:dictionaries',
+    'action',
+    'add',
+    'edit',
+    'detail',
+    'deleted',
+    'drop',
+    'treeDrop',
+  ],
   slots: Object as SlotsType<QueryTableSlots<DefaultCrudEntity>>,
   setup(props, {attrs, emit, expose, slots}) {
-    type TEntity = DefaultCrudEntity
-    const queryTable = ref<CollectionExpose<TEntity>>()
+    const queryTable = ref<CollectionExpose<DefaultCrudEntity>>()
 
-    expose<CollectionExpose<TEntity>>({
+    expose<CollectionExpose<DefaultCrudEntity>>({
       fetchDataSource: () => queryTable.value?.fetchDataSource() ?? Promise.resolve(),
       remove: (records) => queryTable.value?.remove(records),
     })
@@ -143,24 +137,24 @@ const CrudTable = defineComponent({
         pagination={props.pagination}
         buckets={props.buckets}
         dictionaries={props.dictionaries}
-        onUpdate:dataSource={(value: TEntity[]) => emit('update:dataSource', value)}
+        onUpdate:dataSource={(value: DefaultCrudEntity[]) => emit('update:dataSource', value)}
         onUpdate:loading={(value: boolean) => emit('update:loading', value)}
         onUpdate:query={(value: FilterRequest | PageRequest) => emit('update:query', value)}
-        onUpdate:selectedRows={(value: TEntity[]) => emit('update:selectedRows', value)}
+        onUpdate:selectedRows={(value: DefaultCrudEntity[]) => emit('update:selectedRows', value)}
         onUpdate:pagination={(value: unknown) => emit('update:pagination', value)}
         onUpdate:buckets={(value: EnumBucketsResponseBody) => emit('update:buckets', value)}
         onUpdate:dictionaries={(value: PageDictionaries) => emit('update:dictionaries', value)}
         onAction={(payload) => emit('action', payload)}
         onAdd={() => emit('add')}
-        onEdit={(record: TEntity) => emit('edit', record)}
-        onDetail={(record: TEntity) => emit('detail', record)}
-        onDeleted={(records: TEntity[]) => emit('deleted', records)}
+        onEdit={(record: DefaultCrudEntity) => emit('edit', record)}
+        onDetail={(record: DefaultCrudEntity) => emit('detail', record)}
+        onDeleted={(records: DefaultCrudEntity[]) => emit('deleted', records)}
         onDrop={(sorts, target, fromIndex, toIndex) => emit('drop', sorts, target, fromIndex, toIndex)}
         onTreeDrop={(sorts, drag, target, payload) => emit('treeDrop', sorts, drag, target, payload)}
         v-slots={{
           title: slots.title ? () => slots.title?.() : undefined,
           expandedRowRender: slots.expandedRowRender
-            ? (args: {record: TEntity; index: number; indent: number; expanded: boolean}) =>
+            ? (args: {record: DefaultCrudEntity; index: number; indent: number; expanded: boolean}) =>
                 slots.expandedRowRender?.(args)
             : undefined,
           bodyCell: slots.bodyCell
@@ -171,9 +165,9 @@ const CrudTable = defineComponent({
                 column,
               }: {
                 text: unknown
-                record: TEntity
+                record: DefaultCrudEntity
                 index: number
-                column: SearchableColumnType<TEntity>
+                column: SearchableColumnType<DefaultCrudEntity>
               }) => slots.bodyCell?.({text, record, index, column})
             : undefined,
         }}
