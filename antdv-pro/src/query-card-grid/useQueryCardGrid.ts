@@ -5,9 +5,10 @@ import type {BasicCrudQueryClasses, BasicCrudQueryExpose, BasicCrudQueryStyles,}
 import type {DefaultCrudEntity} from '../_util/crud/useCollectionData'
 import {resolveRowKey} from '../_util/crud/rowKey'
 import {type DragProp, isDragEnabled} from '../_util/crud/useDrag'
+import {useCollectionModels} from '../_util/crud/useCollectionModels'
 import {useFlatDragDrop} from '../_util/crud/useFlatDragDrop'
 import useStyle from './style'
-import type {CardGridDragDirection, QueryCardGridProps} from './types'
+import type {QueryCardGridProps} from './types'
 
 export function useQueryCardGrid(
   props: QueryCardGridProps<string | number, DefaultCrudEntity, DefaultCrudEntity>,
@@ -19,7 +20,12 @@ export function useQueryCardGrid(
   )
   const [hashId, cssVarCls] = useStyle(prefixCls)
   const base = ref<BasicCrudQueryExpose<DefaultCrudEntity, string | number>>()
-  const dataSource = useTwoWayModel(props, 'dataSource', emit) as unknown as Ref<DefaultCrudEntity[]>
+  const {
+    dataSource,
+    loading,
+    query,
+    pagination: tablePagination,
+  } = useCollectionModels(props, emit)
   const selectedItems = useTwoWayModel(props, 'selectedItems', emit) as unknown as Ref<DefaultCrudEntity[]>
 
   const baseClasses = computed<BasicCrudQueryClasses>(() => ({
@@ -36,9 +42,6 @@ export function useQueryCardGrid(
   const dragPreview = computed((): DragProp<DefaultCrudEntity> | undefined =>
     typeof props.drag === 'object' ? props.drag.dragPreview : props.drag,
   )
-  const dragDirection = computed((): CardGridDragDirection =>
-    typeof props.drag === 'object' ? props.drag.direction : 'horizontal',
-  )
   const dragEnabled = computed(() => isDragEnabled(dragPreview.value))
   const ghostClass = computed(() =>
     classNames(prefixCls.value, hashId.value, cssVarCls.value, `${prefixCls.value}-drag-ghost`),
@@ -54,7 +57,7 @@ export function useQueryCardGrid(
       | (keyof DefaultCrudEntity & string)
       | undefined,
     dataSource,
-    direction: dragDirection.value,
+    direction: typeof props.drag === 'object' ? props.drag.direction : 'horizontal',
     ghostClass,
     dropClassPrefix,
     onFlatDrop: ({sorts, target, fromIndex, toIndex}) =>
@@ -90,6 +93,9 @@ export function useQueryCardGrid(
     cssVarCls,
     base,
     dataSource,
+    loading,
+    query,
+    tablePagination,
     selectedItems,
     baseClasses,
     baseStyles,

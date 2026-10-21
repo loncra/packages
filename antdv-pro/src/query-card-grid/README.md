@@ -1,6 +1,6 @@
 # `QueryCardGrid` 卡片网格
 
-把同一份「取数 / 分页 / 字典 / 标题 / 工具栏 / 项内动作」按卡片网格排出来的内容层：数据在 `BasicCrudQuery` 基类里，本控件只负责画网格、管选中、接拖拽。
+把同一份「取数 / 分页 / 标题 / 工具栏 / 项内动作」按卡片网格排出来的内容层：数据在 `BasicCrudQuery` 基类里，本控件只负责画网格、管选中、接拖拽。
 
 ## 何时使用 {#when-to-use}
 
@@ -53,7 +53,7 @@ const query = ref<FilterRequest>({})
 | pagination | 分页对象（`v-model`）；`false` 不出分页 | `TableProps['pagination']` | `{hideOnSinglePage: true, align: 'center'}` | - |
 | prefixCls | 前缀，默认 `loncra-query-card-grid` | string | - | - |
 | rootClass | 并入根元素的类名，位置在宿主 `class` 之前 | string | - | - |
-| classes | 区域表，见 [语义化 DOM](#semantic-dom)：`card` / `spin` / `pagination`（基类三区域）+ `cardGrid.root` / `cardGrid.item` | `QueryCardGridClasses` | - | - |
+| classes | 区域表，见 [语义化 DOM](#semantic-dom)：`card` / `spin` / `pagination`（基类三区域）+ `cardGrid.grid` / `cardGrid.item` | `QueryCardGridClasses` | - | - |
 | styles | 同上区域的样式表 | `QueryCardGridStyles` | - | - |
 | dataSource | 当前数据（`v-model`） | `TEntity[]` | `[]` | - |
 | loading | 加载态（`v-model`）；写本地立即生效并同步 `emit`，宿主不接事件也照样转圈 | boolean | `false` | - |
@@ -102,7 +102,7 @@ const query = ref<FilterRequest>({})
 
 ### QueryCardGridClasses / QueryCardGridStyles {#querycardgridclasses}
 
-> `extends BasicCrudQueryClasses`（继承 `card` / `spin` / `pagination` 三个基类区域，原样转发给基类）+ `cardGrid?: {root?: string; item?: string}`（落本控件自己的网格容器与每一项）。`QueryCardGridStyles` 同形，`cardGrid` 的值为 `CSSProperties`。
+> `extends BasicCrudQueryClasses`（继承 `card` / `spin` / `pagination` 三个基类区域，原样转发给基类）+ `cardGrid?: {grid?: string; item?: string}`（落本控件自己的网格容器与每一项）。`QueryCardGridStyles` 同形，`cardGrid` 的值为 `CSSProperties`。
 
 ### QueryCardGridItemSlot / QueryCardGridItemActionsSlot {#querycardgriditemslot}
 
@@ -120,7 +120,7 @@ const query = ref<FilterRequest>({})
 | card | 卡片壳的语义键，转发给基类的 `Card`；`plain` 下没有落点 |
 | spin | 内容区 `Spin` 的语义键（基类出的那个）；`:loading="false"` 时没有落点 |
 | pagination | 分页器 `Pagination` 的语义键；`:pagination="false"` 时没有落点 |
-| cardGrid.root | 网格容器（所有卡片的外层） |
+| cardGrid.grid | 网格容器（所有卡片的外层） |
 | cardGrid.item | 每一张卡片（`CardGrid` 的根） |
 
 自有类名都在本控件自己画的节点上，**每个节点都带 `prefixCls` + `hashId` + `cssVarCls`**：
@@ -138,4 +138,4 @@ const query = ref<FilterRequest>({})
 
 **attrs 落点**：`class` / `style` 落根（`style` 支持对象 / 数组 / 字符串，数组不会被丢）；其余 attrs 下推给基类，最终落到卡片壳上。
 
-**无落点**：空态的 `Empty`、默认卡片里的标题与 `Typography.Text` 没有区域键，要改只能从上面的自有类名往下写选择器，或者用 `#item` 槽自己画。
+**无落点**：空态的 `Empty`、默认卡片本体（每张卡片里那个 `Card`，与 `card` 区域的壳不是同一个实例）以及它里面的标题、`Typography.Text` 都没有区域键，要改只能从上面的自有类名往下写选择器，或者用 `#item` 槽自己画。

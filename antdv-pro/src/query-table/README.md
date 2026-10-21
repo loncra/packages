@@ -1,5 +1,7 @@
 # QueryTable 表格
 
+宿主列表页的**表格形态**：数据、分页、字典、标题、动作都交给 `BasicCrudQuery` 基类，本控件只画表格 —— 列、列筛选、拖拽列、自带标题与各种槽。
+
 ## 何时使用 {#when-to-use}
 
 - 需要一个**已经接好取数 / 分页 / 字典 / 标题 / 工具栏 / 行内动作**的 antd `Table`：直接用本控件。
@@ -12,21 +14,23 @@
 
 ```vue
 <script setup lang="ts">
-import {markRaw} from 'vue'
+import {markRaw, ref} from 'vue'
 import {Input, Select} from 'antdv-next'
 import {QueryTable} from '@loncra/antdv-pro'
 import type {SearchableColumnType} from '@loncra/antdv-pro'
-import type {SysRoleEntity} from '@loncra/client/resource'
+import {RoleService, type RoleEntity} from '@loncra/client/auth'
+import type {FilterRequest} from '@loncra/client/commons'
 
-const service = roleService
-const columns: SearchableColumnType<SysRoleEntity>[] = [
+const service = new RoleService()
+const query = ref<FilterRequest>({})
+const columns: SearchableColumnType<RoleEntity>[] = [
   {key: 'name', width: 200, search: {component: markRaw(Input)}},
   {
     key: 'enabled',
     width: 100,
     search: {
       component: markRaw(Select),
-      props: {options: [{label: '启用', value: true}]},
+      props: {options: [{label: '启用', value: 1}]},
     },
   },
 ]

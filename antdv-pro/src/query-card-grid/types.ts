@@ -22,11 +22,11 @@ import type {BasicCrudQueryClasses, BasicCrudQueryStyles, QueryCollectionProps,}
 export type CardGridDragDirection = 'horizontal' | 'vertical'
 
 export interface QueryCardGridClasses extends BasicCrudQueryClasses {
-  cardGrid?: {root?: string; item?: string}
+  cardGrid?: {grid?: string; item?: string}
 }
 
 export interface QueryCardGridStyles extends BasicCrudQueryStyles {
-  cardGrid?: {root?: CSSProperties; item?: CSSProperties}
+  cardGrid?: {grid?: CSSProperties; item?: CSSProperties}
 }
 
 export type CardGridDragProp<TEntity> =

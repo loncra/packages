@@ -73,6 +73,8 @@ const CrudTable = defineComponent({
     },
     prefixCls: String,
     rootClass: String,
+    classes: Object as PropType<QueryTableProps['classes']>,
+    styles: Object as PropType<QueryTableProps['styles']>,
     dataSource: {type: Array as PropType<DefaultCrudEntity[]>, default: () => []},
     loading: {type: Boolean, default: false},
     query: {
@@ -130,6 +132,8 @@ const CrudTable = defineComponent({
         rowSelection={props.rowSelection}
         prefixCls={props.prefixCls}
         rootClass={props.rootClass}
+        classes={props.classes}
+        styles={props.styles}
         dataSource={props.dataSource}
         loading={props.loading}
         query={props.query}

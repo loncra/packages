@@ -85,6 +85,9 @@ const QueryCardGrid = defineComponent({
       cssVarCls,
       base,
       dataSource,
+      loading,
+      query,
+      tablePagination,
       selectedItems,
       baseClasses,
       baseStyles,
@@ -137,15 +140,15 @@ const QueryCardGrid = defineComponent({
           fetch={props.fetch}
           selectedKey="selectedItems"
           dataSource={dataSource.value}
-          loading={props.loading}
-          query={props.query}
+          loading={loading.value}
+          query={query.value}
           selectedItems={selectedItems.value}
-          pagination={props.pagination}
+          pagination={tablePagination.value}
           onUpdate:dataSource={(value: DefaultCrudEntity[]) => (dataSource.value = value)}
-          onUpdate:loading={(value: boolean) => emit('update:loading', value)}
-          onUpdate:query={(value: FilterRequest | PageRequest) => emit('update:query', value)}
-          onUpdate:selectedItems={(value: DefaultCrudEntity[]) => emit('update:selectedItems', value)}
-          onUpdate:pagination={(value: TableProps['pagination']) => emit('update:pagination', value)}
+          onUpdate:loading={(value: boolean) => (loading.value = value)}
+          onUpdate:query={(value: FilterRequest | PageRequest) => (query.value = value)}
+          onUpdate:selectedItems={(value: DefaultCrudEntity[]) => (selectedItems.value = value)}
+          onUpdate:pagination={(value: TableProps['pagination']) => (tablePagination.value = value)}
           onAdd={() => emit('add')}
           onEdit={(record: DefaultCrudEntity) => emit('edit', record)}
           onDetail={(record: DefaultCrudEntity) => emit('detail', record)}
@@ -162,9 +165,9 @@ const QueryCardGrid = defineComponent({
                   cssVarCls.value,
                   `${prefixCls.value}-grid`,
                   (dataSource.value || []).length <= 0 && `${prefixCls.value}-grid-empty`,
-                  gridClasses?.root,
+                  gridClasses?.grid,
                 )}
-                style={gridStyles?.root}
+                style={gridStyles?.grid}
               >
                 {(dataSource.value || []).length <= 0 ? (
                   slots.empty ? (

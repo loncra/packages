@@ -6,6 +6,7 @@ import type {FilterRequest, PageRequest} from '@loncra/client/commons'
 import type {EnumBucketsResponseBody} from '@loncra/client/resource'
 import type {BasicCrudQueryExpose, PageDictionaries} from '../basic-crud-query'
 import {type DefaultCrudEntity, patchQuery} from '../_util/crud/useCollectionData'
+import {useCollectionModels} from '../_util/crud/useCollectionModels'
 import {useMergeRowSelection} from '../_util/crud/useMergeRowSelection'
 import {isDragEnabled} from '../_util/crud/useDrag'
 import {useTableRowDrag} from '../_util/crud/useTableRowDrag'
@@ -31,11 +32,13 @@ export function useQueryTable(
   const [hashId, cssVarCls] = useStyle(prefixCls)
   const basic = ref<BasicCrudQueryExpose<DefaultCrudEntity, string | number>>()
 
-  const dataSource = useTwoWayModel(props, 'dataSource', emit) as unknown as Ref<DefaultCrudEntity[]>
-  const loading = useTwoWayModel(props, 'loading', emit) as unknown as Ref<boolean>
-  const query = useTwoWayModel(props, 'query', emit) as unknown as Ref<FilterRequest | PageRequest>
+  const {
+    dataSource,
+    loading,
+    query,
+    pagination: tablePagination,
+  } = useCollectionModels(props, emit)
   const selectedRows = useTwoWayModel(props, 'selectedRows', emit) as unknown as Ref<DefaultCrudEntity[]>
-  const tablePagination = useTwoWayModel(props, 'pagination', emit) as unknown as Ref<TableProps['pagination']>
   const buckets = useTwoWayModel(props, 'buckets', emit) as unknown as Ref<EnumBucketsResponseBody>
   const dictionaries = useTwoWayModel(props, 'dictionaries', emit) as unknown as Ref<PageDictionaries>
   const tableColumns = ref<SearchableColumnType<DefaultCrudEntity>[]>([])
@@ -93,14 +96,7 @@ export function useQueryTable(
   )
 
   const tablePassthroughAttrs = computed(() => {
-    const {
-      class: _class,
-      style: _style,
-      rowSelection: _rowSelection,
-      classes: _classes,
-      styles: _styles,
-      ...rest
-    } = attrs
+    const {class: _class, style: _style, ...rest} = attrs
     if (rest.scroll === undefined) {
       const cols: {width?: string | number}[] = tableColumns.value
       const allSized = cols.length > 0 && cols.every((column) => column.width != null)

@@ -48,7 +48,7 @@ import zhCN from '@loncra/antdv-pro/locale/zh_CN'
 | --- | --- |
 | `<控件>/` | 一个控件一个目录。骨架 `index.ts` / 主组件 `.tsx` / `style/index.ts` 见 [CONTRIBUTING.md](../CONTRIBUTING.md) 第 7 节，`types.ts` 与 `constants.ts` 按需 |
 | `crud-page/` | 页面装配套件：`home/`、`form/`、`form-modal/`、`detail/`、`card-grid/`、`operation-trace/`，以及 `define.ts`（声明入口）、`registry.ts`（字段组件注册表）、`types.ts` |
-| `_util/` | 包内共用基础件：`format.ts`（单元格格式化）、`attachmentList.ts` / `uploadFile.ts` / `media.ts`（附件）、`useLocale.ts`，以及 `crud/`（`actions.ts` 动作解析、`defaultActions.ts` 默认动作、`useCollectionData.ts` 取数、`useCrudDelete.ts`、`useDrag.ts` / `useFlatDragDrop.ts` / `useTableRowDrag.ts`、`genDragStyle.ts`、`useMergeRowSelection.ts`、`dateUtils.ts` / `useDateFormat.ts`、`useStaleCheck.ts`、`navigate.ts`、`rowKey.ts`、`readPath.ts`、`sources.ts`、`collectionExpose.ts`） |
+| `_util/` | 包内共用基础件：`format.ts`（单元格格式化）、`attachmentList.ts` / `uploadFile.ts` / `media.ts`（附件）、`useLocale.ts`，以及 `crud/`（`actions.ts` 动作解析、`defaultActions.ts` 默认动作、`useCollectionData.ts` 取数、`useCollectionModels.ts`（集合的四个受控模型）、`useCrudDelete.ts`、`useDrag.ts` / `useFlatDragDrop.ts` / `useTableRowDrag.ts`、`genDragStyle.ts`、`useMergeRowSelection.ts`、`dateUtils.ts` / `useDateFormat.ts`、`useStaleCheck.ts`、`navigate.ts`、`rowKey.ts`、`readPath.ts`、`sources.ts`、`collectionExpose.ts`） |
 | `locale/` | 本包 locale 与 `Locale` 类型 |
 | `notification/` | `useAppNotification`（**有意例外**：这个目录没有 `index.ts`，根入口直接从文件导出） |
 

@@ -6,6 +6,7 @@ import ActionButton from '../../action-button'
 
 const QueryCardGridDefaultItem = defineComponent({
   name: 'LQueryCardGridDefaultItem',
+  inheritAttrs: false,
   props: {
     prefixCls: {type: String, required: true},
     hashId: String,
@@ -17,13 +18,17 @@ const QueryCardGridDefaultItem = defineComponent({
     onDragEnd: Function as PropType<() => void>,
     onAction: Function as PropType<(id: string) => void>,
   },
-  setup(props) {
+  setup(props, {attrs}) {
     return () => {
       const hasActions = props.itemActions.length > 0
       const hasHandle = props.dragEnabled
+      const {class: attrClass, style: attrStyle, ...rest} = attrs
       return (
         <Card
+          {...rest}
           size="small"
+          class={attrClass}
+          style={attrStyle}
           title={props.title}
           v-slots={{
             actions:
