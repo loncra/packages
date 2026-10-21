@@ -204,6 +204,10 @@ export {
   isOperationTraceVisible,
 } from './crud-page'
 export type {
+  CrudCardGridPageConstructor,
+  CrudCardGridPageExpose,
+  CrudCardGridPageProps,
+  CrudCardGridPageSlots,
   CrudDetailDefinition,
   CrudDetailPageConstructor,
   CrudDetailPageExpose,
@@ -215,6 +219,7 @@ export type {
   CrudFormPageExpose,
   CrudFormPageProps,
   CrudFormPageSlots,
+  FormService,
   CrudFormModalConstructor,
   CrudFormModalExpose,
   CrudFormModalProps,
@@ -240,6 +245,9 @@ export type {
   PageFormFieldKey,
   PageFormFieldSlots,
   PageCardGridDefinition,
+  OperationTraceEntity,
+  OperationTraceTableProps,
+  OperationTraceTableSlots,
   PageTableColumn,
   PageTableDefinition,
   PageTableEntry,

@@ -29,6 +29,7 @@ const CrudHomePage = defineComponent({
     title: {type: [Object, Boolean] as PropType<CrudHomePageProps['title']>, default: undefined},
     query: {type: Object as PropType<CrudHomePageProps['query']>, default: undefined},
     plain: {type: Boolean, default: false},
+    fetch: {type: Function as PropType<CrudHomePageProps['fetch']>, default: undefined},
   },
   slots: Object as SlotsType<CrudHomePageSlots<DefaultCrudEntity>>,
   setup(props, {attrs, expose, slots}) {
@@ -118,6 +119,7 @@ const CrudHomePage = defineComponent({
           title={props.title}
           query={props.query}
           plain={props.plain}
+          fetch={props.fetch}
           columns={columns.value}
           drag={props.page.table?.drag}
           authority={props.page.table?.authority}

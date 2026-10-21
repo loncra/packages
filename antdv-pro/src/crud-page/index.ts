@@ -50,6 +50,7 @@ export type {
   CrudFormPageExpose,
   CrudFormPageProps,
   CrudFormPageSlots,
+  FormService,
   PageFieldRenderContext,
   PageFormContext,
   PageFormDefinition,
