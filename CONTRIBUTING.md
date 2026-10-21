@@ -39,6 +39,8 @@ xxx/
 
 **为什么**：主组件一旦长出请求和业务分支就再也拆不动。状态、判定、展示分开后，任一层都能单独替换或单测。
 
+**受控模型**（宿主要双向绑定的值）一律走 `@loncra/antdv` 的 `useTwoWayModel`，写本地立即生效并同步 `emit`，宿主回写再经 props 回流。据此两条附加规则 —— 写完必须在同一 tick 内读得到新值（不得用 `nextTick` 绕过）；`update:*` 一律由写 ref 触发，不手写 `emit('update:x')`（没有对应 ref 的意图事件除外，如 `update:open`）。
+
 ### 9. 命名与类名
 
 - 组件名一律 `L` 前缀（`LFileEditor`），`inheritAttrs: false`；展示型子控件同样 `L` 前缀。

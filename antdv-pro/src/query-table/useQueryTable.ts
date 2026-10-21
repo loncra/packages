@@ -5,12 +5,11 @@ import {
   type SetupContext,
   type SlotsType,
   toRef,
-  useModel,
   watch,
 } from 'vue'
 import type {TableProps} from 'antdv-next'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
-import {classNames} from '@loncra/antdv'
+import {classNames, useTwoWayModel} from '@loncra/antdv'
 import type {FilterRequest, PageRequest} from '@loncra/client/commons'
 import type {EnumBucketsResponseBody} from '@loncra/client/resource'
 import type {BasicCrudQueryExpose, PageDictionaries} from '../basic-crud-query'
@@ -48,13 +47,13 @@ export function useQueryTable(
   const [hashId, cssVarCls] = useStyle(prefixCls)
   const basic = ref<BasicCrudQueryExpose<TEntity, TId>>()
 
-  const dataSource = useModel(props, 'dataSource') as unknown as Ref<TEntity[]>
-  const loading = useModel(props, 'loading') as unknown as Ref<boolean>
-  const query = useModel(props, 'query') as unknown as Ref<FilterRequest | PageRequest>
-  const selectedRows = useModel(props, 'selectedRows') as unknown as Ref<TEntity[]>
-  const tablePagination = useModel(props, 'pagination') as unknown as Ref<TableProps['pagination']>
-  const buckets = useModel(props, 'buckets') as unknown as Ref<EnumBucketsResponseBody>
-  const dictionaries = useModel(props, 'dictionaries') as unknown as Ref<PageDictionaries>
+  const dataSource = useTwoWayModel(props, 'dataSource', emit) as unknown as Ref<TEntity[]>
+  const loading = useTwoWayModel(props, 'loading', emit) as unknown as Ref<boolean>
+  const query = useTwoWayModel(props, 'query', emit) as unknown as Ref<FilterRequest | PageRequest>
+  const selectedRows = useTwoWayModel(props, 'selectedRows', emit) as unknown as Ref<TEntity[]>
+  const tablePagination = useTwoWayModel(props, 'pagination', emit) as unknown as Ref<TableProps['pagination']>
+  const buckets = useTwoWayModel(props, 'buckets', emit) as unknown as Ref<EnumBucketsResponseBody>
+  const dictionaries = useTwoWayModel(props, 'dictionaries', emit) as unknown as Ref<PageDictionaries>
   const tableColumns = ref<SearchableColumnType<TEntity>[]>([])
   const appliedDefaultValueKeys = new Set<string>()
 
@@ -128,8 +127,8 @@ export function useQueryTable(
     return rest
   })
 
-  function fetch() {
-    void basic.value?.fetchDataSource()
+  function fetch(nextQuery: FilterRequest | PageRequest = query.value) {
+    void basic.value?.fetchDataSource(nextQuery)
   }
 
   const {doSearch, clear, resetField, onFilterEnterKey} = useQueryTableFilter<TEntity>({

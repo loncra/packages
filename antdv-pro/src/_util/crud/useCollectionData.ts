@@ -28,8 +28,13 @@ export type DefaultCrudEntity = BasicIdMetadata<string | number>
 export const DEFAULT_COLLECTION_PAGINATION = {hideOnSinglePage: true, align: 'center'} as const
 
 /** 改查询条件：把 patch 并进持有查询状态的 ref（表格 / 基类共用同一个动作） */
-export function patchQuery(query: Ref<FilterRequest | PageRequest>, patch: FilterRequest): void {
-  query.value = {...query.value, ...patch}
+export function patchQuery(
+  query: Ref<FilterRequest | PageRequest>,
+  patch: FilterRequest,
+): FilterRequest | PageRequest {
+  const next = {...query.value, ...patch}
+  query.value = next
+  return next
 }
 
 export type CollectionService<
@@ -47,41 +52,54 @@ export function syncPaginationFromPageResult<TEntity>(
   pageData: ScrollPageResult<TEntity> & Partial<PageResult<TEntity>> & Partial<TotalPage<TEntity>>,
   fallbackNumber: number,
   rowCount: number,
-) {
-  pagination.pageSize = pageData.size || 10
+): CollectionPageState {
+  const pageSize = pageData.size || 10
   const n =
     typeof pageData.number === 'number' && Number.isFinite(pageData.number)
       ? pageData.number
       : fallbackNumber
+  let current = pagination.current
+  let total = pagination.total
   if (pageData.number) {
-    pagination.current = pageData.number
-    if (pageData.last) {
-      pagination.total = (n - 1) * pageData.size + rowCount
-    } else {
-      pagination.total = n * pageData.size + 1
-    }
+    current = pageData.number
+    total = pageData.last ? (n - 1) * pageData.size + rowCount : n * pageData.size + 1
   }
   if (pageData.totalCount) {
-    pagination.total = pageData.totalCount
+    total = pageData.totalCount
   }
+  return {...pagination, pageSize, current, total}
 }
 
 export function syncPaginationFromFindResult(
   pagination: CollectionPageState,
   query: FilterRequest | PageRequest,
   rowCount: number,
-) {
+): CollectionPageState {
   const querySize = typeof query.size === 'number' ? query.size : undefined
   const pageSize = pagination.pageSize ?? querySize ?? 10
   const queryNumber = typeof query.number === 'number' ? query.number : undefined
   const current = pagination.current ?? queryNumber ?? 1
-  pagination.pageSize = pageSize
-  pagination.current = current
-  if (rowCount < pageSize) {
-    pagination.total = (current - 1) * pageSize + rowCount
-  } else {
-    pagination.total = current * pageSize + 1
+  const total =
+    rowCount < pageSize ? (current - 1) * pageSize + rowCount : current * pageSize + 1
+  return {...pagination, pageSize, current, total}
+}
+
+function applyPagination(
+  target: Ref<CollectionPagination | undefined>,
+  next: CollectionPageState,
+): void {
+  const current = target.value
+  if (current === false || current === undefined) {
+    return
   }
+  if (
+    current.pageSize === next.pageSize &&
+    current.current === next.current &&
+    current.total === next.total
+  ) {
+    return
+  }
+  target.value = next
 }
 
 function isPageSearchService<
@@ -132,14 +150,17 @@ export async function fetchCollectionData<
     if (pagination.value === undefined) {
       pagination.value = false
     } else if (pagination.value !== false) {
-      syncPaginationFromFindResult(pagination.value, query, data.length)
+      applyPagination(pagination, syncPaginationFromFindResult(pagination.value, query, data.length))
     }
   } else if (isPageSearchService(service)) {
     const number = typeof query.number === 'number' ? query.number : 1
     const result: RestResult<TPage> = await service.page({...query, number})
     data.push(...(result.data?.elements || []))
     if (result.data && pagination.value !== false && pagination.value != null) {
-      syncPaginationFromPageResult(pagination.value, result.data, number, data.length)
+      applyPagination(
+        pagination,
+        syncPaginationFromPageResult(pagination.value, result.data, number, data.length),
+      )
     }
   } else if (isFindSearchService(service)) {
     const result: RestResult<TEntity[]> = await service.find(query)
@@ -147,7 +168,7 @@ export async function fetchCollectionData<
     if (pagination.value === undefined) {
       pagination.value = false
     } else if (pagination.value !== false) {
-      syncPaginationFromFindResult(pagination.value, query, data.length)
+      applyPagination(pagination, syncPaginationFromFindResult(pagination.value, query, data.length))
     }
   }
 

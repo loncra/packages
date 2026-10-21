@@ -8,7 +8,7 @@ peer：`vue`、`antdv-next`、`@antdv-next/icons`、`antdv-next-tiptap`（只有
 
 | 路径 | 内容 |
 | --- | --- |
-| `@loncra/antdv` | 全部控件 + 基础件（`classNames` / `splitSemantic` / `genStyleHooks` / `createStyleHooks` / `useLocale` / `createUseLocale` / `fillLocale` / `useIsDark` / `useFormItemTrigger`）+ 共享样式片段（`genFullSpinStyle` / `genScrollAreaStyle` / `SPIN_KEYFRAMES` / `JUMP_KEYFRAMES`）+ locale 默认包 + 类型；完整清单以 `src/index.ts` 为准 |
+| `@loncra/antdv` | 全部控件 + 基础件（`classNames` / `splitSemantic` / `genStyleHooks` / `createStyleHooks` / `useLocale` / `createUseLocale` / `fillLocale` / `useIsDark` / `useFormItemTrigger` / `useTwoWayModel`）+ 共享样式片段（`genFullSpinStyle` / `genScrollAreaStyle` / `SPIN_KEYFRAMES` / `JUMP_KEYFRAMES`）+ locale 默认包 + 类型；完整清单以 `src/index.ts` 为准 |
 | `@loncra/antdv/locale/zh_CN` | 简体中文语言包 |
 | `@loncra/antdv/locale/en_US` | 英文语言包 |
 
@@ -34,7 +34,7 @@ import zhCN from '@loncra/antdv/locale/zh_CN'
 | --- | --- |
 | `<控件>/` | 一个控件一个目录。骨架 `index.ts` / 主组件 `.tsx` / `types.ts` / `style/index.ts` 见 [CONTRIBUTING.md](../CONTRIBUTING.md) 第 7 节 |
 | `locale/` | 本包 locale 与 `Locale` 类型 |
-| `_util/` | 共用基础件：纯函数 `classNames`、`splitSemantic`、`genStyleHooks`、`isEmptyRichText` / `normalizeRichTextValue`，依赖 vue / antdv-next 的 composable（`useFormItemTrigger`，以及 `context/` 下的 `useLocale` / `createUseLocale` / `fillLocale` / `useIsDark`），样式机制与共享片段在 `style/`（工厂 `createStyleHooks`、`genFullSpinStyle`、`genScrollAreaStyle`、`SPIN_KEYFRAMES` / `JUMP_KEYFRAMES`） |
+| `_util/` | 共用基础件：纯函数 `classNames`、`splitSemantic`、`genStyleHooks`、`isEmptyRichText` / `normalizeRichTextValue`，依赖 vue / antdv-next 的 composable（`useFormItemTrigger` / `useTwoWayModel`，以及 `context/` 下的 `useLocale` / `createUseLocale` / `fillLocale` / `useIsDark`），样式机制与共享片段在 `style/`（工厂 `createStyleHooks`、`genFullSpinStyle`、`genScrollAreaStyle`、`SPIN_KEYFRAMES` / `JUMP_KEYFRAMES`） |
 
 ## 本包的开发规范
 

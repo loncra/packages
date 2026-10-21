@@ -126,6 +126,7 @@ export interface BasicCrudQueryExpose<
   TEntity extends BasicIdMetadata<TId>,
   TId = TEntity[typeof SYSTEM_CONSTANT.ID_NAME],
 > extends CollectionExpose<TEntity> {
+  fetchDataSource: (query?: FilterRequest | PageRequest) => Promise<void | undefined>
   resolveRecordActions: (record: TEntity) => ResolvedAction[]
   onRecordAction: (id: string, record: TEntity) => void
   hasRecordActions: boolean

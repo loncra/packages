@@ -113,7 +113,7 @@
 
 随属性走的几条边界：
 
-- **"受控"只在宿主同时给了值与对应的 `update:*` 时成立**：只给值不接事件时，`useModel` 会留本地副本，宿主传的值只当初始值。
+- **`v-model` 一律走 `useTwoWayModel`**：写本地立即生效，同时同步 `emit`；宿主回写经 props 回流覆盖。宿主只给值、不接事件时行为一致（本地照常写，事件没人听）。
 - **`selectedKey` 在 `setup` 时绑定**：运行中从 `selectedRows` 改成 `selectedItems` 不会重绑。
 - **同 id 覆盖是逐字段合并**：自定义 `{id: 'add', run}` 只换 `run`，`permission` 仍是 `authority?.add` ⇒ 没配 `authority` 的按钮依旧不显示。
 - **字典失败会连累取数**：`onPlanMounted` 先 `await loadDictionaries()` 再取数，没有 `try/catch` ⇒ 字典接口挂了列表一片空，错误冒成未处理拒绝。
@@ -149,7 +149,7 @@
 
 | 成员 | 说明 | 类型 | 版本 |
 | --- | --- | --- | --- |
-| fetchDataSource | 重新取数（先置 `loading`，结束后抛 `update:pagination`） | `() => Promise<void>` | - |
+| fetchDataSource | 重新取数（先置 `loading`）。给了参数就用它代替当前 `query` 取数，用于"改完条件立刻取"；`pagination` 只在其值真的变化时才回写宿主 | `(query?: FilterRequest \| PageRequest) => Promise<void>` | - |
 | remove | 走统一的删除确认流程。空数组直接返回；service 不能删时静默什么都不做 | `(records: TEntity[]) => void` | - |
 | resolveRecordActions | 解析某条记录的行内动作（已按权限过滤），形态组件画「操作」列用它 | `(record: TEntity) => ResolvedAction[]` | - |
 | onRecordAction | 行内动作点击后转发（内置 id 直接忽略） | `(id: string, record: TEntity) => void` | - |

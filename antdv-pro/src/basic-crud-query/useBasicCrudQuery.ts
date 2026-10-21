@@ -1,8 +1,9 @@
-import {computed, type Ref, type SetupContext, type SlotsType, toRef, useModel} from 'vue'
+import {computed, type Ref, type SetupContext, type SlotsType, toRef} from 'vue'
 import {App} from 'antdv-next'
 import type {TableProps} from 'antdv-next'
 import type {FilterRequest, PageRequest} from '@loncra/client/commons'
 import type {EnumBucketsResponseBody} from '@loncra/client/resource'
+import {useTwoWayModel} from '@loncra/antdv'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {useLocale} from '../_util/useLocale'
 import {useActionAuth, useCrudConfig} from '../crud-config-provider'
@@ -44,32 +45,30 @@ export function useBasicCrudQuery(
   )
   const [hashId, cssVarCls] = useStyle(prefixCls)
 
-  const dataSource = useModel(props, 'dataSource') as unknown as Ref<TEntity[]>
-  const loading = useModel(props, 'loading') as unknown as Ref<boolean>
-  const query = useModel(props, 'query') as unknown as Ref<FilterRequest | PageRequest>
-  const pagination = useModel(props, 'pagination') as unknown as Ref<TableProps['pagination']>
-  const selected = useModel(props, props.selectedKey ?? 'selectedRows') as unknown as Ref<TEntity[]>
-  const buckets = useModel(props, 'buckets') as unknown as Ref<EnumBucketsResponseBody>
-  const dictionaries = useModel(props, 'dictionaries') as unknown as Ref<PageDictionaries>
+  const dataSource = useTwoWayModel(props, 'dataSource', emit) as unknown as Ref<TEntity[]>
+  const loading = useTwoWayModel(props, 'loading', emit) as unknown as Ref<boolean>
+  const query = useTwoWayModel(props, 'query', emit) as unknown as Ref<FilterRequest | PageRequest>
+  const pagination = useTwoWayModel(props, 'pagination', emit) as unknown as Ref<TableProps['pagination']>
+  const selected = toRef(props, props.selectedKey ?? 'selectedRows') as unknown as Ref<TEntity[]>
+  const buckets = useTwoWayModel(props, 'buckets', emit) as unknown as Ref<EnumBucketsResponseBody>
+  const dictionaries = useTwoWayModel(props, 'dictionaries', emit) as unknown as Ref<PageDictionaries>
 
-  async function fetchDataSource() {
+  async function fetchDataSource(nextQuery?: FilterRequest | PageRequest) {
     loading.value = true
     try {
       dataSource.value = await fetchCollectionData({
         service: props.service,
-        query: query.value,
+        query: nextQuery ?? query.value,
         pagination: pagination,
         fetch: props.fetch,
       })
-      emit('update:pagination', pagination.value)
     } finally {
       loading.value = false
     }
   }
 
-  function onPageChange(page: number, pageSize: number) {
-    patchQuery(query, {number: page, size: pageSize})
-    void fetchDataSource()
+  async function onPageChange(page: number, pageSize: number) {
+    void fetchDataSource(patchQuery(query, {number: page, size: pageSize}))
   }
 
   async function loadDictionaries() {
