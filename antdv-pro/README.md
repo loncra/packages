@@ -47,7 +47,7 @@ import zhCN from '@loncra/antdv-pro/locale/zh_CN'
 | 目录 | 内容 |
 | --- | --- |
 | `<控件>/` | 一个控件一个目录。骨架 `index.ts` / 主组件 `.tsx` / `style/index.ts` 见 [CONTRIBUTING.md](../CONTRIBUTING.md) 第 7 节，`types.ts` 与 `constants.ts` 按需 |
-| `crud-page/` | 页面装配套件：`home/`、`form/`、`form-modal/`、`detail/`、`card-grid/`、`operation-trace/`，以及 `define.ts`（声明入口）、`registry.ts`（字段组件注册表）、`types.ts` |
+| `crud-page/` | 页面装配套件：`home/`、`form/`、`form-modal/`、`detail/`、`card-grid/`、`operation-trace/`，以及 `define.ts`（声明入口）、`registryKinds.ts` / `usePageRegistry.ts`（字段组件注册表）、`fieldSourcesKinds.ts`（枚举 / 字典来源 → props）、`types.ts` + `pageTypes.ts`（声明模型与页面壳契约） |
 | `_util/` | 包内共用基础件：`format.ts`（单元格格式化）、`attachmentList.ts` / `uploadFile.ts` / `media.ts`（附件）、`useLocale.ts`，以及 `crud/`（`actions.ts` 动作解析、`defaultActions.ts` 默认动作、`useCollectionData.ts` 取数、`useCollectionModels.ts`（集合的四个受控模型）、`useCrudDelete.ts`、`useDrag.ts` / `useFlatDragDrop.ts` / `useTableRowDrag.ts`、`genDragStyle.ts`、`useMergeRowSelection.ts`、`dateUtils.ts` / `useDateFormat.ts`、`useStaleCheck.ts`、`navigate.ts`、`rowKey.ts`、`readPath.ts`、`sources.ts`、`collectionExpose.ts`） |
 | `locale/` | 本包 locale 与 `Locale` 类型 |
 | `notification/` | `useAppNotification`（**有意例外**：这个目录没有 `index.ts`，根入口直接从文件导出） |
@@ -59,7 +59,7 @@ import zhCN from '@loncra/antdv-pro/locale/zh_CN'
 - `prefixCls` 用 `getPrefixCls('<名>', 'loncra-<名>')`，名字默认等于目录名。`getPrefixCls` 取自 antd 深路径的 `useConfig()`，不是本包的 `useAntdvConfig`。两个例外：`crud-page/form` → `crud-form-page`，`notification` → `app-notification`。
 - 本包有 9 个带样式的控件目录；`user-avatar` / `user-select` 只用前缀，没有样式文件。
 - CSS 变量用 `--loncra-<控件>-<语义>` 手写（如 `--loncra-card-grid-columns`），不走 `getPrefixCls`。
-- **分层**：`basic-crud-query` 是所有内容层的底座（内部用 `data-loading-card` 与 `action-button`）→ `query-table` / `query-card-grid` 做查询内容 → `crud-table` / `crud-card-grid` 是固定实体类型的门面 → `crud-page` 装配页面（`define*` 声明翻成 props，字段组件走 `registry.ts`）。
+- **分层**：`basic-crud-query` 是所有内容层的底座（内部用 `data-loading-card` 与 `action-button`）→ `query-table` / `query-card-grid` 做查询内容 → `crud-table` / `crud-card-grid` 是固定实体类型的门面 → `crud-page` 装配页面（`define*` 声明翻成 props，字段组件走 `registryKinds.ts`）。
 - **Provider 层次**：`Provider`（`config-provider`）内嵌 antdv-next 的 `ConfigProvider` 与 `ClientProvider`、`CrudConfigProvider`。`Form` 与 `ConfigProviderSetting` 读 `useAntdvConfig`，CRUD 相关读 `useCrudConfig` / `useActionAuth`。
 
 通用规则见 [CONTRIBUTING.md](../CONTRIBUTING.md) 第 7–12 节与 [CONTRIBUTING-PACKAGES.md](../CONTRIBUTING-PACKAGES.md) 第 1–6 节。

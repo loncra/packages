@@ -1,18 +1,12 @@
-import {createTextVNode, createVNode, Fragment, isVNode, type VNode} from 'vue'
+import {createTextVNode, createVNode, Fragment, isVNode, markRaw, type VNode} from 'vue'
 import type {EnumBucketsResponseBody} from '@loncra/client/resource'
 import type {ColumnSearchConfig, SearchableColumnType} from '../../query-table/types'
 import type {PageDictionaries} from '../../basic-crud-query/types'
 import {readPath} from '../../_util/crud/readPath'
-import {assertMapOptions, assertSingleSource, resolveSourceProps} from '../fieldSources'
-import {componentName, formatValue, resolveFieldSpec} from '../registry'
-import type {
-  PageDeclContext,
-  PageFieldsDictionary,
-  PageRegistry,
-  PageSearchConfig,
-  PageTableColumn,
-  PageTableEntry,
-} from '../types'
+import {assertMapOptions, assertSingleSource, resolveSourceProps} from '../fieldSourcesKinds'
+import {componentName, formatValue, resolveFieldSpec} from '../registryKinds'
+import type {PageDeclContext, PageFieldsDictionary, PageRegistry} from '../types'
+import type {PageSearchConfig, PageTableColumn, PageTableEntry} from './types'
 
 export function toTableColumn<TEntity extends object>(
   entry: PageTableEntry<TEntity>,
@@ -38,7 +32,7 @@ function resolveColumnSearch<TEntity extends object>(
   const declaredProps = typeof search.props === 'function' ? search.props(ctx) : search.props
   return {
     ...search,
-    component: spec?.component,
+    component: spec?.component ? markRaw(spec.component) : undefined,
     expression: search.expression ?? 'eq',
     props: {...resolveSourceProps(column, spec, buckets, dictionaries), ...declaredProps},
   }

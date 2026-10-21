@@ -9,12 +9,13 @@ import {useStaleCheck} from '../../_util/crud/useStaleCheck'
 import type {DefaultCrudEntity} from '../../_util/crud/useCollectionData'
 import type {PageDictionaries} from '../../basic-crud-query/types'
 import {useLocale} from '../../_util/useLocale'
-import {usePageRegistry} from '../registry'
-import {collectFormSources, mergeSources} from '../../_util/crud/sources.ts'
+import {usePageRegistry} from '../usePageRegistry'
+import {collectFormSources, mergeSources} from '../sourceLoadsKinds'
 import {fetchDataDictionaries, fetchEnumBuckets} from '../../basic-crud-query'
 import {buildFormFields} from './fields'
 import useStyle from './style'
-import type {CrudFormPageProps, FormService, PageDeclContext, PageFormContext} from '../types'
+import type {PageDeclContext} from '../types'
+import type {CrudFormPageProps, FormService, PageFormContext} from './types'
 
 const SHELL_ENTITY_KEYS = ['id', 'version', 'creationTime'] as const
 

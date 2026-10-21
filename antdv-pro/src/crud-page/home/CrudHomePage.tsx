@@ -6,18 +6,18 @@ import CrudTable from '../../crud-table/CrudTable'
 import type {CollectionExpose} from '../../_util/crud/collectionExpose'
 import type {DefaultCrudEntity} from '../../_util/crud/useCollectionData'
 import type {QueryTableBodyCellArgs, QueryTableExpandedRowArgs,} from '../../query-table/types'
-import {usePageRegistry} from '../registry'
-import {buildTableColumns, renderCell, toCellVNode} from './columns'
-import {collectTableSources, mergeSources} from '../../_util/crud/sources.ts'
+import {usePageRegistry} from '../usePageRegistry'
+import {buildTableColumns, renderCell, toCellVNode} from './tableColumnsKinds'
+import {collectTableSources, mergeSources} from '../sourceLoadsKinds'
 import type {PageDictionaries} from '../../basic-crud-query/types'
+import type {PageDeclContext} from '../types'
 import type {
   CrudHomePageConstructor,
   CrudHomePageExpose,
   CrudHomePageProps,
   CrudHomePageSlots,
-  PageDeclContext,
-  PageTableEntry,
-} from '../types'
+  PageTableEntry
+} from './types'
 
 const CrudHomePage = defineComponent({
   name: 'LCrudHomePage',

@@ -1,6 +1,6 @@
 import type {EnumBucketsResponseBody} from '@loncra/client/resource'
 import type {PageDictionaries} from '../basic-crud-query/types'
-import {dictOptions} from './registry'
+import {dictOptions} from './registryKinds'
 import type {FieldComponentSpec} from './types'
 
 interface FieldSource {

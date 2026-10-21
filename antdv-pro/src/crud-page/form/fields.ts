@@ -1,19 +1,12 @@
-import type {Component} from 'vue'
+import {type Component, markRaw} from 'vue'
 import type {ColProps, FormItemProps} from 'antdv-next'
 import type {EnumBucketsResponseBody} from '@loncra/client/resource'
 import type {PageDictionaries} from '../../basic-crud-query/types'
-import {componentName, resolveFieldSpec} from '../registry'
-import {assertMapOptions, assertSingleSource, resolveSourceProps,} from '../fieldSources'
+import {componentName, resolveFieldSpec} from '../registryKinds'
+import {assertMapOptions, assertSingleSource, resolveSourceProps,} from '../fieldSourcesKinds'
 import {pathSegments} from '../../_util/crud/readPath'
-import type {
-  FieldComponentSpec,
-  PageDeclContext,
-  PageFieldRenderContext,
-  PageFieldsDictionary,
-  PageFormField,
-  PageFormFieldKey,
-  PageRegistry,
-} from '../types'
+import type {FieldComponentSpec, PageDeclContext, PageFieldsDictionary, PageRegistry} from '../types'
+import type {PageFieldRenderContext, PageFormField, PageFormFieldKey} from './types'
 
 const FORM_FIELD_DEFAULT_COL: ColProps = {
   span: 12,
@@ -69,7 +62,11 @@ function resolveFieldComponent<TBody extends object>(
   if (field.render) {
     return undefined
   }
-  return resolveFieldSpec(field.component ?? 'input', registry.fieldComponents)
+  const spec = resolveFieldSpec(field.component ?? 'input', registry.fieldComponents)
+  if (spec?.component) {
+    return {...spec, component: markRaw(spec.component)}
+  }
+  return spec
 }
 
 function resolveFieldProps<TBody extends object>(

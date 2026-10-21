@@ -1,5 +1,5 @@
 import type {DefaultCrudEntity} from '../../_util/crud/useCollectionData'
-import type {PageFieldRenderContext, PageFormFieldSlots} from '../types'
+import type {PageFieldRenderContext, PageFormFieldSlots} from './types'
 
 export function withFieldCtx(
   slots: PageFormFieldSlots | undefined,

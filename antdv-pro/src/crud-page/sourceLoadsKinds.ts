@@ -1,6 +1,8 @@
-import type {EnumBucketRequest, EnumRef} from '../../basic-crud-query/types.ts'
-import type {PageFieldsDictionary, PageFormField, PageLookupFieldSpec, PageTableEntry,} from '../../crud-page/types.ts'
-import {toTableColumn} from '../../crud-page/home/columns.ts'
+import type {EnumBucketRequest, EnumRef} from '../basic-crud-query/types.ts'
+import type {PageFieldsDictionary, PageLookupFieldSpec} from './types'
+import type {PageTableEntry} from './home/types'
+import type {PageFormField} from './form/types'
+import {toTableColumn} from './home/tableColumnsKinds'
 
 /** 一个页面要预载的来源（去掉重复、按 module 分组） */
 export interface PageSourceLoads {

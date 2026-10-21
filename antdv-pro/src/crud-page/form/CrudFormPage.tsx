@@ -8,16 +8,16 @@ import Form from '../../form'
 import {readPath, writePath} from '../../_util/crud/readPath'
 import type {DefaultCrudEntity} from '../../_util/crud/useCollectionData'
 import {isOperationTraceVisible, OperationTraceTable} from '../operation-trace'
-import {withFieldCtx} from './withFieldCtx'
+import {withFieldCtx} from './formFieldSlots'
 import {useCrudFormPage} from './useCrudFormPage'
+import type {CrudStaleInfo} from '../types'
 import type {
   CrudFormPageConstructor,
   CrudFormPageExpose,
   CrudFormPageProps,
   CrudFormPageSlots,
-  CrudStaleInfo,
-  PageFieldRenderContext,
-} from '../types'
+  PageFieldRenderContext
+} from './types'
 
 const CrudFormPage = defineComponent({
   name: 'LCrudFormPage',

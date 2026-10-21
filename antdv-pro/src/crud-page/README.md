@@ -13,8 +13,9 @@
 | `detail/` | `CrudDetailPage` | 详情页壳（descriptions 形态） |
 | `operation-trace/` | `OperationTraceTable` / `createOperationTracePage` | 操作记录表（详情 / 表单页内嵌；也可 `createOperationTracePage` 独立成页） |
 | `define.ts` | `defineHomePage` / `defineFormPage` / `defineDetailPage` / `defineCardGridPage` | 声明入口：`core`（service / 字段字典 / 路由）+ 形态块 |
-| `registry.ts` | 字段组件表 / 值格式表 | 内置 + 宿主 `CrudConfig` 逐 key 覆盖 |
-| `fieldSources.ts` | 枚举 / 字典来源 → 组件 props | 列表与表单共用的同一段解析 |
+| `registryKinds.ts` / `usePageRegistry.ts` | 字段组件表 / 值格式表 | 内置 + 宿主 `CrudConfig` 逐 key 覆盖 |
+| `fieldSourcesKinds.ts` | 枚举 / 字典来源 → 组件 props | 列表与表单共用的同一段解析 |
+| `sourceLoadsKinds.ts` | 来源**加载清单**推导与合并（`collectTableSources` / `collectFormSources` / `mergeSources`） | 列表只收带搜索项的列，表单收全部字段 |
 | `types/`（`types.ts` + `pageTypes.ts`） | 声明模型 + 页面壳组件契约 | `types.ts` 是声明模型，`pageTypes.ts` 是五个壳的 Props / Expose / Slots / Constructor |
 
 ## 数据链（以表格为例）

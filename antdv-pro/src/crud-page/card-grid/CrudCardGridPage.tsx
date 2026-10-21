@@ -7,17 +7,17 @@ import type {CrudNavigateKind} from '../../_util/crud/navigate'
 import CrudCardGrid from '../../crud-card-grid/CrudCardGrid'
 import type {CollectionExpose} from '../../_util/crud/collectionExpose'
 import type {DefaultCrudEntity} from '../../_util/crud/useCollectionData'
-import {mergeSources} from '../../_util/crud/sources.ts'
+import {mergeSources} from '../sourceLoadsKinds'
 import {fetchDataDictionaries, fetchEnumBuckets} from '../../basic-crud-query'
 import type {PageDictionaries} from '../../basic-crud-query/types'
 import type {QueryCardGridItemActionsSlot, QueryCardGridItemSlot} from '../../query-card-grid/types'
+import type {PageDeclContext} from '../types'
 import type {
     CrudCardGridPageConstructor,
     CrudCardGridPageExpose,
     CrudCardGridPageProps,
     CrudCardGridPageSlots,
-    PageDeclContext,
-} from '../types'
+} from './types'
 
 const CrudCardGridPage = defineComponent({
   name: 'LCrudCardGridPage',
