@@ -1,8 +1,7 @@
 import type {CSSInterpolation, CSSObject} from '@antdv-next/cssinjs'
-import {SPIN_KEYFRAMES, type LoncraStyleToken} from '@loncra/antdv'
+import {type LoncraStyleToken, SPIN_KEYFRAMES} from '@loncra/antdv'
 import {genStyleHooks} from '../../_util/genStyleLayer'
 
-/** 列表 / 缩略图 / 遮罩 / 弹层那一半 */
 function genAttachmentListStyle(token: LoncraStyleToken): Record<string, CSSObject> {
   const {
     componentCls,
@@ -19,7 +18,6 @@ function genAttachmentListStyle(token: LoncraStyleToken): Record<string, CSSObje
     fontSizeHeading3,
     fontSizeLG,
     fontSizeSM,
-    screenMD,
     sizeSM,
     lineWidth,
     lineType,
@@ -132,12 +130,8 @@ function genAttachmentListStyle(token: LoncraStyleToken): Record<string, CSSObje
       width: '100%',
     },
     [`${componentCls}-size`]: {
-      /*display: 'none',*/
       flexShrink: 0,
       marginInlineStart: marginXXS,
-      /*[`@media (min-width: ${screenMD})`]: {
-        display: 'inline',
-      },*/
     },
     [`${componentCls}-video`]: {
       width: '100%',
@@ -154,7 +148,6 @@ function genAttachmentListStyle(token: LoncraStyleToken): Record<string, CSSObje
   }
 }
 
-/** 卡片形态（状态边框 / meta）与触发区那一半 */
 function genAttachmentCardStyle(token: LoncraStyleToken): Record<string, CSSObject> {
   const {
     componentCls,

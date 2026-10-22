@@ -1,4 +1,4 @@
-import {defineComponent, type CSSProperties, type PropType} from 'vue'
+import {type CSSProperties, defineComponent, type PropType, type VNodeChild} from 'vue'
 import {Alert, Button, Flex, Progress, theme, TypographyText} from 'antdv-next'
 import {DeleteOutlined, DownloadOutlined} from '@antdv-next/icons'
 import {classNames} from '@loncra/antdv'
@@ -6,10 +6,13 @@ import type {ObjectWriteResult} from '@loncra/client/resource'
 import type {UploadFile} from 'antdv-next/dist/upload/interface'
 import {byteFormat} from '../../_util/format'
 import {attachmentAlertType} from '../attachmentKinds'
+import type {AttachmentPathItem} from '../types'
 import AttachmentFilePreview from './AttachmentFilePreview'
+import {pickItemSlots} from '../internal/attachmentItemSlots'
 
 const AttachmentListPreview = defineComponent({
   name: 'LAttachmentListPreview',
+  inheritAttrs: false,
   props: {
     files: {type: Array as PropType<UploadFile<ObjectWriteResult>[]>, required: true},
     preview: Boolean,
@@ -37,14 +40,7 @@ const AttachmentListPreview = defineComponent({
   setup(props, {slots}) {
     const {token} = theme.useToken()
     const hashed = (name?: string) => classNames(props.hashId, props.cssVarCls, name)
-    const itemSlots = {
-      itemRender: slots.itemRender
-        ? (ctx: {file: UploadFile<ObjectWriteResult>}) => slots.itemRender!(ctx)
-        : undefined,
-      itemIcon: slots.itemIcon
-        ? (ctx: {file: UploadFile<ObjectWriteResult>}) => slots.itemIcon!(ctx)
-        : undefined,
-    }
+    const itemSlots = pickItemSlots(slots)
 
     function renderActions(file: UploadFile<ObjectWriteResult>) {
       if (props.disabled) {
@@ -76,6 +72,70 @@ const AttachmentListPreview = defineComponent({
       )
     }
 
+    function renderItem(file: UploadFile<ObjectWriteResult>) {
+      if (slots.itemRender) {
+        return slots.itemRender({file})
+      }
+      return (
+        <Alert type={props.preview ? 'info' : attachmentAlertType(file.status)}>
+          {{
+            title: () => (
+              <Flex justify="space-between" gap={token.value.sizeXS}>
+                <AttachmentFilePreview
+                  file={file}
+                  disabled={props.disabled}
+                  itemClass={props.itemClass}
+                  itemStyle={props.itemStyle}
+                  prefixCls={props.prefixCls}
+                  hashId={props.hashId}
+                  canDelete={() => false}
+                  canDownload={() => false}
+                  cssVarCls={props.cssVarCls}
+                  onPreview={props.onPreview}
+                  v-slots={itemSlots}
+                />
+                <Flex vertical justify={"space-between"} class={hashed(`${props.prefixCls}-grow`)}>
+                  <Flex justify={"space-between"} align={"center"} class={hashed(`${props.prefixCls}-grow`)}>
+                    <Flex vertical justify="space-between" class={hashed(`${props.prefixCls}-grow`)}>
+                      <TypographyText ellipsis class={hashed(`${props.prefixCls}-grow`)}>
+                        {file.name}
+                      </TypographyText>
+                      <TypographyText
+                        type="secondary"
+                        class={hashed(`${props.prefixCls}-size`)}
+                      >
+                        {`(${byteFormat(file.size || 0)})`}
+                      </TypographyText>
+                    </Flex>
+                    {renderActions(file)}
+                  </Flex>
+                  {!props.preview && (!file.response || !props.disabled) ? (
+                    <Progress percent={file.percent} size="small" />
+                  ) : (
+                    <></>
+                  )}
+                </Flex>
+              </Flex>
+            ),
+          }}
+        </Alert>
+      )
+    }
+
+    function renderItems(files: UploadFile<ObjectWriteResult>[], depth = 0): VNodeChild {
+      return files.map((file) => (
+        <div
+          key={file.uid}
+          style={depth > 0 ? {paddingInlineStart: token.value.size * depth} : undefined}
+        >
+          {renderItem(file)}
+          {file.type === 'directory'
+            ? renderItems((file as AttachmentPathItem).children ?? [], depth + 1)
+            : null}
+        </div>
+      ))
+    }
+
     return () => (
       <Flex
         vertical
@@ -84,55 +144,7 @@ const AttachmentListPreview = defineComponent({
         style={props.listStyle}
       >
         {slots.listBefore?.()}
-        {props.files.map((file) =>
-          slots.itemRender ? (
-            slots.itemRender({file})
-          ) : (
-            <Alert key={file.uid} type={props.preview ? 'info' : attachmentAlertType(file.status)}>
-              {{
-                title: () => (
-                  <Flex justify="space-between" gap={token.value.sizeXS}>
-                    <AttachmentFilePreview
-                      file={file}
-                      disabled={props.disabled}
-                      itemClass={props.itemClass}
-                      itemStyle={props.itemStyle}
-                      prefixCls={props.prefixCls}
-                      hashId={props.hashId}
-                      canDelete={() => false}
-                      canDownload={() => false}
-                      cssVarCls={props.cssVarCls}
-                      onPreview={props.onPreview}
-                      v-slots={itemSlots}
-                    />
-                    <Flex vertical justify={"space-between"} class={hashed(`${props.prefixCls}-grow`)}>
-                      <Flex justify={"space-between"} align={"center"} class={hashed(`${props.prefixCls}-grow`)}>
-                        <Flex vertical justify="space-between" class={hashed(`${props.prefixCls}-grow`)}>
-                          <TypographyText ellipsis class={hashed(`${props.prefixCls}-grow`)}>
-                            {file.name}
-                          </TypographyText>
-                          <TypographyText
-                            type="secondary"
-                            class={hashed(`${props.prefixCls}-size`)}
-                          >
-                            {`(${byteFormat(file.size || 0)})`}
-                          </TypographyText>
-                        </Flex>
-                        {renderActions(file)}
-                      </Flex>
-                      {!props.preview && (!file.response || !props.disabled) ? (
-                        <Progress percent={file.percent} size="small" />
-                      ) : (
-                        /*<TypographyText type="secondary">{byteFormat(file.size || 0)}</TypographyText>*/
-                          <></>
-                      )}
-                    </Flex>
-                  </Flex>
-                ),
-              }}
-            </Alert>
-          ),
-        )}
+        {renderItems(props.files)}
       </Flex>
     )
   },

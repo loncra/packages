@@ -1,4 +1,4 @@
-import {defineComponent, type CSSProperties, type PropType} from 'vue'
+import {type CSSProperties, defineComponent, type PropType} from 'vue'
 import {TypographyText} from 'antdv-next'
 import {classNames} from '@loncra/antdv'
 import type {ObjectWriteResult} from '@loncra/client/resource'
@@ -6,9 +6,11 @@ import type {UploadFile} from 'antdv-next/dist/upload/interface'
 import {attachmentStatusClass} from '../attachmentKinds'
 import type {AttachmentPreviewProps} from '../types'
 import AttachmentFilePreview from './AttachmentFilePreview'
+import {pickItemSlots} from '../internal/attachmentItemSlots'
 
 const AttachmentCardPreview = defineComponent({
   name: 'LAttachmentCardPreview',
+  inheritAttrs: false,
   props: {
     files: {type: Array as PropType<UploadFile<ObjectWriteResult>[]>, required: true},
     preview: Boolean,
@@ -69,14 +71,7 @@ const AttachmentCardPreview = defineComponent({
               cssVarCls={props.cssVarCls}
               onPreview={props.onPreview}
               onDelete={props.onPostRemove}
-              v-slots={{
-                itemRender: slots.itemRender
-                  ? (ctx: {file: UploadFile<ObjectWriteResult>}) => slots.itemRender!(ctx)
-                  : undefined,
-                itemIcon: slots.itemIcon
-                  ? (ctx: {file: UploadFile<ObjectWriteResult>}) => slots.itemIcon!(ctx)
-                  : undefined,
-              }}
+              v-slots={{...pickItemSlots(slots)}}
             />
             {showMeta ? (
               <span class={hashed(classNames(`${props.prefixCls}-meta`, props.metaClass))}>

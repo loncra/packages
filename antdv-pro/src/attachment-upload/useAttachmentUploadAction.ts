@@ -1,22 +1,17 @@
-import {nextTick, watch, type Ref} from 'vue'
+import {nextTick, type Ref, watch} from 'vue'
 import type {ObjectWriteResult} from '@loncra/client/resource'
 import type {UploadFile} from 'antdv-next/dist/upload/interface'
 import {
-  applyAttachmentDirectoryProgress,
-  collectAttachmentFileLeaves,
-  detectAttachmentValueMode,
-  isObjectWriteResult,
-  isUploadFile,
+    applyAttachmentDirectoryProgress,
+    collectAttachmentFileLeaves,
+    detectAttachmentValueMode,
+    isObjectWriteResult,
+    isUploadFile,
 } from '../_util/attachmentList'
 import {uploadFile as uploadAttachmentFile} from '../_util/uploadFile'
 import type {AttachmentFileItem, AttachmentPathItem, AttachmentUploadExecutorOptions, AttachmentValue} from './types'
 import {getObjectWriteResult} from './attachmentKinds'
 
-/**
- * 上传动作：收集叶子 → 分"已传 / 待传" → 并发上传（进度回写目录树）→ 结果归一。
- * 上传完把内部 `fileList` 写成 `ObjectWriteResult[]`，交给 `useAttachmentUploadValue`
- * 的 `watch(fileList)` 统一 emit，避免与显式 emit 重复。
- */
 export function useAttachmentUploadAction(options: {
   fileList: Ref<AttachmentFileItem[]>
   value: () => AttachmentValue | undefined

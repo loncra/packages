@@ -1,20 +1,15 @@
 import {defineComponent, h, type PropType} from 'vue'
-import {
-  FileImageOutlined,
-  FileUnknownOutlined,
-  FolderOutlined,
-  PlayCircleOutlined,
-} from '@antdv-next/icons'
+import {FileImageOutlined, FileUnknownOutlined, FolderOutlined, PlayCircleOutlined,} from '@antdv-next/icons'
 import {BasicImage, classNames} from '@loncra/antdv'
 import type {ObjectWriteResult} from '@loncra/client/resource'
 import type {UploadFile} from 'antdv-next/dist/upload/interface'
-import {attachmentStatusClass} from '../attachmentKinds'
+import {attachmentStatusClass, isVideoFile} from '../attachmentKinds'
 import {useAttachmentFileActions} from './useAttachmentFileActions'
 import AttachmentThumbOverlay from './AttachmentThumbOverlay'
 import type {AttachmentPreviewFileProps} from '../types'
 
 function defaultCanPreview(file: UploadFile<ObjectWriteResult>) {
-  return file.type?.includes('image/') || file.type?.includes('video/')
+  return file.type?.includes('image/') || isVideoFile(file)
 }
 
 function defaultCanDownload(file: UploadFile<ObjectWriteResult>) {
@@ -75,7 +70,7 @@ const AttachmentFilePreview = defineComponent({
       if (props.file?.type?.includes('image/')) {
         return FileImageOutlined
       }
-      if (props.file?.type?.includes('video/')) {
+      if (isVideoFile(props.file)) {
         return PlayCircleOutlined
       }
       if (props.file?.type === 'directory') {

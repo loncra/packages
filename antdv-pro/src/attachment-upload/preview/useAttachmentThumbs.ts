@@ -2,11 +2,8 @@ import {type Ref, watch} from 'vue'
 import type {ObjectWriteResult} from '@loncra/client/resource'
 import type {UploadFile} from 'antdv-next/dist/upload/interface'
 import {getImageBase64, getVideoThumbnail} from '../../_util/media'
+import {isVideoFile} from '../attachmentKinds'
 
-/**
- * 缩略图补齐：列表变化后给没缩略图的文件补 `thumbUrl`
- * （图片有 url 直接用；本地图片走 base64；视频抽帧）。内部有 thumbUrl 早退，watch 不会无限循环。
- */
 export function useAttachmentThumbs(options: {
   fileList: Ref<UploadFile<ObjectWriteResult>[]>
   enabled: () => boolean
@@ -36,7 +33,7 @@ export function useAttachmentThumbs(options: {
       }
       return
     }
-    if (type.includes('video/') && file.originFileObj) {
+    if (isVideoFile(file) && file.originFileObj) {
       const result = await getVideoThumbnail(file.originFileObj)
       patchFile(file.uid, {thumbUrl: result.base64, url: result.videoUrl})
     }

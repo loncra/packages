@@ -1,17 +1,12 @@
 import {defineComponent, type PropType, type VNode} from 'vue'
-import {
-  DeleteOutlined,
-  DownloadOutlined,
-  EyeOutlined,
-  LoadingOutlined,
-} from '@antdv-next/icons'
+import {DeleteOutlined, DownloadOutlined, EyeOutlined, LoadingOutlined,} from '@antdv-next/icons'
 import {classNames} from '@loncra/antdv'
 import type {ObjectWriteResult} from '@loncra/client/resource'
 import type {UploadFile} from 'antdv-next/dist/upload/interface'
 
-/** 缩略图悬浮遮罩：预览 / 删除 / 下载三个动作，上传中显示进度 */
 const AttachmentThumbOverlay = defineComponent({
   name: 'LAttachmentThumbOverlay',
+  inheritAttrs: false,
   props: {
     file: {type: Object as PropType<UploadFile<ObjectWriteResult>>, required: true},
     disabled: Boolean,

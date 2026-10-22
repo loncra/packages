@@ -1,5 +1,6 @@
 import {computed, nextTick, ref, type Ref, watch} from 'vue'
 import type {UploadChangeParam} from 'antdv-next'
+import {Upload} from 'antdv-next'
 import {
     applyAttachmentDirectoryProgress,
     buildAttachmentPathTree,
@@ -8,7 +9,10 @@ import {
 } from '../../_util/attachmentList'
 import type {AttachmentFileItem, AttachmentPathItem} from '../types'
 
-export function useAttachmentUploadFiles(fileList: Ref<AttachmentFileItem[] | undefined>) {
+export function useAttachmentUploadFiles(
+  fileList: Ref<AttachmentFileItem[] | undefined>,
+  options?: {dedupe?: () => boolean},
+) {
   const uploadFiles = ref<AttachmentPathItem[]>([])
   let syncingFromChild = false
   let ignoreAntdChange = false
@@ -59,5 +63,15 @@ export function useAttachmentUploadFiles(fileList: Ref<AttachmentFileItem[] | un
     }
   }
 
-  return {uploadFiles, antdFileList, onAntdFileListChange}
+  function beforeUpload(file: File): boolean | string {
+    if (
+      options?.dedupe?.() &&
+      uploadFiles.value.some((f) => f.name === file.name && f.size === file.size)
+    ) {
+      return Upload.LIST_IGNORE
+    }
+    return false
+  }
+
+  return {uploadFiles, antdFileList, onAntdFileListChange, beforeUpload}
 }

@@ -2,26 +2,27 @@ import {computed, defineComponent, type PropType, toRef} from 'vue'
 import type {UploadChangeParam} from 'antdv-next'
 import {Upload} from 'antdv-next'
 import {useMergeSemantic, useToArr, useToProps,} from 'antdv-next/dist/_util/hooks/useMergeSemantic'
-import {classNames, useFormItemTrigger} from '@loncra/antdv'
+import {classNames} from '@loncra/antdv'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import type {ObjectWriteResult} from '@loncra/client/resource'
 import type {UploadFile} from 'antdv-next/dist/upload/interface'
 import {uploadFile as uploadAttachmentFile} from '../_util/uploadFile'
 import {ATTACHMENT_PREVIEW_MODE, ATTACHMENT_UPLOAD_MODE} from './constants'
 import type {
-  AttachmentUploadClassNamesType,
-  AttachmentUploadMode,
-  AttachmentUploadProps,
-  AttachmentUploadResolvedClassNames,
-  AttachmentUploadResolvedStyles,
-  AttachmentUploadStylesType,
-  AttachmentPreviewMode,
+    AttachmentPreviewMode,
+    AttachmentUploadClassNamesType,
+    AttachmentUploadMode,
+    AttachmentUploadProps,
+    AttachmentUploadResolvedClassNames,
+    AttachmentUploadResolvedStyles,
+    AttachmentUploadStylesType,
 } from './types'
 import useStyle from './style'
 import {useAttachmentUploadValue} from './useAttachmentUploadValue'
 import {useAttachmentUploadAction} from './useAttachmentUploadAction'
 import AttachmentDraggerUpload from './internal/AttachmentDraggerUpload'
 import AttachmentPictureCardUpload from './internal/AttachmentPictureCardUpload'
+import {pickItemSlots} from './internal/attachmentItemSlots'
 
 const AttachmentUpload = defineComponent({
   name: 'LAttachmentUpload',
@@ -124,8 +125,6 @@ const AttachmentUpload = defineComponent({
       uploadOptions: () => props.uploadOptions,
     })
 
-    useFormItemTrigger(() => props.value, true)
-
     expose({
       upload,
       getFiles,
@@ -142,20 +141,7 @@ const AttachmentUpload = defineComponent({
         props.rootClass,
         attrClass,
       )
-      const sharedSlots = {
-        itemRender: slots.itemRender
-          ? (ctx: {file: UploadFile<ObjectWriteResult>}) => slots.itemRender!(ctx)
-          : undefined,
-        itemIcon: slots.itemIcon
-          ? (ctx: {file: UploadFile<ObjectWriteResult>}) => slots.itemIcon!(ctx)
-          : undefined,
-        itemTitle: slots.itemTitle
-          ? (ctx: {file: UploadFile<ObjectWriteResult>}) => slots.itemTitle!(ctx)
-          : undefined,
-        itemDescription: slots.itemDescription
-          ? (ctx: {file: UploadFile<ObjectWriteResult>}) => slots.itemDescription!(ctx)
-          : undefined,
-      }
+      const sharedSlots = pickItemSlots(slots)
 
       if (props.mode === ATTACHMENT_UPLOAD_MODE.DRAGGER) {
         return (

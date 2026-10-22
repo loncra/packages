@@ -6,13 +6,13 @@ import type {UploadFile} from 'antdv-next/dist/upload/interface'
 import {useLocale} from '../../_util/useLocale'
 import {ATTACHMENT_PREVIEW_MODE} from '../constants'
 import type {
-  AttachmentPreviewMode,
-  AttachmentPreviewProps,
-  AttachmentUploadResolvedClassNames,
-  AttachmentUploadResolvedStyles,
+    AttachmentPreviewMode,
+    AttachmentPreviewProps,
+    AttachmentUploadResolvedClassNames,
+    AttachmentUploadResolvedStyles,
 } from '../types'
 import useStyle from '../style'
-import {isImageFile} from '../attachmentKinds'
+import {isImageFile, isVideoFile} from '../attachmentKinds'
 import {useAttachmentFileActions} from './useAttachmentFileActions'
 import {useAttachmentThumbs} from './useAttachmentThumbs'
 import AttachmentListPreview from './AttachmentListPreview'
@@ -117,7 +117,7 @@ const AttachmentPreview = defineComponent({
         }
         previewImageGroup.value.current = index
         previewImageGroup.value.open = true
-      } else if (file.type?.includes('video/')) {
+      } else if (isVideoFile(file)) {
         modalOptions.value = {open: true, file}
       }
     }

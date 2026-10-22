@@ -4,12 +4,9 @@ import {BasicImage, classNames} from '@loncra/antdv'
 import type {ObjectWriteResult} from '@loncra/client/resource'
 import type {UploadFile} from 'antdv-next/dist/upload/interface'
 
-/**
- * 预览弹层（图片组 + 视频 Modal），Teleport 到 body。
- * `group` / `modal` 是父级的状态对象（reactive），开合变化经回调交回父级改。
- */
 const AttachmentPreviewOverlays = defineComponent({
   name: 'LAttachmentPreviewOverlays',
+  inheritAttrs: false,
   props: {
     imageFiles: {type: Array as PropType<UploadFile<ObjectWriteResult>[]>, required: true},
     group: {

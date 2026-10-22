@@ -5,11 +5,6 @@ import {AttachmentService} from '@loncra/client/resource'
 import type {UploadFile} from 'antdv-next/dist/upload/interface'
 import {useLocale} from '../../_util/useLocale'
 
-/**
- * 附件的下载 / 删除动作（`AttachmentPreview` 与 `AttachmentFilePreview` 共用，
- * 消掉两处近乎逐字的重复）。`postRemove` 由调用方给：列表态 = 从列表移除，
- * 单项态 = 向父级 emit `delete`。
- */
 export function useAttachmentFileActions(options: {
   postRemove: (file: UploadFile<ObjectWriteResult>) => void
 }) {
@@ -41,7 +36,6 @@ export function useAttachmentFileActions(options: {
     })
   }
 
-  /** 已上传（有 response）走确认 + 服务端删除；还没上传的直接本地移除 */
   function remove(file: UploadFile<ObjectWriteResult>): void {
     if (file.response) {
       confirmRemove(file)

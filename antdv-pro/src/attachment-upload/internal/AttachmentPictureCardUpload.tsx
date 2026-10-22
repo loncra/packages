@@ -8,14 +8,15 @@ import type {ObjectWriteResult} from '@loncra/client/resource'
 import type {UploadFile} from 'antdv-next/dist/upload/interface'
 import {ATTACHMENT_PREVIEW_MODE} from '../constants'
 import type {
-  AttachmentFileItem,
-  AttachmentPictureCardUploadProps,
-  AttachmentUploadResolvedClassNames,
-  AttachmentUploadResolvedStyles,
+    AttachmentFileItem,
+    AttachmentPictureCardUploadProps,
+    AttachmentUploadResolvedClassNames,
+    AttachmentUploadResolvedStyles,
 } from '../types'
 import useStyle from '../style'
 import AttachmentPreview from '../preview/AttachmentPreview'
 import {useAttachmentUploadFiles} from './useAttachmentUploadFiles'
+import {pickItemSlots} from './attachmentItemSlots'
 
 const AttachmentPictureCardUpload = defineComponent({
   name: 'LAttachmentPictureCardUpload',
@@ -65,7 +66,11 @@ const AttachmentPictureCardUpload = defineComponent({
     const [hashId, cssVarCls] = useStyle(prefixCls)
 
     const fileList = useTwoWayModel(props, 'fileList', emit) as unknown as Ref<AttachmentFileItem[]>
-    const {uploadFiles, antdFileList, onAntdFileListChange} = useAttachmentUploadFiles(fileList)
+    const {uploadFiles, antdFileList, onAntdFileListChange, beforeUpload} = useAttachmentUploadFiles(
+      fileList,
+      {dedupe: () => !!props.dedupe},
+    )
+    const triggerVisible = computed(() => !props.preview && !props.disabled)
 
     function onChange(info: UploadChangeParam) {
       onAntdFileListChange(info)
@@ -79,7 +84,6 @@ const AttachmentPictureCardUpload = defineComponent({
       const multi = !!(props.maxCount && props.maxCount > 1)
       const showTrigger =
         !props.maxCount || uploadFiles.value.length < props.maxCount || props.preview
-      const triggerVisible = computed(() => !props.preview && !props.disabled)
 
       return (
         <AttachmentPreview
@@ -103,11 +107,6 @@ const AttachmentPictureCardUpload = defineComponent({
             pictureCardAfter: showTrigger
               ? ({showMeta}: {showMeta: boolean}) =>
                   triggerVisible.value ? (
-                    /**
-                     * 触发区：`classes.trigger` / `styles.trigger` 挂在这块虚线框上（宿主看到的就是它）。
-                     * ⚠️ **不再转给 antd 的 `Upload`** —— 语义键 `trigger` 的归属就是"触发上传的那块区域"，
-                     * 里面那层 `.ant-upload` 要改只能自己写全局类名（见 `types.ts` 的语义键说明）。
-                     */
                     <span
                       class={hashed(
                         classNames(`${prefixCls.value}-trigger`, props.classes?.trigger),
@@ -121,17 +120,7 @@ const AttachmentPictureCardUpload = defineComponent({
                           multi ? `${prefixCls.value}-trigger-upload-multi` : undefined,
                         )}
                         fileList={antdFileList.value}
-                        beforeUpload={(file: File) => {
-                          if (
-                            props.dedupe &&
-                            uploadFiles.value.some(
-                              (f) => f.name === file.name && f.size === file.size,
-                            )
-                          ) {
-                            return Upload.LIST_IGNORE
-                          }
-                          return false
-                        }}
+                        beforeUpload={beforeUpload}
                         showUploadList={false}
                         maxCount={props.maxCount}
                         multiple={props.multiple}
@@ -170,18 +159,7 @@ const AttachmentPictureCardUpload = defineComponent({
                     </span>
                   ) : null
               : undefined,
-            itemRender: slots.itemRender
-              ? (ctx: {file: UploadFile<ObjectWriteResult>}) => slots.itemRender!(ctx)
-              : undefined,
-            itemIcon: slots.itemIcon
-              ? (ctx: {file: UploadFile<ObjectWriteResult>}) => slots.itemIcon!(ctx)
-              : undefined,
-            itemTitle: slots.itemTitle
-              ? (ctx: {file: UploadFile<ObjectWriteResult>}) => slots.itemTitle!(ctx)
-              : undefined,
-            itemDescription: slots.itemDescription
-              ? (ctx: {file: UploadFile<ObjectWriteResult>}) => slots.itemDescription!(ctx)
-              : undefined,
+            ...pickItemSlots(slots),
           }}
         />
       )

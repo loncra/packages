@@ -2,10 +2,6 @@ import type {ObjectItemInfo, ObjectWriteResult} from '@loncra/client/resource'
 import {AttachmentService} from '@loncra/client/resource'
 import type {UploadFile} from 'antdv-next/dist/upload/interface'
 
-/**
- * 附件值形状的唯一来源（`attachment-upload/types.ts` 从这里 re-export——`_util` 是基础件层，
- * 不能反向依赖控件目录）。
- */
 export type AttachmentFileItem = UploadFile<ObjectWriteResult> | ObjectWriteResult | ObjectItemInfo
 
 export interface AttachmentPathItem extends UploadFile<ObjectWriteResult> {
@@ -22,7 +18,17 @@ export function isUploadFile(item: unknown): item is UploadFile {
   return !!item && typeof item === 'object' && 'uid' in item
 }
 
-/** 附件项的稳定标识：UploadFile 取 `uid`、OWR 取 `etag`、ObjectItemInfo 取 `id` */
+const TS_CODE_EXTENSIONS = ['.ts', '.tsx', '.mts', '.cts']
+
+export function isVideoFile(file?: {type?: string; name?: string}): boolean {
+  const type = (file?.type ?? '').toLowerCase()
+  if (!type.startsWith('video/')) {
+    return false
+  }
+  const name = (file?.name ?? '').toLowerCase()
+  return !TS_CODE_EXTENSIONS.some((ext) => name.endsWith(ext))
+}
+
 export function attachmentUidOf(item: AttachmentFileItem): string {
   if (isUploadFile(item)) {
     return item.uid
@@ -33,7 +39,6 @@ export function attachmentUidOf(item: AttachmentFileItem): string {
   return String((item as ObjectItemInfo).id ?? '')
 }
 
-/** 按 uid 去重（保留首个）——回显值里同 key 重复时用 */
 export function dedupeAttachmentList<T extends AttachmentFileItem>(list: T[]): T[] {
   const seen = new Set<string>()
   return list.filter((item) => {
@@ -46,7 +51,6 @@ export function dedupeAttachmentList<T extends AttachmentFileItem>(list: T[]): T
   })
 }
 
-/** 展示名：优先上传时写进元数据的原始文件名，其次取 `objectName` 最后一段 */
 export function resolveDisplayName(item: ObjectItemInfo): string {
   return (
     item.userMetadata?.['X-Amz-Meta-Original-Filename'] ||
@@ -55,30 +59,33 @@ export function resolveDisplayName(item: ObjectItemInfo): string {
   )
 }
 
+function convertObjectWriteResult(file: ObjectWriteResult): UploadFile<ObjectWriteResult> {
+  const contentType = file.extraHeaders?.['Content-Type'] || ''
+  const name = file.extraHeaders?.['x-amz-meta-original-filename'] || file.objectName
+  const url = AttachmentService.query(file.bucketName, file.objectName)
+  return {
+    uid: file.etag,
+    name,
+    url,
+    thumbUrl: contentType.startsWith('image/') ? url : undefined,
+    type: contentType || undefined,
+    size: file.size || 0,
+    percent: 100,
+    status: 'done',
+    response: file,
+  }
+}
+
 export function convertUploadFiles(
   fileList: AttachmentFileItem[],
 ): UploadFile<ObjectWriteResult>[] {
   const result: UploadFile<ObjectWriteResult>[] = []
   for (const file of fileList) {
     if (isObjectWriteResult(file)) {
-      const contentType = file?.extraHeaders?.['Content-Type'] || ''
-      const url = AttachmentService.query(file.bucketName, file.objectName)
-      result.push({
-        uid: file.etag,
-        name: file?.extraHeaders?.['x-amz-meta-original-filename'] || file.objectName,
-        url,
-        thumbUrl: ['image/', 'video/'].some((v) => contentType.startsWith(v)) ? url : undefined,
-        type: contentType || undefined,
-        size: file.size || 0,
-        percent: 100,
-        status: 'done',
-        response: file,
-      })
+      result.push(convertObjectWriteResult(file))
     } else if (isUploadFile(file)) {
       result.push(file)
     }
-    // 这里原有个 `isObjectItemInfo` 分支：守卫与 `isObjectWriteResult` 逐字相同 ⇒ 永远进不来（死代码）。
-    // 要处理 `ObjectItemInfo`（`userMetadata` 那套）得先给它一个能与 `ObjectWriteResult` 区分开的判定。
   }
 
   return result
@@ -108,6 +115,9 @@ export function normalizeAttachmentToList(
   }
   if (isObjectWriteResult(value)) {
     return [...convertUploadFiles([value as ObjectWriteResult])]
+  }
+  if (isUploadFile(value)) {
+    return [value]
   }
   return []
 }
@@ -197,37 +207,46 @@ export function collectAttachmentFileLeaves(
   return result
 }
 
+function aggregateDirectoryStatus(
+  leaves: AttachmentPathItem[],
+): AttachmentPathItem['status'] {
+  if (leaves.some((file) => file.status === 'error')) {
+    return 'error'
+  }
+  if (leaves.length > 0 && leaves.every((file) => file.status === 'done')) {
+    return 'done'
+  }
+  if (leaves.some((file) => file.status === 'uploading')) {
+    return 'uploading'
+  }
+  return undefined
+}
+
+function applyDirectoryNodeProgress(node: AttachmentPathItem): void {
+  applyAttachmentDirectoryProgress(node.children ?? [])
+  const leaves = collectAttachmentFileLeaves([node])
+  const total = leaves.reduce((sum, file) => sum + (file.size || 0), 0)
+  const loaded = leaves.reduce(
+    (sum, file) => sum + ((file.size || 0) * (file.percent || 0)) / 100,
+    0,
+  )
+  const percent = total > 0 ? Math.floor((loaded * 100) / total) : 0
+  if (node.size !== total) {
+    node.size = total
+  }
+  if (node.percent !== percent) {
+    node.percent = percent
+  }
+  const status = aggregateDirectoryStatus(leaves)
+  if (node.status !== status) {
+    node.status = status
+  }
+}
+
 export function applyAttachmentDirectoryProgress(nodes: AttachmentPathItem[] = []): void {
   for (const node of nodes) {
-    if (node.type !== 'directory') {
-      continue
-    }
-    applyAttachmentDirectoryProgress(node.children ?? [])
-    const leaves = collectAttachmentFileLeaves([node])
-    const total = leaves.reduce((sum, file) => sum + (file.size || 0), 0)
-    const loaded = leaves.reduce(
-      (sum, file) => sum + ((file.size || 0) * (file.percent || 0)) / 100,
-      0,
-    )
-    const percent = total > 0 ? Math.floor((loaded * 100) / total) : 0
-    if (node.size !== total) {
-      node.size = total
-    }
-    if (node.percent !== percent) {
-      node.percent = percent
-    }
-    let status: AttachmentPathItem['status']
-    if (leaves.some((file) => file.status === 'error')) {
-      status = 'error'
-    } else if (leaves.length > 0 && leaves.every((file) => file.status === 'done')) {
-      status = 'done'
-    } else if (leaves.some((file) => file.status === 'uploading')) {
-      status = 'uploading'
-    } else {
-      status = undefined
-    }
-    if (node.status !== status) {
-      node.status = status
+    if (node.type === 'directory') {
+      applyDirectoryNodeProgress(node)
     }
   }
 }

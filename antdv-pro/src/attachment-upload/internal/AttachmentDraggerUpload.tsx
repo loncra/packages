@@ -1,6 +1,6 @@
 import {computed, defineComponent, h, type PropType, type Ref} from 'vue'
 import type {UploadChangeParam} from 'antdv-next'
-import {Space, TypographyText, TypographyTitle, Upload, UploadDragger} from 'antdv-next'
+import {Space, TypographyText, TypographyTitle, UploadDragger} from 'antdv-next'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {UploadOutlined} from '@antdv-next/icons'
 import {classNames, useTwoWayModel} from '@loncra/antdv'
@@ -18,6 +18,7 @@ import type {
 import useStyle from '../style'
 import AttachmentPreview from '../preview/AttachmentPreview'
 import {useAttachmentUploadFiles} from './useAttachmentUploadFiles'
+import {pickItemSlots} from './attachmentItemSlots'
 
 const AttachmentDraggerUpload = defineComponent({
   name: 'LAttachmentDraggerUpload',
@@ -71,18 +72,16 @@ const AttachmentDraggerUpload = defineComponent({
     const [hashId, cssVarCls] = useStyle(prefixCls)
 
     const fileList = useTwoWayModel(props, 'fileList', emit) as unknown as Ref<AttachmentFileItem[]>
-    const {uploadFiles, antdFileList, onAntdFileListChange} = useAttachmentUploadFiles(fileList)
+    const {uploadFiles, antdFileList, onAntdFileListChange, beforeUpload} = useAttachmentUploadFiles(
+      fileList,
+      {dedupe: () => !!props.dedupe},
+    )
 
     function onChange(info: UploadChangeParam) {
       onAntdFileListChange(info)
       emit('change', info)
     }
 
-    /**
-     * ⚠️ 与 picture-card 那半**有意不同**：dragger 模式 pro 没有自己的 wrapper（`-trigger` 那层只存在于
-     * picture-card）⇒ 语义键 `trigger` 这里**转给 antd `UploadDragger`** —— 宿主看到的那块大拖拽区就是它，
-     * 落点一致。picture-card 那半则挂在 pro 自己的虚线框上（见那边的注释 + `types.ts` 的键说明）。
-     */
     const uploadClasses = computed(() => ({
       trigger: props.classes?.trigger,
     }))
@@ -126,17 +125,7 @@ const AttachmentDraggerUpload = defineComponent({
                         multiple: props.multiple,
                         accept: props.accept,
                         fileList: antdFileList.value,
-                        beforeUpload: (file: File) => {
-                          if (
-                            props.dedupe &&
-                            uploadFiles.value.some(
-                              (f) => f.name === file.name && f.size === file.size,
-                            )
-                          ) {
-                            return Upload.LIST_IGNORE
-                          }
-                          return false
-                        },
+                        beforeUpload: beforeUpload,
                         showUploadList: false,
                         onChange,
                       } as Record<string, unknown>)}
@@ -163,18 +152,7 @@ const AttachmentDraggerUpload = defineComponent({
                     </UploadDragger>
                   ) : null
               : undefined,
-            itemRender: slots.itemRender
-              ? (ctx: {file: UploadFile<ObjectWriteResult>}) => slots.itemRender!(ctx)
-              : undefined,
-            itemIcon: slots.itemIcon
-              ? (ctx: {file: UploadFile<ObjectWriteResult>}) => slots.itemIcon!(ctx)
-              : undefined,
-            itemTitle: slots.itemTitle
-              ? (ctx: {file: UploadFile<ObjectWriteResult>}) => slots.itemTitle!(ctx)
-              : undefined,
-            itemDescription: slots.itemDescription
-              ? (ctx: {file: UploadFile<ObjectWriteResult>}) => slots.itemDescription!(ctx)
-              : undefined,
+            ...pickItemSlots(slots),
           }}
         />
       )

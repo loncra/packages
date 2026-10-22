@@ -1,17 +1,9 @@
-import {ref, toRaw, watch, type Ref} from 'vue'
+import {ref, type Ref, toRaw, watch} from 'vue'
 import {useFormItemTrigger} from '@loncra/antdv'
-import {
-  dedupeAttachmentList,
-  denormalizeAttachmentFromList,
-  normalizeAttachmentToList,
-} from '../_util/attachmentList'
+import {dedupeAttachmentList, denormalizeAttachmentFromList, normalizeAttachmentToList,} from '../_util/attachmentList'
 import type {AttachmentFileItem, AttachmentValue} from './types'
 import {getObjectWriteResult} from './attachmentKinds'
 
-/**
- * 内部 `fileList` ↔ 宿主 `value` 的双向同步。
- * 回声守卫（比 `toRaw`）与"传完交回 OWR、不交 UploadFile 外壳"两条实现约定见控件 README。
- */
 export function useAttachmentUploadValue(options: {
   value: () => AttachmentValue | undefined
   maxCount: () => number | undefined
@@ -24,13 +16,12 @@ export function useAttachmentUploadValue(options: {
   watch(
     options.value,
     (v) => {
-      if (v != null && toRaw(v) === lastEmitted) {
+      if (v != null && toRaw(v) === toRaw(lastEmitted)) {
         return
       }
       const list = normalizeAttachmentToList(v ?? undefined)
       fileList.value = options.dedupe() ? dedupeAttachmentList(list) : list
     },
-    // deep：父级原地修改数组元素时也要同步进来
     {immediate: true, deep: true},
   )
 
@@ -47,7 +38,6 @@ export function useAttachmentUploadValue(options: {
     {deep: true},
   )
 
-  // 值变化通知 FormItem 校验；`deep`：父级原地改数组元素也算变
   useFormItemTrigger(options.value, true)
 
   return fileList
