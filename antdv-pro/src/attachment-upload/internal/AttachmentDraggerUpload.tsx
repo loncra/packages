@@ -1,6 +1,6 @@
 import {computed, defineComponent, h, type PropType, type Ref} from 'vue'
 import type {UploadChangeParam} from 'antdv-next'
-import {Space, TypographyText, TypographyTitle, UploadDragger} from 'antdv-next'
+import {Space, TypographyText, TypographyTitle, Upload, UploadDragger} from 'antdv-next'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {UploadOutlined} from '@antdv-next/icons'
 import {classNames, useTwoWayModel} from '@loncra/antdv'
@@ -45,6 +45,7 @@ const AttachmentDraggerUpload = defineComponent({
     },
     multiple: Boolean,
     accept: String,
+    dedupe: Boolean,
     maxCount: Number,
     canPreview: Function as PropType<AttachmentDraggerUploadProps['canPreview']>,
     canDelete: Function as PropType<AttachmentDraggerUploadProps['canDelete']>,
@@ -125,7 +126,17 @@ const AttachmentDraggerUpload = defineComponent({
                         multiple: props.multiple,
                         accept: props.accept,
                         fileList: antdFileList.value,
-                        beforeUpload: () => false,
+                        beforeUpload: (file: File) => {
+                          if (
+                            props.dedupe &&
+                            uploadFiles.value.some(
+                              (f) => f.name === file.name && f.size === file.size,
+                            )
+                          ) {
+                            return Upload.LIST_IGNORE
+                          }
+                          return false
+                        },
                         showUploadList: false,
                         onChange,
                       } as Record<string, unknown>)}

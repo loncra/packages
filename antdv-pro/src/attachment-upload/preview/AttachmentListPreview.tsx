@@ -1,0 +1,141 @@
+import {defineComponent, type CSSProperties, type PropType} from 'vue'
+import {Alert, Button, Flex, Progress, theme, TypographyText} from 'antdv-next'
+import {DeleteOutlined, DownloadOutlined} from '@antdv-next/icons'
+import {classNames} from '@loncra/antdv'
+import type {ObjectWriteResult} from '@loncra/client/resource'
+import type {UploadFile} from 'antdv-next/dist/upload/interface'
+import {byteFormat} from '../../_util/format'
+import {attachmentAlertType} from '../attachmentKinds'
+import AttachmentFilePreview from './AttachmentFilePreview'
+
+const AttachmentListPreview = defineComponent({
+  name: 'LAttachmentListPreview',
+  props: {
+    files: {type: Array as PropType<UploadFile<ObjectWriteResult>[]>, required: true},
+    preview: Boolean,
+    disabled: Boolean,
+    itemClass: String,
+    itemStyle: Object as PropType<CSSProperties>,
+    listClass: String,
+    listStyle: Object as PropType<CSSProperties>,
+    prefixCls: {type: String, required: true},
+    hashId: {type: String, required: true},
+    cssVarCls: String,
+    onPreview: {
+      type: Function as PropType<(file: UploadFile<ObjectWriteResult>) => void>,
+      required: true,
+    },
+    onRemove: {
+      type: Function as PropType<(file: UploadFile<ObjectWriteResult>) => void>,
+      required: true,
+    },
+    onDownload: {
+      type: Function as PropType<(file: ObjectWriteResult) => void>,
+      required: true,
+    },
+  },
+  setup(props, {slots}) {
+    const {token} = theme.useToken()
+    const hashed = (name?: string) => classNames(props.hashId, props.cssVarCls, name)
+    const itemSlots = {
+      itemRender: slots.itemRender
+        ? (ctx: {file: UploadFile<ObjectWriteResult>}) => slots.itemRender!(ctx)
+        : undefined,
+      itemIcon: slots.itemIcon
+        ? (ctx: {file: UploadFile<ObjectWriteResult>}) => slots.itemIcon!(ctx)
+        : undefined,
+    }
+
+    function renderActions(file: UploadFile<ObjectWriteResult>) {
+      if (props.disabled) {
+        return null
+      }
+      return (
+        <Flex gap="small">
+          {!props.preview ? (
+            <Button
+              danger
+              size="small"
+              type="text"
+              disabled={file.status === 'uploading'}
+              onClick={() => props.onRemove(file)}
+            >
+              <DeleteOutlined />
+            </Button>
+          ) : null}
+          {file.response ? (
+            <Button
+              type="text"
+              size="small"
+              onClick={() => props.onDownload(file.response as ObjectWriteResult)}
+            >
+              <DownloadOutlined />
+            </Button>
+          ) : null}
+        </Flex>
+      )
+    }
+
+    return () => (
+      <Flex
+        vertical
+        class={hashed(classNames(`${props.prefixCls}-list`, props.listClass))}
+        gap="middle"
+        style={props.listStyle}
+      >
+        {slots.listBefore?.()}
+        {props.files.map((file) =>
+          slots.itemRender ? (
+            slots.itemRender({file})
+          ) : (
+            <Alert key={file.uid} type={props.preview ? 'info' : attachmentAlertType(file.status)}>
+              {{
+                title: () => (
+                  <Flex justify="space-between" gap={token.value.sizeXS}>
+                    <AttachmentFilePreview
+                      file={file}
+                      disabled={props.disabled}
+                      itemClass={props.itemClass}
+                      itemStyle={props.itemStyle}
+                      prefixCls={props.prefixCls}
+                      hashId={props.hashId}
+                      canDelete={() => false}
+                      canDownload={() => false}
+                      cssVarCls={props.cssVarCls}
+                      onPreview={props.onPreview}
+                      v-slots={itemSlots}
+                    />
+                    <Flex vertical justify={"space-between"} class={hashed(`${props.prefixCls}-grow`)}>
+                      <Flex justify={"space-between"} align={"center"} class={hashed(`${props.prefixCls}-grow`)}>
+                        <Flex vertical justify="space-between" class={hashed(`${props.prefixCls}-grow`)}>
+                          <TypographyText ellipsis class={hashed(`${props.prefixCls}-grow`)}>
+                            {file.name}
+                          </TypographyText>
+                          <TypographyText
+                            type="secondary"
+                            class={hashed(`${props.prefixCls}-size`)}
+                          >
+                            {`(${byteFormat(file.size || 0)})`}
+                          </TypographyText>
+                        </Flex>
+                        {renderActions(file)}
+                      </Flex>
+                      {!props.preview && (!file.response || !props.disabled) ? (
+                        <Progress percent={file.percent} size="small" />
+                      ) : (
+                        /*<TypographyText type="secondary">{byteFormat(file.size || 0)}</TypographyText>*/
+                          <></>
+                      )}
+                    </Flex>
+                  </Flex>
+                ),
+              }}
+            </Alert>
+          ),
+        )}
+      </Flex>
+    )
+  },
+})
+
+export default AttachmentListPreview

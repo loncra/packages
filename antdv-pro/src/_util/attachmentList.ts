@@ -1,7 +1,18 @@
 import type {ObjectItemInfo, ObjectWriteResult} from '@loncra/client/resource'
 import {AttachmentService} from '@loncra/client/resource'
 import type {UploadFile} from 'antdv-next/dist/upload/interface'
-import type {AttachmentFileItem, AttachmentPathItem, AttachmentValue} from '../attachment-upload/types'
+
+/**
+ * 附件值形状的唯一来源（`attachment-upload/types.ts` 从这里 re-export——`_util` 是基础件层，
+ * 不能反向依赖控件目录）。
+ */
+export type AttachmentFileItem = UploadFile<ObjectWriteResult> | ObjectWriteResult | ObjectItemInfo
+
+export interface AttachmentPathItem extends UploadFile<ObjectWriteResult> {
+  children?: AttachmentPathItem[]
+}
+
+export type AttachmentValue = AttachmentFileItem | AttachmentFileItem[] | undefined
 
 export function isObjectWriteResult(item: unknown): item is ObjectWriteResult {
   return !!item && typeof item === 'object' && 'bucketName' in item && 'objectName' in item
@@ -9,6 +20,30 @@ export function isObjectWriteResult(item: unknown): item is ObjectWriteResult {
 
 export function isUploadFile(item: unknown): item is UploadFile {
   return !!item && typeof item === 'object' && 'uid' in item
+}
+
+/** 附件项的稳定标识：UploadFile 取 `uid`、OWR 取 `etag`、ObjectItemInfo 取 `id` */
+export function attachmentUidOf(item: AttachmentFileItem): string {
+  if (isUploadFile(item)) {
+    return item.uid
+  }
+  if (isObjectWriteResult(item)) {
+    return item.etag
+  }
+  return String((item as ObjectItemInfo).id ?? '')
+}
+
+/** 按 uid 去重（保留首个）——回显值里同 key 重复时用 */
+export function dedupeAttachmentList<T extends AttachmentFileItem>(list: T[]): T[] {
+  const seen = new Set<string>()
+  return list.filter((item) => {
+    const uid = attachmentUidOf(item)
+    if (seen.has(uid)) {
+      return false
+    }
+    seen.add(uid)
+    return true
+  })
 }
 
 /** 展示名：优先上传时写进元数据的原始文件名，其次取 `objectName` 最后一段 */

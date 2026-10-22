@@ -7,6 +7,7 @@ export interface AttachmentUploadLocale {
   draggerSubTitle: string
   deleteConfirmTitle: string
   deleteConfirmSingle: string
+  videoUnsupported: string
 }
 
 /**

@@ -10,6 +10,7 @@ const locale: Locale = {
     draggerSubTitle: 'Up to {maxCount} files, {count} uploaded',
     deleteConfirmTitle: 'Delete confirmation',
     deleteConfirmSingle: 'Delete this item?',
+    videoUnsupported: 'Your browser does not support video playback.',
   },
   Crud: {
     search: 'Search',

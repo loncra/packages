@@ -10,7 +10,6 @@ import {ATTACHMENT_PREVIEW_MODE} from '../constants'
 import type {
   AttachmentFileItem,
   AttachmentPictureCardUploadProps,
-  AttachmentPreviewMode,
   AttachmentUploadResolvedClassNames,
   AttachmentUploadResolvedStyles,
 } from '../types'
@@ -25,10 +24,6 @@ const AttachmentPictureCardUpload = defineComponent({
     fileList: {
       type: Array as PropType<AttachmentFileItem[]>,
       default: () => [],
-    },
-    mode: {
-      type: String as PropType<AttachmentPreviewMode>,
-      default: ATTACHMENT_PREVIEW_MODE.PICTURE_CARD,
     },
     preview: {
       type: Boolean,
@@ -45,6 +40,7 @@ const AttachmentPictureCardUpload = defineComponent({
     disabled: Boolean,
     multiple: Boolean,
     accept: String,
+    dedupe: Boolean,
     maxCount: Number,
     canPreview: Function as PropType<AttachmentPictureCardUploadProps['canPreview']>,
     canDelete: Function as PropType<AttachmentPictureCardUploadProps['canDelete']>,
@@ -83,6 +79,7 @@ const AttachmentPictureCardUpload = defineComponent({
       const multi = !!(props.maxCount && props.maxCount > 1)
       const showTrigger =
         !props.maxCount || uploadFiles.value.length < props.maxCount || props.preview
+      const triggerVisible = computed(() => !props.preview && !props.disabled)
 
       return (
         <AttachmentPreview
@@ -105,7 +102,7 @@ const AttachmentPictureCardUpload = defineComponent({
           v-slots={{
             pictureCardAfter: showTrigger
               ? ({showMeta}: {showMeta: boolean}) =>
-                  !props.preview && !props.disabled ? (
+                  triggerVisible.value ? (
                     /**
                      * 触发区：`classes.trigger` / `styles.trigger` 挂在这块虚线框上（宿主看到的就是它）。
                      * ⚠️ **不再转给 antd 的 `Upload`** —— 语义键 `trigger` 的归属就是"触发上传的那块区域"，
@@ -124,7 +121,17 @@ const AttachmentPictureCardUpload = defineComponent({
                           multi ? `${prefixCls.value}-trigger-upload-multi` : undefined,
                         )}
                         fileList={antdFileList.value}
-                        beforeUpload={() => false}
+                        beforeUpload={(file: File) => {
+                          if (
+                            props.dedupe &&
+                            uploadFiles.value.some(
+                              (f) => f.name === file.name && f.size === file.size,
+                            )
+                          ) {
+                            return Upload.LIST_IGNORE
+                          }
+                          return false
+                        }}
                         showUploadList={false}
                         maxCount={props.maxCount}
                         multiple={props.multiple}

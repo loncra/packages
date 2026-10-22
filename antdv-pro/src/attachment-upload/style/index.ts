@@ -1,8 +1,9 @@
-import type {CSSInterpolation} from '@antdv-next/cssinjs'
+import type {CSSInterpolation, CSSObject} from '@antdv-next/cssinjs'
 import {SPIN_KEYFRAMES, type LoncraStyleToken} from '@loncra/antdv'
 import {genStyleHooks} from '../../_util/genStyleLayer'
 
-function genAttachmentUploadStyle(token: LoncraStyleToken): CSSInterpolation {
+/** 列表 / 缩略图 / 遮罩 / 弹层那一半 */
+function genAttachmentListStyle(token: LoncraStyleToken): Record<string, CSSObject> {
   const {
     componentCls,
     colorBorderSecondary,
@@ -10,28 +11,18 @@ function genAttachmentUploadStyle(token: LoncraStyleToken): CSSInterpolation {
     colorInfoBorder,
     colorSuccessBorder,
     colorErrorBorder,
-    colorWarningBg,
-    colorInfoBg,
-    colorSuccessBg,
-    colorErrorBg,
-    colorBgContainer,
-    colorBgLayout,
     colorBgMask,
+    colorBgLayout,
     colorTextLightSolid,
     borderRadiusSM,
-    borderRadiusLG,
     paddingXS,
-    paddingSM,
-    padding,
     fontSizeHeading3,
     fontSizeLG,
     fontSizeSM,
-    fontSizeHeading2,
     screenMD,
     sizeSM,
     lineWidth,
     lineType,
-    antCls,
     motionDurationMid,
     motionDurationSlow,
     sizeXL,
@@ -140,6 +131,57 @@ function genAttachmentUploadStyle(token: LoncraStyleToken): CSSInterpolation {
       display: 'block',
       width: '100%',
     },
+    [`${componentCls}-size`]: {
+      /*display: 'none',*/
+      flexShrink: 0,
+      marginInlineStart: marginXXS,
+      /*[`@media (min-width: ${screenMD})`]: {
+        display: 'inline',
+      },*/
+    },
+    [`${componentCls}-video`]: {
+      width: '100%',
+      height: '100%',
+      maxHeight: 400,
+      background: colorBgLayout,
+    },
+    [`${componentCls}-preview-hidden`]: {
+      display: 'none',
+    },
+    [`${componentCls}-dragger-title`]: {
+      margin: 0,
+    },
+  }
+}
+
+/** 卡片形态（状态边框 / meta）与触发区那一半 */
+function genAttachmentCardStyle(token: LoncraStyleToken): Record<string, CSSObject> {
+  const {
+    componentCls,
+    antCls,
+    colorBorderSecondary,
+    colorWarningBorder,
+    colorInfoBorder,
+    colorSuccessBorder,
+    colorErrorBorder,
+    colorWarningBg,
+    colorInfoBg,
+    colorSuccessBg,
+    colorErrorBg,
+    colorBgContainer,
+    borderRadiusLG,
+    paddingXS,
+    paddingSM,
+    padding,
+    sizeXXL,
+    marginXXS,
+    lineWidth,
+    lineType,
+    fontSizeHeading2,
+    calc,
+  } = token
+
+  return {
     [`${componentCls}-card`]: {
       display: 'inline-flex',
       flexDirection: 'column',
@@ -176,14 +218,6 @@ function genAttachmentUploadStyle(token: LoncraStyleToken): CSSInterpolation {
       overflow: 'hidden',
       textAlign: 'center',
     },
-    [`${componentCls}-size`]: {
-      display: 'none',
-      flexShrink: 0,
-      marginInlineStart: marginXXS,
-      [`@media (min-width: ${screenMD})`]: {
-        display: 'inline',
-      },
-    },
     [`${componentCls}-trigger`]: {
       display: 'inline-flex',
       flexDirection: 'column',
@@ -217,26 +251,14 @@ function genAttachmentUploadStyle(token: LoncraStyleToken): CSSInterpolation {
       width: '100%',
       height: '100%',
     },
-    [`${componentCls}-trigger-inner-multi`]: {
-      width: calc(sizeXXL).mul(2).equal(),
-      height: calc(sizeXXL).mul(2).equal(),
-    },
     [`${componentCls}-plus-icon`]: {
       fontSize: fontSizeHeading2,
     },
-    [`${componentCls}-video`]: {
-      width: '100%',
-      height: '100%',
-      maxHeight: 400,
-      background: colorBgLayout,
-    },
-    [`${componentCls}-preview-hidden`]: {
-      display: 'none',
-    },
-    [`${componentCls}-dragger-title`]: {
-      margin: 0,
-    },
   }
+}
+
+function genAttachmentUploadStyle(token: LoncraStyleToken): CSSInterpolation {
+  return {...genAttachmentListStyle(token), ...genAttachmentCardStyle(token)}
 }
 
 export default genStyleHooks('AttachmentUpload', genAttachmentUploadStyle, {order: 2})

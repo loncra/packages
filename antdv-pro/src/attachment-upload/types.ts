@@ -1,21 +1,20 @@
 import type {CSSProperties} from 'vue'
-import type {ObjectItemInfo, ObjectWriteResult} from '@loncra/client/resource'
+import type {ObjectWriteResult} from '@loncra/client/resource'
 import type {UploadFile} from 'antdv-next/dist/upload/interface'
 import type {SemanticClassNamesType, SemanticStylesType,} from 'antdv-next/dist/_util/hooks/useMergeSemantic'
 import type {ATTACHMENT_PREVIEW_MODE, ATTACHMENT_UPLOAD_MODE} from './constants'
+import type {AttachmentFileItem, AttachmentValue} from '../_util/attachmentList'
+
+export type {
+  AttachmentFileItem,
+  AttachmentPathItem,
+  AttachmentValue,
+} from '../_util/attachmentList'
 
 export type AttachmentUploadMode =
   (typeof ATTACHMENT_UPLOAD_MODE)[keyof typeof ATTACHMENT_UPLOAD_MODE]
 export type AttachmentPreviewMode =
   (typeof ATTACHMENT_PREVIEW_MODE)[keyof typeof ATTACHMENT_PREVIEW_MODE]
-
-export type AttachmentFileItem = UploadFile<ObjectWriteResult> | ObjectWriteResult | ObjectItemInfo
-
-export interface AttachmentPathItem extends UploadFile<ObjectWriteResult> {
-  children?: AttachmentPathItem[]
-}
-
-export type AttachmentValue = AttachmentFileItem | AttachmentFileItem[] | undefined
 
 export type AttachmentUploadExpose = {
   upload: () => Promise<ObjectWriteResult | ObjectWriteResult[] | undefined>
@@ -108,7 +107,7 @@ export interface AttachmentUploadProps extends BasicAttachmentProps, AttachmentU
   value?: AttachmentValue
   mode?: AttachmentUploadMode
   postFilename?: string
-  autoUpload?: boolean
+  dedupe?: boolean
   showFilename?: boolean
   action?: string
   promiseLimit?: number
@@ -142,8 +141,6 @@ export interface AttachmentPreviewProps extends AttachmentUploadDomProps, Attach
   changeThumbUrl?: boolean
   showFilename?: boolean
   preview?: boolean
-  height?: string
-  width?: string
 }
 
 export interface AttachmentPreviewFileProps extends AttachmentOperationProps {

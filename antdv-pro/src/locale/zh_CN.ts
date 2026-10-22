@@ -10,6 +10,7 @@ const locale: Locale = {
     draggerSubTitle: '可上传 {maxCount} 个文件内容，当前已上传 {count}',
     deleteConfirmTitle: '删除确认',
     deleteConfirmSingle: '确定要删除该记录吗？',
+    videoUnsupported: '您的浏览器不支持视频播放。',
   },
   Crud: {
     search: '搜索',

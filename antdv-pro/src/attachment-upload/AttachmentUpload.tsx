@@ -1,4 +1,4 @@
-import {computed, defineComponent, nextTick, type PropType, ref, toRaw, toRef, watch} from 'vue'
+import {computed, defineComponent, type PropType, toRef} from 'vue'
 import type {UploadChangeParam} from 'antdv-next'
 import {Upload} from 'antdv-next'
 import {useMergeSemantic, useToArr, useToProps,} from 'antdv-next/dist/_util/hooks/useMergeSemantic'
@@ -6,31 +6,20 @@ import {classNames, useFormItemTrigger} from '@loncra/antdv'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import type {ObjectWriteResult} from '@loncra/client/resource'
 import type {UploadFile} from 'antdv-next/dist/upload/interface'
-import {
-  applyAttachmentDirectoryProgress,
-  collectAttachmentFileLeaves,
-  denormalizeAttachmentFromList,
-  detectAttachmentValueMode,
-  isObjectWriteResult,
-  isUploadFile,
-  normalizeAttachmentToList,
-} from '../_util/attachmentList'
 import {uploadFile as uploadAttachmentFile} from '../_util/uploadFile'
 import {ATTACHMENT_PREVIEW_MODE, ATTACHMENT_UPLOAD_MODE} from './constants'
 import type {
-  AttachmentFileItem,
-  AttachmentPathItem,
-  AttachmentPreviewMode,
   AttachmentUploadClassNamesType,
-  AttachmentUploadExecutorOptions,
   AttachmentUploadMode,
   AttachmentUploadProps,
   AttachmentUploadResolvedClassNames,
   AttachmentUploadResolvedStyles,
   AttachmentUploadStylesType,
-  AttachmentValue,
+  AttachmentPreviewMode,
 } from './types'
 import useStyle from './style'
+import {useAttachmentUploadValue} from './useAttachmentUploadValue'
+import {useAttachmentUploadAction} from './useAttachmentUploadAction'
 import AttachmentDraggerUpload from './internal/AttachmentDraggerUpload'
 import AttachmentPictureCardUpload from './internal/AttachmentPictureCardUpload'
 
@@ -38,14 +27,10 @@ const AttachmentUpload = defineComponent({
   name: 'LAttachmentUpload',
   inheritAttrs: false,
   props: {
-    value: [Object, Array] as PropType<AttachmentValue>,
+    value: [Object, Array] as PropType<AttachmentUploadProps['value']>,
     postFilename: {
       type: String,
       default: 'file',
-    },
-    autoUpload: {
-      type: Boolean,
-      default: false,
     },
     mode: {
       type: String as PropType<AttachmentUploadMode>,
@@ -54,6 +39,10 @@ const AttachmentUpload = defineComponent({
     promiseLimit: {
       type: Number,
       default: 3,
+    },
+    dedupe: {
+      type: Boolean,
+      default: false,
     },
     bucket: {
       type: String,
@@ -89,7 +78,7 @@ const AttachmentUpload = defineComponent({
     rootClass: String,
   },
   emits: {
-    'update:value': (_value: AttachmentValue) => true,
+    'update:value': (_value: AttachmentUploadProps['value']) => true,
     remove: (_file: UploadFile<ObjectWriteResult>) => true,
     change: (_info: UploadChangeParam) => true,
   },
@@ -102,10 +91,13 @@ const AttachmentUpload = defineComponent({
       ),
     )
     const [hashId, cssVarCls] = useStyle(prefixCls)
-    const fileList = ref<AttachmentFileItem[]>([])
-    // 记录最后一次 emit 出去的值，用来识别「自己的回声」。
-    // 替代原来的 syncing + nextTick 时序保护：那种写法依赖下一轮 tick，父级同步回写/异步回写表现不一致。
-    let lastEmitted: AttachmentValue | undefined
+
+    const fileList = useAttachmentUploadValue({
+      value: () => props.value,
+      maxCount: () => props.maxCount,
+      dedupe: () => props.dedupe,
+      onEmit: (v) => emit('update:value', v),
+    })
 
     const [mergedClasses, mergedStyles] = (
       useMergeSemantic as (
@@ -122,145 +114,17 @@ const AttachmentUpload = defineComponent({
       useToProps(computed(() => props) as never),
     )
 
-    watch(
-      () => props.value,
-      (v) => {
-        /**
-         * 自己刚 emit 出去又被回传回来的值，不需要再反向同步一次。
-         *
-         * ⚠️ **必须比 `toRaw(v)`**：父级常把值放进 **reactive 容器**（表单实体就是 `ref({...})`），
-         * 读回来的是**代理**，代理 `!==` 当初那个原始数组 ⇒ 守卫失效 ⇒
-         * `props.value → normalize(fileList) → watch(fileList) → emit → 父级写回 → props.value …`
-         * **每 tick 空转一轮**（多附件时整页卡死；单选那份因为 `normalize` 对非 OWR 单值返回 `[]`
-         * 意外刹住，所以只在"多个附件"上暴露）。2026-09-29 定位。
-         */
-        if (v != null && toRaw(v) === lastEmitted) {
-          return
-        }
-        fileList.value = normalizeAttachmentToList(v ?? undefined)
-      },
-      // deep：父级原地修改数组元素时也要同步进来
-      {immediate: true, deep: true},
-    )
-
-    watch(
+    const {upload, getFiles, buildExecutorOptions} = useAttachmentUploadAction({
       fileList,
-      (list) => {
-        /**
-         * ⚠️ **已经传完的叶子必须交回 `ObjectWriteResult`（= `item.response`），不能交 `UploadFile` 外壳。**
-         *
-         * `upload()` 上传完会把内部 `fileList` 写成 `ObjectWriteResult[]`（见 `upload()` 里那句注释），
-         * 而子组件的两向回流（`useAttachmentUploadFiles`：`toTree()` 把 OWR 包成 `UploadFile` 再写回）
-         * 会让这一轮 watch **再跑一次** —— 那时 `list` 里是 `UploadFile` 外壳，直接 emit 出去的话，
-         * 父级拿到的值里就**没有** `bucketName` / `objectName`（它们被套在 `response` 里）⇒ 提交给
-         * 后端时对象信息整块丢失（DB 里 `bucketName` / `objectName` 为空、图片拼不出可用 URL）。
-         *
-         * 取不到 `response`（还没上传：父级持有的本来就是"待上传的文件"）时才交回 `item` 本身。
-         * 这样"父级把同一个 OWR 写回来"会命中上面的回声守卫（`v === lastEmitted`），不会来回震荡。
-         */
-        lastEmitted = denormalizeAttachmentFromList(
-          list.map((item) => getObjectWriteResult(item) ?? item),
-          props.value ?? undefined,
-          props.maxCount,
-        )
-        emit('update:value', lastEmitted)
-      },
-      {deep: true},
-    )
+      value: () => props.value,
+      maxCount: () => props.maxCount,
+      bucket: () => props.bucket,
+      promiseLimit: () => props.promiseLimit,
+      postFilename: () => props.postFilename,
+      uploadOptions: () => props.uploadOptions,
+    })
 
-    // 值变化通知 FormItem 校验；`deep`：父级原地改数组元素也算变
     useFormItemTrigger(() => props.value, true)
-
-    function buildExecutorOptions(): AttachmentUploadExecutorOptions {
-      return {
-        postFilename: props.postFilename,
-        promiseLimit: props.promiseLimit,
-        param: (props.uploadOptions?.param ?? {}) as Record<string, unknown>,
-        headers: (props.uploadOptions?.headers ?? {}) as Record<string, string>,
-      }
-    }
-
-    function getObjectWriteResult(item: AttachmentFileItem): ObjectWriteResult | undefined {
-      if (isObjectWriteResult(item)) {
-        return item
-      }
-      if (isUploadFile(item) && item.response && item.status === 'done') {
-        return item.response
-      }
-    }
-
-    function resolveUploadResult(
-      results: AttachmentFileItem[],
-    ): ObjectWriteResult | ObjectWriteResult[] | undefined {
-      const mode = detectAttachmentValueMode(props.value ?? undefined, props.maxCount)
-      if (mode === 'single') {
-        return getObjectWriteResult(results[0] as AttachmentFileItem)
-      }
-      return results.map((s) => getObjectWriteResult(s)).filter((s) => s) as ObjectWriteResult[]
-    }
-
-    async function upload(): Promise<ObjectWriteResult | ObjectWriteResult[] | undefined> {
-      const tree = fileList.value as AttachmentPathItem[]
-      const leaves = collectAttachmentFileLeaves(tree)
-      const existing = leaves.filter(
-        (s) => isObjectWriteResult(s) || (isUploadFile(s) && s.response && s.status === 'done'),
-      )
-      const pending = leaves.filter(
-        (item): item is UploadFile => isUploadFile(item) && !!item.originFileObj && !item.response,
-      )
-
-      if (pending.length === 0) {
-        return resolveUploadResult(existing)
-      }
-
-      const options = buildExecutorOptions()
-      const stopProgressWatch = watch(
-        () => pending.map((file) => [file.percent, file.status]),
-        () => applyAttachmentDirectoryProgress(tree),
-        {flush: 'sync'},
-      )
-      try {
-        await Promise.all(
-          pending.map(
-            async (file) =>
-              (file.response = await uploadAttachmentFile(file, props.bucket, options)),
-          ),
-        )
-      } finally {
-        stopProgressWatch()
-        applyAttachmentDirectoryProgress(tree)
-      }
-
-      const hasDirectory = tree.some((item) => item.type === 'directory')
-      if (!hasDirectory) {
-        const results = leaves
-          .map((item) => {
-            if (isObjectWriteResult(item)) {
-              return item
-            }
-            if (isUploadFile(item) && item.response) {
-              return item.response
-            }
-            return null
-          })
-          .filter((item): item is ObjectWriteResult => item !== null)
-
-        // 交给 fileList 的 watch 统一 emit，避免与显式 emit 重复
-        fileList.value = results
-        await nextTick()
-        return resolveUploadResult(results)
-      }
-
-      const results = leaves
-        .map((item) => getObjectWriteResult(item))
-        .filter((item): item is ObjectWriteResult => item !== undefined)
-
-      return resolveUploadResult(results)
-    }
-
-    function getFiles(): AttachmentFileItem[] {
-      return collectAttachmentFileLeaves(fileList.value as AttachmentPathItem[])
-    }
 
     expose({
       upload,
@@ -311,6 +175,7 @@ const AttachmentUpload = defineComponent({
               maxCount={props.maxCount}
               multiple={props.multiple}
               accept={props.accept}
+              dedupe={props.dedupe}
               disabled={props.disabled}
               mode={props.previewMode || ATTACHMENT_PREVIEW_MODE.LIST}
               prefixCls={prefixCls.value}
@@ -339,10 +204,10 @@ const AttachmentUpload = defineComponent({
               maxCount={props.maxCount}
               multiple={props.multiple}
               accept={props.accept}
+              dedupe={props.dedupe}
               showFilename={props.showFilename}
               classes={mergedClasses.value}
               styles={mergedStyles.value}
-              mode={props.previewMode || ATTACHMENT_PREVIEW_MODE.PICTURE_CARD}
               prefixCls={prefixCls.value}
               onRemove={(file) => emit('remove', file)}
               onChange={(info) => emit('change', info)}
