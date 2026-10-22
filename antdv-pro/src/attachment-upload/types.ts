@@ -1,5 +1,6 @@
 import type {CSSProperties} from 'vue'
 import type {ObjectWriteResult} from '@loncra/client/resource'
+import type {UploadChangeParam} from 'antdv-next'
 import type {UploadFile} from 'antdv-next/dist/upload/interface'
 import type {SemanticClassNamesType, SemanticStylesType,} from 'antdv-next/dist/_util/hooks/useMergeSemantic'
 import type {ATTACHMENT_PREVIEW_MODE, ATTACHMENT_UPLOAD_MODE} from './constants'
@@ -109,7 +110,7 @@ export interface AttachmentUploadProps extends BasicAttachmentProps, AttachmentU
 export interface AttachmentUploadEmits {
   'update:value': (value: AttachmentValue) => void
   remove: (file: UploadFile<ObjectWriteResult>) => void
-  change: (info: unknown) => void
+  change: (info: UploadChangeParam) => void
 }
 
 export interface AttachmentUploadSlots {

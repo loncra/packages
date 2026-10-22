@@ -1,44 +1,31 @@
-import {ref, type Ref, toRaw, watch} from 'vue'
-import {useFormItemTrigger} from '@loncra/antdv'
-import {dedupeAttachmentList, denormalizeAttachmentFromList, normalizeAttachmentToList,} from '../_util/attachmentList'
+import type {Ref} from 'vue'
+import {useFormItemTrigger, useTwoWayModel, type ModelEmit} from '@loncra/antdv'
+import {
+  dedupeAttachmentList,
+  denormalizeAttachmentFromList,
+  normalizeAttachmentToList,
+} from '../_util/attachmentList'
 import type {AttachmentFileItem, AttachmentValue} from './types'
 import {getObjectWriteResult} from './attachmentKinds'
 
-export function useAttachmentUploadValue(options: {
-  value: () => AttachmentValue | undefined
-  maxCount: () => number | undefined
-  dedupe: () => boolean
-  onEmit: (value: AttachmentValue) => void
-}): Ref<AttachmentFileItem[]> {
-  const fileList = ref<AttachmentFileItem[]>([])
-  let lastEmitted: AttachmentValue | undefined
+export function useAttachmentUploadValue(
+  props: {value?: AttachmentValue; maxCount?: number; dedupe?: boolean},
+  emit: ModelEmit,
+): Ref<AttachmentFileItem[]> {
+  useFormItemTrigger(() => props.value, true)
 
-  watch(
-    options.value,
-    (v) => {
-      if (v != null && toRaw(v) === toRaw(lastEmitted)) {
-        return
-      }
-      const list = normalizeAttachmentToList(v ?? undefined)
-      fileList.value = options.dedupe() ? dedupeAttachmentList(list) : list
+  return useTwoWayModel(props, 'value', emit, {
+    deep: true,
+    flush: 'pre',
+    toLocal: (value) => {
+      const list = normalizeAttachmentToList(value ?? undefined)
+      return props.dedupe ? dedupeAttachmentList(list) : list
     },
-    {immediate: true, deep: true},
-  )
-
-  watch(
-    fileList,
-    (list) => {
-      lastEmitted = denormalizeAttachmentFromList(
+    toEmitted: (list) =>
+      denormalizeAttachmentFromList(
         list.map((item) => getObjectWriteResult(item) ?? item),
-        options.value() ?? undefined,
-        options.maxCount(),
-      )
-      options.onEmit(lastEmitted)
-    },
-    {deep: true},
-  )
-
-  useFormItemTrigger(options.value, true)
-
-  return fileList
+        props.value ?? undefined,
+        props.maxCount,
+      ),
+  })
 }

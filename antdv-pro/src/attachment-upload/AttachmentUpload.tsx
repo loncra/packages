@@ -93,12 +93,7 @@ const AttachmentUpload = defineComponent({
     )
     const [hashId, cssVarCls] = useStyle(prefixCls)
 
-    const fileList = useAttachmentUploadValue({
-      value: () => props.value,
-      maxCount: () => props.maxCount,
-      dedupe: () => props.dedupe,
-      onEmit: (v) => emit('update:value', v),
-    })
+    const fileList = useAttachmentUploadValue(props, emit)
 
     const [mergedClasses, mergedStyles] = (
       useMergeSemantic as (

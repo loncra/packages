@@ -69,15 +69,9 @@ export type {ClientProviderProps, ClientProviderSlots} from './client-provider'
 
 export { uploadFile } from './_util/uploadFile'
 export {
-  applyAttachmentDirectoryProgress,
-  buildAttachmentPathTree,
-  collectAttachmentFileLeaves,
   convertUploadFiles,
-  denormalizeAttachmentFromList,
-  detectAttachmentValueMode,
   isObjectWriteResult,
   isUploadFile,
-  normalizeAttachmentToList,
   resolveDisplayName,
 } from './_util/attachmentList'
 
