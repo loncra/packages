@@ -4,7 +4,7 @@
 
 ## 安装与引用
 
-peer：`vue`、`antdv-next`、`@antdv-next/icons`、`antdv-next-tiptap`（只有 `Editor` 用）。
+peer：`vue`、`antdv-next`、`@antdv-next/icons`。
 
 | 路径 | 内容 |
 | --- | --- |
@@ -26,7 +26,6 @@ import zhCN from '@loncra/antdv/locale/zh_CN'
 | `BasicImage` | 图片展示，取不到图时回退包内自带占位图 | [说明](./src/basic-image/README.md) |
 | `IconSelect` | 图标选择：图标库 / 纯文本 / 头像三形态，外加只读预览 | [说明](./src/icon-select/README.md) |
 | `KeyValueTable` | 键值表格，行内可编辑，提交前收敛编辑态 | [说明](./src/key-value-table/README.md) |
-| `Editor` | 富文本编辑器（`antdv-next-tiptap`） | [说明](./src/editor/README.md) |
 
 ## 目录
 
@@ -34,7 +33,7 @@ import zhCN from '@loncra/antdv/locale/zh_CN'
 | --- | --- |
 | `<控件>/` | 一个控件一个目录。骨架 `index.ts` / 主组件 `.tsx` / `types.ts` / `style/index.ts` 见 [CONTRIBUTING.md](../CONTRIBUTING.md) 第 7 节 |
 | `locale/` | 本包 locale 与 `Locale` 类型 |
-| `_util/` | 共用基础件：纯函数 `classNames`、`genStyleHooks`、`isEmptyRichText` / `normalizeRichTextValue`，依赖 vue / antdv-next 的 composable（`useFormItemTrigger` / `useTwoWayModel`，以及 `context/` 下的 `useLocale` / `createUseLocale` / `fillLocale` / `useIsDark`），样式机制与共享片段在 `style/`（工厂 `createStyleHooks`、`genFullSpinStyle`、`genScrollAreaStyle`、`SPIN_KEYFRAMES` / `JUMP_KEYFRAMES`） |
+| `_util/` | 共用基础件：纯函数 `classNames`、`genStyleHooks`，依赖 vue / antdv-next 的 composable（`useFormItemTrigger` / `useTwoWayModel`，以及 `context/` 下的 `useLocale` / `createUseLocale` / `fillLocale` / `useIsDark`），样式机制与共享片段在 `style/`（工厂 `createStyleHooks`、`genFullSpinStyle`、`genScrollAreaStyle`、`SPIN_KEYFRAMES` / `JUMP_KEYFRAMES`） |
 
 ## 本包的开发规范
 

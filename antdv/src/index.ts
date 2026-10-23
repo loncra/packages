@@ -43,18 +43,6 @@ export type {
   KeyValueTableStyles,
 } from './key-value-table'
 
-export { default as Editor } from './editor'
-export type {
-  EditorEmits,
-  EditorLocale,
-  EditorProps,
-  EditorSlots,
-  OutputFormat,
-  PluginName,
-  UploadFn,
-} from './editor'
-export { isEmptyRichText, normalizeRichTextValue } from './editor'
-
 export { default as zhCN } from './locale/zh_CN'
 export { default as enUS } from './locale/en_US'
 export type { Locale } from './locale'

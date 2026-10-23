@@ -41,6 +41,18 @@ export type { UserAvatarProps, UserAvatarSlots } from './user-avatar'
 export { default as UserSelect } from './user-select'
 export type { UserSelectEmits, UserSelectOption, UserSelectProps, UserSelectSlots } from './user-select'
 
+export { default as Editor } from './editor'
+export type {
+  EditorEmits,
+  EditorLocale,
+  EditorProps,
+  EditorSlots,
+  OutputFormat,
+  PluginName,
+  UploadFn,
+} from './editor'
+export { isEmptyRichText, normalizeRichTextValue } from './editor'
+
 export { default as AttachmentMasonry } from './attachment-masonry'
 export type {
   AttachmentMasonryClasses,

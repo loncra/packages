@@ -4,7 +4,7 @@
 
 ## 安装与引用
 
-peer：`vue`、`antdv-next`、`@antdv-next/icons`、`@loncra/antdv`、`@loncra/client`、`dayjs`、`p-limit`。`dayjs` 用在 `_util/crud/dateUtils.ts` 与 `useDateFormat.ts`，`p-limit` 用在 `_util/uploadFile.ts`；`vue` 的版本只在包自己的 `devDependencies` 里钉死。
+peer：`vue`、`antdv-next`、`@antdv-next/icons`、`antdv-next-tiptap`（只有 `Editor` 用）、`@loncra/antdv`、`@loncra/client`、`dayjs`、`p-limit`。`dayjs` 用在 `_util/crud/dateUtils.ts` 与 `useDateFormat.ts`，`p-limit` 用在 `_util/uploadFile.ts`；`vue` 的版本只在包自己的 `devDependencies` 里钉死。
 
 本包 `exports` 只有三个入口，控件没有单独子路径：
 
@@ -33,6 +33,7 @@ import zhCN from '@loncra/antdv-pro/locale/zh_CN'
 | `UserSelect` | 用户选择（远程搜索 + 来源类型分组，内部 antd `Select`），含 `UserSelectOption` | [说明](./src/user-select/README.md) |
 | `AttachmentUpload` | 附件上传：分片、进度、模式常量 `ATTACHMENT_UPLOAD_MODE` / `ATTACHMENT_PREVIEW_MODE` | [说明](./src/attachment-upload/README.md) |
 | `AttachmentMasonry` | 附件瀑布流展示 | [说明](./src/attachment-masonry/README.md) |
+| `Editor` | 富文本编辑器（`antdv-next-tiptap`），自 `antdv` 迁入 | [说明](./src/editor/README.md) |
 | `DataLoadingCard` | 取数过程中的加载卡片（`DataLoadingTask`），被 `BasicCrudQuery` 使用 | [说明](./src/data-loading-card/README.md) |
 | `BasicCrudQuery` | 查询底座：搜索区 + 取数 + 分页 + 动作解析。`fetchDataDictionaries` / `fetchEnumBuckets` 只在控件出口 | [说明](./src/basic-crud-query/README.md) |
 | `QueryTable` | 查询内容的表格形态（列搜索 `ColumnSearchConfig`） | [说明](./src/query-table/README.md) |
@@ -48,7 +49,7 @@ import zhCN from '@loncra/antdv-pro/locale/zh_CN'
 | --- | --- |
 | `<控件>/` | 一个控件一个目录。骨架 `index.ts` / 主组件 `.tsx` / `style/index.ts` 见 [CONTRIBUTING.md](../CONTRIBUTING.md) 第 7 节，`types.ts` 与 `constants.ts` 按需 |
 | `crud-page/` | 页面装配套件：`home/`、`form/`、`form-modal/`、`detail/`、`card-grid/`、`operation-trace/`，以及 `define.ts`（声明入口）、`registryKinds.ts` / `usePageRegistry.ts`（字段组件注册表）、`fieldSourcesKinds.ts`（枚举 / 字典来源 → props）、`types.ts` + `pageTypes.ts`（声明模型与页面壳契约） |
-| `_util/` | 包内共用基础件：`format.ts`（单元格格式化）、`attachmentList.ts` / `uploadFile.ts` / `media.ts`（附件）、`useLocale.ts`，以及 `crud/`（`actions.ts` 动作解析、`defaultActions.ts` 默认动作、`useCollectionData.ts` 取数、`useCollectionModels.ts`（集合的四个受控模型）、`useCrudDelete.ts`、`useDrag.ts` / `useFlatDragDrop.ts` / `useTableRowDrag.ts`、`genDragStyle.ts`、`useMergeRowSelection.ts`、`dateUtils.ts` / `useDateFormat.ts`、`useStaleCheck.ts`、`navigate.ts`、`rowKey.ts`、`readPath.ts`、`sources.ts`、`collectionExpose.ts`） |
+| `_util/` | 包内共用基础件：`format.ts`（单元格格式化）、`attachmentList.ts` / `uploadFile.ts` / `media.ts`（附件）、`richText.ts`（富文本空值归一）、`useLocale.ts`，以及 `crud/`（`actions.ts` 动作解析、`defaultActions.ts` 默认动作、`useCollectionData.ts` 取数、`useCollectionModels.ts`（集合的四个受控模型）、`useCrudDelete.ts`、`useDrag.ts` / `useFlatDragDrop.ts` / `useTableRowDrag.ts`、`genDragStyle.ts`、`useMergeRowSelection.ts`、`dateUtils.ts` / `useDateFormat.ts`、`useStaleCheck.ts`、`navigate.ts`、`rowKey.ts`、`readPath.ts`、`sources.ts`、`collectionExpose.ts`） |
 | `locale/` | 本包 locale 与 `Locale` 类型 |
 | `notification/` | `useAppNotification` |
 
