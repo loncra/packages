@@ -4,7 +4,7 @@ import {classNames} from '@loncra/antdv'
 import type {ObjectWriteResult} from '@loncra/client/resource'
 import type {UploadFile} from 'antdv-next/dist/upload/interface'
 import {attachmentStatusClass} from '../attachmentKinds'
-import type {AttachmentPreviewProps} from '../types'
+import type {AttachmentPreviewProps, AttachmentPreviewRenderers} from '../types'
 import AttachmentFilePreview from './AttachmentFilePreview'
 import {pickItemSlots} from '../internal/attachmentItemSlots'
 
@@ -24,6 +24,7 @@ const AttachmentCardPreview = defineComponent({
     prefixCls: {type: String, required: true},
     hashId: {type: String, required: true},
     cssVarCls: String,
+    previewRenderers: Object as PropType<AttachmentPreviewRenderers>,
     canDelete: Function as PropType<AttachmentPreviewProps['canDelete']>,
     canPreview: Function as PropType<AttachmentPreviewProps['canPreview']>,
     canDownload: Function as PropType<AttachmentPreviewProps['canDownload']>,
@@ -69,6 +70,7 @@ const AttachmentCardPreview = defineComponent({
               prefixCls={props.prefixCls}
               hashId={props.hashId}
               cssVarCls={props.cssVarCls}
+              previewRenderers={props.previewRenderers}
               onPreview={props.onPreview}
               onDelete={props.onPostRemove}
               v-slots={{...pickItemSlots(slots)}}

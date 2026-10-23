@@ -6,7 +6,7 @@ import type {ObjectWriteResult} from '@loncra/client/resource'
 import type {UploadFile} from 'antdv-next/dist/upload/interface'
 import {byteFormat} from '../../_util/format'
 import {attachmentAlertType} from '../attachmentKinds'
-import type {AttachmentPathItem} from '../types'
+import type {AttachmentPathItem, AttachmentPreviewRenderers} from '../types'
 import AttachmentFilePreview from './AttachmentFilePreview'
 import {pickItemSlots} from '../internal/attachmentItemSlots'
 
@@ -24,6 +24,7 @@ const AttachmentListPreview = defineComponent({
     prefixCls: {type: String, required: true},
     hashId: {type: String, required: true},
     cssVarCls: String,
+    previewRenderers: Object as PropType<AttachmentPreviewRenderers>,
     onPreview: {
       type: Function as PropType<(file: UploadFile<ObjectWriteResult>) => void>,
       required: true,
@@ -91,6 +92,7 @@ const AttachmentListPreview = defineComponent({
                   canDelete={() => false}
                   canDownload={() => false}
                   cssVarCls={props.cssVarCls}
+                  previewRenderers={props.previewRenderers}
                   onPreview={props.onPreview}
                   v-slots={itemSlots}
                 />

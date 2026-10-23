@@ -1,15 +1,16 @@
-import {defineComponent, h, type PropType} from 'vue'
-import {FileImageOutlined, FileUnknownOutlined, FolderOutlined, PlayCircleOutlined,} from '@antdv-next/icons'
-import {BasicImage, classNames} from '@loncra/antdv'
+import {defineComponent, type PropType, type VNodeChild} from 'vue'
+import {classNames} from '@loncra/antdv'
 import type {ObjectWriteResult} from '@loncra/client/resource'
 import type {UploadFile} from 'antdv-next/dist/upload/interface'
-import {attachmentStatusClass, isVideoFile} from '../attachmentKinds'
+import {attachmentStatusClass, detectAttachmentFileKind} from '../attachmentKinds'
 import {useAttachmentFileActions} from './useAttachmentFileActions'
 import AttachmentThumbOverlay from './AttachmentThumbOverlay'
-import type {AttachmentPreviewFileProps} from '../types'
+import BUILTIN_THUMB_RENDERERS from '../internal/attachmentPreviewRenderers'
+import type {AttachmentPreviewFileProps, AttachmentPreviewRenderers} from '../types'
 
 function defaultCanPreview(file: UploadFile<ObjectWriteResult>) {
-  return file.type?.includes('image/') || isVideoFile(file)
+  const kind = detectAttachmentFileKind(file)
+  return kind === 'image' || kind === 'video'
 }
 
 function defaultCanDownload(file: UploadFile<ObjectWriteResult>) {
@@ -55,6 +56,7 @@ const AttachmentFilePreview = defineComponent({
       required: true,
     },
     cssVarCls: String,
+    previewRenderers: Object as PropType<AttachmentPreviewRenderers>,
   },
   emits: {
     download: (_file: ObjectWriteResult) => true,
@@ -65,19 +67,6 @@ const AttachmentFilePreview = defineComponent({
     const {download, remove} = useAttachmentFileActions({
       postRemove: (file) => emit('delete', file),
     })
-
-    function getFileIcon() {
-      if (props.file?.type?.includes('image/')) {
-        return FileImageOutlined
-      }
-      if (isVideoFile(props.file)) {
-        return PlayCircleOutlined
-      }
-      if (props.file?.type === 'directory') {
-        return FolderOutlined
-      }
-      return FileUnknownOutlined
-    }
 
     function thumbBorderClass() {
       if (!props.border) {
@@ -101,6 +90,8 @@ const AttachmentFilePreview = defineComponent({
 
     return () => {
       const file = props.file
+      const kind = detectAttachmentFileKind(file)
+      const renderer = props.previewRenderers?.[kind] ?? BUILTIN_THUMB_RENDERERS[kind]
       return (
         <span
           class={classNames(
@@ -114,18 +105,14 @@ const AttachmentFilePreview = defineComponent({
         >
           {slots.itemRender ? (
             slots.itemRender({file})
-          ) : file.thumbUrl ? (
-            <BasicImage
-              preview={false}
-              {...({src: file.thumbUrl} as Record<string, unknown>)}
-            />
           ) : (
-            <span class={classNames(props.hashId, `${props.prefixCls}-thumb-fallback`)}>
-              {slots.itemIcon?.({file}) ??
-                h(getFileIcon(), {
-                  class: classNames(props.hashId, `${props.prefixCls}-file-icon`),
-                })}
-            </span>
+            renderer({
+              file,
+              prefixCls: props.prefixCls,
+              hashId: props.hashId,
+              cssVarCls: props.cssVarCls,
+              itemIcon: slots.itemIcon?.({file}) as VNodeChild | undefined,
+            })
           )}
           {!props.disabled ? (
             <AttachmentThumbOverlay

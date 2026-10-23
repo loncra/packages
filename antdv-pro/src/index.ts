@@ -58,6 +58,10 @@ export type {
   AttachmentFileItem,
   AttachmentValue,
   AttachmentUploadExecutorOptions,
+  AttachmentFileKind,
+  AttachmentPreviewRenderer,
+  AttachmentPreviewRendererContext,
+  AttachmentPreviewRenderers,
 } from './attachment-upload'
 export { ATTACHMENT_UPLOAD_MODE, ATTACHMENT_PREVIEW_MODE } from './attachment-upload'
 

@@ -41,7 +41,7 @@ const uploadRef = ref<AttachmentUploadExpose>()
 
 ### 值的双向同步
 
-值经 `useTwoWayModel`（`@loncra/antdv`）做**转换型受控绑定**：宿主值 → `toLocal`（normalize + 去重）→ 内部 `fileList`；内部 `fileList` → `toEmitted`（denormalize）→ 宿主。两条"别踩回去"的约定：
+值经 `useTwoWayModel`（`@loncra/antdv`）做**转换型受控绑定**：宿主值 → `toLocal`（normalize，`dedupe` 开启时再去重）→ 内部 `fileList`；内部 `fileList` → `toEmitted`（denormalize）→ 宿主。两条"别踩回去"的约定：
 
 1. **回声守卫是 `toRaw` 对称比较**（模型内置）：父级常把值放进 reactive 容器（表单实体就是 `ref({...})`），读回来的是**代理**；emit 出去的值可能是裸对象也可能是代理（内部 `fileList` 住在深层 ref 里），所以两侧都要过 `toRaw` 再比。只比一侧会让守卫失效 ⇒ `value → normalize → emit → 父级写回 …` 空转，单值场景还会把值 normalize 成空、表现为"拖了文件但 required 校验不过"。2026-10-22 定位。
 2. **已经传完的叶子必须交回 `ObjectWriteResult`（= `item.response`），不能交 `UploadFile` 外壳**：内部目录树会把 OWR 包成 `UploadFile` 再写回，触发一轮 emit——那时交外壳，父级拿到的值里**没有** `bucketName` / `objectName` ⇒ 提交时对象信息整块丢失。取不到 `response`（还没上传）才交回 `item` 本身。
@@ -49,7 +49,7 @@ const uploadRef = ref<AttachmentUploadExpose>()
 ### 值的形状
 
 - 宿主传**数组** ⇒ 数组语义；传**单值**或 `maxCount: 1` ⇒ 单值语义（`detectAttachmentValueMode` 判定）。
-- `AttachmentValue` 联合里的 `ObjectItemInfo` **实际不可用**：转换层的守卫（`isObjectWriteResult` 看 `bucketName`/`objectName`）与它逐字相同，永远无法区分 ⇒ `normalize` 对它返回空。只接受 `UploadFile` / `ObjectWriteResult`（或其数组）。要支持它得先给一个能区分的判定。
+- `AttachmentValue` 联合里的 `ObjectItemInfo` **没有独立语义**：`ObjectItemInfo` 自带 `bucketName` / `objectName`，会被 `isObjectWriteResult` 守卫捕获、按 OWR 转换（`userMetadata` 那套原始文件名展示等特性不生效）。要给它独立处理路径，得先写一个能与 `ObjectWriteResult` 区分开的判定。
 
 ### 上传
 
@@ -69,9 +69,19 @@ const uploadRef = ref<AttachmentUploadExpose>()
 
 ### 缩略图与文件类型判定
 
+- 文件先按 `detectAttachmentFileKind` 分为四类：`image` / `video` / `directory` / `other`（唯一判定点）。缩略图与点击预览都按 kind 分发。
 - 图片：有 `url` 直接用；本地图片转 base64；本地视频抽帧写 `thumbUrl`。已有 `thumbUrl` 早退，不会循环。
-- **回显（OWR）视频不设 `thumbUrl`**：视频 URL 放进 `<img>` 只会破图，视频项显示 `PlayCircleOutlined` 兜底图标 + 悬浮层播放按钮。远程 URL 抽帧需要 `<video>` + canvas + 跨域配合，暂不做。
-- **`isVideoFile` 是过渡方案**：`video/*` 且扩展名不是 `.ts` / `.tsx` / `.mts` / `.cts` 才算视频。这几个扩展名在浏览器里会被报成 MPEG 传输流的 MIME（实测 `video/vnd.dlna.mpeg-tts`，变体随平台），按 MIME 点名拦不住，只能按扩展名排除——代价是真正的传输流视频文件失去预览。文件类型 → 预览方式的分发后续要做成**宿主可插拔接入**（宿主能预览 office 等格式时注入自己的实现），到时一并替换。
+- **回显（OWR）视频不设 `thumbUrl`**：视频 URL 放进 `<img>` 只会破图，视频项显示 `PlayCircleOutlined` 兜底图标 + 悬浮层预览（眼睛）按钮，点击打开视频弹窗播放。远程 URL 抽帧需要 `<video>` + canvas + 跨域配合，暂不做。
+- **`video` 的判定是扩展名排除**：`video/*` 且扩展名不是 `.ts` / `.tsx` / `.mts` / `.cts` 才算视频。这几个扩展名在浏览器里会被报成 MPEG 传输流的 MIME（实测 `video/vnd.dlna.mpeg-tts`，变体随平台），按 MIME 点名拦不住。对内置判定不满意时用 `previewRenderers` 覆盖对应 kind 的渲染，不必改包。
+- **宿主可插拔预览（`previewRenderers`）**：按 kind 覆盖缩略图渲染，内置表缺省——`{image, video, directory, other}`（image/video 有 `thumbUrl` 出图、否则图标；directory = 文件夹图标；other = 通用文件图标）。宿主能预览 office 等格式时传自己的渲染器即可：
+
+```ts
+previewRenderers={{
+  other: ({file, prefixCls, hashId}) => <OfficeThumb file={file} class={hashId} />
+}}
+```
+
+优先级：`itemRender` 插槽（整项）> `previewRenderers[kind]` > `itemIcon` 插槽（内置兜底图标）> 内置图标。点击行为不受 `previewRenderers` 影响：image 走图片预览组、video 走视频弹窗，**directory 点击无反应**（维持老行为）。
 
 ## API
 
@@ -86,7 +96,7 @@ const uploadRef = ref<AttachmentUploadExpose>()
 | multiple | 是否可多选 | boolean | `true` | - |
 | accept | 接受的文件类型 | string | - | - |
 | disabled | 禁用 | boolean | `false` | - |
-| preview | 只读形态开关：隐藏触发区与操作按钮，只展示 | boolean | `false` | - |
+| preview | 只读形态开关：隐藏触发区与删除按钮，只展示；下载 / 预览（眼睛）操作仍可用 | boolean | `false` | - |
 | bucket | 附件桶 | string | `user.file` | - |
 | postFilename | 上传字段名 | string | `file` | - |
 | promiseLimit | 并发上限 | number | `3` | - |
@@ -97,10 +107,11 @@ const uploadRef = ref<AttachmentUploadExpose>()
 | canPreview | 预览权限判定；默认图片/视频可预览 | `(file) => boolean` | - | - |
 | canDelete | 删除权限判定；默认可删 | `(file) => boolean` | - | - |
 | canDownload | 下载权限判定；默认有 `response` 可下载 | `(file) => boolean` | - | - |
+| previewRenderers | 按 kind 覆盖缩略图渲染，见"缩略图与文件类型判定" | `AttachmentPreviewRenderers` | - | - |
 | classes / styles | 语义化 DOM 区域表，见下 | - | - | - |
 | prefixCls / rootClass | 前缀覆盖 / 根类名 | string | - | - |
 
-**attrs 透传**：拆出 `class` / `style` 后，其余 attrs 按模式下推——`picture-card` / `dragger` 给内层 antd `Upload` / `UploadDragger`（`directory`、`before-upload`、`data` 等都走这里），`customize` 给宿主自己写的 `a-upload`。
+**attrs 透传**：拆出 `class` / `style` 后，其余 attrs 按模式下推——`picture-card` / `dragger` 给内层 antd `Upload` / `UploadDragger`（`directory`、`before-upload`、`data` 等都走这里）；`customize` 给 **pro 内层那个包裹宿主内容的 antd `Upload` 裸壳**（宿主写的 `a-upload` 只是它的插槽内容，attrs 不会落到宿主元素本身）。
 
 ### 事件 {#events}
 
@@ -129,7 +140,7 @@ const uploadRef = ref<AttachmentUploadExpose>()
 
 ## 类型 {#types}
 
-全部从包根导出：`AttachmentUploadProps` {#attachmentuploadprops} / `AttachmentUploadEmits` {#attachmentuploademits} / `AttachmentUploadSlots` {#attachmentuploadslots} / `AttachmentUploadExpose` {#attachmentuploadexpose} / `AttachmentFileItem` {#attachmentfileitem} / `AttachmentValue` {#attachmentvalue} / `AttachmentUploadExecutorOptions` {#attachmentuploadexecutoroptions} / `AttachmentUploadMode` {#attachmentuploadmode} / `AttachmentPreviewMode` {#attachmentpreviewmode}；常量 `ATTACHMENT_UPLOAD_MODE` / `ATTACHMENT_PREVIEW_MODE` 同。
+从包根导出：`AttachmentUploadProps` {#attachmentuploadprops} / `AttachmentUploadEmits` {#attachmentuploademits} / `AttachmentUploadSlots` {#attachmentuploadslots} / `AttachmentUploadExpose` {#attachmentuploadexpose} / `AttachmentFileItem` {#attachmentfileitem} / `AttachmentValue` {#attachmentvalue} / `AttachmentUploadExecutorOptions` {#attachmentuploadexecutoroptions} / `AttachmentFileKind` {#attachmentfilekind} / `AttachmentPreviewRenderer` {#attachmentpreviewrenderer} / `AttachmentPreviewRendererContext` {#attachmentpreviewrenderercontext} / `AttachmentPreviewRenderers` {#attachmentpreviewrenderers}；常量 `ATTACHMENT_UPLOAD_MODE` / `ATTACHMENT_PREVIEW_MODE` 同。`AttachmentUploadMode` / `AttachmentPreviewMode` 是内部类型，未从包根导出——宿主声明形态直接用两个常量的字面量。
 
 - `AttachmentFileItem` = `UploadFile<ObjectWriteResult> | ObjectWriteResult | ObjectItemInfo`（见"值的形状"：`ObjectItemInfo` 实际不可用）。
 - `AttachmentValue` = `AttachmentFileItem | AttachmentFileItem[] | undefined`。
@@ -149,4 +160,4 @@ const uploadRef = ref<AttachmentUploadExpose>()
 
 ⚠️ **`trigger` 不透传给 antd 的 `Upload`**：语义键的归属就是"宿主看到的那块触发区"，里面那层 `.ant-upload` 要改只能写全局类名。
 
-无落点清单：CUSTOMIZE 模式宿主自己写 `a-upload`，`classes` / `styles` 没有落点；列表内部非语义节点（进度条、文件大小、目录缩进）不提供键；弹层（图片预览组 / 视频 Modal）Teleport 到 body，只有 `-video` 一个自有类。
+无落点清单：CUSTOMIZE 模式宿主自己写 `a-upload`，`classes` / `styles` 没有落点；列表内部非语义节点（进度条、文件大小、目录缩进）不提供键；弹层（图片预览组 / 视频 Modal）Teleport 到 body，自有类只有 `-video`（视频播放器）与 `-preview-hidden`（图片预览组的隐藏容器）。

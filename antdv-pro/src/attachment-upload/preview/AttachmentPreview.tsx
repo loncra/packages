@@ -6,13 +6,14 @@ import type {UploadFile} from 'antdv-next/dist/upload/interface'
 import {useLocale} from '../../_util/useLocale'
 import {ATTACHMENT_PREVIEW_MODE} from '../constants'
 import type {
-    AttachmentPreviewMode,
-    AttachmentPreviewProps,
-    AttachmentUploadResolvedClassNames,
-    AttachmentUploadResolvedStyles,
+  AttachmentPreviewMode,
+  AttachmentPreviewProps,
+  AttachmentPreviewRenderers,
+  AttachmentUploadResolvedClassNames,
+  AttachmentUploadResolvedStyles,
 } from '../types'
 import useStyle from '../style'
-import {isImageFile, isVideoFile} from '../attachmentKinds'
+import {detectAttachmentFileKind, isImageFile} from '../attachmentKinds'
 import {useAttachmentFileActions} from './useAttachmentFileActions'
 import {useAttachmentThumbs} from './useAttachmentThumbs'
 import AttachmentListPreview from './AttachmentListPreview'
@@ -59,6 +60,7 @@ const AttachmentPreview = defineComponent({
     canDownload: Function as PropType<AttachmentPreviewProps['canDownload']>,
     classes: Object as PropType<AttachmentUploadResolvedClassNames>,
     styles: Object as PropType<AttachmentUploadResolvedStyles>,
+    previewRenderers: Object as PropType<AttachmentPreviewRenderers>,
     prefixCls: String,
   },
   emits: {
@@ -110,14 +112,15 @@ const AttachmentPreview = defineComponent({
     const {download, remove} = useAttachmentFileActions({postRemove})
 
     function openPreview(file: UploadFile<ObjectWriteResult>) {
-      if (file.type?.includes('image/')) {
+      const kind = detectAttachmentFileKind(file)
+      if (kind === 'image') {
         const index = imageFiles.value.findIndex((f) => f.uid === file.uid)
         if (index === -1) {
           return
         }
         previewImageGroup.value.current = index
         previewImageGroup.value.open = true
-      } else if (isVideoFile(file)) {
+      } else if (kind === 'video') {
         modalOptions.value = {open: true, file}
       }
     }
@@ -135,6 +138,7 @@ const AttachmentPreview = defineComponent({
         prefixCls: prefixCls.value,
         hashId: hashId.value,
         cssVarCls: cssVarCls.value,
+        previewRenderers: props.previewRenderers,
       }
       if (props.mode === ATTACHMENT_PREVIEW_MODE.LIST) {
         return (

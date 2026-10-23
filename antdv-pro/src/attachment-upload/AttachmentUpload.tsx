@@ -10,6 +10,7 @@ import {uploadFile as uploadAttachmentFile} from '../_util/uploadFile'
 import {ATTACHMENT_PREVIEW_MODE, ATTACHMENT_UPLOAD_MODE} from './constants'
 import type {
     AttachmentPreviewMode,
+    AttachmentPreviewRenderers,
     AttachmentUploadClassNamesType,
     AttachmentUploadMode,
     AttachmentUploadProps,
@@ -70,6 +71,7 @@ const AttachmentUpload = defineComponent({
     action: String,
     uploadOptions: Object as PropType<Record<string, unknown>>,
     previewMode: String as PropType<AttachmentPreviewMode>,
+    previewRenderers: Object as PropType<AttachmentPreviewRenderers>,
     canPreview: Function as PropType<AttachmentUploadProps['canPreview']>,
     canDelete: Function as PropType<AttachmentUploadProps['canDelete']>,
     canDownload: Function as PropType<AttachmentUploadProps['canDownload']>,
@@ -153,6 +155,7 @@ const AttachmentUpload = defineComponent({
               canDownload={props.canDownload}
               classes={mergedClasses.value}
               styles={mergedStyles.value}
+              previewRenderers={props.previewRenderers}
               maxCount={props.maxCount}
               multiple={props.multiple}
               accept={props.accept}
@@ -189,6 +192,7 @@ const AttachmentUpload = defineComponent({
               showFilename={props.showFilename}
               classes={mergedClasses.value}
               styles={mergedStyles.value}
+              previewRenderers={props.previewRenderers}
               prefixCls={prefixCls.value}
               onRemove={(file) => emit('remove', file)}
               onChange={(info) => emit('change', info)}

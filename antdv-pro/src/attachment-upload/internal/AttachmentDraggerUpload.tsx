@@ -12,6 +12,7 @@ import type {
   AttachmentDraggerUploadProps,
   AttachmentFileItem,
   AttachmentPreviewMode,
+  AttachmentPreviewRenderers,
   AttachmentUploadResolvedClassNames,
   AttachmentUploadResolvedStyles,
 } from '../types'
@@ -53,6 +54,7 @@ const AttachmentDraggerUpload = defineComponent({
     canDownload: Function as PropType<AttachmentDraggerUploadProps['canDownload']>,
     classes: Object as PropType<AttachmentUploadResolvedClassNames>,
     styles: Object as PropType<AttachmentUploadResolvedStyles>,
+    previewRenderers: Object as PropType<AttachmentPreviewRenderers>,
     prefixCls: String,
   },
   emits: {
@@ -105,6 +107,7 @@ const AttachmentDraggerUpload = defineComponent({
           changeThumbUrl={props.changeThumbUrl}
           classes={props.classes}
           styles={props.styles}
+          previewRenderers={props.previewRenderers}
           preview={props.preview}
           mode={props.mode}
           canPreview={props.canPreview}

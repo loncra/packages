@@ -8,10 +8,11 @@ import type {ObjectWriteResult} from '@loncra/client/resource'
 import type {UploadFile} from 'antdv-next/dist/upload/interface'
 import {ATTACHMENT_PREVIEW_MODE} from '../constants'
 import type {
-    AttachmentFileItem,
-    AttachmentPictureCardUploadProps,
-    AttachmentUploadResolvedClassNames,
-    AttachmentUploadResolvedStyles,
+  AttachmentFileItem,
+  AttachmentPictureCardUploadProps,
+  AttachmentPreviewRenderers,
+  AttachmentUploadResolvedClassNames,
+  AttachmentUploadResolvedStyles,
 } from '../types'
 import useStyle from '../style'
 import AttachmentPreview from '../preview/AttachmentPreview'
@@ -48,6 +49,7 @@ const AttachmentPictureCardUpload = defineComponent({
     canDownload: Function as PropType<AttachmentPictureCardUploadProps['canDownload']>,
     classes: Object as PropType<AttachmentUploadResolvedClassNames>,
     styles: Object as PropType<AttachmentUploadResolvedStyles>,
+    previewRenderers: Object as PropType<AttachmentPreviewRenderers>,
     prefixCls: String,
   },
   emits: {
@@ -94,6 +96,7 @@ const AttachmentPictureCardUpload = defineComponent({
           preview={props.preview}
           classes={props.classes}
           styles={props.styles}
+          previewRenderers={props.previewRenderers}
           mode={ATTACHMENT_PREVIEW_MODE.PICTURE_CARD}
           disabled={props.disabled}
           showFilename={props.showFilename}

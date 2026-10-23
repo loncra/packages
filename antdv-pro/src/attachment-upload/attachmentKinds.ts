@@ -1,6 +1,12 @@
 import type {ObjectWriteResult} from '@loncra/client/resource'
 import type {UploadFile} from 'antdv-next/dist/upload/interface'
-import {type AttachmentFileItem, isObjectWriteResult, isUploadFile} from '../_util/attachmentList'
+import {
+  type AttachmentFileItem,
+  isObjectWriteResult,
+  isUploadFile,
+  isVideoFile,
+} from '../_util/attachmentList'
+import type {AttachmentFileKind} from './types'
 
 export {isVideoFile} from '../_util/attachmentList'
 
@@ -36,6 +42,19 @@ export function isImageFile(file: UploadFile<ObjectWriteResult>): boolean {
   return (
     file.type !== 'directory' && !!file.type?.includes('image/') && !!(file.thumbUrl || file.url)
   )
+}
+
+export function detectAttachmentFileKind(file?: {
+  type?: string
+  name?: string
+}): AttachmentFileKind {
+  if (file?.type === 'directory') {
+    return 'directory'
+  }
+  if (isVideoFile(file)) {
+    return 'video'
+  }
+  return (file?.type ?? '').toLowerCase().startsWith('image/') ? 'image' : 'other'
 }
 
 export function getObjectWriteResult(item: AttachmentFileItem): ObjectWriteResult | undefined {

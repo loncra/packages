@@ -1,4 +1,4 @@
-import type {CSSProperties} from 'vue'
+import type {CSSProperties, VNodeChild} from 'vue'
 import type {ObjectWriteResult} from '@loncra/client/resource'
 import type {UploadChangeParam} from 'antdv-next'
 import type {UploadFile} from 'antdv-next/dist/upload/interface'
@@ -16,6 +16,20 @@ export type AttachmentUploadMode =
   (typeof ATTACHMENT_UPLOAD_MODE)[keyof typeof ATTACHMENT_UPLOAD_MODE]
 export type AttachmentPreviewMode =
   (typeof ATTACHMENT_PREVIEW_MODE)[keyof typeof ATTACHMENT_PREVIEW_MODE]
+
+export type AttachmentFileKind = 'image' | 'video' | 'directory' | 'other'
+
+export interface AttachmentPreviewRendererContext {
+  file: UploadFile<ObjectWriteResult>
+  prefixCls: string
+  hashId: string
+  cssVarCls?: string
+  itemIcon?: VNodeChild
+}
+
+export type AttachmentPreviewRenderer = (ctx: AttachmentPreviewRendererContext) => VNodeChild
+
+export type AttachmentPreviewRenderers = Partial<Record<AttachmentFileKind, AttachmentPreviewRenderer>>
 
 export type AttachmentUploadExpose = {
   upload: () => Promise<ObjectWriteResult | ObjectWriteResult[] | undefined>
@@ -101,6 +115,7 @@ export interface AttachmentUploadProps extends BasicAttachmentProps, AttachmentU
   bucket?: string
   uploadOptions?: Record<string, unknown>
   previewMode?: AttachmentPreviewMode
+  previewRenderers?: AttachmentPreviewRenderers
   prefixCls?: string
   class?: unknown
   rootClass?: string
