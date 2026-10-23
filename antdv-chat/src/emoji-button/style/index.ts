@@ -6,10 +6,10 @@ function genEmojiButtonStyle(token: LoncraStyleToken): CSSInterpolation {
   const {componentCls, controlHeightLG, fontSizeXL, paddingXS, calc} = token
 
   return {
+    [`${componentCls}-panel`]: {
+      width: calc(controlHeightLG).mul(10).equal(),
+    },
     [componentCls]: {
-      [`&-panel`]: {
-        width: calc(controlHeightLG).mul(10).equal(),
-      },
       [`${componentCls}-cell`]: {
         cursor: 'pointer',
         paddingBlock: paddingXS,

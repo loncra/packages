@@ -6,26 +6,9 @@ import emojiGroups from 'unicode-emoji-json/data-by-group.json'
 import type {EmojiButtonLocale} from '../locale'
 import {classNames} from '@loncra/antdv'
 import {useLocale} from '../_util/useLocale'
+import {EMOJI_DEFAULT_HIDDEN_SLUGS} from './constants'
+import type {EmojiButtonProps} from './types'
 import useStyle from './style'
-
-export interface EmojiButtonProps {
-  class?: unknown
-  rootClass?: string
-  style?: unknown
-  prefixCls?: string
-  type?: 'default' | 'primary' | 'dashed' | 'link' | 'text'
-  disabled?: boolean
-  /** 不展示的 emoji 分组 slug。 */
-  hiddenSlugs?: string[]
-}
-
-export interface EmojiButtonEmits {
-  selected: (emoji: string) => void
-}
-
-export interface EmojiButtonSlots {
-  icon?: () => unknown
-}
 
 const EmojiButton = defineComponent({
   name: 'LEmojiButton',
@@ -37,7 +20,7 @@ const EmojiButton = defineComponent({
     disabled: Boolean,
     hiddenSlugs: {
       type: Array as PropType<string[]>,
-      default: () => ['people_body', 'symbols', 'flags'],
+      default: () => EMOJI_DEFAULT_HIDDEN_SLUGS,
     },
   },
   emits: ['selected'],
@@ -99,7 +82,6 @@ const EmojiButton = defineComponent({
                 <Tabs
                   activeKey={state.value.activeKey}
                   items={tabItems.value}
-                  classes={{ body: `${prefixCls.value}-body` }}
                   onChange={(key) => {
                     state.value.activeKey = String(key)
                   }}
