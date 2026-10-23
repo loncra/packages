@@ -1,10 +1,4 @@
-import {
-  computed,
-  onActivated,
-  onMounted,
-  type Ref,
-  type VNodeChild,
-} from 'vue'
+import {computed, onActivated, onMounted, type Ref, type VNodeChild} from 'vue'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {type ModelEmit, useTwoWayModel} from '@loncra/antdv'
 import {useCrudConfig} from '../crud-config-provider'

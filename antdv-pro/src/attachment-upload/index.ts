@@ -10,8 +10,10 @@ export type {
   AttachmentValue,
   AttachmentUploadExecutorOptions,
   AttachmentFileKind,
+  AttachmentPreviewMode,
   AttachmentPreviewRenderer,
   AttachmentPreviewRendererContext,
   AttachmentPreviewRenderers,
+  AttachmentUploadMode,
 } from './types'
 export {ATTACHMENT_PREVIEW_MODE, ATTACHMENT_UPLOAD_MODE} from './constants'

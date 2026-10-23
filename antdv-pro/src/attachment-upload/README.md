@@ -140,7 +140,7 @@ previewRenderers={{
 
 ## 类型 {#types}
 
-从包根导出：`AttachmentUploadProps` {#attachmentuploadprops} / `AttachmentUploadEmits` {#attachmentuploademits} / `AttachmentUploadSlots` {#attachmentuploadslots} / `AttachmentUploadExpose` {#attachmentuploadexpose} / `AttachmentFileItem` {#attachmentfileitem} / `AttachmentValue` {#attachmentvalue} / `AttachmentUploadExecutorOptions` {#attachmentuploadexecutoroptions} / `AttachmentFileKind` {#attachmentfilekind} / `AttachmentPreviewRenderer` {#attachmentpreviewrenderer} / `AttachmentPreviewRendererContext` {#attachmentpreviewrenderercontext} / `AttachmentPreviewRenderers` {#attachmentpreviewrenderers}；常量 `ATTACHMENT_UPLOAD_MODE` / `ATTACHMENT_PREVIEW_MODE` 同。`AttachmentUploadMode` / `AttachmentPreviewMode` 是内部类型，未从包根导出——宿主声明形态直接用两个常量的字面量。
+从包根导出：`AttachmentUploadProps` {#attachmentuploadprops} / `AttachmentUploadEmits` {#attachmentuploademits} / `AttachmentUploadSlots` {#attachmentuploadslots} / `AttachmentUploadExpose` {#attachmentuploadexpose} / `AttachmentFileItem` {#attachmentfileitem} / `AttachmentValue` {#attachmentvalue} / `AttachmentUploadExecutorOptions` {#attachmentuploadexecutoroptions} / `AttachmentFileKind` {#attachmentfilekind} / `AttachmentPreviewRenderer` {#attachmentpreviewrenderer} / `AttachmentPreviewRendererContext` {#attachmentpreviewrenderercontext} / `AttachmentPreviewRenderers` {#attachmentpreviewrenderers} / `AttachmentUploadMode` {#attachmentuploadmode} / `AttachmentPreviewMode` {#attachmentpreviewmode}；常量 `ATTACHMENT_UPLOAD_MODE` / `ATTACHMENT_PREVIEW_MODE` 同。
 
 - `AttachmentFileItem` = `UploadFile<ObjectWriteResult> | ObjectWriteResult | ObjectItemInfo`（见"值的形状"：`ObjectItemInfo` 实际不可用）。
 - `AttachmentValue` = `AttachmentFileItem | AttachmentFileItem[] | undefined`。
