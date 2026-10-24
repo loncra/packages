@@ -1,2 +1,8 @@
-export {default} from './ConversationList.tsx'
-export type {ConversationNode} from './types.ts'
+export {default} from './ConversationList'
+export type {
+  ConversationListClasses,
+  ConversationListEmits,
+  ConversationListProps,
+  ConversationListStyles,
+  ConversationNode,
+} from './types'

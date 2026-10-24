@@ -5,8 +5,13 @@ import {Button, Dropdown, Empty, Flex, Menu, Spin, theme, Typography} from 'antd
 import {EllipsisOutlined} from '@antdv-next/icons'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {classNames} from '@loncra/antdv'
-import type {ConversationNode} from './types.ts'
-import useStyle, {CONVERSATION_LIST_PREFIX} from './style/index.ts'
+import type {
+  ConversationListClasses,
+  ConversationListProps,
+  ConversationListStyles,
+  ConversationNode,
+} from './types'
+import useStyle, {CONVERSATION_LIST_PREFIX} from './style'
 
 function stopRowAction(event: MouseEvent) {
   event.stopPropagation()
@@ -40,17 +45,23 @@ const ConversationList = defineComponent({
   name: 'LConversationList',
   inheritAttrs: false,
   props: {
-    items: {type: Array as PropType<ConversationNode[]>, required: true},
+    items: {type: Array as PropType<ConversationListProps['items']>, required: true},
     selectedKeys: {type: Array as PropType<string[]>, required: true},
     openKeys: {type: Array as PropType<string[]>, required: true},
     loading: {type: Boolean, default: false},
     actionsVisible: {type: Boolean, default: true},
+    prefixCls: String,
+    rootClass: String,
+    classes: Object as PropType<ConversationListClasses>,
+    styles: Object as PropType<ConversationListStyles>,
   },
   emits: ['update:selectedKeys', 'update:openKeys', 'active'],
   setup(props, {emit, slots, attrs}) {
     const config = useConfig()
     const {token} = theme.useToken()
-    const prefixCls = computed(() => config.value.getPrefixCls('conversation-list', CONVERSATION_LIST_PREFIX))
+    const prefixCls = computed(() =>
+      config.value.getPrefixCls('conversation-list', props.prefixCls ?? CONVERSATION_LIST_PREFIX),
+    )
     const [hashId, cssVarCls] = useStyle(prefixCls)
 
     function renderLabel(node: ConversationNode) {
@@ -116,14 +127,19 @@ const ConversationList = defineComponent({
         <Flex
           {...rest}
           vertical
-          class={classNames(prefixCls.value, hashId.value, cssVarCls.value, attrClass)}
+          class={classNames(prefixCls.value, hashId.value, cssVarCls.value, props.rootClass, attrClass)}
           style={attrStyle as never}
         >
           {slots.header?.()}
           <div class={`${prefixCls.value}-body`}>
             {props.items.length === 0
               ? (
-                <Flex justify="center" align="center" class={`${prefixCls.value}-empty`}>
+                <Flex
+                  justify="center"
+                  align="center"
+                  class={classNames(`${prefixCls.value}-empty`, props.classes?.empty)}
+                  style={props.styles?.empty as never}
+                >
                   <Empty />
                 </Flex>
               )
@@ -140,13 +156,18 @@ const ConversationList = defineComponent({
                     onClick={(info: {key: string | number}) => emit('active', String(info.key))}
                     rootClass={`${prefixCls.value}-menu`}
                     classes={{
-                      item: itemClass,
-                      itemContent: itemContentClass,
+                      ...props.classes?.menu,
+                      item: classNames(itemClass, props.classes?.menu?.item),
+                      itemContent: classNames(itemContentClass, props.classes?.menu?.itemContent),
                       subMenu: {
-                        item: itemClass,
-                        itemContent: itemContentClass,
+                        item: classNames(itemClass, props.classes?.menu?.subMenu?.item),
+                        itemContent: classNames(
+                          itemContentClass,
+                          props.classes?.menu?.subMenu?.itemContent,
+                        ),
                       },
                     }}
+                    styles={props.styles?.menu as never}
                     iconRender={(item: RenderItem) => {
                       const node = asNode(item)
                       return node.editing ? null : slots.icon?.(node)
