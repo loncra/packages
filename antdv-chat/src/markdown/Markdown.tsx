@@ -89,7 +89,7 @@ const Markdown = defineComponent({
     return () => {
       const { class: attrClass, style: attrStyle, ...rest } = attrs
       return (
-        <div
+        /*<div
           ref={scrollEl}
           class={classNames(
             `${prefixCls.value}-scroll`,
@@ -102,13 +102,13 @@ const Markdown = defineComponent({
           )}
           style={attrStyle as string | Record<string, string> | undefined}
           onScroll={onScroll}
-        >
+        >*/
           <XMarkdown
             {...rest}
             class={classNames(themeClass.value, props.classes?.markdown)}
             style={props.styles?.markdown as never}
           />
-        </div>
+        /*</div>*/
       )
     }
   },

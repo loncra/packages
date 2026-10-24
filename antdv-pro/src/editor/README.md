@@ -61,6 +61,8 @@
 | uploadImage | 图片上传，见"覆盖上传" | [UploadFn](#uploadfn) | -（底座 base64 默认） | - |
 | uploadVideo | 视频上传，见"覆盖上传" | [UploadFn](#uploadfn) | -（底座 base64 默认） | - |
 | wordCount | 字数统计；`true` 只显示数量，给数字则显示上限。**不传就没有字数区域**，`word-count` 插槽也不会渲染 | `true \| number` | - | - |
+| classes | 语义化 DOM 区域表，见下 | [EditorClasses](#editorclasses) | - | - |
+| styles | 语义化 DOM 样式区域表 | [EditorStyles](#editorstyles) | - | - |
 | prefixCls | 改根前缀 | string | -（组件内兜底 `loncra-editor`） | - |
 | rootClass | 追加到根元素 | string | - | - |
 
@@ -86,7 +88,18 @@
 
 ## 类型 {#types}
 
-从包根导出：`EditorProps` {#editorprops} / `EditorEmits` {#editoremits} / `EditorSlots` {#editorslots} / `EditorLocale` {#editorlocale} / `UploadFn` {#uploadfn} / `OutputFormat` {#outputformat} / `PluginName` {#pluginname}；工具函数 `isEmptyRichText` / `normalizeRichTextValue` 同。
+从包根导出：`EditorProps` {#editorprops} / `EditorEmits` {#editoremits} / `EditorSlots` {#editorslots} / `EditorExpose` {#editorexpose} / `EditorLocale` {#editorlocale} / `EditorClasses` {#editorclasses} / `EditorStyles` {#editorstyles} / `UploadFn` {#uploadfn} / `OutputFormat` {#outputformat} / `PluginName` {#pluginname}；工具函数 `isEmptyRichText` / `normalizeRichTextValue` 同。
+
+### EditorClasses {#editorclasses}
+
+| 键 | 类型 | 落点 |
+| --- | --- | --- |
+| root | string | 根元素 `div`（`-status-error` 状态修饰所在层） |
+| editor | string | 内部 `AEditor` 本体（与固定的 hash 链合并） |
+
+### EditorStyles {#editorstyles}
+
+同构：`root` / `editor`（`CSSProperties`）。根样式宿主优先（`styles.root` 在前，attrs 的 `style` 在后）。
 
 ### UploadFn {#uploadfn}
 
@@ -112,8 +125,8 @@
 
 | 区域 | 说明 |
 | --- | --- |
-| root | 根元素 `div`（本组件自己的）：`loncra-editor` + `hashId` + `cssVarCls` + `rootClass` + 宿主 `class`；表单校验状态为 error 时再追加 `loncra-editor-status-error` |
-| editor | 内部 `AEditor`（`antdv-next-tiptap`）：**没有**语义化 `classes` / `styles` 入口，要定制只能从 `.loncra-editor` 往下写选择器；其余 attrs 透传给 `AEditor` |
+| root | 根元素 `div`（本组件自己的）：`loncra-editor` + `hashId` + `cssVarCls` + `classes.root` + `rootClass` + 宿主 `class`；表单校验状态为 error 时再追加 `loncra-editor-status-error` |
+| editor | 内部 `AEditor`（`antdv-next-tiptap`）：`classes.editor` / `styles.editor` 挂其本体（AEditor 无语义 DOM，值退化为 `string`）；其余 attrs 透传给 `AEditor` |
 
 - 编辑区高度落在内部 `.editor-content` 上（行内 `style` 的 `height`，跟随 `height` 属性）。
 - `-status-error` 只改边框色：选中 `.editor`、`.editor .editor-toolbar`、`.editor .editor-word-count`（这三个是编辑器自带的类名，**没有**自有类名可挂）。

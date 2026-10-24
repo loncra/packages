@@ -1,3 +1,4 @@
+import type {CSSProperties} from 'vue'
 import type {OutputFormat, PluginName} from 'antdv-next-tiptap'
 
 export type {OutputFormat, PluginName} from 'antdv-next-tiptap'
@@ -31,4 +32,14 @@ export interface EditorEmits {
 
 export interface EditorSlots {
   'word-count'?: (ctx: { count: number; limit: true | number }) => unknown
+}
+
+export interface EditorClasses {
+  root?: string
+  editor?: string
+}
+
+export interface EditorStyles {
+  root?: CSSProperties
+  editor?: CSSProperties
 }

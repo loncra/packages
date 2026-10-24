@@ -5,7 +5,7 @@ import {useFormItemInputContext} from 'antdv-next/dist/form/context'
 import {classNames, useFormItemTrigger} from '@loncra/antdv'
 import {isEditorEditable, resolveEditorLocale} from './editorKinds'
 import {useEditor} from './useEditor'
-import type {EditorProps, UploadFn} from './types'
+import type {EditorClasses, EditorProps, EditorStyles, UploadFn} from './types'
 import useStyle from './style'
 
 const AEditor = defineAsyncComponent(async () => {
@@ -42,6 +42,8 @@ const Editor = defineComponent({
     wordCount: [Boolean, Number] as PropType<true | number>,
     prefixCls: String,
     rootClass: String,
+    classes: Object as PropType<EditorClasses>,
+    styles: Object as PropType<EditorStyles>,
   },
   emits: {
     'update:value': (_value: string) => true,
@@ -66,6 +68,7 @@ const Editor = defineComponent({
     return () => {
       const { class: attrClass, style: attrStyle, ...rest } = attrs
       const status = itemStatus.value.status
+      const rootStyle = props.styles?.root ? [props.styles.root, attrStyle] : attrStyle
       return (
         <div
           class={classNames(
@@ -73,10 +76,11 @@ const Editor = defineComponent({
             hashId.value,
             cssVarCls.value,
             status === 'error' ? `${prefixCls.value}-status-error` : undefined,
+            props.classes?.root,
             props.rootClass,
             attrClass,
           )}
-          style={attrStyle as never}
+          style={rootStyle as never}
         >
           <AEditor
             {...rest}
@@ -86,6 +90,8 @@ const Editor = defineComponent({
             outputFormat={props.outputFormat}
             locale={editorLocale.value as never}
             disabledPlugins={props.disabledPlugins}
+            class={props.classes?.editor}
+            style={props.styles?.editor as never}
             uploadImage={props.uploadImage}
             uploadVideo={props.uploadVideo}
             wordCount={props.wordCount}

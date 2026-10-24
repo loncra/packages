@@ -43,10 +43,12 @@ export type { UserSelectEmits, UserSelectOption, UserSelectProps, UserSelectSlot
 
 export { default as Editor } from './editor'
 export type {
+  EditorClasses,
   EditorEmits,
   EditorLocale,
   EditorProps,
   EditorSlots,
+  EditorStyles,
   OutputFormat,
   PluginName,
   UploadFn,
