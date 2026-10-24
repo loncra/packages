@@ -70,7 +70,11 @@ export type {AgentSession} from './agent/types'
 export {default as SkillReleaseChangeLog} from './agent/hub/SkillReleaseChangeLog'
 
 export {default as FileEditor} from './file-editor'
-export type {FileEditorProps, FileEditorSlots} from './file-editor'
+export type {
+  FileEditorClasses,
+  FileEditorProps,
+  FileEditorStyles,
+} from './file-editor'
 
 export {default as SystemUserPanel} from './system-user-panel'
 export type {

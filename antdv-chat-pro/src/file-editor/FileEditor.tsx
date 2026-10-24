@@ -1,10 +1,10 @@
-import {computed, defineComponent, type PropType} from 'vue'
+import {computed, defineComponent, ref, type PropType} from 'vue'
 import {Splitter, SplitterPanel, Upload} from 'antdv-next'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {classNames} from '@loncra/antdv'
 import FileConversation from './conversation/FileConversation'
 import FileTabs from './tabs/FileTabs'
-import type {FileEditorProps} from './types'
+import type {FileEditorClasses, FileEditorProps, FileEditorStyles} from './types'
 import {useFileEditor} from './useFileEditor'
 import useStyle from './style'
 
@@ -30,6 +30,8 @@ const FileEditor = defineComponent({
     maxHeight: [String, Number],
     prefixCls: String,
     rootClass: String,
+    classes: Object as PropType<FileEditorClasses>,
+    styles: Object as PropType<FileEditorStyles>,
   },
   setup(props, {attrs}) {
     const config = useConfig()
@@ -37,10 +39,20 @@ const FileEditor = defineComponent({
       config.value.getPrefixCls('file-editor', props.prefixCls ?? 'loncra-file-editor'),
     )
     const [hashId, cssVarCls] = useStyle(prefixCls)
+    const conversationRef = ref<{revealItem: (key: string) => void}>()
+
+    function locateSelectedItem() {
+      const item = editor.state.value.selectedItem
+      if (!item) {
+        return
+      }
+      editor.onSelectOpenFile(item)
+      void conversationRef.value?.revealItem(item.id)
+    }
     const editor = useFileEditor(props)
 
     return () => {
-      const {class: attrClass, style: attrStyle} = attrs
+      const {class: attrClass, style: attrStyle, ...rest} = attrs
       const hashed = (...names: (string | undefined)[]) =>
         classNames(hashId.value, cssVarCls.value, ...names)
       const {state, fileUploadTrigger, dirUploadTrigger, onUploadChange} = editor
@@ -57,15 +69,15 @@ const FileEditor = defineComponent({
       }
 
       return (
-        /*
-         * ⚠️ 这是 pro 里**唯一保留的内联样式**，且是有意的例外（2026-09-23 全仓审计后确认）：
-         * - `sizeStyle`：按 `height` / `maxHeight` **逐实例**算出来的尺寸，没法预先写进 `genStyleHooks`；
-         * - `attrStyle`：宿主自己传进来的 `style`，本就该原样透传。
-         * 想彻底去掉的话只能走 CSS 变量（仍要靠 `style` 设变量），收益为零 ⇒ 保持现状。
-         */
         <div
-          class={hashed(prefixCls.value, props.rootClass, attrClass as string)}
-          style={[sizeStyle, attrStyle] as never}
+          {...rest}
+          class={hashed(
+            prefixCls.value,
+            props.classes?.root,
+            props.rootClass,
+            attrClass as string,
+          )}
+          style={[sizeStyle, props.styles?.root, attrStyle] as never}
         >
           <Upload
             key={`file-${state.value.upload.session}`}
@@ -88,17 +100,31 @@ const FileEditor = defineComponent({
           >
             <span ref={dirUploadTrigger} />
           </Upload>
-          <Splitter class={hashed(`${prefixCls.value}-splitter`)}>
-            <SplitterPanel class={hashed(`${prefixCls.value}-panel`)} defaultSize="20%" min="10%" max="30%">
+          <Splitter
+            class={hashed(`${prefixCls.value}-splitter`, props.classes?.splitter)}
+            style={props.styles?.splitter as never}
+          >
+            <SplitterPanel
+              class={hashed(`${prefixCls.value}-panel`, props.classes?.panel)}
+              style={props.styles?.panel as never}
+              defaultSize="20%"
+              min="10%"
+              max="30%"
+            >
               <FileConversation
+                ref={conversationRef}
                 editor={editor}
                 name={props.name}
                 readonly={props.readonly}
               />
             </SplitterPanel>
-            <SplitterPanel class={hashed(`${prefixCls.value}-panel-main`)}>
+            <SplitterPanel
+              class={hashed(`${prefixCls.value}-panel-main`, props.classes?.panelMain)}
+              style={props.styles?.panelMain as never}
+            >
               <FileTabs
                 editor={editor}
+                locateFile={locateSelectedItem}
                 bucket={props.bucket}
                 rootPath={props.path}
                 readonly={props.readonly}
@@ -112,4 +138,4 @@ const FileEditor = defineComponent({
 })
 
 export default FileEditor
-export type {FileEditorProps, FileEditorSlots} from './types'
+export type {FileEditorProps} from './types'

@@ -1,7 +1,7 @@
 import type {LanguageSupport} from '@codemirror/language'
 import type {ObjectItemInfo} from '@loncra/client/resource'
 import {resolveDisplayName} from '@loncra/antdv-pro'
-import {AUDIO_EXT, IMAGE_EXT, TEXT_MAX_BYTES, VIDEO_EXT} from './constants'
+import {AUDIO_EXT, IMAGE_EXT, TEXT_APPLICATION_SUBTYPE, TEXT_MAX_BYTES, VIDEO_EXT} from './constants'
 import type {FilePaneContext, ResolvedFilePaneKind} from './types'
 
 function extOf(name: string): string {
@@ -26,7 +26,20 @@ export function resolveFilePaneKind(ctx: FilePaneContext): ResolvedFilePaneKind 
   if (ctx.mime.startsWith('audio/') || AUDIO_EXT.has(ctx.ext)) {
     return {id: 'audio', mode: 'view'}
   }
-  return {id: 'text', mode: 'edit'}
+  if (ctx.mime.startsWith('text/')) {
+    return {id: 'text', mode: 'edit'}
+  }
+  if (ctx.mime.startsWith('application/')) {
+    const subtype = ctx.mime.slice('application/'.length)
+    if (TEXT_APPLICATION_SUBTYPE.has(subtype) || subtype.endsWith('+xml') || subtype.endsWith('+json')) {
+      return {id: 'text', mode: 'edit'}
+    }
+    return {id: 'fallback', mode: 'view'}
+  }
+  if (ctx.mime === '') {
+    return {id: 'text', mode: 'edit'}
+  }
+  return {id: 'fallback', mode: 'view'}
 }
 
 export function isTextTooLarge(size: number): boolean {

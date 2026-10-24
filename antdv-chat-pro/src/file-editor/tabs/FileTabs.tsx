@@ -16,6 +16,10 @@ const FileTabs = defineComponent({
       type: Object as PropType<ReturnType<typeof useFileEditor>>,
       required: true,
     },
+    locateFile: {
+      type: Function as PropType<() => void>,
+      default: undefined,
+    },
     bucket: {
       type: String,
       required: true,
@@ -47,7 +51,6 @@ const FileTabs = defineComponent({
         paneHostRef,
         saveActive,
         activeCanSave,
-        onSelectOpenFile,
         onDownloadFile,
         state,
       } = props.editor
@@ -81,10 +84,6 @@ const FileTabs = defineComponent({
                   gap="small"
                   class={hashed(`${prefixCls.value}-tab-label`)}
                 >
-                  {/*
-                    图标**在这里画**（要套 `Badge` 的"未保存"圆点）—— 不能交给 `items[].icon`：
-                    `@v-c/tabs` 的 `TabNode` 会把那份再画一遍 ⇒ 两个图标（见 `useFileEditor` 的 `tabItems`）
-                  */}
                   <Badge dot={tabMeta[item.key]?.dirty} offset={[0, 0]}>
                     {resolveIcon(item.file)}
                   </Badge>
@@ -141,10 +140,7 @@ const FileTabs = defineComponent({
                     <Tooltip title={locale.value.locate}>
                       <Button
                         size="small"
-                        onClick={() =>
-                          state.value.selectedItem &&
-                          onSelectOpenFile(state.value.selectedItem)
-                        }
+                        onClick={() => props.locateFile?.()}
                       >
                         {{icon: () => h(AimOutlined)}}
                       </Button>

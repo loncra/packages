@@ -1,4 +1,4 @@
-import {computed, defineComponent, h, type PropType} from 'vue'
+import {computed, defineComponent, h, type PropType, ref} from 'vue'
 import {Button, Flex, Input, Menu, SpaceCompact, TypographyText,} from 'antdv-next'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {
@@ -32,12 +32,19 @@ const FileConversation = defineComponent({
       default: false,
     },
   },
-  setup(props) {
+  setup(props, {expose}) {
     const config = useConfig()
+    const listRef = ref<{revealItem: (key: string) => void}>()
     const prefixCls = computed(() =>
       config.value.getPrefixCls('file-conversation', 'loncra-file-conversation'),
     )
     const [hashId, cssVarCls] = useStyle(prefixCls)
+
+    function revealItem(key: string): void {
+      void listRef.value?.revealItem(key)
+    }
+
+    expose({revealItem})
     return () => {
       const {
         locale,
@@ -101,6 +108,7 @@ const FileConversation = defineComponent({
 
       return (
         <ConversationList
+          ref={listRef}
           class={hashed(`${prefixCls.value}-side`)}
           items={nodes}
           selectedKeys={state.value.selectedItem ? [state.value.selectedItem.id] : []}

@@ -64,6 +64,12 @@ IM 与 Agent 会话侧栏的共享底座：受控的树形会话菜单（选中 
 | subtitle | 行副标题 | `(node: ConversationNode) => any` | - |
 | editor | 重命名编辑位（`editing: true` 时接管 label） | `(node: ConversationNode) => any` | - |
 
+### 方法 {#methods}
+
+| 方法 | 说明 | 类型 | 版本 |
+| --- | --- | --- | --- |
+| revealItem | 把树滚动到指定 key 的节点（不在可视区才滚，**顶对齐**；配合宿主先展开祖先目录，内部等一帧再寻址）。节点寻址用自渲染 label 上的 `data-conversation-key`，不依赖 Menu 内部属性 | `(key: string) => Promise<void>` | - |
+
 ## 类型 {#types}
 
 从包根导出：`ConversationNode` {#conversationnode} / `ConversationListProps` {#conversationlistprops} / `ConversationListEmits` {#conversationlistemits} / `ConversationListClasses` {#conversationlistclasses} / `ConversationListStyles` {#conversationliststyles}。

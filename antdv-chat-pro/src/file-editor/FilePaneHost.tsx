@@ -2,7 +2,6 @@ import {computed, defineComponent, type PropType, watch} from 'vue'
 import {Spin} from 'antdv-next'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {classNames} from '@loncra/antdv'
-import type {ObjectItemInfo} from '@loncra/client/resource'
 import AudioPane from './panes/audio/AudioPane'
 import ImagePane from './panes/image/ImagePane'
 import TextPane from './panes/text/TextPane'
@@ -10,13 +9,44 @@ import UnsupportedPane from './panes/unsupported/UnsupportedPane'
 import VideoPane from './panes/video/VideoPane'
 import useStyle from './panes/style'
 import {useFilePane} from './useFilePane'
+import type {FilePaneKindId, FilePaneProps} from './types'
+
+interface PaneShared {
+  prefixCls: string
+  hashId: string
+  cssVarCls: string | undefined
+}
+
+interface PaneRenderContext {
+  pane: ReturnType<typeof useFilePane>
+  shared: PaneShared
+  readonly: boolean
+}
+
+const PANE_RENDERERS = {
+  image: (ctx: PaneRenderContext) => (
+    <ImagePane src={ctx.pane.src.value} alt={ctx.pane.context.value.name} {...ctx.shared} />
+  ),
+  video: (ctx: PaneRenderContext) => <VideoPane src={ctx.pane.src.value} {...ctx.shared} />,
+  audio: (ctx: PaneRenderContext) => <AudioPane src={ctx.pane.src.value} {...ctx.shared} />,
+  text: (ctx: PaneRenderContext) => (
+    <TextPane
+      ext={ctx.pane.context.value.ext}
+      readonly={ctx.readonly}
+      modelValue={ctx.pane.content.value}
+      onUpdate:modelValue={ctx.pane.updateContent}
+      {...ctx.shared}
+    />
+  ),
+  fallback: (ctx: PaneRenderContext) => <UnsupportedPane reason="unsupported" {...ctx.shared} />,
+} satisfies Record<FilePaneKindId, (ctx: PaneRenderContext) => unknown>
 
 const FilePaneHost = defineComponent({
   name: 'LFilePaneHost',
   inheritAttrs: false,
   props: {
     item: {
-      type: Object as PropType<ObjectItemInfo>,
+      type: Object as PropType<FilePaneProps['item']>,
       required: true,
     },
     bucket: {
@@ -60,35 +90,17 @@ const FilePaneHost = defineComponent({
     })
 
     return () => {
-      const shared = {
+      const shared: PaneShared = {
         prefixCls: prefixCls.value,
         hashId: hashId.value,
         cssVarCls: cssVarCls.value,
       }
-      let viewer: unknown = null
-      if (showViewer.value) {
-        if (pane.paneReason.value) {
-          viewer = <UnsupportedPane reason={pane.paneReason.value} {...shared} />
-        } else if (pane.kind.value.id === 'image') {
-          viewer = <ImagePane src={pane.src.value} alt={pane.context.value.name} {...shared} />
-        } else if (pane.kind.value.id === 'video') {
-          viewer = <VideoPane src={pane.src.value} {...shared} />
-        } else if (pane.kind.value.id === 'audio') {
-          viewer = <AudioPane src={pane.src.value} {...shared} />
-        } else if (pane.kind.value.id === 'text') {
-          viewer = (
-            <TextPane
-              ext={pane.context.value.ext}
-              readonly={props.readonly}
-              modelValue={pane.content.value}
-              onUpdate:modelValue={pane.updateContent}
-              {...shared}
-            />
-          )
-        } else {
-          viewer = <UnsupportedPane reason="unsupported" {...shared} />
-        }
-      }
+      const ctx: PaneRenderContext = {pane, shared, readonly: props.readonly}
+      const viewer = !showViewer.value
+        ? null
+        : pane.paneReason.value
+          ? <UnsupportedPane reason={pane.paneReason.value ?? 'unsupported'} {...shared} />
+          : (PANE_RENDERERS[pane.kind.value.id]?.(ctx) ?? null)
       return (
         <Spin
           spinning={pane.loading.value}

@@ -1,4 +1,4 @@
-import type {VNodeChild} from 'vue'
+import type {CSSProperties, VNodeChild} from 'vue'
 import type {ObjectItemInfo} from '@loncra/client/resource'
 
 export type FilePaneKindId = 'image' | 'video' | 'audio' | 'text' | 'fallback'
@@ -23,18 +23,12 @@ export interface FileEditorProps {
   bucket: string
   height?: string | number
   maxHeight?: string | number
-  /**
-   * 文件图标：宿主按**文件后缀**（`item.objectName`）自定义，直接给渲染结果（VNode）。
-   * 不给就用组件内置的 antd 图标（文件 `FileOutlined`、目录 `FolderOutlined` / `FolderOpenOutlined`）。
-   */
   getIcon?: (item: ObjectItemInfo) => VNodeChild
   prefixCls?: string
   class?: unknown
   rootClass?: string
   style?: unknown
 }
-
-export interface FileEditorSlots {}
 
 export interface FilePaneProps {
   item: ObjectItemInfo
@@ -50,4 +44,33 @@ export interface EditObjectItemInfo extends ObjectItemInfo {
   editName: string
   readonly?: boolean
   name?: string
+}
+
+export interface FileEditorUploadState {
+  session: number
+  directory: boolean
+}
+
+export interface FileEditorState {
+  openKeys: string[]
+  selectedItem?: ObjectItemInfo
+  tabs: ObjectItemInfo[]
+  currentEditItem?: EditObjectItemInfo
+  dataSource: ObjectItemInfo[]
+  loading: boolean
+  upload: FileEditorUploadState
+}
+
+export interface FileEditorClasses {
+  root?: string
+  splitter?: string
+  panel?: string
+  panelMain?: string
+}
+
+export interface FileEditorStyles {
+  root?: CSSProperties
+  splitter?: CSSProperties
+  panel?: CSSProperties
+  panelMain?: CSSProperties
 }

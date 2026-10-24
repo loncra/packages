@@ -1,4 +1,4 @@
-import {computed, defineComponent, type PropType} from 'vue'
+import {computed, defineComponent, nextTick, ref, type PropType} from 'vue'
 import type {ItemType} from 'antdv-next/dist/menu/interface'
 import type {RenderItem} from 'antdv-next/dist/menu/menu'
 import {Button, Dropdown, Empty, Flex, Menu, Spin, theme, Typography} from 'antdv-next'
@@ -56,13 +56,14 @@ const ConversationList = defineComponent({
     styles: Object as PropType<ConversationListStyles>,
   },
   emits: ['update:selectedKeys', 'update:openKeys', 'active'],
-  setup(props, {emit, slots, attrs}) {
+  setup(props, {emit, slots, attrs, expose}) {
     const config = useConfig()
     const {token} = theme.useToken()
     const prefixCls = computed(() =>
       config.value.getPrefixCls('conversation-list', props.prefixCls ?? CONVERSATION_LIST_PREFIX),
     )
     const [hashId, cssVarCls] = useStyle(prefixCls)
+    const rootRef = ref<{$el: HTMLElement | undefined}>()
 
     function renderLabel(node: ConversationNode) {
       if (node.editing) {
@@ -74,7 +75,7 @@ const ConversationList = defineComponent({
       }
       return (
         <Flex vertical>
-          <div class={`${prefixCls.value}-line`}>
+          <div class={`${prefixCls.value}-line`} data-conversation-key={node.key}>
             <Typography.Text class={`${prefixCls.value}-name`} ellipsis>
               {node.name}
             </Typography.Text>
@@ -119,6 +120,29 @@ const ConversationList = defineComponent({
       )
     }
 
+    async function revealItem(key: string): Promise<void> {
+      await nextTick()
+      const root = rootRef.value?.$el
+      if (!root) {
+        return
+      }
+      const box = root.querySelector(`.${prefixCls.value}-body`)
+      const target = root
+        .querySelector(`[data-conversation-key="${CSS.escape(key)}"]`)
+        ?.closest('li')
+      if (!box || !target) {
+        return
+      }
+      const boxRect = box.getBoundingClientRect()
+      const itemRect = target.getBoundingClientRect()
+      if (itemRect.top >= boxRect.top && itemRect.bottom <= boxRect.bottom) {
+        return
+      }
+      box.scrollTop += itemRect.top - boxRect.top
+    }
+
+    expose({revealItem})
+
     return () => {
       const {class: attrClass, style: attrStyle, ...rest} = attrs
       const itemClass = `${prefixCls.value}-item`
@@ -126,6 +150,7 @@ const ConversationList = defineComponent({
       return (
         <Flex
           {...rest}
+          ref={rootRef}
           vertical
           class={classNames(prefixCls.value, hashId.value, cssVarCls.value, props.rootClass, attrClass)}
           style={attrStyle as never}
