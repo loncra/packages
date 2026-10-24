@@ -16,8 +16,7 @@ import type {SlotConfigType} from '@antdv-next/x/dist/sender/interface'
 import type {DraftRestoreResult} from '@loncra/chat-core'
 import {classNames} from '@loncra/antdv'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
-import DraftSender, {type DraftSenderExpose} from '../../draft-sender/DraftSender'
-import type {DraftBinding} from '../../draft-sender/useDraftSender'
+import DraftSender, {type DraftBinding, type DraftSenderExpose} from '../../draft-sender'
 import {
   type InstructionItem,
   type InstructionSenderHandle,

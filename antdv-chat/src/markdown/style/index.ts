@@ -3,13 +3,13 @@ import type {LoncraStyleToken} from '@loncra/antdv'
 import {genStyleHooks} from '../../_util/genStyleLayer'
 
 function genMarkdownStyle(token: LoncraStyleToken): CSSInterpolation {
-  const {componentCls, antCls, paddingXXS, paddingXS} = token
+  const {componentCls, paddingXXS, paddingXS} = token
   return {
-    [`${componentCls} .x-markdown ${antCls}-code-highlighter ${antCls}-code-highlighter-content ${antCls}-code-highlighter-code pre`]:
+    [`${componentCls} .x-markdown .antd-code-highlighter .antd-code-highlighter-content .antd-code-highlighter-code pre`]:
       {
         padding: `${unit(paddingXXS)} !important`,
       },
-    [`${componentCls} .x-markdown ${antCls}-code-highlighter ${antCls}-code-highlighter-content ${antCls}-code-highlighter-code pre code`]:
+    [`${componentCls} .x-markdown .antd-code-highlighter .antd-code-highlighter-content .antd-code-highlighter-code pre code`]:
       {
         whiteSpace: 'pre !important',
         wordBreak: 'normal !important',

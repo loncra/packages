@@ -5,18 +5,10 @@ import {
   InstructionSender,
   type InstructionItem,
   type InstructionSenderExpose,
-  type InstructionSenderHandle,
   type InstructionSenderProps,
 } from '@loncra/antdv-chat'
-import {type DraftBinding, useDraftSender} from './useDraftSender'
-
-export interface DraftSenderExpose {
-  flush: () => Promise<void>
-  clearStored: () => Promise<void>
-  clear: () => void
-  getSlotConfigValue: () => SlotConfigType[]
-  getSender: () => InstructionSenderHandle | undefined
-}
+import type {DraftBinding} from './types'
+import {useDraftSender} from './useDraftSender'
 
 const DraftSender = defineComponent({
   name: 'LDraftSender',
@@ -49,7 +41,12 @@ const DraftSender = defineComponent({
     instructionContextVisibleMargin: Number,
     instructionMap: Object as PropType<Record<string, InstructionItem[]>>,
   },
-  emits: ['change', 'pasteFile', 'submit', 'cancel'],
+  emits: {
+    change: (_value: string, _event?: Event, _slotConfig?: SlotConfigType[]) => true,
+    pasteFile: (_fileList: FileList) => true,
+    submit: (_value: string, _slotConfig?: SlotConfigType[]) => true,
+    cancel: () => true,
+  },
   setup(props, {attrs, slots, emit, expose}) {
     const slotsState = shallowRef<SlotConfigType[]>([...(props.slotConfig ?? [])])
     const innerRef = ref<InstructionSenderExpose>()
@@ -82,35 +79,32 @@ const DraftSender = defineComponent({
       getSender: () => innerRef.value?.getSender(),
     })
 
-    return () => {
-      const {onChange: _onChange, onPasteFile: _onPasteFile, ...rest} = attrs
-      return (
-        <InstructionSender
-          {...rest}
-          ref={innerRef}
-          slotConfig={slotsState.value}
-          placeholder={props.placeholder}
-          sending={props.sending}
-          disabled={props.disabled}
-          instructionContextVisibleMargin={props.instructionContextVisibleMargin}
-          instructionMap={props.instructionMap}
-          onFilterDataSource={props.onFilterDataSource}
-          senderInsertInstruction={props.senderInsertInstruction}
-          createInstructionSlot={props.createInstructionSlot}
-          onChange={(value: string, event?: Event, slotConfig?: SlotConfigType[]) => {
-            schedule()
-            emit('change', value, event, slotConfig)
-          }}
-          onPasteFile={(fileList: FileList) => {
-            schedule()
-            emit('pasteFile', fileList)
-          }}
-          onSubmit={(value: string, slotConfig?: SlotConfigType[]) => emit('submit', value, slotConfig)}
-          onCancel={() => emit('cancel')}
-          v-slots={slots}
-        />
-      )
-    }
+    return () => (
+      <InstructionSender
+        {...attrs}
+        ref={innerRef}
+        slotConfig={slotsState.value}
+        placeholder={props.placeholder}
+        sending={props.sending}
+        disabled={props.disabled}
+        instructionContextVisibleMargin={props.instructionContextVisibleMargin}
+        instructionMap={props.instructionMap}
+        onFilterDataSource={props.onFilterDataSource}
+        senderInsertInstruction={props.senderInsertInstruction}
+        createInstructionSlot={props.createInstructionSlot}
+        onChange={(value: string, event?: Event, slotConfig?: SlotConfigType[]) => {
+          schedule()
+          emit('change', value, event, slotConfig)
+        }}
+        onPasteFile={(fileList: FileList) => {
+          schedule()
+          emit('pasteFile', fileList)
+        }}
+        onSubmit={(value: string, slotConfig?: SlotConfigType[]) => emit('submit', value, slotConfig)}
+        onCancel={() => emit('cancel')}
+        v-slots={slots}
+      />
+    )
   },
 })
 

@@ -1,6 +1,6 @@
 import type {SlotConfigType} from '@antdv-next/x/dist/sender/interface'
 import {dexieDraftStore} from '@loncra/chat-core/dexie'
-import type {DraftBinding} from '../../draft-sender/useDraftSender'
+import type {DraftBinding} from '../../draft-sender'
 import type {RestoreDraftSlotFactories} from '../../draft'
 import {createAgentDraftCodec} from './agentDraftCodec'
 

@@ -1,5 +1,5 @@
 import {dexieDraftStore} from '@loncra/chat-core/dexie'
-import type {DraftBinding} from '../../draft-sender/useDraftSender'
+import type {DraftBinding} from '../../draft-sender'
 import type {RestoreDraftSlotFactories} from '../../draft'
 import {createImDraftCodec, type ImDraftLive} from './imDraftCodec'
 

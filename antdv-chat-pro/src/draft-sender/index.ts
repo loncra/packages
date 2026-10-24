@@ -1,5 +1,4 @@
 import DraftSender from './DraftSender'
 
 export default DraftSender
-export type {DraftSenderExpose} from './DraftSender'
-export type {DraftBinding} from './useDraftSender'
+export type {DraftBinding, DraftSenderExpose} from './types'

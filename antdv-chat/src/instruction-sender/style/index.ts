@@ -5,7 +5,6 @@ import {genStyleHooks} from '../../_util/genStyleLayer'
 function genInstructionSenderStyle(token: LoncraStyleToken): CSSInterpolation {
   const {
     componentCls,
-    antCls,
     paddingXS,
     lineWidth,
     lineType,
@@ -17,7 +16,6 @@ function genInstructionSenderStyle(token: LoncraStyleToken): CSSInterpolation {
     calc,
   } = token
   const panelSize = calc(controlHeightLG).mul(6).equal()
-
   return {
     [componentCls]: {
       [`${componentCls}-footer`]: {
@@ -26,9 +24,9 @@ function genInstructionSenderStyle(token: LoncraStyleToken): CSSInterpolation {
       },
     },
     [`${componentCls}-input`]: {
-      [`> ${antCls}-sender-slot:not(${antCls}-sender-slot-content)`]: {
-        height: 'auto',
-        verticalAlign: 'bottom',
+      [`> .antd-sender-slot:not(.antd-sender-slot-content)`]: {
+        height: 'auto !important',
+        verticalAlign: 'bottom !important',
         marginBlock: 0,
       },
       [`&[contenteditable="false"]`]: {

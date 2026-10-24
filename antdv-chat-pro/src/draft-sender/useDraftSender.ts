@@ -1,27 +1,9 @@
-import {nextTick, onBeforeUnmount, onMounted, onUnmounted, type Ref, watch} from 'vue'
+import {nextTick, onBeforeUnmount, onMounted, onUnmounted, watch} from 'vue'
 import type {SlotConfigType} from '@antdv-next/x/dist/sender/interface'
 import {decideDraftRestore, type DraftRestoreResult, isPlaceholderDraft} from '@loncra/chat-core'
+import type {UseDraftSenderOptions} from './types'
 
 const PERSIST_DEBOUNCE_MS = 400
-
-/** 当前这份稿是谁、怎么读写，由宿主闭包决定。key 的字符串内容发送器不解释。 */
-export interface DraftBinding<TLive> {
-  key: () => string | undefined
-  save: (live: TLive) => Promise<void>
-  load: () => Promise<TLive | null>
-  clear: () => Promise<void>
-}
-
-export interface UseDraftSenderOptions<TLive> {
-  /** 输入框里的活槽，不是入库用的 PersistableSlot。 */
-  slots: Ref<SlotConfigType[]>
-  binding: () => DraftBinding<TLive>
-  readLive: () => TLive
-  slotsOf: (live: TLive) => SlotConfigType[]
-  onRestore: (result: DraftRestoreResult<TLive, SlotConfigType[]>) => void
-  /** 词槽以外、也要触发防抖写入的数据。IM 的引用条。 */
-  saveSource?: () => unknown
-}
 
 function debounce(fn: () => void, wait: number): (() => void) & {cancel: () => void} {
   let timer: ReturnType<typeof setTimeout> | undefined
@@ -43,10 +25,6 @@ function debounce(fn: () => void, wait: number): (() => void) & {cancel: () => v
   return wrapped
 }
 
-/**
- * 输入后 400ms 写入，离开时立刻写。还原出词槽；只有内存是占位稿才写回 slots。
- * hydrating 期间不 put，避免刚还原又被空稿盖掉。
- */
 export function useDraftSender<TLive>(options: UseDraftSenderOptions<TLive>) {
   let hydrating = false
 
@@ -63,7 +41,7 @@ export function useDraftSender<TLive>(options: UseDraftSenderOptions<TLive>) {
     try {
       await binding.save(options.readLive())
     } catch {
-      // 库不可用或单文件超限时不阻断输入和切会话
+      return
     }
   }
 

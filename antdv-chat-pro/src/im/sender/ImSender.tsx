@@ -28,7 +28,7 @@ import {getEnumName, type IdValueMetadata, isEnumValue} from '@loncra/client/com
 import type {ObjectWriteResult} from '@loncra/client/resource'
 import {MESSAGE_SERVER_USER_CHAT_PARTICIPANT_TYPE, type UserChatMessageResponseBody,} from '@loncra/client/message'
 import type {DraftRestoreResult, ImContentBlock, InstructionBlock, ReferenceBlock} from '@loncra/chat-core'
-import DraftSender, {type DraftSenderExpose} from '../../draft-sender/DraftSender'
+import DraftSender, {type DraftSenderExpose} from '../../draft-sender'
 import {createImDraftBinding} from '../draft/createImDraftBinding'
 import type {ImDraftLive} from '../draft/imDraftCodec'
 import type {ImPageHost} from '../host'
