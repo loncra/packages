@@ -1,5 +1,11 @@
 export { default as EmojiButton } from './emoji-button'
-export type { EmojiButtonEmits, EmojiButtonProps, EmojiButtonSlots } from './emoji-button'
+export type {
+  EmojiButtonClasses,
+  EmojiButtonEmits,
+  EmojiButtonProps,
+  EmojiButtonSlots,
+  EmojiButtonStyles,
+} from './emoji-button'
 
 export { default as InstructionSender } from './instruction-sender'
 export type {
@@ -18,9 +24,11 @@ export { useInstructionSender } from './instruction-sender'
 
 export { default as Markdown, MarkdownCodeRenderer } from './markdown'
 export type {
+  MarkdownClasses,
   MarkdownCodeRendererProps,
   MarkdownProps,
   MarkdownSlots,
+  MarkdownStyles,
   MarkdownTheme,
 } from './markdown'
 

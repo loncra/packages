@@ -1,4 +1,10 @@
 import EmojiButton from './EmojiButton'
 
 export default EmojiButton
-export type { EmojiButtonEmits, EmojiButtonProps, EmojiButtonSlots } from './types'
+export type {
+  EmojiButtonClasses,
+  EmojiButtonEmits,
+  EmojiButtonProps,
+  EmojiButtonSlots,
+  EmojiButtonStyles,
+} from './types'

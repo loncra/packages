@@ -5,6 +5,7 @@ import {genStyleHooks} from '../../_util/genStyleLayer'
 function genInstructionSenderStyle(token: LoncraStyleToken): CSSInterpolation {
   const {
     componentCls,
+    antCls,
     paddingXS,
     lineWidth,
     lineType,
@@ -23,16 +24,16 @@ function genInstructionSenderStyle(token: LoncraStyleToken): CSSInterpolation {
         padding: paddingXS,
         borderTop: `${lineWidth} ${lineType} ${colorBorderSecondary}`,
       },
-      [`.antd-sender-input.antd-sender-input-slot`]: {
-        [`> .antd-sender-slot:not(.antd-sender-slot-content)`]: {
-          height: 'auto',
-          verticalAlign: 'bottom',
-          marginBlock: 0,
-        },
-        [`&[contenteditable="false"]`]: {
-          opacity: 0.5,
-          cursor: 'not-allowed',
-        },
+    },
+    [`${componentCls}-input`]: {
+      [`> ${antCls}-sender-slot:not(${antCls}-sender-slot-content)`]: {
+        height: 'auto',
+        verticalAlign: 'bottom',
+        marginBlock: 0,
+      },
+      [`&[contenteditable="false"]`]: {
+        opacity: 0.5,
+        cursor: 'not-allowed',
       },
     },
     [`${componentCls}-panel`]: {

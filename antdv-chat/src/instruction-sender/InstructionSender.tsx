@@ -5,90 +5,26 @@ import {
     type PropType,
     type Ref,
     ref,
-    Teleport,
     toRef,
     unref
 } from 'vue'
-import {Flex, Popover, Space} from 'antdv-next'
+import {Flex, Space} from 'antdv-next'
 import {Sender} from '@antdv-next/x'
-import type {ActionsComponents, SenderRef, SlotConfigType} from '@antdv-next/x/dist/sender/interface'
+import type {SenderRef, SlotConfigType} from '@antdv-next/x/dist/sender/interface'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {classNames} from '@loncra/antdv'
-import type {InstructionItem, InstructionMeasure, InstructionSenderHandle} from './types'
+import type {
+  InstructionItem,
+  InstructionSenderClasses,
+  InstructionSenderHandle,
+  InstructionSenderProps,
+  InstructionSenderStyles,
+} from './types'
+import InstructionSenderPanel from './InstructionSenderPanel'
 import {useInstructionSender} from './useInstructionSender'
 import useStyle from './style'
 
 const EMPTY_SLOT_CONFIG: SlotConfigType[] = []
-
-export type {
-  InstructionItem,
-  InstructionMeasure,
-  InstructionPopoverState,
-  InstructionSenderHandle,
-  UseInstructionSenderParams,
-} from './types'
-
-export interface InstructionSenderProps {
-  slotConfig?: SlotConfigType[]
-  placeholder?: string
-  sending?: boolean
-  disabled?: boolean
-  instructionContextVisibleMargin?: number
-  instructionMap?: Record<string, InstructionItem[]>
-  /** 按关键字筛候选：宿主自己实现（包不猜业务怎么匹配） */
-  onFilterDataSource: (
-    keyword: string,
-    dataSource: InstructionItem[],
-    prefix: string,
-  ) => InstructionItem[]
-  /** 选中后怎么插进编辑器：宿主自己实现 */
-  senderInsertInstruction: (
-    sender: InstructionSenderHandle,
-    block: object,
-    measure: InstructionMeasure,
-  ) => void
-  /** 选中后造一个「指令芯片」塞进 slotConfig：形状 / 渲染 / metadata 全归宿主 */
-  createInstructionSlot: (option: InstructionItem, measure: InstructionMeasure) => object
-  inputClass?: string
-  prefixCls?: string
-  class?: unknown
-  rootClass?: string
-  style?: unknown
-  classNames?: Record<string, string>
-  styles?: Record<string, unknown>
-}
-
-export interface InstructionSenderEmits {
-  submit: (value: string, slotConfig?: SlotConfigType[]) => void
-  cancel: () => void
-  change: (value: string, event?: Event, slotConfig?: SlotConfigType[]) => void
-  pasteFile: (fileList: FileList) => void
-}
-
-export interface InstructionSenderSlots {
-  header?: () => unknown
-  leftExtra?: () => unknown
-  rightExtra?: () => unknown
-  defaultButton?: (props: {components: ActionsComponents}) => unknown
-  instructionItemRender?: (props: {
-    index: number
-    item: InstructionItem
-    prefix: string
-  }) => unknown
-  instructionListRender?: (props: {
-    items: InstructionItem[]
-    prefix: string
-    activeIndex: number
-    pick: (item: InstructionItem) => void
-  }) => unknown
-}
-
-export interface InstructionSenderExpose {
-  clear: () => void
-  getSlotConfigValue: () => SlotConfigType[]
-  getSender: () => InstructionSenderHandle | undefined
-  senderRef: Ref<InstructionSenderHandle | undefined>
-}
 
 const InstructionSender = defineComponent({
   name: 'LInstructionSender',
@@ -127,14 +63,11 @@ const InstructionSender = defineComponent({
       type: Function as PropType<InstructionSenderProps['createInstructionSlot']>,
       required: true,
     },
-    inputClass: {
-      type: String,
-      default: 'chat-sender-input',
-    },
+    inputClass: String,
     prefixCls: String,
     rootClass: String,
-    classNames: Object as PropType<Record<string, string>>,
-    styles: Object as PropType<Record<string, unknown>>,
+    classes: Object as PropType<InstructionSenderClasses>,
+    styles: Object as PropType<InstructionSenderStyles>,
   },
   emits: ['submit', 'cancel', 'change', 'pasteFile'],
   setup(props, {emit, slots, attrs, expose}) {
@@ -157,11 +90,9 @@ const InstructionSender = defineComponent({
       contextVisibleMargin: toRef(props, 'instructionContextVisibleMargin'),
       disabled: toRef(props, 'disabled'),
       senderRef: senderRef as Ref<InstructionSenderHandle | undefined>,
-      onFilterDataSource: (keyword, dataSource, prefix) =>
-        props.onFilterDataSource(keyword, dataSource, prefix),
-      senderInsertInstruction: (sender, block, measure) =>
-        props.senderInsertInstruction(sender, block, measure),
-      createInstructionSlot: (option, measure) => props.createInstructionSlot(option, measure),
+      onFilterDataSource: props.onFilterDataSource,
+      senderInsertInstruction: props.senderInsertInstruction,
+      createInstructionSlot: props.createInstructionSlot,
     })
 
     function clear(): void {
@@ -215,29 +146,23 @@ const InstructionSender = defineComponent({
             readOnly={sending || props.disabled}
             class={classNames(hashedClass, props.rootClass, attrClass)}
             style={attrStyle as never}
-            /**
-             * ⚠️ 传给 `@antdv-next/x` 的 `Sender` 时**必须用 `classes`**：x **1.2.5 起**把 `classNames` 标为
-             * `@deprecated Use \`classes\` instead`（`dist/sender/interface.d.ts` 里两者并存，`classes` 是新增的正名）。
-             * 注意别与我们组件**自己的**公开 prop 混：本组件的 prop 仍叫 `classNames`（= 下面 `props.classNames`，宿主入参），
-             * 语义化键名（`input` / `footer` …）两版一致，只是属性改名。
-             */
             classes={{
-              ...props.classNames,
+              ...props.classes?.sender,
               input: classNames(
                 hashId.value,
                 cssVarCls.value,
                 `${prefixCls.value}-input`,
                 props.inputClass,
-                props.classNames?.input,
+                props.classes?.sender?.input,
               ),
               footer: classNames(
                 hashId.value,
                 cssVarCls.value,
                 `${prefixCls.value}-footer`,
-                props.classNames?.footer,
+                props.classes?.sender?.footer,
               ),
             }}
-            styles={props.styles as never}
+            styles={props.styles?.sender as never}
             header={slots.header ? () => slots.header?.() : undefined}
             footer={
               props.disabled
@@ -269,58 +194,32 @@ const InstructionSender = defineComponent({
               emit('submit', value, slotConfig)
             }
           />
-          <Teleport to="body">
-            <Popover
-              ref={instructionPopoverRef as never}
-              open={option.open && option.displayDataSource.length > 0}
-              trigger={[]}
-              destroyOnHidden={false}
-              class={hashedClass}
-              rootClass={hashedClass}
-              classes={{root: hashedClass, content: hashedClass}}
-              v-slots={{
-                content: () => (
-                  <div
-                    class={classNames(hashedClass, `${prefixCls.value}-panel`)}
-                    onMousedown={(e: MouseEvent) => e.preventDefault()}
-                  >
-                    {slots.instructionListRender
-                      ? slots.instructionListRender({
-                          items: option.displayDataSource,
-                          prefix: option.measure.prefix,
-                          activeIndex: option.activeIndex,
-                          pick: handleInstructionPick,
-                        })
-                      : option.displayDataSource.map((item, index) => (
-                          <div
-                            key={item.id ?? index}
-                            class={classNames(hashId.value, cssVarCls.value, `${prefixCls.value}-item`, {
-                              [`${prefixCls.value}-item-active`]: index === option.activeIndex,
-                            })}
-                            onMouseenter={() => {
-                              instructionOption.value.activeIndex = index
-                            }}
-                            onClick={() => handleInstructionPick(item)}
-                          >
-                            {slots.instructionItemRender
-                              ? slots.instructionItemRender({
-                                  index,
-                                  item,
-                                  prefix: option.measure.prefix,
-                                })
-                              : item.value}
-                          </div>
-                        ))}
-                  </div>
-                ),
-              }}
-            >
-              <span
-                class={classNames(hashedClass, `${prefixCls.value}-anchor`)}
-                style={option.anchorStyle}
-              />
-            </Popover>
-          </Teleport>
+          <InstructionSenderPanel
+            popoverRef={instructionPopoverRef}
+            open={option.open && option.displayDataSource.length > 0}
+            hashedClass={hashedClass}
+            prefixCls={prefixCls.value}
+            prefix={option.measure.prefix}
+            items={option.displayDataSource}
+            activeIndex={option.activeIndex}
+            pick={handleInstructionPick}
+            highlight={(index: number) => {
+              instructionOption.value.activeIndex = index
+            }}
+            popoverClasses={{
+              ...props.classes?.popover,
+              root: classNames(hashedClass, props.classes?.popover?.root),
+              content: classNames(hashedClass, props.classes?.popover?.content),
+            }}
+            popoverStyles={props.styles?.popover as never}
+            panelClass={props.classes?.panel}
+            panelStyle={props.styles?.panel as never}
+            itemClass={props.classes?.item}
+            itemStyle={props.styles?.item as never}
+            anchorClass={props.classes?.anchor}
+            anchorStyle={{...props.styles?.anchor, ...option.anchorStyle} as never}
+            v-slots={{list: slots.instructionListRender, item: slots.instructionItemRender}}
+          />
         </>
       )
     }

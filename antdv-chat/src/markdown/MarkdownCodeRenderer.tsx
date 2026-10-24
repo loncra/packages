@@ -86,14 +86,16 @@ const MarkdownCodeRenderer = defineComponent({
     })
 
     return () => {
+      const hostClass = typeof attrs.class === 'string' ? attrs.class : undefined
       if (!isBlock.value) {
-        return <code>{getCodeText()}</code>
+        return <code class={hostClass}>{getCodeText()}</code>
       }
       if (language.value === 'mermaid') {
         return (
           <Mermaid
             content={getCodeText()}
             codeHighlighterProps={{ theme: highlighterTheme.value }}
+            class={hostClass}
           />
         )
       }
@@ -104,6 +106,7 @@ const MarkdownCodeRenderer = defineComponent({
           theme={highlighterTheme.value}
           showLineNumbers
           showCopyButton
+          class={hostClass}
         />
       )
     }

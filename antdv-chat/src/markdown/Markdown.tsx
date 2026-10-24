@@ -1,34 +1,18 @@
-import {computed, defineComponent, nextTick, ref, watch} from 'vue'
-import {type StreamingOption, XMarkdown, type XMarkdownProps} from '@antdv-next/x-markdown'
+import {computed, defineComponent, nextTick, ref, watch, type PropType} from 'vue'
+import {type StreamingOption, XMarkdown} from '@antdv-next/x-markdown'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
-import {classNames} from '@loncra/antdv'
-import {useIsDark} from '@loncra/antdv'
+import {classNames, useIsDark} from '@loncra/antdv'
+import type {MarkdownClasses, MarkdownStyles, MarkdownTheme} from './types'
 import useStyle from './style'
 
 import '@antdv-next/x-markdown/themes/index.css'
 import '@antdv-next/x-markdown/themes/light.css'
 import '@antdv-next/x-markdown/themes/dark.css'
 
-export type MarkdownTheme = 'light' | 'dark'
-
-export interface MarkdownProps extends XMarkdownProps {
-  scrollClass?: string
-  nearBottomPx?: number
-  theme?: MarkdownTheme
-  prefixCls?: string
-  class?: unknown
-  rootClass?: string
-}
-
-export interface MarkdownSlots {
-  default?: () => unknown
-}
-
 const Markdown = defineComponent({
   name: 'LMarkdown',
   inheritAttrs: false,
   props: {
-    scrollClass: String,
     nearBottomPx: {
       type: Number,
       default: 48,
@@ -36,6 +20,8 @@ const Markdown = defineComponent({
     theme: String as () => MarkdownTheme,
     prefixCls: String,
     rootClass: String,
+    classes: Object as PropType<MarkdownClasses>,
+    styles: Object as PropType<MarkdownStyles>,
   },
   setup(props, { attrs }) {
     const config = useConfig()
@@ -54,8 +40,15 @@ const Markdown = defineComponent({
       appearance.value === 'dark' ? 'x-markdown-dark' : 'x-markdown-light',
     )
 
-    function streamingOption(): StreamingOption | undefined {
-      return attrs.streaming as StreamingOption | undefined
+    function isStreaming(): boolean {
+      const streaming = attrs.streaming as StreamingOption | boolean | undefined
+      if (streaming === true) {
+        return true
+      }
+      if (streaming && typeof streaming === 'object') {
+        return streaming.hasNextChunk === true
+      }
+      return false
     }
 
     function isNearBottom(el: HTMLElement): boolean {
@@ -72,14 +65,14 @@ const Markdown = defineComponent({
 
     function onScroll() {
       const el = scrollEl.value
-      if (!el || !streamingOption()?.hasNextChunk) {
+      if (!el || !isStreaming()) {
         return
       }
       autoStickBottom.value = isNearBottom(el)
     }
 
     async function maybeAutoScroll() {
-      if (!streamingOption()?.hasNextChunk || !autoStickBottom.value) {
+      if (!isStreaming() || !autoStickBottom.value) {
         return
       }
       await nextTick()
@@ -99,18 +92,22 @@ const Markdown = defineComponent({
         <div
           ref={scrollEl}
           class={classNames(
+            `${prefixCls.value}-scroll`,
             prefixCls.value,
             hashId.value,
             cssVarCls.value,
-            props.scrollClass ? `${prefixCls.value}-scroll` : undefined,
-            props.scrollClass,
+            props.classes?.root,
             props.rootClass,
             attrClass,
           )}
           style={attrStyle as string | Record<string, string> | undefined}
           onScroll={onScroll}
         >
-          <XMarkdown {...rest} class={themeClass.value} />
+          <XMarkdown
+            {...rest}
+            class={classNames(themeClass.value, props.classes?.markdown)}
+            style={props.styles?.markdown as never}
+          />
         </div>
       )
     }

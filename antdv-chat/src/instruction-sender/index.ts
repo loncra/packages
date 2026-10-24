@@ -2,11 +2,13 @@ import InstructionSender from './InstructionSender'
 
 export default InstructionSender
 export type {
+  InstructionSenderClasses,
   InstructionSenderEmits,
   InstructionSenderExpose,
   InstructionSenderProps,
   InstructionSenderSlots,
-} from './InstructionSender'
+  InstructionSenderStyles,
+} from './types'
 export type {
   InstructionItem,
   InstructionMeasure,

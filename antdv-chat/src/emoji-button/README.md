@@ -74,5 +74,6 @@ const text = ref('')
 | cell | 单个 emoji 格子（antd `CardGrid`）：`-cell` |
 | emoji | 格子里的 emoji 字符 `span`：`-emoji` |
 
-- **没有 `classes` / `styles` 语义键**：以上区域类名是固定的自有类，宿主要定制用 `prefixCls` 起自己的前缀，或全局 CSS 按类名覆盖。
+- **`classes` / `styles` 区域表**（2026-10-23 起）：`root`（antd `Button`，原生语义对象透传）、`popover`（antd `Popover`，原生语义对象透传）、`panel` / `body` / `cell` / `emoji`（自有节点，`string` / `CSSProperties`），键与类名后缀一一对应；内部固定类与宿主类合并（宿主在后优先）。
 - 弹层面板在 body 上，写覆盖样式时不要写成 root 的后代选择器。
+- `body` / `cell` / `emoji` 是裸节点，已随语义化 DOM 改造补挂 `hashId`（此前样式不命中，2026-10-23 修复）。

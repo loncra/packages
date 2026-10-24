@@ -3,27 +3,27 @@ import type {LoncraStyleToken} from '@loncra/antdv'
 import {genStyleHooks} from '../../_util/genStyleLayer'
 
 function genMarkdownStyle(token: LoncraStyleToken): CSSInterpolation {
-  const {componentCls, paddingXXS, paddingXS} = token
+  const {componentCls, antCls, paddingXXS, paddingXS} = token
   return {
-    [`${componentCls}-scroll`]: {
+    /*[`${componentCls}-scroll`]: {
       overflow: 'auto',
-    },
-    [`${componentCls} .x-markdown .antd-code-highlighter .antd-code-highlighter-content .antd-code-highlighter-code pre`]:
+    },*/
+    [`${componentCls} .x-markdown ${antCls}-code-highlighter ${antCls}-code-highlighter-content ${antCls}-code-highlighter-code pre`]:
       {
-        padding: `${unit(paddingXXS)} !important`,
+        padding: `${unit(paddingXXS)}`,
       },
-    [`${componentCls} .x-markdown .antd-code-highlighter .antd-code-highlighter-content .antd-code-highlighter-code pre code`]:
+    [`${componentCls} .x-markdown ${antCls}-code-highlighter ${antCls}-code-highlighter-content ${antCls}-code-highlighter-code pre code`]:
       {
-        ['white-space']: 'pre !important',
-        ['word-break']: 'normal !important',
-        lineHeight: '1.5em !important',
-        background: 'transparent !important',
-        margin: '0 !important',
-        padding: `${unit(paddingXS)} !important`,
+        whiteSpace: 'pre',
+        wordBreak: 'normal',
+        lineHeight: '1.5em',
+        background: 'transparent',
+        margin: '0',
+        padding: `${unit(paddingXS)}`,
         borderRadius: 0,
-        border: '0 !important',
+        border: '0',
       },
-  }
+  } as CSSInterpolation
 }
 
 export default genStyleHooks('Markdown', genMarkdownStyle, {order: 3})

@@ -3,11 +3,11 @@ import {Button, Card, CardGrid, Popover, Tabs} from 'antdv-next'
 import {SmileOutlined} from '@antdv-next/icons'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import emojiGroups from 'unicode-emoji-json/data-by-group.json'
-import type {EmojiButtonLocale} from '../locale'
 import {classNames} from '@loncra/antdv'
+import type {EmojiButtonLocale} from '../locale'
 import {useLocale} from '../_util/useLocale'
 import {EMOJI_DEFAULT_HIDDEN_SLUGS} from './constants'
-import type {EmojiButtonProps} from './types'
+import type {EmojiButtonClasses, EmojiButtonProps, EmojiButtonStyles} from './types'
 import useStyle from './style'
 
 const EmojiButton = defineComponent({
@@ -22,6 +22,8 @@ const EmojiButton = defineComponent({
       type: Array as PropType<string[]>,
       default: () => EMOJI_DEFAULT_HIDDEN_SLUGS,
     },
+    classes: Object as PropType<EmojiButtonClasses>,
+    styles: Object as PropType<EmojiButtonStyles>,
   },
   emits: ['selected'],
   setup(props, { emit, slots, attrs }) {
@@ -76,9 +78,14 @@ const EmojiButton = defineComponent({
           onUpdate:open={(open: boolean) => {
             state.value.open = open
           }}
+          classes={props.classes?.popover}
+          styles={props.styles?.popover}
           v-slots={{
             content: () => (
-              <div class={classNames(hashedClass, `${prefixCls.value}-panel`)}>
+              <div
+                class={classNames(hashedClass, `${prefixCls.value}-panel`, props.classes?.panel)}
+                style={props.styles?.panel as never}
+              >
                 <Tabs
                   activeKey={state.value.activeKey}
                   items={tabItems.value}
@@ -87,16 +94,36 @@ const EmojiButton = defineComponent({
                   }}
                   v-slots={{
                     contentRender: ({ item }: { item: { key: string } }) => (
-                      <div class={`${prefixCls.value}-body`}>
+                      <div
+                        class={classNames(
+                          hashId.value,
+                          cssVarCls.value,
+                          `${prefixCls.value}-body`,
+                          props.classes?.body,
+                        )}
+                        style={props.styles?.body as never}
+                      >
                         <Card size="small">
                           {emojisOf(item.key).map((itemEmoji) => (
                             <CardGrid
                               key={itemEmoji.name}
                               hoverable
-                              class={`${prefixCls.value}-cell`}
+                              class={classNames(
+                                hashId.value,
+                                cssVarCls.value,
+                                `${prefixCls.value}-cell`,
+                                props.classes?.cell,
+                              )}
+                              style={props.styles?.cell as never}
                             >
                               <span
-                                class={`${prefixCls.value}-emoji`}
+                                class={classNames(
+                                  hashId.value,
+                                  cssVarCls.value,
+                                  `${prefixCls.value}-emoji`,
+                                  props.classes?.emoji,
+                                )}
+                                style={props.styles?.emoji as never}
                                 onClick={() => onSelectedEmoji(itemEmoji.emoji)}
                               >
                                 {itemEmoji.emoji}
@@ -118,6 +145,8 @@ const EmojiButton = defineComponent({
             disabled={props.disabled}
             class={classNames(hashedClass, props.rootClass, attrClass)}
             style={attrStyle as never}
+            classes={props.classes?.root}
+            styles={props.styles?.root}
             v-slots={{ icon: () => renderTriggerIcon() }}
           />
         </Popover>

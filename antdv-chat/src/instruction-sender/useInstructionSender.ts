@@ -1,15 +1,12 @@
 import {nextTick, onUnmounted, ref} from 'vue'
 import type {SlotConfigType} from '@antdv-next/x/dist/sender/interface'
 import type {InstructionItem, InstructionMeasure, InstructionPopoverState, UseInstructionSenderParams,} from './types'
+import {createInstructionViewportWatchers} from './instructionViewportWatchers'
 
 const ZERO_WIDTH_SPACE = '\u200B'
 
 export function useInstructionSender(params: UseInstructionSenderParams) {
   let editorScrollTarget: HTMLElement | null = null
-  let senderVisibilityObserver: IntersectionObserver | undefined
-  let observedSenderElement: HTMLElement | undefined
-  let viewportListenersBound = false
-  let senderResizeObserver: ResizeObserver | undefined
 
   const instructionOption = ref<InstructionPopoverState>({
     open: false,
@@ -38,17 +35,6 @@ export function useInstructionSender(params: UseInstructionSenderParams) {
     return root.querySelector<HTMLElement>('[contenteditable="true"]')
   }
 
-  function closeInstruction() {
-    instructionOption.value.activeIndex = 0
-    instructionOption.value.measure.keyword = ''
-    instructionOption.value.measure.prefix = ''
-    instructionOption.value.measure.location = -1
-    instructionOption.value.measure.dataSource = []
-    instructionOption.value.displayDataSource = []
-    instructionOption.value.open = false
-    unbindInstructionViewportWatchers()
-  }
-
   function getCaretClientRect(): DOMRect | null {
     const sel = window.getSelection()
     if (!sel?.rangeCount || !sel.isCollapsed) {
@@ -69,35 +55,15 @@ export function useInstructionSender(params: UseInstructionSenderParams) {
     return rect
   }
 
-  function isInstructionContextVisible(): boolean {
-    const editor = getEditableRoot()
-    const senderEl = params.senderRef.value?.nativeElement
-    if (!editor || !senderEl) {
-      return false
-    }
-    const senderRect = senderEl.getBoundingClientRect()
-    const inViewport =
-      senderRect.bottom > params.contextVisibleMargin.value &&
-      senderRect.top < window.innerHeight - params.contextVisibleMargin.value &&
-      senderRect.right > params.contextVisibleMargin.value &&
-      senderRect.left < window.innerWidth - params.contextVisibleMargin.value
-    if (!inViewport) {
-      return false
-    }
-    const sel = window.getSelection()
-    if (!sel?.rangeCount || !editor.contains(sel.anchorNode)) {
-      return false
-    }
-    const caretRect = getCaretClientRect()
-    if (!caretRect) {
-      return false
-    }
-    return (
-      caretRect.bottom >= 0 &&
-      caretRect.top <= window.innerHeight &&
-      caretRect.right >= 0 &&
-      caretRect.left <= window.innerWidth
-    )
+  function closeInstruction() {
+    instructionOption.value.activeIndex = 0
+    instructionOption.value.measure.keyword = ''
+    instructionOption.value.measure.prefix = ''
+    instructionOption.value.measure.location = -1
+    instructionOption.value.measure.dataSource = []
+    instructionOption.value.displayDataSource = []
+    instructionOption.value.open = false
+    watchers.unbindInstructionViewportWatchers()
   }
 
   function updateInstructionAnchor() {
@@ -116,105 +82,15 @@ export function useInstructionSender(params: UseInstructionSenderParams) {
     nextTick(() => requestAnimationFrame(() => instructionPopoverRef.value?.forceAlign?.()))
   }
 
-  function onInstructionViewportChange() {
-    if (!instructionOption.value.open) {
-      return
-    }
-    if (!isInstructionContextVisible()) {
-      closeInstruction()
-      return
-    }
-    updateInstructionAnchor()
-  }
-
-  function onSenderVisibilityChange(entries: IntersectionObserverEntry[]) {
-    if (!instructionOption.value.open) {
-      return
-    }
-    const entry = entries[0]
-    if (!entry) {
-      return
-    }
-    if (!entry.isIntersecting || entry.intersectionRatio < 0.01) {
-      closeInstruction()
-      return
-    }
-    updateInstructionAnchor()
-  }
-
-  function bindSenderVisibilityObserver() {
-    const senderEl = params.senderRef.value?.nativeElement
-    if (!senderEl) {
-      return
-    }
-    if (observedSenderElement === senderEl && senderVisibilityObserver) {
-      return
-    }
-    unbindSenderVisibilityObserver()
-    senderVisibilityObserver = new IntersectionObserver(onSenderVisibilityChange, {
-      root: null,
-      threshold: [0, 0.01, 1],
-    })
-    senderVisibilityObserver.observe(senderEl)
-    observedSenderElement = senderEl
-  }
-
-  function unbindSenderVisibilityObserver() {
-    senderVisibilityObserver?.disconnect()
-    senderVisibilityObserver = undefined
-    observedSenderElement = undefined
-  }
-
-  function bindViewportListeners() {
-    if (viewportListenersBound) {
-      return
-    }
-    window.addEventListener('resize', onInstructionViewportChange, {passive: true})
-    window.addEventListener('scroll', onInstructionViewportChange, {passive: true, capture: true})
-    window.visualViewport?.addEventListener('resize', onInstructionViewportChange, {passive: true})
-    window.visualViewport?.addEventListener('scroll', onInstructionViewportChange, {passive: true})
-    viewportListenersBound = true
-  }
-
-  function unbindViewportListeners() {
-    if (!viewportListenersBound) {
-      return
-    }
-    window.removeEventListener('resize', onInstructionViewportChange)
-    window.removeEventListener('scroll', onInstructionViewportChange, true)
-    window.visualViewport?.removeEventListener('resize', onInstructionViewportChange)
-    window.visualViewport?.removeEventListener('scroll', onInstructionViewportChange)
-    viewportListenersBound = false
-  }
-
-  function bindSenderResizeObserver() {
-    const senderEl = params.senderRef.value?.nativeElement
-    if (!senderEl) {
-      return
-    }
-    senderResizeObserver?.disconnect()
-    senderResizeObserver = new ResizeObserver(() => {
-      onInstructionViewportChange()
-    })
-    senderResizeObserver.observe(senderEl)
-  }
-
-  function unbindSenderResizeObserver() {
-    senderResizeObserver?.disconnect()
-    senderResizeObserver = undefined
-  }
-
-  function bindInstructionViewportWatchers() {
-    bindSenderVisibilityObserver()
-    bindViewportListeners()
-    bindSenderResizeObserver()
-  }
-
-  function unbindInstructionViewportWatchers() {
-    unbindSenderVisibilityObserver()
-    unbindViewportListeners()
-    unbindSenderResizeObserver()
-  }
+  const watchers = createInstructionViewportWatchers({
+    senderRef: params.senderRef,
+    contextVisibleMargin: params.contextVisibleMargin,
+    getEditableRoot,
+    getCaretClientRect,
+    isOpen: () => instructionOption.value.open,
+    close: closeInstruction,
+    refresh: updateInstructionAnchor,
+  })
 
   function onEditorScroll() {
     if (!instructionOption.value.open) {
@@ -315,7 +191,7 @@ export function useInstructionSender(params: UseInstructionSenderParams) {
     }
 
     bindEditorScrollListener()
-    bindInstructionViewportWatchers()
+    watchers.bindInstructionViewportWatchers()
     const measure = parseInstructionMeasure(getTextBeforeCursor(editor))
     if (!measure) {
       closeInstruction()
@@ -335,7 +211,6 @@ export function useInstructionSender(params: UseInstructionSenderParams) {
     )
 
     instructionOption.value.open = instructionOption.value.displayDataSource.length > 0
-    bindInstructionViewportWatchers()
   }
 
   function onCompositionStart() {
@@ -374,7 +249,6 @@ export function useInstructionSender(params: UseInstructionSenderParams) {
     closeInstruction()
   }
 
-  /** 光标紧贴芯片时，把选区扩到整颗芯片（含插入时垫的那一个空格）。返回 undefined，交给 Sender 一次删掉。 */
   function selectChipBeforeCaret(editor: HTMLElement): void {
     const sel = window.getSelection()
     if (!sel?.rangeCount || !sel.isCollapsed) {
@@ -455,7 +329,7 @@ export function useInstructionSender(params: UseInstructionSenderParams) {
   }
 
   onUnmounted(() => {
-    unbindInstructionViewportWatchers()
+    watchers.unbindInstructionViewportWatchers()
     editorScrollTarget?.removeEventListener('scroll', onEditorScroll)
     editorScrollTarget = null
     const editor = getEditableRoot()
