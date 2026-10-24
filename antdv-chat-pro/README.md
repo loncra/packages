@@ -44,7 +44,7 @@ import {createLiveKitCallMedia} from '@loncra/antdv-chat-pro/im/call/livekit'
 | `<控件>/` | 一个控件一个目录。骨架 `index.ts` / 主组件 `.tsx` / `style/index.ts` 见 [CONTRIBUTING.md](../CONTRIBUTING.md) 第 7 节，`types.ts` / `constants.ts` / `_util/` 按需（如 `file-editor/_util/validateName.ts`） |
 | `im/`、`agent/` | 两个套件目录，内部按 `bubble/`、`sender/`、`conversation/`、`history/`、`draft/`、`send/` 分，每个子域各有 `style/`；`agent/` 另有 `hub/`（插件市场与版本变更），`im/` 另有 `chat/`、`contact/`、`room/`、`call/` |
 | `session/` | 会话消息写回（`updateSessionMessage`） |
-| `history/`、`draft/` | 跨套件共享件：`history/revealAnchor.ts`、`draft/persistableSlots.ts` |
+| `history/`、`draft/` | 跨套件共享域：`history/revealAnchor`（IM / Agent 跳转锚定）、`draft/persistableSlots`（草稿槽位序列化），各自带 `index.ts` 出口 |
 | `_util/` | `useLocale` |
 | `locale/` | 本包 locale 与 `Locale` 类型 |
 

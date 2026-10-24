@@ -1,5 +1,5 @@
 import {nextTick, provide, type InjectionKey, type Ref} from 'vue'
-import {revealAnchor} from '../../history/revealAnchor'
+import {revealAnchor} from '../../history'
 import type {PageRequest, PageResult, RestResult} from '@loncra/client/commons'
 import {
   ChatMessageService,

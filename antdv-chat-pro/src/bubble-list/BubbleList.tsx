@@ -5,9 +5,9 @@ import {VerticalAlignBottomOutlined} from '@antdv-next/icons'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import type {RoleType} from '@antdv-next/x/dist/bubble/interface'
 import {classNames} from '@loncra/antdv'
-import {DEFAULT_BUBBLE_LIST_ROLE, useBubbleList} from './useBubbleList.ts'
-import useStyle, {BUBBLE_LIST_PREFIX} from './style/index.ts'
-import type {BubbleListItem, BubbleRenderRow, BubbleSession} from './types.ts'
+import {createBubbleListRole, useBubbleList} from './useBubbleList'
+import useStyle, {BUBBLE_LIST_PREFIX} from './style'
+import type {BubbleListItem, BubbleRenderRow, BubbleSession} from './types'
 
 const slotNames = ['extra', 'avatar', 'header', 'contentRender', 'footer'] as const
 
@@ -16,7 +16,6 @@ const BubbleList = defineComponent({
   inheritAttrs: false,
   props: {
     session: {type: Object as PropType<BubbleSession>, required: true},
-    /** 为 true 时启用可见区探测（IM 已读）；Agent 保持 false */
     collectVisible: {type: Boolean, default: false},
     scrollToBottomThreshold: {type: Number, default: 100},
     throttleOnScrollWait: {type: Number, default: 300},
@@ -31,10 +30,14 @@ const BubbleList = defineComponent({
       type: Function as PropType<(item: BubbleListItem) => boolean>,
       default: undefined,
     },
+    rootClass: String,
   },
   emits: ['loadPage', 'reloadLastPage', 'visibleItems'],
-  setup(props, {emit, slots, expose}) {
+  setup(props, {emit, slots, attrs, expose}) {
     const sessionRef = toRef(props, 'session')
+    const config = useConfig()
+    const prefixCls = computed(() => config.value.getPrefixCls('bubble-list', BUBBLE_LIST_PREFIX))
+    const [hashId, cssVarCls] = useStyle(prefixCls)
     const listProps = computed(() => ({
       scrollToBottomThreshold: props.scrollToBottomThreshold,
       throttleOnScrollWait: props.throttleOnScrollWait,
@@ -45,7 +48,6 @@ const BubbleList = defineComponent({
       bubbleListRef,
       bubbleListItems,
       domainItems,
-      bubbleListRole,
       showScrollToBottom,
       onBubbleScroll,
       jumpToBottom,
@@ -67,12 +69,10 @@ const BubbleList = defineComponent({
           .map((bubble) => ({bubble})),
       },
       () => props.isLoading,
+      () => prefixCls.value,
     )
 
-    const resolvedRole = computed(() => props.role ?? bubbleListRole ?? DEFAULT_BUBBLE_LIST_ROLE)
-    const config = useConfig()
-    const prefixCls = computed(() => config.value.getPrefixCls('bubble-list', BUBBLE_LIST_PREFIX))
-    const [hashId, cssVarCls] = useStyle(prefixCls)
+    const resolvedRole = computed(() => props.role ?? createBubbleListRole(prefixCls.value))
 
     expose({
       getScrollBox,
@@ -94,6 +94,7 @@ const BubbleList = defineComponent({
     }
 
     return () => {
+      const {class: attrClass, style: attrStyle, ...rest} = attrs
       const bubbleSlots: Record<string, (slotProps: {index: number}) => unknown> = {}
       for (const name of slotNames) {
         const bound = bindSlot(name)
@@ -101,10 +102,17 @@ const BubbleList = defineComponent({
           bubbleSlots[name] = bound
         }
       }
-      const rootClass = classNames(prefixCls.value, hashId.value, cssVarCls.value)
+      const rootClass = classNames(
+        prefixCls.value,
+        hashId.value,
+        cssVarCls.value,
+        props.rootClass,
+        attrClass,
+      )
       return (
-        <Flex class={rootClass}>
+        <Flex class={rootClass} style={attrStyle as never}>
           <AxBubbleList
+            {...rest}
             ref={bubbleListRef}
             class={`${prefixCls.value}-list`}
             classes={{scroll: `${prefixCls.value}-scroll`}}

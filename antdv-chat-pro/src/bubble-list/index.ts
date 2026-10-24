@@ -1,6 +1,6 @@
-export {default} from './BubbleList.tsx'
-export {DEFAULT_BUBBLE_LIST_ROLE, toAxBubbleItem, useBubbleList} from './useBubbleList.ts'
-export type {BubbleListApi} from './useBubbleList.ts'
+export {default} from './BubbleList'
+export {createBubbleListRole, DEFAULT_BUBBLE_LIST_ROLE, toAxBubbleItem, useBubbleList} from './useBubbleList'
+export type {BubbleListApi} from './useBubbleList'
 export type {
   BubbleListCallbacks,
   BubbleListExpose,
@@ -8,4 +8,4 @@ export type {
   BubbleListProps,
   BubbleRenderRow,
   BubbleSession,
-} from './types.ts'
+} from './types'

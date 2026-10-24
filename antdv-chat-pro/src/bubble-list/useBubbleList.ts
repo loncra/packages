@@ -2,13 +2,13 @@ import {computed, type MaybeRefOrGetter, nextTick, onUnmounted, ref, toValue, wa
 import type {BubbleItemType, BubbleListRef, RoleType} from '@antdv-next/x/dist/bubble/interface'
 import {bubbleListContent} from '@loncra/chat-core'
 import {CHAT_BUBBLE_TYPE} from '@loncra/client/ai'
-import {BUBBLE_LIST_PREFIX} from './style/index.ts'
+import {BUBBLE_LIST_PREFIX} from './style'
 import type {
   BubbleListCallbacks,
   BubbleListItem,
   BubbleListProps,
   BubbleSession,
-} from './types.ts'
+} from './types'
 
 function throttle<T extends (...args: never[]) => void>(fn: T, wait: number) {
   let timer: ReturnType<typeof setTimeout> | undefined
@@ -48,12 +48,6 @@ function throttle<T extends (...args: never[]) => void>(fn: T, wait: number) {
   return throttled
 }
 
-/**
- * 只留下 ax-bubble 会读的字段。
- * 消息 id、Agent status 与组件自己的 id、status 重名，不能摊到这一层。
- * 业务字段留在气泡上，插槽按渲染下标取回。
- * 进行中的加载由调用方的 isLoading 判断，这里不认识 Agent 状态码。
- */
 export function toAxBubbleItem<T extends BubbleListItem>(
   item: T,
   extra?: Partial<BubbleItemType>,
@@ -71,45 +65,47 @@ export function toAxBubbleItem<T extends BubbleListItem>(
   }
 }
 
-export const DEFAULT_BUBBLE_LIST_ROLE = {
-  user: {
-    variant: 'filled',
-    placement: 'end',
-    shape: 'corner',
-    classes: {content: `${BUBBLE_LIST_PREFIX}-user`,avatar: `${BUBBLE_LIST_PREFIX}-avatar`},
-  },
-  ai: {
-    variant: 'filled',
-    placement: 'start',
-    shape: 'corner',
-    classes: {avatar: `${BUBBLE_LIST_PREFIX}-avatar`},
-  },
-  system: {
-    variant: 'outlined',
-    shape: 'round',
-    classes: {content: `${BUBBLE_LIST_PREFIX}-system`},
-  },
-  divider: {
-    dividerProps: {
-      plain: true,
-      dashed: true,
-      size: 'small',
-      classes: {
-        content: `${BUBBLE_LIST_PREFIX}-divider`,
-        root: `${BUBBLE_LIST_PREFIX}-divider-root`,
+export function createBubbleListRole(prefixCls: string): RoleType {
+  return ({
+    user: {
+      variant: 'filled',
+      placement: 'end',
+      shape: 'corner',
+      classes: {content: `${prefixCls}-user`, avatar: `${prefixCls}-avatar`},
+    },
+    ai: {
+      variant: 'filled',
+      placement: 'start',
+      shape: 'corner',
+      classes: {avatar: `${prefixCls}-avatar`},
+    },
+    system: {
+      variant: 'outlined',
+      shape: 'round',
+      classes: {content: `${prefixCls}-system`},
+    },
+    divider: {
+      dividerProps: {
+        plain: true,
+        dashed: true,
+        size: 'small',
+        classes: {
+          content: `${prefixCls}-divider`,
+          root: `${prefixCls}-divider-root`,
+        },
       },
     },
-  },
-} as RoleType
+  } as RoleType)
+}
 
-/**
- * 无业务气泡列表：滚动分页、跳转闪烁、可见区探测。
- */
+export const DEFAULT_BUBBLE_LIST_ROLE = createBubbleListRole(BUBBLE_LIST_PREFIX)
+
 export function useBubbleList<T extends BubbleListItem>(
   session: MaybeRefOrGetter<BubbleSession<T>>,
   listProps: MaybeRefOrGetter<BubbleListProps>,
   callbacks: BubbleListCallbacks<T>,
   isLoading?: MaybeRefOrGetter<((item: T) => boolean) | undefined>,
+  getPrefix?: MaybeRefOrGetter<string | undefined>,
 ) {
   const showScrollToBottom = ref(false)
   const bubbleListRef = ref<BubbleListRef>()
@@ -137,7 +133,8 @@ export function useBubbleList<T extends BubbleListItem>(
   const rows = computed(() => callbacks.renderItem(getItems()))
   const domainItems = computed(() => rows.value.map((row) => row.bubble))
   const bubbleListItems = computed(() => rows.value.map((row) => {
-    const flash = row.bubble.flashPending ? `${BUBBLE_LIST_PREFIX}-flash` : undefined
+    const prefix = toValue(getPrefix) ?? BUBBLE_LIST_PREFIX
+    const flash = row.bubble.flashPending ? `${prefix}-flash` : undefined
     const rootClass = [row.rootClass, flash].filter(Boolean).join(' ')
     return toAxBubbleItem(
       row.bubble,
@@ -203,7 +200,6 @@ export function useBubbleList<T extends BubbleListItem>(
     }
   }
 
-  /** 到最旧、最新两端的距离。column-reverse 时 0 贴着最新消息，离开后 scrollTop 可能为负或为正。 */
   function distanceToEnds(scrollBox: HTMLElement): {oldest: number; newest: number} {
     const max = Math.max(0, scrollBox.scrollHeight - scrollBox.clientHeight)
     const reverse = getComputedStyle(scrollBox).flexDirection === 'column-reverse'
@@ -332,7 +328,6 @@ export function useBubbleList<T extends BubbleListItem>(
     bubbleListRef,
     bubbleListItems,
     domainItems,
-    bubbleListRole: DEFAULT_BUBBLE_LIST_ROLE,
     showScrollToBottom,
     onBubbleScroll,
     jumpToBottom,

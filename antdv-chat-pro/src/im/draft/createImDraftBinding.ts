@@ -1,6 +1,6 @@
 import {dexieDraftStore} from '@loncra/chat-core/dexie'
 import type {DraftBinding} from '../../draft-sender/useDraftSender'
-import type {RestoreDraftSlotFactories} from '../../draft/persistableSlots'
+import type {RestoreDraftSlotFactories} from '../../draft'
 import {createImDraftCodec, type ImDraftLive} from './imDraftCodec'
 
 export function createImDraftBinding(options: {

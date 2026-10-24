@@ -5,23 +5,20 @@ import {genStyleHooks} from '../../_util/genStyleLayer'
 function genMarkdownStyle(token: LoncraStyleToken): CSSInterpolation {
   const {componentCls, antCls, paddingXXS, paddingXS} = token
   return {
-    /*[`${componentCls}-scroll`]: {
-      overflow: 'auto',
-    },*/
     [`${componentCls} .x-markdown ${antCls}-code-highlighter ${antCls}-code-highlighter-content ${antCls}-code-highlighter-code pre`]:
       {
-        padding: `${unit(paddingXXS)}`,
+        padding: `${unit(paddingXXS)} !important`,
       },
     [`${componentCls} .x-markdown ${antCls}-code-highlighter ${antCls}-code-highlighter-content ${antCls}-code-highlighter-code pre code`]:
       {
-        whiteSpace: 'pre',
-        wordBreak: 'normal',
-        lineHeight: '1.5em',
-        background: 'transparent',
-        margin: '0',
-        padding: `${unit(paddingXS)}`,
+        whiteSpace: 'pre !important',
+        wordBreak: 'normal !important',
+        lineHeight: '1.5em !important',
+        background: 'transparent !important',
+        margin: '0 !important',
+        padding: `${unit(paddingXS)} !important`,
         borderRadius: 0,
-        border: '0',
+        border: '0 !important',
       },
   } as CSSInterpolation
 }

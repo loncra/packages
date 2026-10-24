@@ -24,11 +24,9 @@ export { useInstructionSender } from './instruction-sender'
 
 export { default as Markdown, MarkdownCodeRenderer } from './markdown'
 export type {
-  MarkdownClasses,
   MarkdownCodeRendererProps,
   MarkdownProps,
   MarkdownSlots,
-  MarkdownStyles,
   MarkdownTheme,
 } from './markdown'
 
