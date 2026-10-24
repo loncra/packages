@@ -48,7 +48,6 @@ const ImContact = defineComponent({
                 selected={false}
                 hideSelectPanel
                 dataSource={items}
-                onUpdate:dataSource={(value: SystemUserContactItem[]) => emit('update:dataSource', value)}
                 onSelected={onSelected}
               />
             )

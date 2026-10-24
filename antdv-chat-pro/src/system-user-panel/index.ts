@@ -3,7 +3,8 @@ import SystemUserPanel from './SystemUserPanel'
 export default SystemUserPanel
 export type {
   SystemUserContactItem,
+  SystemUserPanelClasses,
   SystemUserPanelEmits,
   SystemUserPanelProps,
-  SystemUserPanelSlots,
-} from './SystemUserPanel'
+  SystemUserPanelStyles,
+} from './types'

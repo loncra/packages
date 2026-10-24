@@ -9,48 +9,12 @@ import type {PlatformUser} from '@loncra/client/auth'
 import {AuthServerService} from '@loncra/client/auth'
 import {useLocale} from '../_util/useLocale'
 import {UserAvatar} from '@loncra/antdv-pro'
+import type {
+  SystemUserContactItem,
+  SystemUserPanelClasses,
+  SystemUserPanelStyles,
+} from './types'
 import useStyle from './style'
-
-/**
- * 选人面板的行数据。
- * 结构上同时满足 `@antdv-next/x` 的 `ConversationItemType`（key / label / group / disabled）。
- */
-export interface SystemUserContactItem {
-  key: string
-  label?: string
-  data: PlatformUser
-  disabled?: boolean
-  group?: string
-  [key: string]: unknown
-}
-
-export interface SystemUserPanelProps {
-  /** 可选项数据源，`v-model:dataSource` */
-  dataSource?: SystemUserContactItem[]
-  /** 已选集合，`v-model:value` */
-  value?: SystemUserContactItem[]
-  /** 是否可多选，并在右侧展示「已选择的成员」面板 */
-  selected?: boolean
-  /** 在搜索过滤之上再过滤一次 */
-  filter?: (item: SystemUserContactItem) => boolean
-  /** 隐藏右侧「已选择的成员」面板 */
-  hideSelectPanel?: boolean
-  /** 隐藏搜索框 */
-  hideSearch?: boolean
-  /** 头像尺寸，透传给 UserAvatar */
-  avatarSize?: string | number
-  prefixCls?: string
-  rootClass?: string
-}
-
-export interface SystemUserPanelEmits {
-  /** 点击某个联系人时抛出，无论该联系人是否被选中 */
-  selected: (body: PlatformUser) => void
-  'update:dataSource': (value: SystemUserContactItem[]) => void
-  'update:value': (value: SystemUserContactItem[]) => void
-}
-
-export interface SystemUserPanelSlots {}
 
 const SystemUserPanel = defineComponent({
   name: 'LSystemUserPanel',
@@ -86,10 +50,11 @@ const SystemUserPanel = defineComponent({
     },
     prefixCls: String,
     rootClass: String,
+    classes: Object as PropType<SystemUserPanelClasses>,
+    styles: Object as PropType<SystemUserPanelStyles>,
   },
   emits: {
     selected: (_body: PlatformUser) => true,
-    'update:dataSource': (_value: SystemUserContactItem[]) => true,
     'update:value': (_value: SystemUserContactItem[]) => true,
   },
   setup(props, {emit, attrs}) {
@@ -113,7 +78,7 @@ const SystemUserPanel = defineComponent({
     const showSelectPanel = computed(() => props.selected && !props.hideSelectPanel)
 
     const filterDataSource = computed(() =>
-      (dataSource.value ?? [])
+      dataSource.value
         .filter((item) =>
           searchValue.value === '' ? true : principalName(item.data).includes(searchValue.value),
         )
@@ -151,10 +116,27 @@ const SystemUserPanel = defineComponent({
       const selectPanelVisible = showSelectPanel.value
       const selected = selectedValue.value ?? []
 
+      const renderEmpty = () => (
+        <Flex
+          class={hashed(`${prefixCls.value}-empty`, props.classes?.empty)}
+          style={props.styles?.empty}
+          justify="center"
+          align="center"
+        >
+          <Empty />
+        </Flex>
+      )
+
       return (
         <Flex
           {...rest}
-          class={hashed(prefixCls.value, props.rootClass, attrClass as string)}
+          class={classNames(
+            prefixCls.value,
+            hashId.value,
+            cssVarCls.value,
+            props.rootClass,
+            attrClass as string,
+          )}
           style={attrStyle as never}
         >
           <Flex
@@ -162,10 +144,15 @@ const SystemUserPanel = defineComponent({
             class={hashed(
               `${prefixCls.value}-list`,
               selectPanelVisible ? `${prefixCls.value}-list-split` : `${prefixCls.value}-list-full`,
+              props.classes?.list,
             )}
+            style={props.styles?.list}
           >
             {!props.hideSearch ? (
-              <div class={hashed(`${prefixCls.value}-search`)}>
+              <div
+                class={hashed(`${prefixCls.value}-search`, props.classes?.search)}
+                style={props.styles?.search}
+              >
                 <Input
                   value={searchValue.value}
                   onUpdate:value={(value: string) => {
@@ -182,7 +169,14 @@ const SystemUserPanel = defineComponent({
             {filterDataSource.value.length > 0 ? (
               <Conversations
                 class={hashed(`${prefixCls.value}-conversations`)}
-                classes={{item: hashed(`${prefixCls.value}-item`)}}
+                classes={{
+                  ...props.classes?.conversations,
+                  item: classNames(
+                    hashed(`${prefixCls.value}-item`),
+                    props.classes?.conversations?.item,
+                  ),
+                }}
+                styles={props.styles?.conversations}
                 items={filterDataSource.value as never}
                 groupable
                 onActiveChange={onContactActiveChange}
@@ -217,19 +211,23 @@ const SystemUserPanel = defineComponent({
                 }}
               />
             ) : (
-              <Flex class={hashed(`${prefixCls.value}-empty`)} justify="center" align="center">
-                <Empty />
-              </Flex>
+              renderEmpty()
             )}
           </Flex>
           {selectPanelVisible ? (
-            <Flex vertical class={hashed(`${prefixCls.value}-selected-panel`)}>
+            <Flex
+              vertical
+              class={hashed(`${prefixCls.value}-selected-panel`, props.classes?.selectedPanel)}
+              style={props.styles?.selectedPanel}
+            >
               {selected.length > 0 ? (
                 <div>
                   <Divider
                     plain
                     titlePlacement="left"
                     class={hashed(`${prefixCls.value}-selected-divider`)}
+                    classes={props.classes?.selectedDivider}
+                    styles={props.styles?.selectedDivider}
                   >
                     <Space>
                       <UsergroupAddOutlined />
@@ -239,11 +237,12 @@ const SystemUserPanel = defineComponent({
                   <Space wrap>
                     {selected.map((contact) => (
                       <Flex
-                        key={contact.data.id}
+                        key={contact.key}
                         vertical
                         justify="center"
                         align="center"
-                        class={hashed(`${prefixCls.value}-selected-item`)}
+                        class={hashed(`${prefixCls.value}-selected-item`, props.classes?.selectedItem)}
+                        style={props.styles?.selectedItem}
                       >
                         <UserAvatar
                           user={contact.data}
@@ -257,9 +256,7 @@ const SystemUserPanel = defineComponent({
                   </Space>
                 </div>
               ) : (
-                <Flex class={hashed(`${prefixCls.value}-empty`)} justify="center" align="center">
-                  <Empty />
-                </Flex>
+                renderEmpty()
               )}
             </Flex>
           ) : null}

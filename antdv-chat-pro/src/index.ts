@@ -79,7 +79,8 @@ export type {
 export {default as SystemUserPanel} from './system-user-panel'
 export type {
   SystemUserContactItem,
+  SystemUserPanelClasses,
   SystemUserPanelEmits,
   SystemUserPanelProps,
-  SystemUserPanelSlots,
+  SystemUserPanelStyles,
 } from './system-user-panel'
