@@ -6,7 +6,6 @@ import {markRaw} from 'vue'
 import {convertUploadFiles, isObjectWriteResult, isUploadFile} from '@loncra/antdv-pro'
 
 export type RestoreDraftSlotFactories = {
-  /** IM 必须注入现有 createFilesSlot，否则芯片没有 customRender，点发送无法 upload。Agent 无附件槽可省略。 */
   restoreFilesSlot?: (
     files: UploadFile<ObjectWriteResult>[],
     key: string,
@@ -57,10 +56,6 @@ function toPersistableFile(file: UploadFile<ObjectWriteResult>): PersistableUplo
   }
 }
 
-/**
- * 活槽 → 可入库槽。丢掉 customRender（函数不能进 IDB）。
- * 文件只序列化 uid/name/size/type/response，File 走 collectBlobs。
- */
 export function slotConfigToPersistable(slots: SlotConfigType[]): PersistableSlot[] {
   const result: PersistableSlot[] = []
   for (const slot of slots) {
@@ -105,7 +100,6 @@ export function collectBlobsFromSlotConfig(slots: SlotConfigType[]): Map<string,
       if (!isUploadFile(file)) {
         continue
       }
-      // 只收 originFileObj；没有 File 的（例如只剩 response）不进 blobs。
       const origin = asBlob(file.originFileObj)
       if (origin) {
         blobs.set(String(file.uid), origin instanceof File ? origin : new File([origin], file.name ?? 'file', {type: file.type}))
@@ -121,7 +115,6 @@ function persistableFileToUploadFile(
 ): UploadFile<ObjectWriteResult> {
   const blob = blobs.get(meta.uid)
   if (blob) {
-    // markRaw：draft 挂在响应式会话上时，Vue 不能代理 File，否则发送时 originFileObj 对不上。
     return markRaw({
       uid: meta.uid,
       name: meta.name || blob.name,
@@ -161,7 +154,6 @@ export function persistableToSlotConfig(
     }
     if (slot.slotKind === 'files') {
       if (!factories.restoreFilesSlot) {
-        // Agent 当前无附件槽；有元数据也跳过，避免 hydrate 出不能发送的死芯片。
         continue
       }
       const files = slot.files.map((file) => persistableFileToUploadFile(file, blobs))

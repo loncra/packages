@@ -15,7 +15,7 @@ import type {
   TextBlock,
   UndoBlock,
 } from '@loncra/chat-core'
-import SenderSlotBubbleContent from '../../sender-slot-bubble-content/SenderSlotBubbleContent.tsx'
+import SenderSlotBubbleContent from '../../sender-slot-bubble-content'
 import type {ImChatHost} from '../host.ts'
 import {AuthServerService} from '@loncra/client/auth'
 import ImCallBlock from '../call/ImCallBlock.tsx'

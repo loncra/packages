@@ -6,7 +6,7 @@ import {
   persistableToSlotConfig,
   type RestoreDraftSlotFactories,
   slotConfigToPersistable,
-} from '../../draft/persistableSlots.ts'
+} from '../../draft'
 
 export interface ImDraftLive {
   slots: SlotConfigType[]

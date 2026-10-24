@@ -1,1 +1,1 @@
-export {default} from './SenderSlotBubbleContent.tsx'
+export {default} from './SenderSlotBubbleContent'

@@ -5,7 +5,7 @@ import {
   persistableToSlotConfig,
   type RestoreDraftSlotFactories,
   slotConfigToPersistable,
-} from '../../draft/persistableSlots.ts'
+} from '../../draft'
 
 export type AgentDraftLive = SlotConfigType[]
 

@@ -2,7 +2,7 @@ import {defineComponent, type PropType} from 'vue'
 import {Tag, Typography} from 'antdv-next'
 import {ApiOutlined, ThunderboltOutlined} from '@antdv-next/icons'
 import type {TextBlock} from '@loncra/chat-core'
-import SenderSlotBubbleContent from '../../sender-slot-bubble-content/SenderSlotBubbleContent.tsx'
+import SenderSlotBubbleContent from '../../sender-slot-bubble-content'
 
 const AgentUserContent = defineComponent({
   name: 'LAgentUserContent',
