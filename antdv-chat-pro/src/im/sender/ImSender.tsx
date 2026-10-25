@@ -1,9 +1,9 @@
 import {computed, defineComponent, getCurrentInstance, h, markRaw, type PropType, ref, unref,} from 'vue'
+
 import {Flex, Tag, Typography} from 'antdv-next'
 import type {UploadFile} from 'antdv-next/dist/upload/interface'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {UserOutlined} from '@antdv-next/icons'
-import {XProvider} from '@antdv-next/x'
 import type {SlotConfigType} from '@antdv-next/x/dist/sender/interface'
 import type {
     InstructionItem,
@@ -22,7 +22,6 @@ import {
     isObjectWriteResult,
     isUploadFile,
     uploadFile,
-    useAntdvConfig,
 } from '@loncra/antdv-pro'
 import {getEnumName, type IdValueMetadata, isEnumValue} from '@loncra/client/commons'
 import type {ObjectWriteResult} from '@loncra/client/resource'
@@ -73,7 +72,6 @@ const ImSender = defineComponent({
     const instance = getCurrentInstance()
     const draftRef = ref<DraftSenderExpose>()
     const antdConfig = useConfig()
-    const antdvConfig = useAntdvConfig()
     const bubbleLocale = useLocale('ImBubble')
     const prefixCls = computed(() =>
       antdConfig.value.getPrefixCls('im-sender', props.prefixCls ?? 'loncra-im-sender'),
@@ -207,12 +205,15 @@ const ImSender = defineComponent({
       return []
     }
 
+    const chipAppContext = () => {
+      if (!instance) return undefined
+      const provides = (instance as unknown as {provides: Record<PropertyKey, unknown>}).provides
+      return Object.assign({}, instance.appContext, {provides})
+    }
+
     const fileChipViews = new Map<string, {
       files: UploadFile<ObjectWriteResult>[]
       disabled: boolean
-      locale: object | undefined
-      theme: object | undefined
-      componentSize: string
       onUpdate: (next: AttachmentValue) => void
       bindRef: (inst: unknown) => void
     }>()
@@ -250,54 +251,33 @@ const ImSender = defineComponent({
       const slotKey = 'key' in item && item.key ? item.key : ''
       const files = filesValueOf(value, item)
       const disabled = isSending.value
-      const locale = antdConfig.value.locale
-      const theme = antdConfig.value.theme
-      const componentSize = antdvConfig.state.componentSize
       let view = fileChipViews.get(slotKey)
       if (
         !view
         || view.disabled !== disabled
-        || view.locale !== locale
-        || view.theme !== theme
-        || view.componentSize !== componentSize
         || !sameFileRefs(view.files, files)
       ) {
         view = {
           files,
           disabled,
-          locale,
-          theme,
-          componentSize,
           onUpdate: (next: AttachmentValue) => handleFilesSlotChange(item, next, onChange),
           bindRef: (inst: unknown) => bindUploadRef(slotKey, inst),
         }
         fileChipViews.set(slotKey, view)
       }
       const chip = view
-      const node = h(
-        XProvider,
-        {
-          locale: chip.locale,
-          componentSize: chip.componentSize,
-          theme: chip.theme,
-        },
-        {
-          default: () =>
-            h(AttachmentUpload, {
-              bucket: 'temp',
-              disabled: chip.disabled,
-              uploadOptions: props.uploadOptions,
-              ref: chip.bindRef,
-              value: chip.files,
-              multiple: true,
-              maxCount: chip.files.length,
-              'onUpdate:value': chip.onUpdate,
-            }),
-          $stable: true,
-        },
-      )
+      const node = h(AttachmentUpload, {
+        bucket: 'temp',
+        disabled: chip.disabled,
+        uploadOptions: props.uploadOptions,
+        ref: chip.bindRef,
+        value: chip.files,
+        multiple: true,
+        maxCount: chip.files.length,
+        'onUpdate:value': chip.onUpdate,
+      })
       if (instance) {
-        node.appContext = instance.appContext
+        node.appContext = chipAppContext() ?? null
       }
       return node
     }
@@ -330,25 +310,15 @@ const ImSender = defineComponent({
             ? (item.props as {prefix?: string} | undefined)?.prefix ?? ''
             : ''
           const node = h(
-            XProvider,
+            Tag,
+            {key: slotKey, variant: 'outlined'},
             {
-              locale: antdConfig.value.locale,
-              theme: antdConfig.value.theme,
-            },
-            {
-              default: () =>
-                h(
-                  Tag,
-                  {key: slotKey, variant: 'outlined'},
-                  {
-                    icon: prefix === '@' ? () => h(UserOutlined) : undefined,
-                    default: () => value.value,
-                  },
-                ),
+              icon: prefix === '@' ? () => h(UserOutlined) : undefined,
+              default: () => value.value,
             },
           )
           if (instance) {
-            node.appContext = instance.appContext
+            node.appContext = chipAppContext() ?? null
           }
           return node
         },
