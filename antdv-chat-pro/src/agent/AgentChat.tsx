@@ -247,7 +247,7 @@ const AgentChat = defineComponent({
         return
       }
       await history.switchConversation(current, undefined, true)
-      emit('active', session)
+      emit('active', current.value)
     }
 
     const host: AgentConversationHost = {
@@ -630,7 +630,9 @@ const AgentChat = defineComponent({
       if (isConversation(node)) {
         await history.switchConversation(current, undefined, true)
       }
-      emit('active', node)
+      // 必须发 current.value（ref getter 返回的响应式代理）：新会话的 node 是 HTTP 原始对象，
+      // 直接把 raw 泄漏给宿主后，SSE 经 raw 写入绕过响应式追踪，渲染层永远看不到更新。
+      emit('active', current.value)
     }
 
     async function onSubmit(_value: string, slotConfig?: SlotConfigType[]): Promise<void> {
