@@ -17,7 +17,6 @@ import {
 
 export type HistoryBubble = ChatBubbleItem<TextBlock<string, unknown>>
 
-/** 与管理端分页默认条数一致，只在会话上还没有 size 时使用。 */
 const FALLBACK_PAGE_SIZE = 10
 
 export interface AgentHistoryConversation {
@@ -44,11 +43,6 @@ export interface AgentHistoryApi {
 
 export const AGENT_HISTORY_KEY: InjectionKey<AgentHistoryApi> = Symbol('agent-history')
 
-/**
- * Agent 历史分页、锚点跳转、切换会话。
- * 不恢复翻页锚点。切走前落草稿留在宿主的 activateConversation。
- * 气泡列表通过 inject 调用 loadMore，页面不再转发滚动翻页。
- */
 export function useAgentHistory<TSession extends AgentHistoryConversation>(
   session: Ref<TSession | undefined>,
   host: AgentHistoryHost,
@@ -172,10 +166,7 @@ export function useAgentHistory<TSession extends AgentHistoryConversation>(
   provide(AGENT_HISTORY_KEY, api)
 
   return {
-    loadPage,
     loadMore,
     switchConversation,
-    jumpToAnchorPage,
-    positioningMessage,
   }
 }

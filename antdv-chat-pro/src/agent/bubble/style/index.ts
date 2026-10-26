@@ -52,7 +52,7 @@ function genAgentBubbleStyle(token: LoncraStyleToken): CSSInterpolation {
         [`.antd-think-content .x-markdown ol li::marker, .antd-think-content .x-markdown ul li::marker, .antd-think-content .x-markdown *`]: {
           color: `${colorTextTertiary} !important`,
         },
-        ...genScrollAreaStyle(token, '-scroll', 10),
+        ...genScrollAreaStyle(token, '-markdown', 5),
       },
       [`${componentCls}-tool`]: {
         [`${antCls}-card-head`]: {
