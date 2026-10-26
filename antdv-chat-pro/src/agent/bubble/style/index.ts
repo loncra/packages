@@ -34,6 +34,7 @@ function genAgentBubbleStyle(token: LoncraStyleToken): CSSInterpolation {
     [`${componentCls}-divider-flush`]: {
         margin: 0,
     },
+    ...genScrollAreaStyle(token, '-extract-content', 8, 12),
     [componentCls]: {
       ...genScrollAreaStyle(token, '-scroll-tall', 12),
       [`${componentCls}-footer`]: {

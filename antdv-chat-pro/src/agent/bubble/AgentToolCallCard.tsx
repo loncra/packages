@@ -8,7 +8,7 @@ import {Markdown, MarkdownCodeRenderer} from '@loncra/antdv-chat'
 import type {AgentToolCallBlock} from '@loncra/chat-core'
 import {AI_SERVER_AGENT_TOOL_BLOCK_STATUS} from '@loncra/client/ai'
 import {useLocale} from '../../_util/useLocale'
-import {AGENT_BUBBLE_PREFIX} from './style/index'
+import useStyle, {AGENT_BUBBLE_PREFIX} from './style/index'
 import {
   findToolConfirmedItem,
   getTavilyExtractResult,
@@ -46,7 +46,7 @@ function renderSearchContent(prefixCls: string, row: ThoughtChainItemDataType) {
   )
 }
 
-function renderExtractContent(prefixCls: string, row: ThoughtChainItemDataType) {
+function renderExtractContent(prefixCls: string, hashId: string, row: ThoughtChainItemDataType) {
   const output = row.data?.outputText
   if (row.title !== 'tavily_extract' || !output || row.data?.resultState !== 'success') {
     return null
@@ -64,8 +64,8 @@ function renderExtractContent(prefixCls: string, row: ThoughtChainItemDataType) 
           title={result.title}
           v-slots={{
             content: () => result.raw_content
-              ? (
-                <div>
+                  ? (
+                    <div class={`${prefixCls}-extract-content ${hashId}`}>
                   <Markdown
                     {...markdownAttrs({
                       content: result.raw_content,
@@ -88,13 +88,13 @@ function renderExtractContent(prefixCls: string, row: ThoughtChainItemDataType) 
   )
 }
 
-function renderToolContent(prefixCls: string, row: ThoughtChainItemDataType) {
+function renderToolContent(prefixCls: string, hashId: string, row: ThoughtChainItemDataType) {
   const output = row.data?.outputText
   if (!output) {
     return null
   }
   return renderSearchContent(prefixCls, row)
-    ?? renderExtractContent(prefixCls, row)
+    ?? renderExtractContent(prefixCls, hashId, row)
     ?? (
       <div class={`${prefixCls}-scroll-tall`}>
         <Markdown
@@ -124,6 +124,7 @@ const AgentToolCallCard = defineComponent({
     const locale = useLocale('AgentBubble')
     const config = useConfig()
     const prefixCls = computed(() => config.value.getPrefixCls('agent-bubble', AGENT_BUBBLE_PREFIX))
+    const [hashId] = useStyle(prefixCls)
 
     const pendingTools = computed(() => findToolConfirmedItem(props.group.toolBlocks))
     const items = computed(() => props.group.toolBlocks.map(toThoughtChainItem))
@@ -207,7 +208,7 @@ const AgentToolCallCard = defineComponent({
                       {slot.item.title}
                     </Typography.Text>
                   ),
-                  content: (slot: {item: ThoughtChainItemDataType}) => renderToolContent(prefixCls.value, chainItem(slot)),
+                  content: (slot: {item: ThoughtChainItemDataType}) => renderToolContent(prefixCls.value, hashId.value, chainItem(slot)),
                   footer: (slot: {item: ThoughtChainItemDataType}) => {
                     const data = chainItem(slot).data
                     if (data?.hitlStatus !== AI_SERVER_AGENT_TOOL_BLOCK_STATUS.PENDING || data.userConfirmed !== undefined) {
