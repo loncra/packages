@@ -44,6 +44,9 @@ function senderInsertInstruction(sender, block, measure) {
 - **芯片删除**：光标紧贴指令芯片（含插入时垫的那一个空格）按 Backspace，会把选区扩到整颗芯片交给 Sender 一次删掉，避免删一半留半颗残芯片。
 - **视口锚点**：面板是 Teleport 到 body 的 Popover，用一个 `position: fixed` 的 `-anchor` span 跟随光标；窗口滚动 / 缩放、发送器进出视口（IntersectionObserver + ResizeObserver）时自动跟随或关闭（可配 `instructionContextVisibleMargin`，默认 8px）。中文输入法 composing 期间不触发补全。
 - **上传粘贴**：`pasteFile` 事件原样向外抛 `FileList`，宿主自行处理。
+- **纯文本粘贴拦截**：捕获阶段先于底座处理纯文本粘贴——按 `\n` 拆行，`insertText` + `insertLineBreak` 逐行插入（行间 `<br>` 被 PM 解析为 hardBreak）。底座把 `\r\n` 整段塞进文本节点后，会在 DOM 同步 round-trip 中被空白规则折叠成空格（粘贴格式化文本再输入即丢格式）；文件 / 富文本（HTML）粘贴不受影响，走底座默认。
+- **光标可视滚动**：粘贴 / 换行导致内容变长时，把光标滚回输入区可视范围——只在光标出界时做最小滚动，编辑前文（光标本就可见）不会拽动滚动条。
+- **空白保留**：输入区根元素带 `white-space: pre-wrap`（ProseMirror 根元素的标准样式）。底座的变更管线按纯文本重渲染 DOM，没有它，粘贴格式化文本后再输入，连续空格 / 缩进会按 HTML 规则塌陷。
 
 ## API
 

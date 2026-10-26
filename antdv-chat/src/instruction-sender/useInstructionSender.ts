@@ -232,9 +232,69 @@ export function useInstructionSender(params: UseInstructionSenderParams) {
     editor.addEventListener('compositionend', onCompositionEnd)
   }
 
+  // 粘贴 / Shift+Enter 后内容变长，输入区出现滚动；把光标滚回可视范围。
+  // 只在光标出界时做最小滚动，编辑前文（光标本就可见）不会被拽动。
+  function scrollCaretIntoView() {
+    const editor = getEditableRoot()
+    if (!editor) {
+      return
+    }
+    const rect = getCaretClientRect()
+    if (!rect) {
+      return
+    }
+    const box = editor.getBoundingClientRect()
+    if (rect.top < box.top) {
+      editor.scrollTop += rect.top - box.top - 8
+    } else if (rect.bottom > box.bottom) {
+      editor.scrollTop += rect.bottom - box.bottom + 8
+    }
+  }
+
+  // 纯文本粘贴拦截（捕获阶段，先于底座）：按 \n 拆行，用 insertText + insertLineBreak
+  // 逐行插入——行间生成 <br>，PM 解析为 hardBreak；避免底座把 \r\n 整段塞进文本节点后
+  // 在 DOM 同步 round-trip 中被空白规则折叠成空格。文件 / 富文本（HTML）粘贴走底座默认。
+  function onPasteIntercept(event: ClipboardEvent) {
+    const clipboard = event.clipboardData
+    if (!clipboard || clipboard.files.length > 0 || clipboard.getData('text/html')) {
+      return
+    }
+    const text = clipboard.getData('text/plain')
+    if (!text) {
+      return
+    }
+    event.preventDefault()
+    event.stopPropagation()
+    const lines = text.replace(/\r/g, '').split('\n')
+    lines.forEach((line, index) => {
+      if (line) {
+        document.execCommand('insertText', false, line)
+      }
+      if (index < lines.length - 1) {
+        document.execCommand('insertLineBreak')
+      }
+    })
+  }
+
+  let pasteInterceptRoot: HTMLElement | null = null
+
+  function bindPasteIntercept() {
+    const editor = getEditableRoot()
+    if (!editor || pasteInterceptRoot === editor) {
+      return
+    }
+    pasteInterceptRoot?.removeEventListener('paste', onPasteIntercept, {capture: true})
+    pasteInterceptRoot = editor
+    editor.addEventListener('paste', onPasteIntercept, {capture: true})
+  }
+
   async function handleSenderChange(_value: string, _event?: Event, _slotConfigType?: SlotConfigType[]) {
     bindCompositionEvents()
-    await nextTick(syncInstruction)
+    bindPasteIntercept()
+    await nextTick(() => {
+      syncInstruction()
+      scrollCaretIntoView()
+    })
   }
 
   function handleInstructionPick(option: InstructionItem) {
@@ -332,6 +392,8 @@ export function useInstructionSender(params: UseInstructionSenderParams) {
     watchers.unbindInstructionViewportWatchers()
     editorScrollTarget?.removeEventListener('scroll', onEditorScroll)
     editorScrollTarget = null
+    pasteInterceptRoot?.removeEventListener('paste', onPasteIntercept, {capture: true})
+    pasteInterceptRoot = null
     const editor = getEditableRoot()
     if (editor) {
       editor.removeEventListener('compositionstart', onCompositionStart)

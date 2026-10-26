@@ -1,5 +1,5 @@
 import type {CSSInterpolation} from '@antdv-next/cssinjs'
-import type {LoncraStyleToken} from '@loncra/antdv'
+import {genScrollAreaStyle, type LoncraStyleToken} from '@loncra/antdv'
 import {genStyleHooks} from '../../_util/genStyleLayer'
 
 function genInstructionSenderStyle(token: LoncraStyleToken): CSSInterpolation {
@@ -12,10 +12,7 @@ function genInstructionSenderStyle(token: LoncraStyleToken): CSSInterpolation {
     colorPrimaryBg,
     colorFillSecondary,
     borderRadiusSM,
-    controlHeightLG,
-    calc,
   } = token
-  const panelSize = calc(controlHeightLG).mul(6).equal()
   return {
     [componentCls]: {
       [`${componentCls}-footer`]: {
@@ -24,6 +21,7 @@ function genInstructionSenderStyle(token: LoncraStyleToken): CSSInterpolation {
       },
     },
     [`${componentCls}-input`]: {
+      whiteSpace: 'pre-wrap',
       [`> .antd-sender-slot:not(.antd-sender-slot-content)`]: {
         height: 'auto !important',
         verticalAlign: 'bottom !important',
@@ -34,11 +32,7 @@ function genInstructionSenderStyle(token: LoncraStyleToken): CSSInterpolation {
         cursor: 'not-allowed',
       },
     },
-    [`${componentCls}-panel`]: {
-      maxHeight: panelSize,
-      maxWidth: panelSize,
-      overflow: 'auto',
-    },
+    ...genScrollAreaStyle(token, '-panel', 6, 6),
     [`${componentCls}-item`]: {
       padding: paddingXS,
       cursor: 'pointer',

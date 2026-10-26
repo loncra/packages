@@ -25,7 +25,6 @@ import {
 import useStyle from './style'
 
 export interface AgentSenderWorkspace {
-  /** 已经译好的标题，例如「工作区: 名称」。 */
   title: string
   color?: string
   variant?: 'outlined' | 'filled' | 'solid'
@@ -35,7 +34,6 @@ export interface AgentSenderWorkspace {
 export interface AgentSenderChoice {
   label?: string
   color?: string
-  /** 模型图标字体名。没有时按钮用默认图标。 */
   icon?: string | null
   items: MenuItemType[]
   selectedKeys: string[]
@@ -73,7 +71,7 @@ const AgentSender = defineComponent({
       type: Function as PropType<(result: DraftRestoreResult<unknown, SlotConfigType[]>) => void>,
       required: true,
     },
-    saveSource: {default: undefined as unknown},
+    saveSource: {default: undefined},
     onFilterDataSource: {
       type: Function as PropType<InstructionSenderProps['onFilterDataSource']>,
       required: true,
@@ -91,7 +89,6 @@ const AgentSender = defineComponent({
     instructionMap: Object as PropType<Record<string, InstructionItem[]>>,
     isRunning: {type: Boolean, default: false},
     workspace: Object as PropType<AgentSenderWorkspace>,
-    /** 该前缀的点名弹层改用目录菜单。 */
     catalogPrefix: String,
     toCatalogMenuItems: Function as PropType<(items: InstructionItem[]) => MenuItemType[]>,
     onCatalogClick: Function as PropType<
@@ -106,7 +103,12 @@ const AgentSender = defineComponent({
     prefixCls: String,
     rootClass: String,
   },
-  emits: ['pasteFile', 'submit', 'change', 'cancel'],
+  emits: {
+    pasteFile: (_fileList: FileList) => true,
+    submit: (_value: string, _slotConfig?: SlotConfigType[]) => true,
+    change: (_value: string, _event?: Event, _slotConfig?: SlotConfigType[]) => true,
+    cancel: () => true,
+  },
   setup(props, {attrs, slots, emit, expose}) {
     const draftRef = ref<DraftSenderExpose>()
     const config = useConfig()

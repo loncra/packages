@@ -42,7 +42,7 @@ import {createLiveKitCallMedia} from '@loncra/antdv-chat-pro/im/call/livekit'
 | 目录 | 内容 |
 | --- | --- |
 | `<控件>/` | 一个控件一个目录。骨架 `index.ts` / 主组件 `.tsx` / `style/index.ts` 见 [CONTRIBUTING.md](../CONTRIBUTING.md) 第 7 节，`types.ts` / `constants.ts` / `_util/` 按需（如 `file-editor/_util/validateName.ts`） |
-| `im/`、`agent/` | 两个套件目录，内部按 `bubble/`、`sender/`、`conversation/`、`history/`、`draft/`、`send/` 分，每个子域各有 `style/`；`agent/` 另有 `hub/`（插件市场与版本变更），`im/` 另有 `chat/`、`contact/`、`room/`、`call/`。两套各自的 `history`（`useAgentHistory` / `useImHistory`）互不复用：切会话不恢复翻页锚点，切走前的草稿落点在宿主（`activateConversation`），翻页由气泡列表经 `AGENT_HISTORY_KEY` inject `loadMore`，页面不转发滚动翻页；分页 size 缺省与管理端一致（10） |
+| `im/`、`agent/` | 两个套件目录，内部按 `bubble/`、`sender/`、`conversation/`、`history/`、`draft/`、`send/` 分，每个子域各有 `style/`；`agent/` 另有 `hub/`（插件市场与版本变更），`im/` 另有 `chat/`、`contact/`、`room/`、`call/`。两套各自的 `history`（`useAgentHistory` / `useImHistory`）互不复用：切会话不恢复翻页锚点，切走前的草稿落点在宿主（`activateConversation`），翻页由气泡列表经 `AGENT_HISTORY_KEY` inject `loadMore`，页面不转发滚动翻页；分页 size 缺省与管理端一致（10）。`AgentSender` 的 `catalogPrefix`：该指令前缀的候选面板由宿主的 `toCatalogMenuItems` / `onCatalogClick` 接管（渲染为目录菜单，选中经 `group:id` 复合 key 回调） |
 | `session/` | 会话消息写回（`updateSessionMessage`） |
 | `history/`、`draft/` | 跨套件共享域：`history/revealAnchor`（IM / Agent 跳转锚定）、`draft/persistableSlots`（草稿槽位序列化），各自带 `index.ts` 出口。`persistableSlots` 序列化规则：入库只存可序列化字段——丢 `customRender`（函数进不了 IDB），文件只存 uid/name/size/type/response，`File` 本体经 `collectBlobsFromSlotConfig` 单独收集（只收 `originFileObj`）；还原时还原出的 `File` 用 `markRaw` 包（Vue 不能代理 File，否则发送时 `originFileObj` 对不上）；files 块还原需注入 `restoreFilesSlot`（IM 必须注入，否则芯片没有 customRender、点发送无法 upload；Agent 无附件槽可省略，未注入时该块跳过） |
 | `_util/` | `useLocale` |
