@@ -1,8 +1,8 @@
-export {useAgentConversations, agentMenuKeys} from './useAgentConversations.ts'
+export {useAgentConversations, agentMenuKeys} from './useAgentConversations'
 export type {
+  AgentConversationActions,
   AgentConversationHost,
   AgentConversationMenuKey,
   AgentConversationRecord,
-} from './useAgentConversations.ts'
-export {default as AgentConversationList} from './AgentConversationList.tsx'
-export type {AgentConversationActions} from './AgentConversationList.tsx'
+} from './types'
+export {default as AgentConversationList} from './AgentConversationList'

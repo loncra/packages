@@ -2,12 +2,12 @@ import type {NameValueEnumMetadata} from '@loncra/client/commons'
 import type {ThoughtChainItemType} from '@antdv-next/x'
 import type {
   AgentAnswerBlock,
+  AgentContentBlock,
   AgentErrorBlock,
   AgentThinkBlock,
   AgentToolCallBlock,
 } from '@loncra/chat-core'
 
-/** 用量行。客户端没有单独的 token 结构，字段对齐管理端 AgentTokenUsageContent。 */
 export interface AgentTokenUsage {
   id?: string
   usageType: NameValueEnumMetadata<string> | string
@@ -21,9 +21,25 @@ export interface BlockGroup {
   thinkBlock?: AgentThinkBlock
   answerBlock?: AgentAnswerBlock
   toolBlocks: AgentToolCallBlock[]
-  errorBlock?: AgentErrorBlock
+  errorBlock?: AgentErrorBlock & {metadata?: {message?: string}}
 }
 
 export interface ThoughtChainItemDataType extends ThoughtChainItemType {
   data: AgentToolCallBlock
+}
+
+export interface AgentAssistantItem {
+  key: string | number
+  content: AgentContentBlock[]
+  status?: NameValueEnumMetadata<number> | number
+}
+
+export interface AgentBubbleFooterItem {
+  role: string
+  key?: string | number
+  content?: ReadonlyArray<{type?: unknown; status?: unknown; value?: unknown}>
+  metadata?: {tokenUsage?: AgentTokenUsage[]}
+  data?: unknown
+  type?: unknown
+  model?: {name?: string; manufacturer?: {name?: string}}
 }

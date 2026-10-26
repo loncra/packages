@@ -19,7 +19,7 @@ import {
   type UserPluginInstallResult,
 } from '@loncra/client/ai'
 import {useLocale} from '../../_util/useLocale'
-import type {AgentConversationRecord} from '../conversation/useAgentConversations'
+import type {AgentConversationRecord} from '../conversation'
 import PluginCard from './PluginCard'
 import SkillReleaseChangeLog from './SkillReleaseChangeLog'
 import {AGENT_HUB_PREFIX} from './style'

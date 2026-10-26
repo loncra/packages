@@ -15,7 +15,7 @@ import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import {useLocale} from '../../_util/useLocale'
 import PluginInstallModal from './PluginInstallModal'
-import type {AgentConversationRecord} from '../conversation/useAgentConversations'
+import type {AgentConversationRecord} from '../conversation'
 import useStyle, {AGENT_HUB_PREFIX} from './style'
 
 dayjs.extend(relativeTime)

@@ -1,26 +1,12 @@
 import {ref, type Ref} from 'vue'
 import useApp from 'antdv-next/dist/app/useApp'
 import {findFirstTreeNode, isEnumValue} from '@loncra/client/commons'
-import {useLocale} from '../../_util/useLocale.ts'
+import {useLocale} from '../../_util/useLocale'
 import {
   AgentService,
   AI_SERVER_AGENT_CONVERSATION_TYPE,
-  type AgentConversationEntity,
 } from '@loncra/client/ai'
-
-export interface AgentConversationRecord extends AgentConversationEntity {
-  editing?: boolean
-  original?: string
-}
-
-export interface AgentConversationHost {
-  timeText: (unix?: number) => string
-  onOpen: (item: AgentConversationRecord) => void
-  onOpenPluginMarket: () => void
-  afterLoad: (items: AgentConversationRecord[]) => void
-}
-
-export type AgentConversationMenuKey = 'create' | 'rename' | 'delete'
+import type {AgentConversationHost, AgentConversationMenuKey, AgentConversationRecord} from './types'
 
 export function agentMenuKeys(type: unknown): AgentConversationMenuKey[] {
   if (isEnumValue(type as number, AI_SERVER_AGENT_CONVERSATION_TYPE.DEFAULT_WORKSPACE)) {

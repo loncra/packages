@@ -1,8 +1,8 @@
 import {computed, reactive} from 'vue'
 import useApp from 'antdv-next/dist/app/useApp'
 import type {ThoughtChainItemType} from '@antdv-next/x'
-import type {AgentContentBlock, AgentErrorBlock, AgentThinkBlock, AgentToolCallBlock} from '@loncra/chat-core'
-import {getEnumValue, type NameValueEnumMetadata} from '@loncra/client/commons'
+import type {AgentContentBlock, AgentThinkBlock, AgentToolCallBlock} from '@loncra/chat-core'
+import {getEnumValue} from '@loncra/client/commons'
 import {
   AGENT_TOOL_BLOCK_CONFIRM_STATUS_VALUE,
   AI_SERVER_AGENT_BLOCK_STATUS,
@@ -11,21 +11,19 @@ import {
   AgentService,
   BLOCK_RUNNING_STATUS_VALUE,
 } from '@loncra/client/ai'
-import type {BlockGroup, ThoughtChainItemDataType} from './types.ts'
-
-type AssistantItem = {
-  key: string | number
-  content: AgentContentBlock[]
-  status?: NameValueEnumMetadata<number> | number
-}
+import type {AgentAssistantItem, BlockGroup, ThoughtChainItemDataType} from './types'
 
 type ContentPiece = AgentContentBlock & {
   id?: string
   metadata?: {message?: string}
 }
 
-export function isBlockRunning(block: {status: NameValueEnumMetadata<string> | string}): boolean {
-  return BLOCK_RUNNING_STATUS_VALUE.includes(getEnumValue(block.status))
+export function isBlockRunning(block: {status: unknown}): boolean {
+  return BLOCK_RUNNING_STATUS_VALUE.includes(getEnumValue(block.status as string))
+}
+
+export function markdownAttrs(extra: Record<string, unknown>): Record<string, unknown> {
+  return extra
 }
 
 export function getTavilySearchSourceConfig(json: string) {
@@ -81,46 +79,58 @@ export function getToolChainStatus(block: AgentToolCallBlock): ThoughtChainItemT
   return undefined
 }
 
+export function toThoughtChainItem(block: AgentToolCallBlock): ThoughtChainItemDataType {
+  const running = getEnumValue(block.status) === AI_SERVER_AGENT_BLOCK_STATUS.RUNNING
+  return {
+    key: block.id,
+    title: block.name,
+    description: block.value,
+    content: block.outputText,
+    data: block,
+    status: getToolChainStatus(block),
+    blink: running,
+    collapsible: true,
+  }
+}
+
+function groupContentBlocks(content: ContentPiece[]): BlockGroup[] {
+  const groupMap = new Map<string, BlockGroup>()
+  const orderedKeys: string[] = []
+
+  function ensureGroup(key: string): BlockGroup {
+    if (!groupMap.has(key)) {
+      groupMap.set(key, {groupId: key, toolBlocks: []})
+      orderedKeys.push(key)
+    }
+    return groupMap.get(key)!
+  }
+
+  for (const block of content) {
+    const type = getEnumValue(block.type as string)
+    const id = block.id ?? ''
+    if (type === AI_SERVER_AGENT_CONTENT_TYPE.THINK) {
+      ensureGroup(id).thinkBlock = block as unknown as AgentThinkBlock
+    } else if (type === AI_SERVER_AGENT_CONTENT_TYPE.ANSWER) {
+      ensureGroup(id).answerBlock = block as unknown as BlockGroup['answerBlock']
+    } else if (type === AI_SERVER_AGENT_CONTENT_TYPE.TOOL) {
+      const toolBlock = block as unknown as AgentToolCallBlock
+      ensureGroup(toolBlock.groupId || id).toolBlocks.push(toolBlock)
+    } else if (type === AI_SERVER_AGENT_CONTENT_TYPE.ERROR) {
+      ensureGroup(id).errorBlock = block as BlockGroup['errorBlock']
+    }
+  }
+
+  return orderedKeys.map((key) => groupMap.get(key)!)
+}
+
 export function useAgentAssistantContent(
-  item: AssistantItem,
+  item: AgentAssistantItem,
   onResume: (assistantMessageId: number) => void,
 ) {
   const {message} = useApp()
   const toolCallUserState = reactive<Record<string, boolean | undefined>>({})
 
-  const groupedBlocks = computed<BlockGroup[]>(() => {
-    const groupMap = new Map<string, BlockGroup>()
-    const orderedKeys: string[] = []
-
-    function ensureGroup(key: string): BlockGroup {
-      if (!groupMap.has(key)) {
-        groupMap.set(key, {groupId: key, toolBlocks: []})
-        orderedKeys.push(key)
-      }
-      return groupMap.get(key)!
-    }
-
-    for (const block of item.content as ContentPiece[]) {
-      const type = getEnumValue(block.type as string)
-      const id = block.id ?? ''
-      if (type === AI_SERVER_AGENT_CONTENT_TYPE.THINK) {
-        ensureGroup(id).thinkBlock = block as AgentThinkBlock
-      } else if (type === AI_SERVER_AGENT_CONTENT_TYPE.ANSWER) {
-        ensureGroup(id).answerBlock = block as AgentContentBlock as BlockGroup['answerBlock']
-      } else if (type === AI_SERVER_AGENT_CONTENT_TYPE.TOOL) {
-        const toolBlock = block as AgentToolCallBlock
-        ensureGroup(toolBlock.groupId || id).toolBlocks.push(toolBlock)
-      } else if (type === AI_SERVER_AGENT_CONTENT_TYPE.ERROR) {
-        const error = block as AgentErrorBlock & {metadata?: {message?: string}}
-        if (!error.value) {
-          error.value = error.metadata?.message ?? ''
-        }
-        ensureGroup(id).errorBlock = error
-      }
-    }
-
-    return orderedKeys.map((key) => groupMap.get(key)!)
-  })
+  const groupedBlocks = computed<BlockGroup[]>(() => groupContentBlocks(item.content as ContentPiece[]))
 
   const toolCallExpandedState = computed<Record<string, boolean>>(() => {
     const result: Record<string, boolean> = {}
@@ -137,21 +147,41 @@ export function useAgentAssistantContent(
     toolCallUserState[groupId] = !toolCallExpandedState.value[groupId]
   }
 
-  function toThoughtChainItem(block: AgentToolCallBlock): ThoughtChainItemDataType {
-    const running = getEnumValue(block.status) === AI_SERVER_AGENT_BLOCK_STATUS.RUNNING
-    return {
-      key: block.id,
-      title: block.name,
-      description: block.value,
-      content: block.outputText,
-      data: block,
-      status: getToolChainStatus(block),
-      blink: running,
-      collapsible: true,
+  async function resumeIfAllDecided(previous: Array<{tool: AgentToolCallBlock; value: boolean | undefined}>) {
+    const tools = (item.content as ContentPiece[])
+      .filter((block) => block.type === AI_SERVER_AGENT_CONTENT_TYPE.TOOL)
+      .map((block) => block as AgentToolCallBlock)
+    if (hasToolConfirmed(tools)) {
+      return
+    }
+    const decided = tools.filter((block) =>
+      getEnumValue(block.status) === AI_SERVER_AGENT_BLOCK_STATUS.PENDING
+      && block.userConfirmed !== undefined,
+    )
+    try {
+      const result = await AgentService.resume({
+        assistantMessageId: Number(item.key),
+        confirmResults: decided.map((block) => ({
+          toolCallId: block.id,
+          confirmed: block.userConfirmed || false,
+        })),
+      })
+      if (!result.data) {
+        throw new Error(result.message)
+      }
+      onResume(Number(item.key))
+      decided.forEach((block) => {
+        block.hitlStatus = AI_SERVER_AGENT_TOOL_BLOCK_STATUS.FINISHED
+      })
+    } catch (error) {
+      previous.forEach(({tool, value}) => {
+        tool.userConfirmed = value
+      })
+      message.error(error instanceof Error ? error.message : String(error))
     }
   }
 
-  async function clickToolConfirmed(tool: AgentToolCallBlock, confirmed: boolean) {
+  function clickToolConfirmed(tool: AgentToolCallBlock, confirmed: boolean) {
     const contents = item.content as ContentPiece[]
     const find = contents.find((block) => block.id === tool.id)
     if (!find || !('hitlStatus' in find)) {
@@ -161,43 +191,19 @@ export function useAgentAssistantContent(
     if (!AGENT_TOOL_BLOCK_CONFIRM_STATUS_VALUE.includes(findTool.hitlStatus)) {
       return
     }
-    const previous = findTool.userConfirmed
+    const previous = [{tool: findTool, value: findTool.userConfirmed}]
     findTool.userConfirmed = confirmed
-    const tools = contents
-      .filter((block) => block.type === AI_SERVER_AGENT_CONTENT_TYPE.TOOL)
-      .map((block) => block as AgentToolCallBlock)
-    if (hasToolConfirmed(tools)) {
-      return
-    }
-    const toolBlocks = tools.filter((block) =>
-      getEnumValue(block.status) === AI_SERVER_AGENT_BLOCK_STATUS.PENDING
-      && block.userConfirmed !== undefined,
-    )
-    try {
-      const result = await AgentService.resume({
-        assistantMessageId: Number(item.key),
-        confirmResults: toolBlocks.map((block) => ({
-          toolCallId: block.id,
-          confirmed: block.userConfirmed || false,
-        })),
-      })
-      if (!result.data) {
-        throw new Error(result.message)
-      }
-      onResume(Number(item.key))
-      toolBlocks.forEach((block) => {
-        block.hitlStatus = AI_SERVER_AGENT_TOOL_BLOCK_STATUS.FINISHED
-      })
-    } catch (error) {
-      findTool.userConfirmed = previous
-      message.error(error instanceof Error ? error.message : String(error))
-    }
+    void resumeIfAllDecided(previous)
   }
 
-  async function clickAllToolConfirmed(tools: AgentToolCallBlock[], confirmed: boolean) {
-    for (const tool of tools) {
-      await clickToolConfirmed(tool, confirmed)
-    }
+  function clickAllToolConfirmed(tools: AgentToolCallBlock[], confirmed: boolean) {
+    const previous = tools
+      .filter((tool) => AGENT_TOOL_BLOCK_CONFIRM_STATUS_VALUE.includes(tool.hitlStatus))
+      .map((tool) => ({tool, value: tool.userConfirmed}))
+    previous.forEach(({tool}) => {
+      tool.userConfirmed = confirmed
+    })
+    void resumeIfAllDecided(previous)
   }
 
   function hasContent() {

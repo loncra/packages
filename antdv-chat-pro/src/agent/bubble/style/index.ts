@@ -1,5 +1,5 @@
 import type {CSSInterpolation} from '@antdv-next/cssinjs'
-import type {LoncraStyleToken} from '@loncra/antdv'
+import {genScrollAreaStyle, type LoncraStyleToken} from '@loncra/antdv'
 import {genStyleHooks} from '../../../_util/genStyleLayer'
 
 export const AGENT_BUBBLE_PREFIX = 'loncra-agent-bubble'
@@ -35,6 +35,7 @@ function genAgentBubbleStyle(token: LoncraStyleToken): CSSInterpolation {
         margin: 0,
     },
     [componentCls]: {
+      ...genScrollAreaStyle(token, '-scroll-tall', 12),
       [`${componentCls}-footer`]: {
         display: 'flex',
         gap: marginXS,
@@ -50,6 +51,7 @@ function genAgentBubbleStyle(token: LoncraStyleToken): CSSInterpolation {
         [`.antd-think-content .x-markdown ol li::marker, .antd-think-content .x-markdown ul li::marker, .antd-think-content .x-markdown *`]: {
           color: `${colorTextTertiary} !important`,
         },
+        ...genScrollAreaStyle(token, '-scroll', 10),
       },
       [`${componentCls}-tool`]: {
         [`${antCls}-card-head`]: {

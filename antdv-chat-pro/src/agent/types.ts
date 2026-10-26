@@ -1,5 +1,5 @@
 import type {PageResult} from '@loncra/client/commons'
-import type {AgentConversationRecord} from './conversation/useAgentConversations'
+import type {AgentConversationRecord} from './conversation'
 import type {HistoryBubble} from './history/useAgentHistory'
 
 export interface AgentSession extends AgentConversationRecord {

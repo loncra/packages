@@ -4,13 +4,14 @@ import {UserAvatar} from '@loncra/antdv-pro'
 import type {PlatformUser, UserMetadata} from '@loncra/client/auth'
 import {getEnumValue} from '@loncra/client/commons'
 import {CHAT_BUBBLE_TYPE, STREAM_RUNNING_STATUS_VALUE} from '@loncra/client/ai'
-import BubbleList from '../../bubble-list/BubbleList.tsx'
-import {DEFAULT_BUBBLE_LIST_ROLE} from '../../bubble-list/useBubbleList.ts'
-import type {BubbleListExpose, BubbleListItem, BubbleSession} from '../../bubble-list/types.ts'
-import AgentAssistantContent from './AgentAssistantContent.tsx'
-import AgentBubbleFooter from './AgentBubbleFooter.tsx'
-import AgentUserContent from './AgentUserContent.tsx'
-import {AGENT_HISTORY_KEY} from '../history/useAgentHistory.ts'
+import BubbleList from '../../bubble-list/BubbleList'
+import {DEFAULT_BUBBLE_LIST_ROLE} from '../../bubble-list/useBubbleList'
+import type {BubbleListExpose, BubbleListItem, BubbleSession} from '../../bubble-list/types'
+import AgentAssistantContent from './AgentAssistantContent'
+import AgentBubbleFooter from './AgentBubbleFooter'
+import AgentUserContent from './AgentUserContent'
+import {AGENT_HISTORY_KEY} from '../history/useAgentHistory'
+import type {AgentAssistantItem, AgentBubbleFooterItem} from './types'
 
 function isLoading(item: BubbleListItem): boolean {
   if (!('status' in item)) {
@@ -46,7 +47,9 @@ const AgentBubbleList = defineComponent({
       default: undefined,
     },
   },
-  emits: ['resume'],
+  emits: {
+    resume: (_assistantMessageId: number) => true,
+  },
   setup(props, {emit, slots, expose}) {
     const history = inject(AGENT_HISTORY_KEY, null)
     const listRef = ref<BubbleListExpose>()
@@ -87,7 +90,7 @@ const AgentBubbleList = defineComponent({
             if (item.role === CHAT_BUBBLE_TYPE.AI) {
               return (
                 <AgentAssistantContent
-                  item={item as unknown as {key: string | number; content: never[]}}
+                  item={item as unknown as AgentAssistantItem}
                   onResume={(id: number) => emit('resume', id)}
                 />
               )
@@ -95,7 +98,7 @@ const AgentBubbleList = defineComponent({
             return <AgentUserContent item={item} />
           },
           footer: ({item}: {item: BubbleListItem}) => (
-            <AgentBubbleFooter item={item as unknown as {role: string}} />
+            <AgentBubbleFooter item={item as unknown as AgentBubbleFooterItem} />
           ),
           bubbleListAfter: () => slots.bubbleListAfter?.(),
         }}

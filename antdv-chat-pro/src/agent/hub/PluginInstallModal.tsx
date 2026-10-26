@@ -8,7 +8,7 @@ import {
   AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE,
   AiUserPluginInstallService,
 } from '@loncra/client/ai'
-import type {AgentConversationRecord} from '../conversation/useAgentConversations'
+import type {AgentConversationRecord} from '../conversation'
 import {useLocale} from '../../_util/useLocale'
 import {fillLocale} from '@loncra/antdv'
 

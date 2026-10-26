@@ -26,26 +26,19 @@ import {
 } from '@antdv-next/icons'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {classNames} from '@loncra/antdv'
-import {useLocale} from '../../_util/useLocale.ts'
+import {useLocale} from '../../_util/useLocale'
 import {getEnumValue, isEnumValue} from '@loncra/client/commons'
 import {AI_SERVER_AGENT_CHAT_STATUS, AI_SERVER_AGENT_CONVERSATION_TYPE} from '@loncra/client/ai'
-import ConversationList from '../../conversation/ConversationList.tsx'
-import type {ConversationNode} from '../../conversation/types.ts'
-import {
-  agentMenuKeys,
-  type AgentConversationHost,
-  type AgentConversationMenuKey,
-  type AgentConversationRecord,
-} from './useAgentConversations.ts'
-import useStyle, {AGENT_CONVERSATION_PREFIX} from './style/index.ts'
-
-export interface AgentConversationActions {
-  startCreate: () => void
-  startRename: (item: AgentConversationRecord) => void
-  cancelEdit: (item: AgentConversationRecord) => void
-  confirmEdit: (item: AgentConversationRecord) => void
-  remove: (item: AgentConversationRecord) => void
-}
+import ConversationList from '../../conversation/ConversationList'
+import type {ConversationNode} from '../../conversation/types'
+import {agentMenuKeys} from './useAgentConversations'
+import useStyle, {AGENT_CONVERSATION_PREFIX} from './style/index'
+import type {
+  AgentConversationActions,
+  AgentConversationHost,
+  AgentConversationMenuKey,
+  AgentConversationRecord,
+} from './types'
 
 const STATUS_ICON = {
   [AI_SERVER_AGENT_CHAT_STATUS.READY]: {icon: CommentOutlined, className: 'secondary'},
@@ -66,7 +59,10 @@ const AgentConversationList = defineComponent({
     host: {type: Object as PropType<AgentConversationHost>, required: true},
     actions: {type: Object as PropType<AgentConversationActions>, required: true},
   },
-  emits: ['update:selectedKeys', 'update:openKeys'],
+  emits: {
+    'update:selectedKeys': (_keys: string[]) => true,
+    'update:openKeys': (_keys: string[]) => true,
+  },
   setup(props, {emit}) {
     const locale = useLocale('AgentConversation')
     const config = useConfig()

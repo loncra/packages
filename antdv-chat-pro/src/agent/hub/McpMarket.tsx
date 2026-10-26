@@ -17,7 +17,7 @@ import {
 } from '@loncra/client/ai'
 import type {PageRequest} from '@loncra/client/commons'
 import {useLocale} from '../../_util/useLocale'
-import type {AgentConversationRecord} from '../conversation/useAgentConversations'
+import type {AgentConversationRecord} from '../conversation'
 import PluginCard from './PluginCard'
 import {AGENT_HUB_PREFIX} from './style'
 

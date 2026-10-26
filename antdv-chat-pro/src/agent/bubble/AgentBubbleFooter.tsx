@@ -1,4 +1,4 @@
-import {computed, defineComponent, type PropType} from 'vue'
+import {computed, defineComponent, ref, type PropType} from 'vue'
 import {Badge, Button, Divider, Flex, Popover, Progress, Space, Tag} from 'antdv-next'
 import {
   CopyOutlined,
@@ -16,21 +16,10 @@ import {
   BLOCK_RUNNING_STATUS_VALUE,
   CHAT_BUBBLE_TYPE,
 } from '@loncra/client/ai'
-import {useLocale} from '../../_util/useLocale.ts'
-import useStyle, {AGENT_BUBBLE_PREFIX} from './style/index.ts'
-import {cacheHitRate, countTokenUsage, eachTokenUsage} from './tokenUsage.ts'
-import type {AgentTokenUsage} from './types.ts'
-
-interface FooterItem {
-  role: string
-  key?: string | number
-  content?: ReadonlyArray<{type?: unknown; status?: unknown; value?: unknown}>
-  metadata?: {tokenUsage?: AgentTokenUsage[]}
-  copy?: boolean
-  data?: unknown
-  type?: unknown
-  model?: {name?: string; manufacturer?: {name?: string}}
-}
+import {useLocale} from '../../_util/useLocale'
+import useStyle, {AGENT_BUBBLE_PREFIX} from './style/index'
+import {cacheHitRate, countTokenUsage, eachTokenUsage} from './tokenUsage'
+import type {AgentBubbleFooterItem} from './types'
 
 const TYPE_STYLE: Record<number, {color: string; icon: typeof QuestionCircleOutlined}> = {
   10: {color: 'cyan', icon: QuestionCircleOutlined},
@@ -41,13 +30,14 @@ const TYPE_STYLE: Record<number, {color: string; icon: typeof QuestionCircleOutl
 const AgentBubbleFooter = defineComponent({
   name: 'LAgentBubbleFooter',
   props: {
-    item: {type: Object as PropType<FooterItem>, required: true},
+    item: {type: Object as PropType<AgentBubbleFooterItem>, required: true},
   },
   setup(props) {
     const locale = useLocale('AgentBubble')
     const config = useConfig()
     const prefixCls = computed(() => config.value.getPrefixCls('agent-bubble', AGENT_BUBBLE_PREFIX))
     const [hashId, cssVarCls] = useStyle(prefixCls)
+    const copied = ref(false)
 
     const answer = computed(() => {
       const blocks = (props.item.content ?? []).filter((block) =>
@@ -67,9 +57,9 @@ const AgentBubbleFooter = defineComponent({
       const text = typeof answer.value?.value === 'string' ? answer.value.value : ''
       try {
         await navigator.clipboard.writeText(text)
-        props.item.copy = true
+        copied.value = true
       } catch {
-        // 剪贴板失败时保持原状态，不提示。
+        return
       }
     }
 
@@ -93,7 +83,7 @@ const AgentBubbleFooter = defineComponent({
       )
     }
 
-    function renderAiFooter(item: FooterItem) {
+    function renderAiFooter(item: AgentBubbleFooterItem) {
       const showToken = Boolean(item.metadata?.tokenUsage)
       if (!answerReady.value && !showToken) {
         return null
@@ -106,7 +96,7 @@ const AgentBubbleFooter = defineComponent({
                 <Button
                   size="small"
                   variant="outlined"
-                  color={item.copy ? 'cyan' : 'default'}
+                  color={copied.value ? 'cyan' : 'default'}
                   onClick={() => void copyAnswer()}
                   v-slots={{icon: () => <CopyOutlined />}}
                 />
@@ -148,7 +138,7 @@ const AgentBubbleFooter = defineComponent({
       )
     }
 
-    function renderUserFooter(item: FooterItem) {
+    function renderUserFooter(item: AgentBubbleFooterItem) {
       if (item.role !== CHAT_BUBBLE_TYPE.USER || item.data == null) {
         return null
       }
