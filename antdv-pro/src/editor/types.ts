@@ -15,6 +15,8 @@ export interface EditorProps {
   outputFormat?: OutputFormat
   locale?: EditorLocale
   disabledPlugins?: PluginName[]
+  bucket?: string
+  uploadParam?: Record<string, unknown>
   uploadImage?: UploadFn
   uploadVideo?: UploadFn
   wordCount?: true | number
@@ -28,6 +30,10 @@ export interface EditorEmits {
   'update:value': (value: string) => void
   change: (value: string) => void
   blur: (value: string) => void
+}
+
+export interface EditorExpose {
+  confirmUploads: () => Promise<void>
 }
 
 export interface EditorSlots {

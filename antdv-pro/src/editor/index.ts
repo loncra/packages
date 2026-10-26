@@ -4,6 +4,7 @@ export default Editor
 export type {
   EditorClasses,
   EditorEmits,
+  EditorExpose,
   EditorLocale,
   EditorProps,
   EditorSlots,

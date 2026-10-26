@@ -4,8 +4,9 @@ import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {useFormItemInputContext} from 'antdv-next/dist/form/context'
 import {classNames, useFormItemTrigger} from '@loncra/antdv'
 import {isEditorEditable, resolveEditorLocale} from './editorKinds'
-import {useEditor} from './useEditor'
-import type {EditorClasses, EditorProps, EditorStyles, UploadFn} from './types'
+import {useEditorUpload} from './useEditorUpload'
+import {normalizeRichTextValue} from '../_util/richText'
+import type {EditorClasses, EditorExpose, EditorProps, EditorStyles, UploadFn} from './types'
 import useStyle from './style'
 
 const AEditor = defineAsyncComponent(async () => {
@@ -37,6 +38,11 @@ const Editor = defineComponent({
     outputFormat: String as PropType<OutputFormat>,
     locale: [String, Object] as PropType<EditorProps['locale']>,
     disabledPlugins: Array as PropType<PluginName[]>,
+    bucket: {
+      type: String,
+      default: 'user.file',
+    },
+    uploadParam: Object as PropType<Record<string, unknown>>,
     uploadImage: Function as PropType<UploadFn>,
     uploadVideo: Function as PropType<UploadFn>,
     wordCount: [Boolean, Number] as PropType<true | number>,
@@ -50,7 +56,7 @@ const Editor = defineComponent({
     change: (_value: string) => true,
     blur: (_value: string) => true,
   },
-  setup(props, { emit, slots, attrs }) {
+  setup(props, { emit, slots, attrs, expose }) {
     const config = useConfig()
     const itemStatus = useFormItemInputContext()
     useFormItemTrigger(() => props.value)
@@ -60,10 +66,25 @@ const Editor = defineComponent({
     const [hashId, cssVarCls] = useStyle(prefixCls)
     const editorLocale = computed(() => resolveEditorLocale(config.value.locale, props.locale))
     const editable = computed(() => isEditorEditable(props.disabled, props.editable))
-    const { commit } = useEditor(props, {
-      onUpdateValue: (value: string) => emit('update:value', value),
-      onChange: (value: string) => emit('change', value),
+    const {builtinUploadFn, uploadPending} = useEditorUpload({
+      bucket: () => props.bucket ?? 'user.file',
+      param: () => props.uploadParam,
     })
+    const uploadImage = computed(() => props.uploadImage ?? builtinUploadFn)
+    const uploadVideo = computed(() => props.uploadVideo ?? builtinUploadFn)
+
+    const commit = (value: string) => {
+      emit('update:value', value)
+      emit('change', value)
+      return value
+    }
+
+    expose({
+      confirmUploads: async () => {
+        const uploaded = await uploadPending(props.value, props.outputFormat)
+        commit(normalizeRichTextValue(uploaded, props.outputFormat))
+      },
+    } satisfies EditorExpose)
 
     return () => {
       const { class: attrClass, style: attrStyle, ...rest } = attrs
@@ -92,8 +113,8 @@ const Editor = defineComponent({
             disabledPlugins={props.disabledPlugins}
             class={props.classes?.editor}
             style={props.styles?.editor as never}
-            uploadImage={props.uploadImage}
-            uploadVideo={props.uploadVideo}
+            uploadImage={uploadImage.value}
+            uploadVideo={uploadVideo.value}
             wordCount={props.wordCount}
             onUpdate:modelValue={(value?: string) => {
               commit(value ?? '')

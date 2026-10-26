@@ -2,7 +2,7 @@ import {computed, type ComputedRef} from 'vue'
 import {DatePicker, Input, InputNumber, Select} from 'antdv-next'
 import {getEnumName, type NameValueEnumMetadata} from '@loncra/client/commons'
 import {IconSelect, KeyValueTable, type KeyValueTableExpose} from '@loncra/antdv'
-import Editor from '../editor'
+import Editor, {type EditorExpose} from '../editor'
 import AttachmentUpload, {type AttachmentUploadExpose} from '../attachment-upload'
 import UserSelect from '../user-select'
 import {useCrudConfig} from '../crud-config-provider'
@@ -41,7 +41,12 @@ export function usePageRegistry(): ComputedRef<PageRegistry> {
       select: {component: Select, defaults: {allowClear: true}, mapOptions: ENUM_OPTIONS},
       date: {component: DatePicker},
       dateRange: {component: DatePicker.RangePicker},
-      editor: {component: Editor},
+      editor: {
+        component: Editor,
+        beforeSubmit: async (instance) => {
+          await (instance as EditorExpose | undefined)?.confirmUploads()
+        },
+      },
       iconSelect: {component: IconSelect},
       userSelect: {component: UserSelect},
       keyValueTable: {

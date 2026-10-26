@@ -45,6 +45,7 @@ export { default as Editor } from './editor'
 export type {
   EditorClasses,
   EditorEmits,
+  EditorExpose,
   EditorLocale,
   EditorProps,
   EditorSlots,
