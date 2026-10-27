@@ -53,6 +53,7 @@ import {
   type AgentMessageEntity,
   CHAT_BUBBLE_TYPE,
   type ModelSettingEntity,
+  AgentService,
   ModelSettingService,
   STREAM_RUNNING_STATUS_VALUE,
   type UserPluginInstallResult,
@@ -66,7 +67,6 @@ import type {AgentConversationHost, AgentConversationRecord} from './conversatio
 import AgentConversationList from './conversation/AgentConversationList'
 import AgentBubbleList from './bubble/AgentBubbleList'
 import AgentSender, {type AgentSenderChoice, type AgentSenderExpose, type AgentSenderWorkspace} from './sender/AgentSender'
-import {sendAgentChat} from './send/sendAgentChat'
 import AgentHub from './hub/AgentHub'
 import type {AgentSession} from './types'
 import useStyle, {AGENT_CHAT_PREFIX} from './style'
@@ -642,7 +642,7 @@ const AgentChat = defineComponent({
       }
       session.loading = true
       try {
-        const result = await sendAgentChat({
+        const result = await AgentService.chat({
           modelId: form.modelId,
           type: form.type,
           content: blocksOf(slotConfig),

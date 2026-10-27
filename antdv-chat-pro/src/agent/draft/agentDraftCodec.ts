@@ -9,7 +9,6 @@ import {
 
 export type AgentDraftLive = SlotConfigType[]
 
-/** Agent：槽即可（点名芯片在 slots 里）。无 refMessages。 */
 export function createAgentDraftCodec(
   factories: RestoreDraftSlotFactories,
 ): DraftCodec<AgentDraftLive, AgentDraftRecord> {
