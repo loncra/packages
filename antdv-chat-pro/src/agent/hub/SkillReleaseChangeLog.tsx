@@ -82,7 +82,7 @@ const SkillReleaseChangeLog = defineComponent({
                               )
                               : null}
                           </Flex>
-                          {changelog ? <div>{changelog}</div> : <Empty />}
+                          {changelog ? <div class={`${prefixCls.value}-changelog-content`}>{changelog}</div> : <Empty />}
                         </Flex>
                       )
                       : null,

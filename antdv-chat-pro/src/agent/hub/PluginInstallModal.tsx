@@ -7,6 +7,7 @@ import {
   AGENT_WORKSPACE_TYPE_VALUE,
   AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE,
   AiUserPluginInstallService,
+  type UserPluginInstallResult,
 } from '@loncra/client/ai'
 import type {AgentConversationRecord} from '../conversation'
 import {useLocale} from '../../_util/useLocale'
@@ -21,7 +22,10 @@ const PluginInstallModal = defineComponent({
     packageName: String,
     workspaces: {type: Array as PropType<AgentConversationRecord[]>, default: () => []},
   },
-  emits: ['update:open', 'installed'],
+  emits: {
+    'update:open': (_open: boolean) => true,
+    installed: (_result: UserPluginInstallResult) => true,
+  },
   setup(props, {emit}) {
     const locale = useLocale('AgentHub')
     const {message} = useApp()
@@ -69,7 +73,7 @@ const PluginInstallModal = defineComponent({
     async function onOk(): Promise<void> {
       await formRef.value?.validate()
       if (props.packageId == null) {
-        return Promise.reject()
+        return Promise.reject(new Error('packageId is required'))
       }
       spinning.value = true
       try {

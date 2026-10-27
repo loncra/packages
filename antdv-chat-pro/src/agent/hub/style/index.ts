@@ -85,6 +85,9 @@ function genAgentHubStyle(token: LoncraStyleToken): CSSInterpolation {
           padding: `${padding} 0`
         }
       },
+      [`${componentCls}-changelog-content`]: {
+        whiteSpace: 'pre-wrap',
+      },
     },
     ...genFullSpinStyle(token),
   }

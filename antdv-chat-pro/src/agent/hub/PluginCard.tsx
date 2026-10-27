@@ -32,7 +32,11 @@ const PluginCard = defineComponent({
     targetType: {type: Number, required: true},
     workspaces: {type: Array as PropType<AgentConversationRecord[]>, default: () => []},
   },
-  emits: ['changePage', 'installed', 'uninstalled'],
+  emits: {
+    changePage: (_page: number, _pageSize: number) => true,
+    installed: (_result: UserPluginInstallResult) => true,
+    uninstalled: (_id: number) => true,
+  },
   setup(props, {emit, slots}) {
     const locale = useLocale('AgentHub')
     const {modal, message} = useApp()

@@ -113,8 +113,8 @@ export function useAgentConversations<T extends AgentConversationRecord>(
       item.editing = false
       message.success(result.message ?? '')
       await load(result.data)
-    } catch (e) {
-      message.error(e instanceof Error ? e.message : String(e))
+    } catch {
+      return
     } finally {
       loading.value = false
     }
@@ -130,8 +130,8 @@ export function useAgentConversations<T extends AgentConversationRecord>(
       const result = await AgentService.deleteConversation([Number(item.id)])
       message.success(result.message ?? '')
       await load()
-    } catch (e) {
-      message.error(e instanceof Error ? e.message : String(e))
+    } catch {
+      return
     } finally {
       loading.value = false
     }
