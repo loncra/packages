@@ -1,6 +1,6 @@
-import {computed, defineComponent, onMounted, type PropType, ref} from 'vue'
+import {computed, defineComponent, h, onMounted, type PropType, ref} from 'vue'
 import {Badge, Collapse, Empty, Flex, Skeleton, Space, Tabs, Tag} from 'antdv-next'
-import {createFromIconfontCN} from '@antdv-next/icons'
+import {pluginTypeIcon} from '../pluginIcons'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {
   getEnumValue,
@@ -24,8 +24,6 @@ import PluginCard from './PluginCard'
 import SkillReleaseChangeLog from './SkillReleaseChangeLog'
 import {AGENT_HUB_PREFIX} from './style'
 
-const IconFont = createFromIconfontCN()
-
 function toPage<T>(elements: T[]): TotalPage<T> {
   return {
     elements,
@@ -39,14 +37,8 @@ function toPage<T>(elements: T[]): TotalPage<T> {
   }
 }
 
-function tabIcon(id?: number): string {
-  if (id === AI_SERVER_PLUGIN_TARGET_TYPE.SKILL) {
-    return 'loncra-sparkles'
-  }
-  if (id === AI_SERVER_PLUGIN_TARGET_TYPE.MCP) {
-    return 'loncra-plug-zap'
-  }
-  return 'loncra-package'
+function tabIcon(id?: number) {
+  return pluginTypeIcon(id ?? 0)
 }
 
 const InstalledPlugins = defineComponent({
@@ -134,7 +126,7 @@ const InstalledPlugins = defineComponent({
             v-slots={{
               labelRender: ({item}: {item: {label?: string; key?: string}}) => (
                 <Flex gap="small">
-                  <IconFont type={tabIcon(Number(item.key))} />
+                  {h(tabIcon(Number(item.key)))}
                   <span>{item.label}</span>
                 </Flex>
               ),

@@ -101,6 +101,14 @@ export interface TotalPage<T> extends PageResult<T> {
   totalPages: number
 }
 
+export function emptyPageResult<T>(): PageResult<T> {
+  return {elements: [], number: 1, first: true, last: true, size: 10, metadata: {}}
+}
+
+export function emptyTotalPage<T>(): TotalPage<T> {
+  return {...emptyPageResult<T>(), totalCount: 0, totalPages: 0}
+}
+
 export interface DetailSearchService<
   TEntity extends BasicIdMetadata<TId>,
   TId = TEntity[typeof SYSTEM_CONSTANT.ID_NAME],

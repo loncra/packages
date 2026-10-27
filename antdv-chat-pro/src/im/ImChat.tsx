@@ -3,7 +3,7 @@ import {ContactsOutlined, MessageOutlined} from '@antdv-next/icons'
 import {Drawer, Empty, Flex, Segmented, Spin, Splitter, SplitterPanel} from 'antdv-next'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {classNames} from '@loncra/antdv'
-import {isEnumValue, type RestResult} from '@loncra/client/commons'
+import {emptyPageResult, isEnumValue, type RestResult} from '@loncra/client/commons'
 import {
   type BasicUserChatConversation,
   MESSAGE_SERVER_USER_CHAT_CONVERSATION_STATUS,
@@ -50,14 +50,7 @@ function emptySession(): ImChatSession {
     isOnFirstPage: true,
     drawerOpen: false,
     participants: [],
-    dataSource: {
-      elements: [],
-      first: true,
-      last: true,
-      number: 1,
-      size: 10,
-      metadata: {},
-    },
+    dataSource: emptyPageResult(),
   }
 }
 

@@ -1,6 +1,6 @@
 import {computed, defineComponent, type PropType} from 'vue'
 import {Badge, Collapse, Flex, Skeleton, Spin, Tabs} from 'antdv-next'
-import {createFromIconfontCN} from '@antdv-next/icons'
+import {StarOutlined} from '@antdv-next/icons'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {
     AI_SERVER_PLUGIN_TARGET_TYPE,
@@ -10,14 +10,13 @@ import {
     type SkillPackageEntity,
     type UserPluginInstallResult,
 } from '@loncra/client/ai'
+import {iconFontNode} from '@loncra/antdv'
 import {useLocale} from '../../_util/useLocale'
 import type {AgentConversationRecord} from '../conversation'
 import PluginCard from './PluginCard'
 import SkillReleaseChangeLog from './SkillReleaseChangeLog'
 import {AGENT_HUB_PREFIX} from './style'
 import {useAgentHubMarket} from './useAgentHubMarket'
-
-const IconFont = createFromIconfontCN()
 
 const SkillMarket = defineComponent({
     name: 'LAgentHubSkill',
@@ -53,7 +52,7 @@ const SkillMarket = defineComponent({
                     v-slots={{
                         labelRender: ({item}: { item: { label?: string; metadata?: { icon?: string } } }) => (
                             <Flex gap="small">
-                                <IconFont type={item.metadata?.icon || 'loncra-sparkles'}/>
+                                {item.metadata?.icon ? iconFontNode(item.metadata.icon) : <StarOutlined/>}
                                 <span>{item.label}</span>
                             </Flex>
                         ),

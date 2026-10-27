@@ -1,9 +1,9 @@
 import {computed, defineComponent, h, type PropType, ref} from 'vue'
 import {Button, Card, Empty, Flex, Pagination, Space, Tag, Typography} from 'antdv-next'
-import {createFromIconfontCN} from '@antdv-next/icons'
+import {DeleteOutlined, DownloadOutlined} from '@antdv-next/icons'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import useApp from 'antdv-next/dist/app/useApp'
-import {classNames, IconSelect, ICON_SELECT_AVATAR_MODE_VALUE} from '@loncra/antdv'
+import {classNames, IconSelect, ICON_SELECT_AVATAR_MODE_VALUE, iconFontNode} from '@loncra/antdv'
 import {fillLocale} from '@loncra/antdv'
 import type {TotalPage} from '@loncra/client/commons'
 import {
@@ -19,8 +19,6 @@ import type {AgentConversationRecord} from '../conversation'
 import useStyle, {AGENT_HUB_PREFIX} from './style'
 
 dayjs.extend(relativeTime)
-
-const IconFont = createFromIconfontCN()
 
 export type PluginCardRecord = PluginPackageMetadata & {latestVersion?: string}
 
@@ -101,7 +99,7 @@ const PluginCard = defineComponent({
                             danger
                             type="primary"
                             onClick={() => onUninstall(record)}
-                            v-slots={{icon: () => <IconFont type="loncra-trash-2" />}}
+                            v-slots={{icon: () => <DeleteOutlined />}}
                           >
                             {locale.value.uninstall}
                           </Button>
@@ -111,7 +109,7 @@ const PluginCard = defineComponent({
                             size="small"
                             type="primary"
                             onClick={() => onInstall(record)}
-                            v-slots={{icon: () => <IconFont type="loncra-download" />}}
+                            v-slots={{icon: () => <DownloadOutlined />}}
                           >
                             {locale.value.install}
                           </Button>
@@ -123,7 +121,7 @@ const PluginCard = defineComponent({
                         <IconSelect
                           preview
                           value={record.icon || ICON_SELECT_AVATAR_MODE_VALUE.INPUT + record.name}
-                          iconRender={(type: string) => (type ? h(IconFont, {type}) : null)}
+                          iconRender={(type: string) => iconFontNode(type)}
                         />
                         <Flex gap="small" vertical>
                           <Flex justify="space-between" align="center">

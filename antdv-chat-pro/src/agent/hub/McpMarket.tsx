@@ -1,7 +1,8 @@
 import {computed, defineComponent, type PropType} from 'vue'
 import {Flex, Skeleton, Spin, Tabs} from 'antdv-next'
-import {createFromIconfontCN} from '@antdv-next/icons'
+import {ApiOutlined} from '@antdv-next/icons'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
+import {iconFontNode} from '@loncra/antdv'
 import {
     AI_SERVER_PLUGIN_TARGET_TYPE,
     AiMcpPackageService,
@@ -13,8 +14,6 @@ import type {AgentConversationRecord} from '../conversation'
 import PluginCard from './PluginCard'
 import {AGENT_HUB_PREFIX} from './style'
 import {useAgentHubMarket} from './useAgentHubMarket'
-
-const IconFont = createFromIconfontCN()
 
 const McpMarket = defineComponent({
     name: 'LAgentHubMcp',
@@ -50,8 +49,8 @@ const McpMarket = defineComponent({
                         labelRender: ({item}: { item: { label?: string; metadata?: { icon?: string } } }) => (
                             <Flex gap="small">
                                 {item.metadata?.icon
-                                    ? <IconFont type={item.metadata.icon}/>
-                                    : <IconFont type="loncra-plug-zap"/>}
+                                    ? iconFontNode(item.metadata.icon)
+                                    : <ApiOutlined/>}
                                 <span>{item.label}</span>
                             </Flex>
                         ),

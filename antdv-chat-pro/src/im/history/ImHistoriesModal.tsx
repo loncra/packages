@@ -25,7 +25,7 @@ import {
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {AttachmentMasonry, useDateFormat, UserAvatar} from '@loncra/antdv-pro'
 import {classNames, fillLocale} from '@loncra/antdv'
-import {AttachmentService, type ObjectItemInfo, type PageRequest, type TotalPage,} from '@loncra/client/commons'
+import {AttachmentService, emptyTotalPage, type ObjectItemInfo, type PageRequest, type TotalPage,} from '@loncra/client/commons'
 import {
     ChatMessageService,
     MESSAGE_SERVER_USER_CHAT_MESSAGE_TYPE,
@@ -40,18 +40,6 @@ import {useLocale} from '../../_util/useLocale.ts'
 import useStyle, {IM_HISTORY_PREFIX} from './style/index.ts'
 
 type HistorySegment = 'message' | 'image' | 'video' | 'audio' | 'unknown'
-
-function emptyPage(): TotalPage<UserChatMessageResponseBody> {
-  return {
-    elements: [],
-    size: 10,
-    last: true,
-    number: 1,
-    first: true,
-    totalCount: 0,
-    totalPages: 0,
-  }
-}
 
 function toMillis(value: unknown): number | undefined {
   if (typeof value === 'number' && Number.isFinite(value)) {
@@ -111,7 +99,7 @@ const ImHistoriesModal = defineComponent({
     const dateRange = ref<[import('dayjs').Dayjs, import('dayjs').Dayjs] | null>(null)
     const segment = ref<HistorySegment>('message')
     const loading = ref(false)
-    const messages = ref<TotalPage<UserChatMessageResponseBody>>(emptyPage())
+    const messages = ref<TotalPage<UserChatMessageResponseBody>>(emptyTotalPage())
     const files = ref<ObjectItemInfo[]>([])
     const checkedFiles = ref<ObjectItemInfo[]>([])
     const applied = ref<{keyword: string; date: [import('dayjs').Dayjs, import('dayjs').Dayjs] | null}>({
@@ -141,7 +129,7 @@ const ImHistoriesModal = defineComponent({
         query['filter_[creation_time_between]'] = applied.value.date
       }
       const result = await ChatMessageService.histories(query, props.roomId)
-      messages.value = (result.data as TotalPage<UserChatMessageResponseBody> | undefined) ?? emptyPage()
+      messages.value = (result.data as TotalPage<UserChatMessageResponseBody> | undefined) ?? emptyTotalPage()
     }
 
     async function loadFiles() {

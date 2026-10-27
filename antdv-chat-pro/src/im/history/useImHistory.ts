@@ -1,6 +1,7 @@
 import {nextTick, provide, type InjectionKey, type Ref} from 'vue'
 import {revealAnchor} from '../../history'
 import type {PageRequest, PageResult, RestResult} from '@loncra/client/commons'
+import {emptyPageResult} from '@loncra/client/commons'
 import {
   ChatMessageService,
   type UserChatMessageResponseBody,
@@ -51,17 +52,6 @@ export interface ImHistoryHost {
   jumpToMessage: (key: string, flashPending?: boolean, block?: ScrollLogicalPosition) => void
 }
 
-function emptyPage<TBubble>(): PageResult<TBubble> {
-  return {
-    elements: [],
-    first: true,
-    last: true,
-    number: 1,
-    size: 10,
-    metadata: {},
-  }
-}
-
 export interface ImHistoryApi {
   loadMore: (tag: 'next' | 'previous') => Promise<void>
   jumpToHistoryMessage: (data: UserChatMessageResponseBody) => Promise<void>
@@ -103,7 +93,7 @@ export function useImHistory<TSession extends ImHistorySession>(
       pageLock = true
       const result: RestResult<PageResult<UserChatMessageResponseBody>> =
         await ChatMessageService.histories(request, chatRoomId)
-      const page = result?.data || emptyPage<UserChatMessageResponseBody>()
+      const page = result?.data || emptyPageResult<UserChatMessageResponseBody>()
       applyHistoryPage(current, page, clear)
       for (const message of page.elements || []) {
         // previous 插到头，next 追加到尾。loadMore 用 append=true 表示 previous。
@@ -142,7 +132,7 @@ export function useImHistory<TSession extends ImHistorySession>(
       current.item = item
       current.isOnFirstPage = true
       current.isOnLastPage = false
-      current.dataSource = emptyPage()
+      current.dataSource = emptyPageResult()
       if (!current.item?.data?.room) {
         return
       }

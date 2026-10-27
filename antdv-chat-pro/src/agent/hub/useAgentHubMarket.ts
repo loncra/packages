@@ -1,5 +1,6 @@
 import {onMounted, ref} from 'vue'
 import {
+    emptyTotalPage,
     ResourceServerService,
     type DataDictionaryMetadata,
     type PageRequest,
@@ -10,19 +11,6 @@ import {
 import {useLocale} from '../../_util/useLocale'
 
 const ALL_GROUP_CODE = 'system.all'
-
-function emptyPage<T>(): TotalPage<T> {
-    return {
-        elements: [],
-        first: true,
-        last: true,
-        number: 1,
-        size: 10,
-        totalCount: 0,
-        totalPages: 0,
-        metadata: {},
-    }
-}
 
 function withAll(items: DataDictionaryMetadata[], allName: string): DataDictionaryMetadata[] {
     return [
@@ -39,7 +27,7 @@ export function useAgentHubMarket<T>(service: PageEnabledService<T>, groupCodePr
     const locale = useLocale('AgentHub')
     const loading = ref(false)
     const install = ref(false)
-    const dataSource = ref<TotalPage<T>>(emptyPage())
+    const dataSource = ref<TotalPage<T>>(emptyTotalPage<T>())
     const groups = ref<DataDictionaryMetadata[]>([])
     const activeGroupCode = ref<string>()
 
