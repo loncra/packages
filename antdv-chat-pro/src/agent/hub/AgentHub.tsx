@@ -17,7 +17,10 @@ const AgentHub = defineComponent({
     installs: {type: Array as PropType<UserPluginInstallResult[]>, default: () => []},
     workspaces: {type: Array as PropType<AgentConversationRecord[]>, default: () => []},
   },
-  emits: ['installed', 'uninstalled'],
+  emits: {
+    installed: (_result: UserPluginInstallResult) => true,
+    uninstalled: (_id: number) => true,
+  },
   setup(props, {emit}) {
     const locale = useLocale('AgentHub')
     const config = useConfig()

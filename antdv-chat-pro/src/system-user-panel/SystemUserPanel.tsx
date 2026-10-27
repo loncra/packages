@@ -1,4 +1,4 @@
-import {computed, defineComponent, type PropType, type Ref, ref, toRef} from 'vue'
+import {computed, defineComponent, type CSSProperties, type PropType, type Ref, ref} from 'vue'
 import {Checkbox, Divider, Empty, Flex, Input, Space, TypographyText} from 'antdv-next'
 import {SearchOutlined, UsergroupAddOutlined} from '@antdv-next/icons'
 import type {ConversationItemType, DividerItemType} from '@antdv-next/x'
@@ -68,7 +68,6 @@ const SystemUserPanel = defineComponent({
     )
     const [hashId, cssVarCls] = useStyle(prefixCls)
 
-    const dataSource = toRef(props, 'dataSource') as unknown as Ref<SystemUserContactItem[]>
     const selectedValue = useTwoWayModel(props, 'value', emit) as unknown as Ref<
       SystemUserContactItem[]
     >
@@ -78,7 +77,7 @@ const SystemUserPanel = defineComponent({
     const showSelectPanel = computed(() => props.selected && !props.hideSelectPanel)
 
     const filterDataSource = computed(() =>
-      dataSource.value
+      props.dataSource
         .filter((item) =>
           searchValue.value === '' ? true : principalName(item.data).includes(searchValue.value),
         )
@@ -137,7 +136,7 @@ const SystemUserPanel = defineComponent({
             props.rootClass,
             attrClass as string,
           )}
-          style={attrStyle as never}
+          style={attrStyle as CSSProperties}
         >
           <Flex
             vertical

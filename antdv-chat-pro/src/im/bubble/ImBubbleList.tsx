@@ -28,7 +28,11 @@ const ImBubbleList = defineComponent({
       default: undefined,
     },
   },
-  emits: ['visibleItems', 'reedit', 'reference'],
+  emits: {
+    visibleItems: (_items: BubbleListItem[]) => true,
+    reedit: (_oldContent: unknown) => true,
+    reference: (_bubble: ImChatBubble) => true,
+  },
   setup(props, {emit, slots, expose}) {
     const history = inject(IM_HISTORY_KEY, null)
     const listRef = ref<BubbleListExpose>()

@@ -13,7 +13,7 @@ import AgentBubbleList from './bubble/AgentBubbleList'
 import AgentSender from './sender/AgentSender'
 import AgentHub from './hub/AgentHub'
 import {useAgentChat} from './useAgentChat'
-import type {Self} from './types'
+import type {AgentSession, Self} from './types'
 import useStyle, {AGENT_CHAT_PREFIX} from './style'
 
 const AgentChat = defineComponent({
@@ -22,7 +22,13 @@ const AgentChat = defineComponent({
     installs: {type: Array as PropType<UserPluginInstallResult[]>, default: () => []},
     self: {type: Object as PropType<Self>, required: true},
   },
-  emits: ['active', 'resume', 'cancel', 'installed', 'uninstalled'],
+  emits: {
+    active: (_session: AgentSession | undefined) => true,
+    resume: (_assistantMessageId: number) => true,
+    cancel: (_session: AgentSession) => true,
+    installed: (_result: UserPluginInstallResult) => true,
+    uninstalled: (_id: number) => true,
+  },
   setup(props, {emit, slots}) {
     const chatLocale = useLocale('AgentChat')
     const config = useConfig()

@@ -16,7 +16,6 @@ const ImContact = defineComponent({
   emits: {
     selected: (_body: UserChatConversationResponseBody) => true,
     'update:loading': (_value: boolean) => true,
-    'update:dataSource': (_value: SystemUserContactItem[]) => true,
   },
   setup(props, {emit}) {
     const config = useConfig()

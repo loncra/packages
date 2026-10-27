@@ -86,7 +86,9 @@ const ImHistoriesModal = defineComponent({
     roomName: {type: String, required: true},
     host: {type: Object as PropType<ImChatHost>, required: true},
   },
-  emits: ['update:open'],
+  emits: {
+    'update:open': (_value: boolean) => true,
+  },
   setup(props, {emit}) {
     const locale = useLocale('ImHistory')
     const history = inject(IM_HISTORY_KEY, null)

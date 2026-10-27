@@ -61,7 +61,11 @@ const ImChat = defineComponent({
     contacts: {type: Array as PropType<SystemUserContactItem[]>, default: () => []},
     loading: {type: Boolean, default: false},
   },
-  emits: ['active', 'muted', 'update:loading', 'update:contacts'],
+  emits: {
+    active: (_conversation: UserChatConversationResponseBody | undefined) => true,
+    muted: (_body: BasicUserChatConversation) => true,
+    'update:loading': (_value: boolean) => true,
+  },
   setup(props, {emit, expose}) {
     const locale = useLocale('ImChat')
     const config = useConfig()
@@ -311,7 +315,6 @@ const ImChat = defineComponent({
                     <ImContact
                       dataSource={props.contacts}
                       loading={props.loading}
-                      onUpdate:dataSource={(value: SystemUserContactItem[]) => emit('update:contacts', value)}
                       onUpdate:loading={(value: boolean) => emit('update:loading', value)}
                       onSelected={onContactSelected}
                     />

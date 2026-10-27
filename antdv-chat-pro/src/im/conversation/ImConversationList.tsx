@@ -16,7 +16,7 @@ import {useLocale} from '../../_util/useLocale.ts'
 import {isEnumValue, YES_OR_NO_TYPE} from '@loncra/client/commons'
 import {AuthServerService} from '@loncra/client/auth'
 import {AttachmentService} from '@loncra/client/resource'
-import {ChatMessageService, type UserChatConversationResponseBody,} from '@loncra/client/message'
+import {ChatMessageService, type BasicUserChatConversation, type UserChatConversationResponseBody,} from '@loncra/client/message'
 import type {SlotConfigType} from '@antdv-next/x/dist/sender/interface'
 import ConversationList from '../../conversation/ConversationList.tsx'
 import type {ConversationNode} from '../../conversation/types.ts'
@@ -55,7 +55,13 @@ const ImConversationList = defineComponent({
     host: {type: Object as PropType<ImConversationHost>, required: true},
     storedDrafts: {type: Object as PropType<Record<string, SlotConfigType[]>>, required: true},
   },
-  emits: ['active', 'flags', 'delete', 'update:selectedKeys', 'update:openKeys'],
+  emits: {
+    active: (_key: string, _messageId?: number) => true,
+    flags: (_data: BasicUserChatConversation[]) => true,
+    delete: (_item: UserChatConversationResponseBody) => true,
+    'update:selectedKeys': (_keys: string[]) => true,
+    'update:openKeys': (_keys: string[]) => true,
+  },
   setup(props, {emit}) {
     const keyword = ref('')
     const {modal, message} = useApp()

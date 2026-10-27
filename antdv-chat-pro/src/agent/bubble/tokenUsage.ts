@@ -1,7 +1,7 @@
 import {getEnumName} from '@loncra/client/commons'
-import type {AgentTokenUsage} from './types.ts'
+import type {AgentTokenUsage} from './types'
 
-export type {AgentTokenUsage} from './types.ts'
+export type {AgentTokenUsage} from './types'
 
 type TokenField = 'inputTokens' | 'outputTokens' | 'cachedTokens'
 

@@ -67,7 +67,14 @@ const ImSender = defineComponent({
     prefixCls: String,
     rootClass: String,
   },
-  emits: ['submit', 'change', 'cancel', 'jumpToReference', 'update:refMessages', 'appliedSlots'],
+  emits: {
+    submit: (_blocks: ImContentBlock[]) => true,
+    change: (_value: string, _event?: Event, _slotConfig?: SlotConfigType[]) => true,
+    cancel: () => true,
+    jumpToReference: (_message: UserChatMessageResponseBody) => true,
+    'update:refMessages': (_next: UserChatMessageResponseBody[]) => true,
+    appliedSlots: (_slots: SlotConfigType[]) => true,
+  },
   setup(props, {slots, emit, expose}) {
     const instance = getCurrentInstance()
     const draftRef = ref<DraftSenderExpose>()

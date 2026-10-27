@@ -75,7 +75,6 @@ const ImChatView = defineComponent({
       required: true,
     },
   },
-  emits: ['jumpToReference'],
   setup(props, {expose}) {
     const locale = useLocale('ImChat')
     const config = useConfig()
