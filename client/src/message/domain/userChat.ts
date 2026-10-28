@@ -22,7 +22,6 @@ export interface UserChatMessageEntity extends VersionEntityMetadata {
   undoTime: number
   metadata: Record<string, unknown>
   type: NameValueEnumMetadata<number> | number
-  /** HTTP JSON；管理端收窄为聊天气泡块 */
   content: any
 }
 
@@ -76,7 +75,6 @@ export interface UserChatConversationResponseBody extends BasicUserChatConversat
   lastUserMessage: UserChatMessageEntity
   room: UserChatRoomEntity
   readableCount: number
-  /** HTTP / 本地草稿；管理端收窄为 Sender 词槽 */
   draft?: any[]
 }
 

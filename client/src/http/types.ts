@@ -7,7 +7,6 @@ export interface HttpRequest {
   headers?: Record<string, string>
   params?: Record<string, unknown> | URLSearchParams
   bodyType?: 'json' | 'form' | 'formData' | 'raw'
-  /** 适配器透传（如 axios onUploadProgress） */
   extra?: object
 }
 
@@ -23,8 +22,6 @@ export interface ClientConfig {
   getAccessToken?: () => string | null | undefined
   resourcePath?: string
   openAttachmentUrl?: (url: string) => void
-  /** 表单编码值转换（Dayjs、枚举对象等由 App 注入） */
   formValueConvert?: FormValueConvert
-  /** 超过该字节走分片；未设或非有限数字则始终单文件 */
   uploadBlockSize?: number
 }

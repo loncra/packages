@@ -39,10 +39,6 @@ function appendFormValue(param: URLSearchParams, key: string, val: unknown): voi
   param.append(key, String(val))
 }
 
-/**
- * 把对象编成 application/x-www-form-urlencoded。
- * 值怎么转由调用方决定：单次传入 valueConvert，或 createClient({ formValueConvert })。
- */
 export function formUrlEncoded(
   json: Record<string, unknown>,
   ignoreProperties?: string | string[],

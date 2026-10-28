@@ -43,6 +43,7 @@ import {ChatMessageService} from '@loncra/client/message'
 - 只有全应用入口才进 `commons/api`。
 - 跨模块 import 走 barrel（`from '../../commons'`）；模块内部用相对路径，避免经 `index` 形成循环。
 - 领域类型与枚举一律从 `@loncra/client/<module>` 导出，宿主不另写副本。
+- 业务成功判定只有 `commons/utils/result.ts` 的 `isBusinessSuccess` / `isResultSuccess` 一份实现（宿主 `@/requests` 与各包的上传、编辑器都从这里走），不要另写副本。
 
 ## 启动
 
@@ -59,13 +60,14 @@ createClient({
   resourcePath: '/resource',
   openAttachmentUrl: (url) => window.open(url),
   formValueConvert: (_key, value) => toFormUrlencoded(value), // 可选：值的转换由宿主注入，函数名是宿主自己的
-  uploadBlockSize: 5 * 1024 * 1024, // 可选；超过该字节走分片
+  uploadBlockSize: 5 * 1024 * 1024, // 可选；超过该字节走分片，未设或非有限数字则始终单文件
 })
 ```
 
-- `ClientConfig` 的全部字段见 `http/types.ts`：`http` 与 `runtimeMode` 必填，其余可选。
+- `ClientConfig` 的全部字段见 `http/types.ts`：`http` 与 `runtimeMode` 必填，其余可选；`extra` 由 HTTP 适配器原样透传（如 axios 的 `onUploadProgress`）。
 - 要在 Vue 组件里按 props 驱动配置，走 `configureClient`：幂等，重复调用即覆盖，配置变化后自动重配。
 - `modulePrefix(moduleName)` 返回单体 `/api`、微服务 `/api/{module}`；它依赖 `getClient()`，**必须在 `createClient` 之后调用**。各 Service 把它放在取 `BASE_URL` 的取值函数里，所以 `new XxxService()` 本身是纯的。
+- **Service 的 `baseUrl` 必须传取值函数**（`super(() => XxxService.SERVICE_URL)`）：声明文件在模块顶层就 `new XxxService()`，若 URL 在构造期求值，会把 `getClient()` 拉进首屏 eager 图，导致未 `createClient` 就抛错。字符串形式仍然兼容（原样返回），新代码一律给函数。
 - `formUrlEncoded` 在 `commons/utils`：骨架只编码，值的转换由 `createClient({formValueConvert})` 注入，单次调用也可传第三个 `valueConvert`。
 
 通用规则见 [CONTRIBUTING-PACKAGES.md](../CONTRIBUTING-PACKAGES.md) 第 1–6 节。

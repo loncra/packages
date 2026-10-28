@@ -1,5 +1,3 @@
-/** 跨模块共用的后端枚举码。领域枚举在各模块 enumerate.ts，带 XXX_SERVER_ 前缀。 */
-
 export const YES_OR_NO_TYPE = {
   YES: 1,
   NO: 0,
@@ -40,7 +38,6 @@ export const TIME_UNIT_TYPE = {
   DAYS: 'DAYS',
 } as const
 
-/** 审核状态（后端 `AuditStatusEnum`，resource-server）：企业成员 / 邀请 / 短信签名与模板共用 */
 export const AUDIT_STATUS_VALUE = {
   AUDITABLE: 10,
   AGREED: 20,
