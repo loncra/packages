@@ -1,12 +1,16 @@
-import {computed, type ComputedRef, type Ref, ref} from 'vue'
+import {computed, reactive, type ComputedRef, type Ref, ref} from 'vue'
 import useApp from 'antdv-next/dist/app/useApp'
-import {ChatMessageService, type UserChatConversationResponseBody} from '@loncra/client/message'
+import {ChatMessageService, type BasicUserChatConversation, type UserChatConversationResponseBody} from '@loncra/client/message'
 import {isEnumValue, YES_OR_NO_TYPE} from '@loncra/client/commons'
 import {useLocale} from '../../_util/useLocale'
 
 export interface ImConversationActions {
   remove: (item: UserChatConversationResponseBody) => void
-  toggleFlag: (key: 'pinned' | 'muted', item: UserChatConversationResponseBody) => Promise<void>
+  isFlagPending: (key: 'pinned' | 'muted', item: UserChatConversationResponseBody) => boolean
+  toggleFlag: (
+    key: 'pinned' | 'muted',
+    item: UserChatConversationResponseBody,
+  ) => Promise<BasicUserChatConversation | undefined>
 }
 
 export interface ImConversationsApi<T extends UserChatConversationResponseBody> {
@@ -25,7 +29,9 @@ export interface ImConversationsApi<T extends UserChatConversationResponseBody> 
   refreshByRoomId: (roomId: number) => Promise<T | undefined>
   remove: (id: number | undefined) => void
   removeConversation: (item: T, onRemoved?: () => void) => void
-  toggleFlag: (key: 'pinned' | 'muted', item: T) => Promise<void>
+  patch: (id: number | undefined, mutate: (item: T) => void) => void
+  isFlagPending: (key: 'pinned' | 'muted', id: number | undefined) => boolean
+  toggleFlag: (key: 'pinned' | 'muted', item: T) => Promise<BasicUserChatConversation | undefined>
   patchFlags: (items: Array<{id?: number; pinned?: unknown; muted?: unknown}>) => void
 }
 
@@ -135,6 +141,13 @@ export function useImConversations<T extends UserChatConversationResponseBody>()
     dataSource.value = dataSource.value.filter((d) => d.id !== id)
   }
 
+  function patch(id: number | undefined, mutate: (item: T) => void): void {
+    const data = findById(id)
+    if (data) {
+      mutate(data)
+    }
+  }
+
   function removeConversation(item: T, onRemoved?: () => void): void {
     const id = Number(item.id)
     if (!Number.isFinite(id)) {
@@ -161,15 +174,35 @@ export function useImConversations<T extends UserChatConversationResponseBody>()
     }
   }
 
-  async function toggleFlag(key: 'pinned' | 'muted', item: T): Promise<void> {
+  const pendingFlags = reactive(new Set<string>())
+
+  function isFlagPending(key: 'pinned' | 'muted', id: number | undefined): boolean {
+    return id != null && pendingFlags.has(`${key}:${id}`)
+  }
+
+  async function toggleFlag(key: 'pinned' | 'muted', item: T): Promise<BasicUserChatConversation | undefined> {
     const id = Number(item.id)
-    if (!Number.isFinite(id)) {
-      return
+    if (!Number.isFinite(id) || isFlagPending(key, id)) {
+      return undefined
     }
-    const result = key === 'pinned'
-      ? await ChatMessageService.pinnedConversation([id])
-      : await ChatMessageService.mutedConversation([id])
-    patchFlags(result.data ?? [])
+    const pendingKey = `${key}:${id}`
+    pendingFlags.add(pendingKey)
+    try {
+      const result = key === 'pinned'
+        ? await ChatMessageService.pinnedConversation([id])
+        : await ChatMessageService.mutedConversation([id])
+      const returned = result.data?.at(0)
+      if (returned) {
+        patchFlags([returned])
+      }
+      message.success(result.message)
+      return returned
+    } catch (error) {
+      message.error(error instanceof Error ? error.message : String(error))
+      return undefined
+    } finally {
+      pendingFlags.delete(pendingKey)
+    }
   }
 
   function patchFlags(
@@ -205,6 +238,8 @@ export function useImConversations<T extends UserChatConversationResponseBody>()
     refreshByRoomId,
     remove,
     removeConversation,
+    patch,
+    isFlagPending,
     toggleFlag,
     patchFlags,
   }

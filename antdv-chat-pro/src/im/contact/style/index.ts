@@ -6,8 +6,6 @@ function genImContactStyle(token: LoncraStyleToken): CSSInterpolation {
   const {componentCls} = token
   return {
     [componentCls]: {
-      display: 'flex',
-      flexDirection: 'column',
       height: '100%',
       minHeight: 0,
       overflow: 'hidden',

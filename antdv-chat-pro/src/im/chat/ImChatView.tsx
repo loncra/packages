@@ -245,7 +245,7 @@ const ImChatView = defineComponent({
                   }}
                   instructionMap={instructionMap()}
                   sending={props.session.sending}
-                  uploadOptions={roomId ? {param: {prefix: `user_chat_room/${roomId}`}} : undefined}
+                  uploadOptions={roomId ? {param: {prefix: props.host.roomUploadPrefix(roomId)}} : undefined}
                   placeholder={placeholder()}
                   disabled={!isEnumValue(data.status, MESSAGE_SERVER_USER_CHAT_CONVERSATION_STATUS.ENABLED)}
                   senderInsertInstruction={onSenderInsertInstruction}

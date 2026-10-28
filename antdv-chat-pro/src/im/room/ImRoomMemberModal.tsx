@@ -1,28 +1,20 @@
 import {computed, defineComponent, type PropType, ref, watch} from 'vue'
 import {Button, Modal, Popconfirm, Space, SpaceCompact} from 'antdv-next'
-import useApp from 'antdv-next/dist/app/useApp'
 import SystemUserPanel, {type SystemUserContactItem} from '../../system-user-panel'
 import {fillLocale} from '@loncra/antdv'
-import {isEnumValue, type NameValueEnumMetadata, type RestResult,} from '@loncra/client/commons'
+import {isEnumValue, type RestResult,} from '@loncra/client/commons'
 import {
-    ChatMessageService,
     MESSAGE_SERVER_USER_CHAT_PARTICIPANT_TYPE,
     type UserChatConversationResponseBody,
     type UserChatParticipantEntity,
 } from '@loncra/client/message'
 import type {ImHost} from '../host.ts'
 import {AuthServerService} from '@loncra/client/auth'
+import {participantTypeOf} from './imRoomKinds.ts'
+import {useImRoomMemberActions} from './useImRoomMemberActions.ts'
 import {useLocale} from '../../_util/useLocale.ts'
 
 export type ImRoomMemberModalMode = 'add' | 'member'
-
-function participantTypeOf(item: SystemUserContactItem): number | NameValueEnumMetadata<number> | undefined {
-  const value = item.participantType
-  if (typeof value === 'number' || (value != null && typeof value === 'object' && 'value' in value)) {
-    return value as number | NameValueEnumMetadata<number>
-  }
-  return undefined
-}
 
 const ImRoomMemberModal = defineComponent({
   name: 'LImRoomMemberModal',
@@ -48,8 +40,8 @@ const ImRoomMemberModal = defineComponent({
   },
   setup(props, {emit}) {
     const locale = useLocale('ImRoom')
-    const {message} = useApp()
-    const busy = ref(false)
+    const memberActions = useImRoomMemberActions()
+    const busy = memberActions.busy
     const selectedUsers = ref<SystemUserContactItem[]>([])
 
     const panelContacts = computed(() => {
@@ -93,16 +85,12 @@ const ImRoomMemberModal = defineComponent({
       if (props.roomId == null || principals.length <= 0) {
         return
       }
-      try {
-        busy.value = true
-        const result = await ChatMessageService.addRoomParticipant(props.roomId, principals)
-        emit('added', result)
-        close()
-      } catch (error) {
-        message.error(error instanceof Error ? error.message : String(error))
-      } finally {
-        busy.value = false
+      const result = await memberActions.addParticipants(props.roomId, principals)
+      if (!result) {
+        return
       }
+      emit('added', result)
+      close()
     }
 
     async function updateParticipantType(type: number) {
@@ -110,15 +98,8 @@ const ImRoomMemberModal = defineComponent({
       if (props.roomId == null || principals.length <= 0) {
         return
       }
-      try {
-        busy.value = true
-        const result = await ChatMessageService.updateParticipantType(props.roomId, type, principals)
-        message.success(result.message)
+      if (await memberActions.updateParticipants(props.roomId, type, principals)) {
         close()
-      } catch (error) {
-        message.error(error instanceof Error ? error.message : String(error))
-      } finally {
-        busy.value = false
       }
     }
 
@@ -127,15 +108,8 @@ const ImRoomMemberModal = defineComponent({
       if (props.roomId == null || principals.length <= 0) {
         return
       }
-      try {
-        busy.value = true
-        const result = await ChatMessageService.removeRoomParticipant(props.roomId, principals)
-        message.success(result.message)
+      if (await memberActions.removeMembers(props.roomId, principals)) {
         close()
-      } catch (error) {
-        message.error(error instanceof Error ? error.message : String(error))
-      } finally {
-        busy.value = false
       }
     }
 

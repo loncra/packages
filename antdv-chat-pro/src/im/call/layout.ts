@@ -110,3 +110,79 @@ export function computePrivateCallLayout(
 export function panelStyle(style: CallPanelStyle | {width: string; height: string}): CSSProperties {
   return {width: style.width, height: style.height}
 }
+
+export type CallRole = 'local' | 'remote'
+
+export type CallShellVariant = 'fill' | 'split' | 'pip' | 'shrink'
+
+export interface CallShellState {
+  minimized: boolean
+  fullscreen: boolean
+  leftRight: boolean
+  targetFull: boolean
+}
+
+export function pipRole(role: CallRole, leftRight: boolean, targetFull: boolean): boolean {
+  if (leftRight) {
+    return false
+  }
+  return role === 'local' ? targetFull : !targetFull
+}
+
+export function callShellVariant(role: CallRole, state: CallShellState): CallShellVariant {
+  if (state.minimized) {
+    return 'fill'
+  }
+  if (state.fullscreen && state.leftRight) {
+    return 'split'
+  }
+  if (state.fullscreen && pipRole(role, state.leftRight, state.targetFull)) {
+    return 'pip'
+  }
+  if (state.fullscreen) {
+    return 'fill'
+  }
+  if (state.leftRight) {
+    return 'shrink'
+  }
+  if (pipRole(role, state.leftRight, state.targetFull)) {
+    return 'pip'
+  }
+  return 'fill'
+}
+
+export function callShellClass(prefix: string, variant: CallShellVariant): string {
+  return `${prefix}-${variant}`
+}
+
+export function callShellStyle(
+  role: CallRole,
+  state: CallShellState & {spec: CallLayoutSpec},
+): CSSProperties {
+  if (state.minimized) {
+    return role === 'local' ? {display: 'none'} : {width: '100%', height: '100%'}
+  }
+  if (state.fullscreen) {
+    if (state.leftRight) {
+      return {flex: '1 1 0', width: '0', height: '100%'}
+    }
+    if (pipRole(role, state.leftRight, state.targetFull)) {
+      return role === 'local' ? panelStyle(state.spec.local) : panelStyle(state.spec.remote)
+    }
+    return {width: '100%', height: '100%'}
+  }
+  if (state.leftRight) {
+    const panel = role === 'local' ? state.spec.local : state.spec.remote
+    return {width: panel.width, height: '100%'}
+  }
+  if (pipRole(role, state.leftRight, state.targetFull)) {
+    return role === 'local' ? panelStyle(state.spec.local) : panelStyle(state.spec.remote)
+  }
+  return {width: '100%', height: `${state.spec.modalHeight}px`}
+}
+
+export function videoCover(role: CallRole, state: CallShellState): boolean {
+  return state.minimized
+    || (state.fullscreen && !pipRole(role, state.leftRight, state.targetFull) && !state.leftRight)
+    || (state.fullscreen && state.leftRight)
+}

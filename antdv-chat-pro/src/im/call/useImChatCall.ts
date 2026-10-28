@@ -3,7 +3,6 @@ import useApp from 'antdv-next/dist/app/useApp'
 import {isBusinessSuccess, isEnumValue, timeToMs} from '@loncra/client/commons'
 import {
     ChatCallService,
-    MESSAGE_SERVER_MESSAGE_GROUP,
     MESSAGE_SERVER_USER_CHAT_CALL_PARTICIPANT_STATUS,
     MESSAGE_SERVER_USER_CHAT_CALL_STATUS,
     MESSAGE_SERVER_USER_CHAT_PARTICIPANT_TYPE,
@@ -12,6 +11,7 @@ import {
     type UserChatCallResponseBody,
 } from '@loncra/client/message'
 import type {ImChatCallHost} from '../host.ts'
+import {callNotificationKey} from './constants.ts'
 import {createImCallMedia, type ImCallMedia, type ImCallMediaState} from './media.ts'
 
 const IM_CHAT_CALL_KEY: InjectionKey<ImChatCallSession> = Symbol('imChatCall')
@@ -79,7 +79,7 @@ export function provideImChatCall(host: ImChatCallHost): ImChatCallSession {
   session.state = state
 
   function dismiss(callId: number) {
-    notification.destroy(`${MESSAGE_SERVER_MESSAGE_GROUP.USER_CHAT_CALL}_${callId}`)
+    notification.destroy(callNotificationKey(callId))
   }
 
   function resetWindow() {

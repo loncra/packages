@@ -1,52 +1,46 @@
-import {computed, defineComponent, type PropType} from 'vue'
+import {computed, defineComponent, type CSSProperties, type PropType} from 'vue'
 import {Empty, Flex} from 'antdv-next'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import SystemUserPanel, {type SystemUserContactItem} from '../../system-user-panel'
 import {classNames} from '@loncra/antdv'
 import type {PlatformUser} from '@loncra/client/auth'
-import {ChatMessageService, type UserChatConversationResponseBody} from '@loncra/client/message'
 import useStyle from './style'
 
 const ImContact = defineComponent({
   name: 'LImContact',
+  inheritAttrs: false,
   props: {
     dataSource: {type: Array as PropType<SystemUserContactItem[]>, default: () => []},
-    loading: {type: Boolean, default: false},
+    prefixCls: String,
+    rootClass: String,
   },
   emits: {
-    selected: (_body: UserChatConversationResponseBody) => true,
-    'update:loading': (_value: boolean) => true,
+    selected: (_user: PlatformUser) => true,
   },
-  setup(props, {emit}) {
+  setup(props, {emit, attrs}) {
     const config = useConfig()
-    const prefixCls = computed(() => config.value.getPrefixCls('im-contact', 'loncra-im-contact'))
+    const prefixCls = computed(() => config.value.getPrefixCls('im-contact', props.prefixCls ?? 'loncra-im-contact'))
     const [hashId, cssVarCls] = useStyle(prefixCls)
 
-    async function onSelected(data: PlatformUser) {
-      emit('update:loading', true)
-      try {
-        const result = await ChatMessageService.createConversation(
-          {id: undefined, version: undefined},
-          [data.systemName],
-        )
-        if (result.data) {
-          emit('selected', result.data)
-        }
-      } finally {
-        emit('update:loading', false)
-      }
+    function onSelected(data: PlatformUser) {
+      emit('selected', data)
     }
 
     return () => {
-      const items = props.dataSource ?? []
+      const {class: attrClass, style: attrStyle, ...rest} = attrs
       return (
-        <Flex vertical class={classNames(prefixCls.value, hashId.value, cssVarCls.value)}>
-          {items.length > 0
+        <Flex
+          {...rest}
+          vertical
+          class={classNames(prefixCls.value, hashId.value, cssVarCls.value, props.rootClass, attrClass as string)}
+          style={attrStyle as CSSProperties}
+        >
+          {props.dataSource.length > 0
             ? (
               <SystemUserPanel
                 selected={false}
                 hideSelectPanel
-                dataSource={items}
+                dataSource={props.dataSource}
                 onSelected={onSelected}
               />
             )

@@ -13,6 +13,7 @@ export interface ImChatHost extends ImHost {
     message: UserChatConversationResponseBody['lastUserMessage'] | undefined,
     conversation?: UserChatConversationResponseBody,
   ) => string
+  roomUploadPrefix: (roomId: number) => string
   subscribeReadUpdate: (
     handler: (rows: Array<IdValueMetadata<number, number>>) => void,
   ) => () => void

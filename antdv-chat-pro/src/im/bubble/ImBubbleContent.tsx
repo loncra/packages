@@ -111,7 +111,7 @@ const ImBubbleContent = defineComponent({
       const mine = props.principal === props.host.self.systemName
       return (
         <Tooltip title={piece.tooltip}>
-          <Space size={4}>
+          <Space>
             <Typography.Text delete type="secondary">
               {mine ? locale.value.selfUndo : piece.value}
             </Typography.Text>

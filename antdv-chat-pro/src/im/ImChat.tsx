@@ -1,4 +1,4 @@
-import {computed, defineComponent, type PropType} from 'vue'
+import {computed, defineComponent, type PropType, ref} from 'vue'
 import {ContactsOutlined, MessageOutlined} from '@antdv-next/icons'
 import {Drawer, Empty, Flex, Segmented, Spin, Splitter, SplitterPanel} from 'antdv-next'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
@@ -6,10 +6,12 @@ import {classNames} from '@loncra/antdv'
 import {type RestResult} from '@loncra/client/commons'
 import {
   type BasicUserChatConversation,
+  ChatMessageService,
   type UserChatConversationResponseBody,
   type UserChatMessageEntity,
   type UserChatMessageResponseBody,
 } from '@loncra/client/message'
+import type {PlatformUser} from '@loncra/client/auth'
 import type {SystemUserContactItem} from '../system-user-panel'
 import ImConversationList from './conversation/ImConversationList'
 import ImContact from './contact/ImContact'
@@ -17,6 +19,7 @@ import ImChatView from './chat/ImChatView'
 import {ImRoomSettings} from './room'
 import type {ImPageHost} from './host'
 import {useImChat} from './useImChat'
+import {useImRoomActions} from './room/useImRoomActions'
 import useStyle, {IM_CHAT_PREFIX} from './style'
 
 export interface ImChatExpose {
@@ -42,7 +45,6 @@ const ImChat = defineComponent({
   emits: {
     active: (_conversation: UserChatConversationResponseBody | undefined) => true,
     muted: (_body: BasicUserChatConversation) => true,
-    'update:loading': (_value: boolean) => true,
   },
   setup(props, {emit, expose}) {
     const config = useConfig()
@@ -52,6 +54,28 @@ const ImChat = defineComponent({
       host: props.host,
       emitActive: (conversation) => emit('active', conversation),
     })
+    const roomActions = useImRoomActions({conversations: chat.conversations})
+    const contactLoading = ref(false)
+
+    async function onContactSelected(user: PlatformUser) {
+      contactLoading.value = true
+      try {
+        const result = await ChatMessageService.createConversation(
+          {id: undefined, version: undefined},
+          [user.systemName],
+        )
+        if (!result.data) {
+          return
+        }
+        chat.conversations.upsertToTop(result.data)
+        chat.pane.value = 'conversation'
+        if (result.data.id != null) {
+          await chat.openConversation(result.data.id)
+        }
+      } finally {
+        contactLoading.value = false
+      }
+    }
 
     expose({
       openConversation: chat.openConversation,
@@ -73,7 +97,7 @@ const ImChat = defineComponent({
       return (
         <Splitter class={rootClass}>
           <SplitterPanel class={`${prefixCls.value}-side`} defaultSize="20%" min="15%" max="25%">
-            <Spin spinning={props.loading} class={`${prefixCls.value}-full-spin`}>
+            <Spin spinning={props.loading || contactLoading.value} class={`${prefixCls.value}-full-spin`}>
               <Flex vertical class={`${prefixCls.value}-column`}>
                 {chat.pane.value === 'conversation'
                   ? (
@@ -96,6 +120,7 @@ const ImChat = defineComponent({
                             }
                           })
                         },
+                        isFlagPending: (key, item) => chat.conversations.isFlagPending(key, Number(item.id)),
                         toggleFlag: chat.conversations.toggleFlag,
                       }}
                       onActive={(key: string, messageId?: number) => {
@@ -108,15 +133,7 @@ const ImChat = defineComponent({
                   : (
                     <ImContact
                       dataSource={props.contacts}
-                      loading={props.loading}
-                      onUpdate:loading={(value: boolean) => emit('update:loading', value)}
-                      onSelected={(conversation: UserChatConversationResponseBody) => {
-                        chat.conversations.upsertToTop(conversation)
-                        chat.pane.value = 'conversation'
-                        if (conversation.id != null) {
-                          void chat.openConversation(conversation.id)
-                        }
-                      }}
+                      onSelected={onContactSelected}
                     />
                   )}
                 <div class={`${prefixCls.value}-switch`}>
@@ -172,6 +189,8 @@ const ImChat = defineComponent({
                             participants={chat.session.participants}
                             contacts={props.contacts}
                             host={props.host}
+                            actions={roomActions}
+                            conversations={chat.conversations}
                             onMuted={(body: BasicUserChatConversation) => emit('muted', body)}
                             onDelete={(body: UserChatConversationResponseBody) => {
                               chat.conversations.remove(body.id)

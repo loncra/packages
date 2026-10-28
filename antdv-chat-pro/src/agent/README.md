@@ -106,3 +106,5 @@ const self = {
 未进包根出口的内部实现：`AgentHub` 及其市场子件（`McpMarket` / `SkillMarket` / `InstalledPlugins` / `PluginCard` / `PluginInstallModal` / `useAgentHubMarket`）、`AgentThinkBlock` / `AgentToolCallCard` / `AgentAnswerBlock`、`useAgentChat*` 系列 composable、`useAgentInstructionSlots` / `agentMenus`、`pluginIcons`、草稿 codec。
 
 样式：各子域独立 `genStyleHooks`，前缀 `loncra-agent-chat` / `loncra-agent-bubble` / `loncra-agent-conversation` / `loncra-agent-hub` / `loncra-agent-sender`，均可经 ConfigProvider 的 `getPrefixCls` 覆盖。
+
+体量说明：`AgentChat` 超组件阈值（约 470 逻辑行）不拆的理由——Splitter 三面板装配 + 单份会话状态（`current` / `conversations` / `pane`）协调，再拆会把同一份状态分散到多个 composable，协调成本大于收益。

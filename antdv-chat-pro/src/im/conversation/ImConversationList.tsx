@@ -77,11 +77,13 @@ const ImConversationList = defineComponent({
           key: 'pinned',
           label: pinned ? copy.unpin : copy.pin,
           icon: () => <PinIcon />,
+          disabled: props.actions.isFlagPending('pinned', item),
         },
         {
           key: 'muted',
           label: muted ? copy.unmute : copy.mute,
           icon: () => <MuteIcon />,
+          disabled: props.actions.isFlagPending('muted', item),
         },
         {type: 'divider'},
         {

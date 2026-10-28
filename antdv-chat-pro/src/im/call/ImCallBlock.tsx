@@ -1,34 +1,16 @@
 import {defineComponent, type PropType} from 'vue'
 import {Badge, Space} from 'antdv-next'
 import {AudioOutlined, VideoCameraOutlined} from '@antdv-next/icons'
-import {getEnumName, getEnumValue, isEnumValue} from '@loncra/client/commons'
+import {getEnumName, isEnumValue} from '@loncra/client/commons'
 import {
     MESSAGE_SERVER_CHAT_CALL_SCENE,
     MESSAGE_SERVER_CHAT_CALL_TYPE,
     MESSAGE_SERVER_USER_CHAT_CALL_PARTICIPANT_STATUS,
-    USER_CHAT_CALL_PARTICIPANT_ERROR_STATUS_VALUE,
-    USER_CHAT_CALL_PARTICIPANT_PROCESSING_STATUS_VALUE,
 } from '@loncra/client/message'
 import type {CallBlock} from '@loncra/chat-core'
 import type {ImHost} from '../host.ts'
+import {callParticipantBadgeStatus} from './callBadge.ts'
 import ImCallActions from './ImCallActions.tsx'
-
-function badgeStatus(status: CallBlock['status']) {
-  const value = getEnumValue(status)
-  if (USER_CHAT_CALL_PARTICIPANT_ERROR_STATUS_VALUE.includes(value)) {
-    return 'error' as const
-  }
-  if (USER_CHAT_CALL_PARTICIPANT_PROCESSING_STATUS_VALUE.includes(value)) {
-    return 'processing' as const
-  }
-  if (isEnumValue(status, MESSAGE_SERVER_USER_CHAT_CALL_PARTICIPANT_STATUS.ACTIVE)) {
-    return 'success' as const
-  }
-  if (isEnumValue(status, MESSAGE_SERVER_USER_CHAT_CALL_PARTICIPANT_STATUS.NO_ANSWER)) {
-    return 'default' as const
-  }
-  return 'warning' as const
-}
 
 const ImCallBlock = defineComponent({
   name: 'LImCallBlock',
@@ -48,7 +30,7 @@ const ImCallBlock = defineComponent({
       return (
         <Space>
           <Space align="center">
-            <Badge status={badgeStatus(block.status)} />
+            <Badge status={callParticipantBadgeStatus(block.status)} />
             <TypeIcon />
             <span>{getEnumName(block.status)}</span>
           </Space>

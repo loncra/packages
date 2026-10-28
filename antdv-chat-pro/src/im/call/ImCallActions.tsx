@@ -2,8 +2,8 @@ import {defineComponent, ref, type PropType} from 'vue'
 import {Button, Space} from 'antdv-next'
 import {CheckOutlined, CloseOutlined, StopOutlined} from '@antdv-next/icons'
 import useApp from 'antdv-next/dist/app/useApp'
-import {MESSAGE_SERVER_MESSAGE_GROUP} from '@loncra/client/message'
 import {useLocale} from '../../_util/useLocale.ts'
+import {callNotificationKey} from './constants.ts'
 import {useImChatCall, type ImChatCallSession} from './useImChatCall.ts'
 
 const ImCallActions = defineComponent({
@@ -19,7 +19,7 @@ const ImCallActions = defineComponent({
     const loading = ref(false)
 
     function dismiss() {
-      notification.destroy(`${MESSAGE_SERVER_MESSAGE_GROUP.USER_CHAT_CALL}_${props.callId}`)
+      notification.destroy(callNotificationKey(props.callId))
     }
 
     return () => (

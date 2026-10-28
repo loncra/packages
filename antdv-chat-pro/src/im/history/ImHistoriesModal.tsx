@@ -134,7 +134,7 @@ const ImHistoriesModal = defineComponent({
     }
 
     async function loadFiles() {
-      const result = await AttachmentService.findAttachment('temp', `user_chat_room/${props.roomId}`)
+      const result = await AttachmentService.findAttachment('temp', props.host.roomUploadPrefix(props.roomId))
       files.value = result.data ?? []
     }
 
@@ -197,38 +197,40 @@ const ImHistoriesModal = defineComponent({
       window.dispatchEvent(new Event('resize'))
     })
 
+    function buildFileGroups() {
+      return Object.entries(
+        [...files.value]
+          .filter((item) => matchesSegment(item, segment.value))
+          .filter((item) => keyword.value === '' || fileName(item).includes(keyword.value))
+          .filter((item) => {
+            const range = dateRange.value
+            if (range?.[0] == null || range?.[1] == null) {
+              return true
+            }
+            const start = toMillis(range[0])
+            const end = toMillis(range[1])
+            if (start == null || end == null) {
+              return true
+            }
+            return item.lastModified >= start && item.lastModified <= end
+          })
+          .sort((a, b) => a.lastModified - b.lastModified)
+          .reduce<Record<string, ObjectItemInfo[]>>((acc, item) => {
+            const key = dateFormat(item.lastModified)
+            ;(acc[key] ||= []).push(item)
+            return acc
+          }, {}),
+      )
+        .sort(([a], [b]) => b.localeCompare(a))
+        .map(([key, items]) => ({
+          key,
+          items: [...items].sort((a, b) => b.lastModified - a.lastModified),
+        }))
+    }
+
     return () => {
       const prefix = prefixCls.value
-      const fileGroups = segment.value === 'message'
-        ? []
-        : Object.entries(
-          [...files.value]
-            .filter((item) => matchesSegment(item, segment.value))
-            .filter((item) => keyword.value === '' || fileName(item).includes(keyword.value))
-            .filter((item) => {
-              const range = dateRange.value
-              if (range?.[0] == null || range?.[1] == null) {
-                return true
-              }
-              const start = toMillis(range[0])
-              const end = toMillis(range[1])
-              if (start == null || end == null) {
-                return true
-              }
-              return item.lastModified >= start && item.lastModified <= end
-            })
-            .sort((a, b) => a.lastModified - b.lastModified)
-            .reduce<Record<string, ObjectItemInfo[]>>((acc, item) => {
-              const key = dateFormat(item.lastModified)
-              ;(acc[key] ||= []).push(item)
-              return acc
-            }, {}),
-        )
-          .sort(([a], [b]) => b.localeCompare(a))
-          .map(([key, items]) => ({
-            key,
-            items: [...items].sort((a, b) => b.lastModified - a.lastModified),
-          }))
+      const fileGroups = segment.value === 'message' ? [] : buildFileGroups()
       const rows = messages.value.elements ?? []
       return (
         <Modal
