@@ -1,30 +1,22 @@
-import {computed, defineComponent, type PropType, reactive, ref} from 'vue'
+import {computed, defineComponent, type PropType} from 'vue'
 import {ContactsOutlined, MessageOutlined} from '@antdv-next/icons'
 import {Drawer, Empty, Flex, Segmented, Spin, Splitter, SplitterPanel} from 'antdv-next'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {classNames} from '@loncra/antdv'
-import {emptyPageResult, isEnumValue, type RestResult} from '@loncra/client/commons'
+import {type RestResult} from '@loncra/client/commons'
 import {
   type BasicUserChatConversation,
-  MESSAGE_SERVER_USER_CHAT_CONVERSATION_STATUS,
-  MESSAGE_SERVER_USER_CHAT_MESSAGE_TYPE,
   type UserChatConversationResponseBody,
   type UserChatMessageEntity,
   type UserChatMessageResponseBody,
 } from '@loncra/client/message'
-import {CHAT_BUBBLE_TYPE} from '@loncra/client/ai'
-import {appendMessages, type ChatRole, isPlaceholderDraft, type PersistableSlot} from '@loncra/chat-core'
-import {draftDatabase} from '@loncra/chat-core/dexie'
-import type {SlotConfigType} from '@antdv-next/x/dist/sender/interface'
 import type {SystemUserContactItem} from '../system-user-panel'
-import {useImConversations} from './conversation/useImConversations'
 import ImConversationList from './conversation/ImConversationList'
 import ImContact from './contact/ImContact'
-import ImChatView, {type ImChatSession, type ImChatViewExpose} from './chat/ImChatView'
+import ImChatView from './chat/ImChatView'
 import {ImRoomSettings} from './room'
-import {useImHistory} from './history/useImHistory'
 import type {ImPageHost} from './host'
-import {useLocale} from '../_util/useLocale'
+import {useImChat} from './useImChat'
 import useStyle, {IM_CHAT_PREFIX} from './style'
 
 export interface ImChatExpose {
@@ -40,22 +32,8 @@ export interface ImChatExpose {
   scrollToBottom: () => void
 }
 
-function emptySession(): ImChatSession {
-  return {
-    item: undefined,
-    loading: false,
-    sending: false,
-    readableAnchorLoading: false,
-    isOnLastPage: false,
-    isOnFirstPage: true,
-    drawerOpen: false,
-    participants: [],
-    dataSource: emptyPageResult(),
-  }
-}
-
 const ImChat = defineComponent({
-  name: 'LIm',
+  name: 'LImChat',
   props: {
     host: {type: Object as PropType<ImPageHost>, required: true},
     contacts: {type: Array as PropType<SystemUserContactItem[]>, default: () => []},
@@ -67,227 +45,40 @@ const ImChat = defineComponent({
     'update:loading': (_value: boolean) => true,
   },
   setup(props, {emit, expose}) {
-    const locale = useLocale('ImChat')
     const config = useConfig()
     const prefixCls = computed(() => config.value.getPrefixCls('im-chat', IM_CHAT_PREFIX))
     const [hashId, cssVarCls] = useStyle(prefixCls)
-    const conversations = useImConversations<UserChatConversationResponseBody>()
-    const session = reactive(emptySession())
-    const viewRef = ref<ImChatViewExpose>()
-
-    function scrollToBottom() {
-      viewRef.value?.scrollTo({top: 'bottom', behavior: 'smooth'})
-    }
-
-    const pane = ref<'conversation' | 'contact'>('conversation')
-    const storedDrafts = reactive<Record<string, SlotConfigType[]>>({})
-    const history = useImHistory(computed(() => session), {
-      noMoreText: () => locale.value.noMore,
-      nowUnix: () => Math.floor(Date.now() / 1000),
-      readableSystemMessage: () => locale.value.unreadSystem,
-      resolveRole: (message) => {
-        const details = message.participant?.metadata?.details as {systemName?: string} | undefined
-        let role: ChatRole = props.host.self.systemName === details?.systemName ? CHAT_BUBBLE_TYPE.USER : CHAT_BUBBLE_TYPE.AI
-        if (isEnumValue(message.type, MESSAGE_SERVER_USER_CHAT_MESSAGE_TYPE.SYSTEM)) {
-          role = CHAT_BUBBLE_TYPE.SYSTEM
-        }
-        return role
-      },
-      beforeSwitch: async () => {
-        if (session.item?.data && viewRef.value) {
-          const slots = viewRef.value.getSenderSlotConfigValue()
-          session.item.data.draft = slots
-          rememberDraft(session.item.data.room?.id, slots)
-          await viewRef.value.persistSenderDraft()
-        }
-      },
-      scrollToBottom,
-      jumpToMessage: (key, flashPending, block) => {
-        viewRef.value?.jumpToMessage(key, flashPending, block)
-      },
+    const chat = useImChat({
+      host: props.host,
+      emitActive: (conversation) => emit('active', conversation),
     })
 
-    function emitActive() {
-      emit('active', session.item?.data)
-    }
-
-    async function openConversation(id: number, messageId?: number) {
-      const found = conversations.findById(id)
-      if (!found) {
-        return
-      }
-      if (!Array.isArray(found.draft)) {
-        found.draft = []
-      }
-      session.drawerOpen = false
-      await history.switchConversation({
-        key: String(found.id),
-        data: found,
-      }, messageId)
-      emitActive()
-    }
-
-    function setRoomSettingsOpen(open: boolean) {
-      session.drawerOpen = open
-    }
-
-    function messageRole(message: UserChatMessageResponseBody | UserChatMessageEntity): ChatRole {
-      if (isEnumValue(message.type, MESSAGE_SERVER_USER_CHAT_MESSAGE_TYPE.USER)) {
-        return CHAT_BUBBLE_TYPE.AI
-      }
-      if (isEnumValue(message.type, MESSAGE_SERVER_USER_CHAT_MESSAGE_TYPE.SYSTEM)) {
-        return CHAT_BUBBLE_TYPE.SYSTEM
-      }
-      return message.principal === props.host.self.systemName ? CHAT_BUBBLE_TYPE.USER : CHAT_BUBBLE_TYPE.AI
-    }
-
-    function applyIncomingMessage(message: UserChatMessageResponseBody | UserChatMessageEntity) {
-      if (
-        message.principal === props.host.self.systemName
-        && isEnumValue(message.type, MESSAGE_SERVER_USER_CHAT_MESSAGE_TYPE.USER)
-      ) {
-        return
-      }
-      if (session.item?.data?.room?.id === message.userChatRoomId && viewRef.value) {
-        appendMessages(
-          message,
-          messageRole(message),
-          session.dataSource.elements,
-          false,
-          !session.isOnFirstPage,
-        )
-      }
-      conversations.moveToTopByRoomId(message.userChatRoomId, (item) => {
-        item.lastUserMessage = message as UserChatMessageEntity
-      })
-    }
-
-    async function addConversation(conversation: UserChatConversationResponseBody) {
-      await props.host.refreshUnread()
-      conversations.unshiftIfAbsent(conversation)
-    }
-
-    async function refreshConversationByRoom(roomId: number) {
-      if (!conversations.findByRoomId(roomId)) {
-        return
-      }
-      const found = await conversations.refreshByRoomId(roomId)
-      if (!found || session.item?.data?.room?.id !== roomId) {
-        return
-      }
-      session.item = {key: String(found.id), data: found}
-      emitActive()
-    }
-
-    function previewSlot(slot: PersistableSlot): SlotConfigType {
-      if (slot.type === 'text') {
-        return {type: 'text', value: slot.value}
-      }
-      if (slot.slotKind === 'files') {
-        return {
-          type: 'custom',
-          key: slot.key,
-          props: {
-            slotKind: 'files',
-            defaultValue: slot.files.map((file) => ({
-              uid: file.uid,
-              name: file.name,
-              size: file.size,
-              type: file.type,
-              response: file.response,
-            })),
-          },
-        }
-      }
-      return {type: 'text', value: slot.value.value}
-    }
-
-    function rememberDraft(roomId: number | undefined, slots: SlotConfigType[]) {
-      if (roomId == null) {
-        return
-      }
-      const key = String(roomId)
-      if (slots.length > 0 && !isPlaceholderDraft(slots)) {
-        storedDrafts[key] = slots
-        return
-      }
-      delete storedDrafts[key]
-    }
-
-    async function refreshConversations() {
-      const currentId = session.item?.data?.id
-      await conversations.load()
-      const principal = props.host.self.systemName
-      for (const key of Object.keys(storedDrafts)) {
-        delete storedDrafts[key]
-      }
-      if (principal) {
-        const rows = await draftDatabase.imDrafts.where('principal').equals(principal).toArray()
-        for (const row of rows) {
-          const slots: SlotConfigType[] = []
-          for (const slot of row.slots) {
-            slots.push(previewSlot(slot))
-          }
-          if (slots.length > 0) {
-            storedDrafts[row.targetId] = slots
-          }
-        }
-      }
-      if (currentId != null) {
-        await openConversation(currentId)
-      }
-    }
-
-    async function refreshParticipants(roomId: number) {
-      const current = session.item?.data
-      if (!current || current.room?.id !== roomId) {
-        return
-      }
-      if (!isEnumValue(current.status, MESSAGE_SERVER_USER_CHAT_CONVERSATION_STATUS.ENABLED)) {
-        return
-      }
-      await history.loadParticipant(roomId)
-    }
-
-    function clearCurrent() {
-      session.item = undefined
-      emit('active', undefined)
-    }
-
-    async function onContactSelected(conversation: UserChatConversationResponseBody) {
-      conversations.upsertToTop(conversation)
-      pane.value = 'conversation'
-      if (conversation.id != null) {
-        await openConversation(conversation.id)
-      }
-    }
-
     expose({
-      openConversation,
-      setRoomSettingsOpen,
-      applyIncomingMessage,
+      openConversation: chat.openConversation,
+      setRoomSettingsOpen: chat.setRoomSettingsOpen,
+      applyIncomingMessage: chat.applyIncomingMessage,
       applyMessageUpdate: (message: UserChatMessageResponseBody | UserChatMessageEntity) =>
-        viewRef.value?.applyMessageUpdate(message),
-      applyMessageUndo: (message: UserChatMessageEntity) => viewRef.value?.applyMessageUndo(message),
-      addConversation,
-      refreshConversationByRoom,
-      refreshConversations,
-      refreshParticipants,
-      scrollToBottom,
+        chat.viewRef.value?.applyMessageUpdate(message),
+      applyMessageUndo: (message: UserChatMessageEntity) => chat.viewRef.value?.applyMessageUndo(message),
+      addConversation: chat.addConversation,
+      refreshConversationByRoom: chat.refreshConversationByRoom,
+      refreshConversations: chat.refreshConversations,
+      refreshParticipants: chat.refreshParticipants,
+      scrollToBottom: chat.scrollToBottom,
     } satisfies ImChatExpose)
 
     return () => {
       const rootClass = classNames(prefixCls.value, hashId.value, cssVarCls.value)
-      const activeKey = session.item?.key
+      const activeKey = chat.session.item?.key
       return (
         <Splitter class={rootClass}>
           <SplitterPanel class={`${prefixCls.value}-side`} defaultSize="20%" min="15%" max="25%">
             <Spin spinning={props.loading} class={`${prefixCls.value}-full-spin`}>
               <Flex vertical class={`${prefixCls.value}-column`}>
-                {pane.value === 'conversation'
+                {chat.pane.value === 'conversation'
                   ? (
                     <ImConversationList
-                      items={conversations.sortedDataSource.value}
+                      items={chat.conversations.sortedDataSource.value}
                       selectedKeys={activeKey ? [activeKey] : []}
                       openKeys={[]}
                       host={{
@@ -296,21 +87,21 @@ const ImChat = defineComponent({
                         messagePreview: props.host.messagePreview,
                         draftPreview: props.host.draftPreview,
                       }}
-                      storedDrafts={storedDrafts}
+                      storedDrafts={chat.drafts.storedDrafts}
                       actions={{
                         remove: (item) => {
-                          conversations.removeConversation(item, () => {
-                            if (session.item?.data?.id === item.id) {
-                              clearCurrent()
+                          chat.conversations.removeConversation(item, () => {
+                            if (chat.session.item?.data?.id === item.id) {
+                              chat.clearCurrent()
                             }
                           })
                         },
-                        toggleFlag: conversations.toggleFlag,
+                        toggleFlag: chat.conversations.toggleFlag,
                       }}
                       onActive={(key: string, messageId?: number) => {
-                        const found = conversations.findById(Number(key))
+                        const found = chat.conversations.findById(Number(key))
                         const targetId = messageId ?? found?.mentions?.at(0)?.messageId
-                        void openConversation(Number(key), targetId)
+                        void chat.openConversation(Number(key), targetId)
                       }}
                     />
                   )
@@ -319,19 +110,25 @@ const ImChat = defineComponent({
                       dataSource={props.contacts}
                       loading={props.loading}
                       onUpdate:loading={(value: boolean) => emit('update:loading', value)}
-                      onSelected={onContactSelected}
+                      onSelected={(conversation: UserChatConversationResponseBody) => {
+                        chat.conversations.upsertToTop(conversation)
+                        chat.pane.value = 'conversation'
+                        if (conversation.id != null) {
+                          void chat.openConversation(conversation.id)
+                        }
+                      }}
                     />
                   )}
                 <div class={`${prefixCls.value}-switch`}>
                   <Segmented
-                    value={pane.value}
+                    value={chat.pane.value}
                     block
                     options={[
                       {value: 'conversation', icon: <MessageOutlined />},
                       {value: 'contact', icon: <ContactsOutlined />},
                     ]}
                     onChange={(key: string | number) => {
-                      pane.value = key === 'contact' ? 'contact' : 'conversation'
+                      chat.pane.value = key === 'contact' ? 'contact' : 'conversation'
                     }}
                   />
                 </div>
@@ -339,52 +136,52 @@ const ImChat = defineComponent({
             </Spin>
           </SplitterPanel>
           <SplitterPanel class={`${prefixCls.value}-main`}>
-            {session.item
+            {chat.session.item
               ? (
                 <div class={`${prefixCls.value}-stage`}>
-                  <Spin spinning={session.loading} class={`${prefixCls.value}-full-spin`}>
+                  <Spin spinning={chat.session.loading} class={`${prefixCls.value}-full-spin`}>
                     <ImChatView
-                      ref={viewRef}
-                      session={session}
+                      ref={chat.viewRef}
+                      session={chat.session}
                       host={props.host}
-                      showUnreadJump={history.showReadableAnchorButton()}
-                      onUnreadJump={() => history.toReadableAnchor()}
-                      moveToTop={(roomId, message) => {
-                        conversations.moveToTopByRoomId(roomId, (item) => {
+                      showUnreadJump={chat.history.showReadableAnchorButton()}
+                      onUnreadJump={() => chat.history.toReadableAnchor()}
+                      moveToTop={(roomId: number | undefined, message: UserChatMessageResponseBody) => {
+                        chat.conversations.moveToTopByRoomId(roomId, (item) => {
                           item.lastUserMessage = message
                         })
                       }}
-                      onDraftSlots={rememberDraft}
+                      onDraftSlots={chat.drafts.rememberDraft}
                     />
                   </Spin>
-                  {session.item.data
+                  {chat.session.item.data
                     ? (
                       <Drawer
-                        open={session.drawerOpen}
+                        open={chat.session.drawerOpen}
                         placement="right"
                         getContainer={false}
                         closable={false}
                         mask={false}
                         onClose={() => {
-                          session.drawerOpen = false
+                          chat.session.drawerOpen = false
                         }}
                       >
                         <div class={`${prefixCls.value}-drawer`}>
                           <ImRoomSettings
-                            conversation={session.item.data}
-                            participants={session.participants}
+                            conversation={chat.session.item.data}
+                            participants={chat.session.participants}
                             contacts={props.contacts}
                             host={props.host}
                             onMuted={(body: BasicUserChatConversation) => emit('muted', body)}
                             onDelete={(body: UserChatConversationResponseBody) => {
-                              conversations.remove(body.id)
-                              if (session.item?.data?.id === body.id) {
-                                clearCurrent()
+                              chat.conversations.remove(body.id)
+                              if (chat.session.item?.data?.id === body.id) {
+                                chat.clearCurrent()
                               }
                             }}
                             onAdded={(result: RestResult<UserChatConversationResponseBody>) => {
                               if (result.data?.id != null) {
-                                void openConversation(result.data.id)
+                                void chat.openConversation(result.data.id)
                               }
                             }}
                           />

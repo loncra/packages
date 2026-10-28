@@ -1,6 +1,6 @@
 import type {SlotConfigType} from '@antdv-next/x/dist/sender/interface'
 import type {UserChatMessageResponseBody} from '@loncra/client/message'
-import {draftRecordId, type DraftCodec, type ImDraftRecord} from '@loncra/chat-core'
+import {draftRecordId, type DraftCodec, type ImDraftRecord, type PersistableSlot} from '@loncra/chat-core'
 import {
   collectBlobsFromSlotConfig,
   persistableToSlotConfig,
@@ -11,6 +11,39 @@ import {
 export interface ImDraftLive {
   slots: SlotConfigType[]
   refMessages: UserChatMessageResponseBody[]
+}
+
+export function previewSlots(slots: PersistableSlot[]): SlotConfigType[] {
+  const result: SlotConfigType[] = []
+  for (const slot of slots) {
+    if (slot.type === 'text') {
+      result.push({type: 'text', value: slot.value})
+      continue
+    }
+    if (slot.slotKind === 'files') {
+      result.push({
+        type: 'custom',
+        key: slot.key,
+        props: {
+          slotKind: 'files',
+          defaultValue: slot.files.map((file) => ({
+            uid: file.uid,
+            name: file.name,
+            size: file.size,
+            type: file.type,
+            response: file.response,
+          })),
+        },
+      })
+      continue
+    }
+    result.push({
+      type: 'custom',
+      key: slot.key,
+      props: {slotKind: 'instruction', prefix: slot.prefix, defaultValue: slot.value},
+    })
+  }
+  return result
 }
 
 export function createImDraftCodec(

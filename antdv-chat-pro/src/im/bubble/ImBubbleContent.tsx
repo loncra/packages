@@ -1,5 +1,5 @@
 import {computed, defineComponent, type PropType} from 'vue'
-import {Flex, Tag, Tooltip, Typography} from 'antdv-next'
+import {Flex, Space, Tag, Tooltip, Typography} from 'antdv-next'
 import {UserOutlined} from '@antdv-next/icons'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {classNames} from '@loncra/antdv'
@@ -111,16 +111,18 @@ const ImBubbleContent = defineComponent({
       const mine = props.principal === props.host.self.systemName
       return (
         <Tooltip title={piece.tooltip}>
-          <Typography.Text delete type="secondary">
-            {mine ? locale.value.selfUndo : piece.value}
-          </Typography.Text>
-          {mine
-            ? (
-              <Typography.Link href="javascript:;" onClick={() => props.onReedit()}>
-                {locale.value.reedit}
-              </Typography.Link>
-            )
-            : null}
+          <Space size={4}>
+            <Typography.Text delete type="secondary">
+              {mine ? locale.value.selfUndo : piece.value}
+            </Typography.Text>
+            {mine
+              ? (
+                <Typography.Link href="javascript:;" onClick={() => props.onReedit()}>
+                  {locale.value.reedit}
+                </Typography.Link>
+              )
+              : null}
+          </Space>
         </Tooltip>
       )
     }

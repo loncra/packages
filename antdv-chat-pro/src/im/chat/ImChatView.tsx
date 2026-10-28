@@ -1,17 +1,14 @@
-import {computed, defineComponent, nextTick, type PropType, ref, watch} from 'vue'
+import {computed, defineComponent, nextTick, type PropType, ref} from 'vue'
 import {Avatar, Button, Flex, Space, Typography} from 'antdv-next'
 import {ToTopOutlined} from '@antdv-next/icons'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import type {SlotConfigType} from '@antdv-next/x/dist/sender/interface'
-import type {InstructionMeasure, InstructionSenderHandle} from '@loncra/antdv-chat'
 import {UserAvatar} from '@loncra/antdv-pro'
 import {classNames, fillLocale} from '@loncra/antdv'
-import {type IdValueMetadata, isEnumValue, YES_OR_NO_TYPE} from '@loncra/client/commons'
+import {type IdValueMetadata, isEnumValue} from '@loncra/client/commons'
 import {
-  CHAT_EVERYONE_ID,
   ChatMessageService,
   MESSAGE_SERVER_USER_CHAT_CONVERSATION_STATUS,
-  MESSAGE_SERVER_USER_CHAT_MESSAGE_TYPE,
   MESSAGE_SERVER_USER_CHAT_ROOM_TYPE,
   type UserChatConversationResponseBody,
   type UserChatMessageEntity,
@@ -21,7 +18,6 @@ import {
 import {appendMessages, type ImChatBubble, type ImContentBlock} from '@loncra/chat-core'
 import {CHAT_BUBBLE_TYPE} from '@loncra/client/ai'
 import type {BubbleListHandle} from '../../bubble-list/createBubbleListExpose'
-import type {BubbleListItem} from '../../bubble-list/types'
 import type {ImHistorySession} from '../history/useImHistory'
 import ImBubbleList from '../bubble/ImBubbleList'
 import ImSender, {type ImSenderExpose} from '../sender/ImSender'
@@ -29,6 +25,8 @@ import ImCallButton from '../call/ImCallButton'
 import type {ImPageHost} from '../host'
 import {AuthServerService} from '@loncra/client/auth'
 import {useLocale} from '../../_util/useLocale'
+import {useImReadReport} from './useImReadReport'
+import {useImMentionInstruction} from './useImMentionInstruction'
 import useStyle, {IM_CHAT_VIEW_PREFIX} from './style'
 
 export interface ImChatSession extends ImHistorySession<ImChatBubble> {
@@ -83,76 +81,11 @@ const ImChatView = defineComponent({
     const senderRef = ref<ImSenderExpose>()
     const listRef = ref<BubbleListHandle>()
     const refMessages = ref<UserChatMessageResponseBody[]>([])
-    const readingSet = new Set<number>()
-    const sentIds = new Set<number>()
-    let readProcessing = false
-
-    function isReadableMessage(message: UserChatMessageResponseBody | UserChatMessageEntity | undefined): boolean {
-      if (!message || isEnumValue(message.type, MESSAGE_SERVER_USER_CHAT_MESSAGE_TYPE.SYSTEM)) {
-        return false
-      }
-      const readable = (message as UserChatMessageResponseBody).readable
-      if (readable === undefined) {
-        return false
-      }
-      return isEnumValue(readable, YES_OR_NO_TYPE.YES) && message.principal !== props.host.self.systemName
-    }
-
-    async function flushReadQueue(): Promise<void> {
-      if (readProcessing || readingSet.size === 0) {
-        return
-      }
-      readProcessing = true
-      try {
-        while (readingSet.size > 0) {
-          const batch = Array.from(readingSet)
-          readingSet.clear()
-          try {
-            await ChatMessageService.readMessage(batch)
-            batch.forEach((id) => sentIds.add(id))
-            await props.host.refreshUnread()
-          } catch (error) {
-            console.error('标记已读失败:', error)
-            break
-          }
-        }
-      } finally {
-        readProcessing = false
-      }
-    }
-
-    function markVisible(items: BubbleListItem[]) {
-      if (items.length <= 0) {
-        return
-      }
-      for (const item of items) {
-        if (!('readable' in item) || !('id' in item) || item.id == null) {
-          continue
-        }
-        const id = Number(item.id)
-        if (!sentIds.has(id)) {
-          readingSet.add(id)
-        }
-        const metadata = props.session.dataSource?.metadata as {readableAnchorId?: number} | undefined
-        if (id === metadata?.readableAnchorId) {
-          delete metadata.readableAnchorId
-        }
-      }
-      void flushReadQueue()
-    }
-
-    function onVisibleItems(items: BubbleListItem[]) {
-      if (document.visibilityState !== 'visible' || !document.hasFocus()) {
-        return
-      }
-      markVisible(items.filter((item) =>
-        'readable' in item && isReadableMessage(item as unknown as UserChatMessageResponseBody),
-      ))
-    }
-
-    watch(() => props.session.item?.key, () => {
-      readingSet.clear()
-      sentIds.clear()
+    const {onVisibleItems} = useImReadReport({session: props.session, host: props.host})
+    const {instructionMap, onSenderInsertInstruction, onInstructionFilter} = useImMentionInstruction({
+      session: props.session,
+      senderRef,
+      host: props.host,
     })
 
     function applyMessageUpdate(message: UserChatMessageResponseBody | UserChatMessageEntity) {
@@ -204,93 +137,6 @@ const ImChatView = defineComponent({
         return locale.value.disbandRoom
       }
       return locale.value.inputPlaceholder
-    }
-
-    function instructionMap(): Record<string, IdValueMetadata<string, string>[]> | undefined {
-      const roomType = props.session.item?.data?.room?.type
-      if (isEnumValue(roomType, MESSAGE_SERVER_USER_CHAT_ROOM_TYPE.PRIVATE_CHAT)) {
-        return undefined
-      }
-      const people = props.session.participants
-        .filter((participant) => participant.principal !== props.host.self.systemName)
-        .map((participant) => ({
-          id: participant.principal,
-          value: AuthServerService.getPrincipalNameByUserDetails(participant.metadata.details),
-          metadata: participant as unknown as Record<string, unknown>,
-        }))
-      return {
-        '@': [
-          ...people,
-          {id: CHAT_EVERYONE_ID, value: locale.value.everyone},
-        ],
-      }
-    }
-
-    function stripMentions(slots: SlotConfigType[]): SlotConfigType[] {
-      return slots.filter((slot) => !(slot.type === 'custom' && slot.props?.slotKind === 'instruction'))
-    }
-
-    function removeTrailingTrigger(slots: SlotConfigType[], trigger: string): SlotConfigType[] {
-      if (!trigger) {
-        return slots
-      }
-      const result = slots.map((slot) => ({...slot}))
-      for (let index = result.length - 1; index >= 0; index -= 1) {
-        const slot = result[index]
-        if (slot?.type !== 'text' || typeof slot.value !== 'string' || !slot.value.endsWith(trigger)) {
-          if (slot?.type === 'text') {
-            break
-          }
-          continue
-        }
-        const next = slot.value.slice(0, -trigger.length)
-        if (next === '') {
-          result.splice(index, 1)
-        } else {
-          result[index] = {...slot, value: next}
-        }
-        break
-      }
-      return result
-    }
-
-    function onSenderInsertInstruction(sender: InstructionSenderHandle, block: object, measure: InstructionMeasure) {
-      const slotProps = (block as unknown as {
-        props?: {prefix?: string; defaultValue?: IdValueMetadata<string, string>}
-      }).props
-      if (slotProps?.prefix === '@' && slotProps.defaultValue?.id === CHAT_EVERYONE_ID) {
-        const trigger = measure.prefix + measure.keyword
-        const kept = stripMentions((sender.getValue().slotConfig ?? []) as SlotConfigType[])
-        sender.clear()
-        sender.insert([block, {type: 'text', value: ' '}, ...removeTrailingTrigger(kept, trigger)], 'start')
-        return
-      }
-      sender.insert([block, {type: 'text', value: ' '}], 'cursor', measure.prefix + measure.keyword)
-    }
-
-    function onInstructionFilter(keyword: string, dataSource: IdValueMetadata<string, string>[], prefix: string) {
-      if (prefix !== '@' || !senderRef.value) {
-        return dataSource
-      }
-      const existIds = (senderRef.value.getSlotConfigValue() ?? [])
-        .filter((slot) => slot.type === 'custom' && slot.props?.slotKind === 'instruction')
-        .map((slot) => slot.type === 'custom' ? slot.props?.defaultValue?.id : undefined)
-      if (existIds.includes(CHAT_EVERYONE_ID)) {
-        return []
-      }
-      const absent = dataSource.filter((item) => !existIds.includes(item.id))
-      if (absent.length === 1 && absent.at(-1)?.id === CHAT_EVERYONE_ID) {
-        return []
-      }
-      const matches = (text: string) => keyword === '' || text.includes(keyword)
-      return [
-        ...absent.filter((item) => item.id === CHAT_EVERYONE_ID && matches(item.value)),
-        ...absent.filter((item) => {
-          const participant = item.metadata as unknown as UserChatParticipantEntity | undefined
-          return participant?.metadata?.details
-            && matches(AuthServerService.getPrincipalNameByUserDetails(participant.metadata.details))
-        }),
-      ]
     }
 
     async function onSubmit(content: ImContentBlock[]) {
