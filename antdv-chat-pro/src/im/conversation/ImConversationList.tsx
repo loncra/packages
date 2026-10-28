@@ -10,16 +10,16 @@ import {
     SoundOutlined,
 } from '@antdv-next/icons'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
-import useApp from 'antdv-next/dist/app/useApp'
 import {classNames, fillLocale} from '@loncra/antdv'
 import {useLocale} from '../../_util/useLocale.ts'
 import {isEnumValue, YES_OR_NO_TYPE} from '@loncra/client/commons'
 import {AuthServerService} from '@loncra/client/auth'
 import {AttachmentService} from '@loncra/client/resource'
-import {ChatMessageService, type BasicUserChatConversation, type UserChatConversationResponseBody,} from '@loncra/client/message'
+import {type UserChatConversationResponseBody,} from '@loncra/client/message'
 import type {SlotConfigType} from '@antdv-next/x/dist/sender/interface'
 import ConversationList from '../../conversation/ConversationList.tsx'
 import type {ConversationNode} from '../../conversation/types.ts'
+import type {ImConversationActions} from './useImConversations.ts'
 import useStyle, {IM_CONVERSATION_PREFIX} from './style/index.ts'
 
 export interface ImConversationHost {
@@ -32,20 +32,6 @@ export interface ImConversationHost {
   draftPreview: (draft: UserChatConversationResponseBody['draft']) => string
 }
 
-function confirmDelete(
-  modal: ReturnType<typeof useApp>['modal'],
-  copy: {deleteConfirmTitle: string, deleteConfirmSingle: string},
-): Promise<boolean> {
-  return new Promise((resolve) => {
-    modal.confirm({
-      title: copy.deleteConfirmTitle,
-      content: copy.deleteConfirmSingle,
-      onOk: () => resolve(true),
-      onCancel: () => resolve(false),
-    })
-  })
-}
-
 const ImConversationList = defineComponent({
   name: 'LImConversationList',
   props: {
@@ -54,44 +40,17 @@ const ImConversationList = defineComponent({
     openKeys: {type: Array as PropType<string[]>, required: true},
     host: {type: Object as PropType<ImConversationHost>, required: true},
     storedDrafts: {type: Object as PropType<Record<string, SlotConfigType[]>>, required: true},
+    actions: {type: Object as PropType<ImConversationActions>, required: true},
   },
   emits: {
     active: (_key: string, _messageId?: number) => true,
-    flags: (_data: BasicUserChatConversation[]) => true,
-    delete: (_item: UserChatConversationResponseBody) => true,
-    'update:selectedKeys': (_keys: string[]) => true,
-    'update:openKeys': (_keys: string[]) => true,
   },
   setup(props, {emit}) {
     const keyword = ref('')
-    const {modal, message} = useApp()
     const locale = useLocale('ImConversation')
     const config = useConfig()
     const prefixCls = computed(() => config.value.getPrefixCls('im-conversation', IM_CONVERSATION_PREFIX))
     const [hashId, cssVarCls] = useStyle(prefixCls)
-
-    async function removeConversation(item: UserChatConversationResponseBody) {
-      const id = Number(item.id)
-      const confirmed = await confirmDelete(modal, locale.value)
-      if (!confirmed) {
-        return
-      }
-      try {
-        const result = await ChatMessageService.deleteConversation([id])
-        message.success(result.message ?? '')
-        emit('delete', item)
-      } catch (e) {
-        message.error(e instanceof Error ? e.message : String(e))
-      }
-    }
-
-    async function toggleConversationFlag(key: 'pinned' | 'muted', item: UserChatConversationResponseBody) {
-      const id = Number(item.id)
-      const result = key === 'pinned'
-        ? await ChatMessageService.pinnedConversation([id])
-        : await ChatMessageService.mutedConversation([id])
-      emit('flags', result.data ?? [])
-    }
 
     async function onMenuClick(key: string, item: UserChatConversationResponseBody) {
       const id = Number(item.id)
@@ -99,11 +58,11 @@ const ImConversationList = defineComponent({
         return
       }
       if (key === 'delete') {
-        await removeConversation(item)
+        await props.actions.remove(item)
         return
       }
       if (key === 'pinned' || key === 'muted') {
-        await toggleConversationFlag(key, item)
+        await props.actions.toggleFlag(key, item)
       }
     }
 
@@ -241,28 +200,30 @@ const ImConversationList = defineComponent({
       return null
     }
 
+    const filteredItems = computed(() =>
+      props.items.filter((item) => keyword.value === '' || item.name.includes(keyword.value)),
+    )
+    const lookup = computed(() =>
+      new Map(filteredItems.value.map((item) => [String(item.id), item])),
+    )
+    const nodes = computed<ConversationNode[]>(() =>
+      filteredItems.value.map((item) => {
+        const creationTime = item.lastUserMessage?.creationTime
+        return {
+          key: String(item.id),
+          name: item.name,
+          timeText: creationTime != null ? props.host.timeText(creationTime) : undefined,
+        }
+      }),
+    )
+
     return () => {
-      const lookup = new Map<string, UserChatConversationResponseBody>()
-      const nodes: ConversationNode[] = props.items
-        .filter((item) => keyword.value === '' || item.name.includes(keyword.value))
-        .map((item) => {
-          const key = String(item.id)
-          lookup.set(key, item)
-          const creationTime = item.lastUserMessage?.creationTime
-          return {
-            key,
-            name: item.name,
-            timeText: creationTime != null ? props.host.timeText(creationTime) : undefined,
-          }
-        })
       return (
         <ConversationList
           class={classNames(prefixCls.value, hashId.value, cssVarCls.value)}
-          items={nodes}
+          items={nodes.value}
           selectedKeys={props.selectedKeys}
           openKeys={props.openKeys}
-          onUpdate:selectedKeys={(keys: string[]) => emit('update:selectedKeys', keys)}
-          onUpdate:openKeys={(keys: string[]) => emit('update:openKeys', keys)}
           onActive={(key: string) => emit('active', key)}
           v-slots={{
             header: () => (
@@ -278,15 +239,15 @@ const ImConversationList = defineComponent({
               </div>
             ),
             icon: (node: ConversationNode) => {
-              const item = lookup.get(node.key)
+              const item = lookup.value.get(node.key)
               return item ? renderIcon(item) : null
             },
             subtitle: (node: ConversationNode) => {
-              const item = lookup.get(node.key)
+              const item = lookup.value.get(node.key)
               return item ? renderSubtitle(item) : null
             },
             actions: (node: ConversationNode) => {
-              const item = lookup.get(node.key)
+              const item = lookup.value.get(node.key)
               if (!item) {
                 return null
               }

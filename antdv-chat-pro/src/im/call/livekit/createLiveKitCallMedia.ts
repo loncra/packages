@@ -216,7 +216,6 @@ export const createLiveKitCallMedia: ImCallMediaCreate = (call, selfName) => {
     })
   }
 
-  // 采集没结束就先不发。结束之后缺哪一路，就明确关掉哪一路，对方不会一直当成开着。
   async function publishBoth(current: Room) {
     if (published || closed || !captureSettled) {
       return
@@ -244,7 +243,6 @@ export const createLiveKitCallMedia: ImCallMediaCreate = (call, selfName) => {
       return
     }
     const currentRoom = ensureRoom()
-    // 先监听再连接。对方要是已经发布，connect 期间就会订阅，漏掉这次就没有画面和声音。
     bindRemote(currentRoom)
     await currentRoom.connect(String(liveKit.id), String(liveKit.value))
     adoptExistingRemoteTracks(currentRoom)
@@ -262,8 +260,6 @@ export const createLiveKitCallMedia: ImCallMediaCreate = (call, selfName) => {
   }
 
   const media: ImCallMedia = {
-    // 麦克风和摄像头共用一次授权。无痕模式第一次会停在授权框，进房可以先发生。
-    // 授权成功就发布；拒绝或没有设备则关掉对应开关，通话继续。两路互不影响。
     async previewLocal(current) {
       if (closed || previewed) {
         return
@@ -304,7 +300,6 @@ export const createLiveKitCallMedia: ImCallMediaCreate = (call, selfName) => {
       elements[role] = element
       await attachCurrent(role)
     },
-    // 拒绝之后再点开，会重新向浏览器要授权。再次拒绝就把开关拨回去。
     async setMicrophoneEnabled(enabled) {
       if (!enabled) {
         view.localMicrophone = false

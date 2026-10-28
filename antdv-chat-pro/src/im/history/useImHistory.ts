@@ -30,7 +30,6 @@ export interface ImHistoryConversation {
   }
 }
 
-/** 活跃会话上历史加载会读写的那一段。管理端的会话对象比这多，能直接传进来。 */
 export interface ImHistorySession<TBubble extends HistoryBubble = HistoryBubble> {
   loading: boolean
   drawerOpen: boolean
@@ -60,11 +59,6 @@ export interface ImHistoryApi {
 
 export const IM_HISTORY_KEY: InjectionKey<ImHistoryApi> = Symbol('im-history')
 
-/**
- * IM 历史分页、锚点跳转、切换会话。
- * 文案、角色、滚到哪、切走前落草稿由 host 提供。
- * 气泡列表通过 inject 调用 loadMore，页面不再转发滚动翻页。
- */
 export function useImHistory<TSession extends ImHistorySession>(
   session: Ref<TSession>,
   host: ImHistoryHost,
@@ -96,7 +90,6 @@ export function useImHistory<TSession extends ImHistorySession>(
       const page = result?.data || emptyPageResult<UserChatMessageResponseBody>()
       applyHistoryPage(current, page, clear)
       for (const message of page.elements || []) {
-        // previous 插到头，next 追加到尾。loadMore 用 append=true 表示 previous。
         appendMessages(message, host.resolveRole(message), current.dataSource.elements, !append)
       }
     } finally {

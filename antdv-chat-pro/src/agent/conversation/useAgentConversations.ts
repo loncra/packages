@@ -39,16 +39,29 @@ export function useAgentConversations<T extends AgentConversationRecord>(
   const {modal, message} = useApp()
   const locale = useLocale('AgentConversation')
 
-  function confirmDelete(): Promise<boolean> {
+  function remove(item: AgentConversationRecord): void {
+    if (item.id == null) {
+      return
+    }
     const copy = locale.value
-    return new Promise((resolve) => {
-      modal.confirm({
-        title: copy.deleteConfirmTitle,
-        content: copy.deleteConfirmSingle,
-        onOk: () => resolve(true),
-        onCancel: () => resolve(false),
-      })
+    modal.confirm({
+      title: copy.deleteConfirmTitle,
+      content: copy.deleteConfirmSingle,
+      onOk: async () =>  doRemove([Number(item.id)])
     })
+  }
+
+  async function doRemove(ids:number[]) {
+    loading.value = true
+    try {
+      const result = await AgentService.deleteConversation(ids)
+      message.success(result.message ?? '')
+      await load()
+    } catch {
+      return
+    } finally {
+      loading.value = false
+    }
   }
 
   async function load(switchItemId?: number): Promise<void> {
@@ -113,23 +126,6 @@ export function useAgentConversations<T extends AgentConversationRecord>(
       item.editing = false
       message.success(result.message ?? '')
       await load(result.data)
-    } catch {
-      return
-    } finally {
-      loading.value = false
-    }
-  }
-
-  async function remove(item: AgentConversationRecord): Promise<void> {
-    const confirmed = await confirmDelete()
-    if (!confirmed || item.id == null) {
-      return
-    }
-    loading.value = true
-    try {
-      const result = await AgentService.deleteConversation([Number(item.id)])
-      message.success(result.message ?? '')
-      await load()
     } catch {
       return
     } finally {

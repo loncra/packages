@@ -2,12 +2,11 @@ import {computed, defineComponent, onMounted, onUnmounted, type PropType, ref} f
 import {Button, Space, Tooltip} from 'antdv-next'
 import {MessageOutlined, UndoOutlined} from '@antdv-next/icons'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
-import useApp from 'antdv-next/dist/app/useApp'
 import {classNames, fillLocale} from '@loncra/antdv'
 import {isEnumValue, type NameValueEnumMetadata, YES_OR_NO_TYPE} from '@loncra/client/commons'
-import {ChatMessageService} from '@loncra/client/message'
 import {CHAT_BUBBLE_TYPE} from '@loncra/client/ai'
 import {useLocale} from '../../_util/useLocale.ts'
+import {useImMessageActions} from './useImMessageActions.ts'
 import useStyle, {IM_BUBBLE_PREFIX} from './style/index.ts'
 
 const ImBubbleFooter = defineComponent({
@@ -24,7 +23,7 @@ const ImBubbleFooter = defineComponent({
   },
   setup(props, {slots}) {
     const locale = useLocale('ImBubble')
-    const {modal, message} = useApp()
+    const {confirmUndo} = useImMessageActions()
     const config = useConfig()
     const prefixCls = computed(() => config.value.getPrefixCls('im-bubble', IM_BUBBLE_PREFIX))
     const [hashId, cssVarCls] = useStyle(prefixCls)
@@ -48,24 +47,6 @@ const ImBubbleFooter = defineComponent({
       const timer = window.setInterval(refreshLeft, 200)
       onUnmounted(() => window.clearInterval(timer))
     })
-
-    async function undo() {
-      try {
-        const result = await ChatMessageService.undoMessage([props.messageId])
-        message.success(result.message)
-      } catch (error) {
-        message.error(error instanceof Error ? error.message : String(error))
-        throw error
-      }
-    }
-
-    function confirmUndo() {
-      modal.confirm({
-        title: locale.value.undoConfirmTitle,
-        content: locale.value.undoConfirmContent,
-        onOk: () => undo(),
-      })
-    }
 
     return () => {
       const leading = slots.default?.()
@@ -95,7 +76,7 @@ const ImBubbleFooter = defineComponent({
                     size="small"
                     danger
                     variant="outlined"
-                    onClick={confirmUndo}
+                    onClick={() => confirmUndo(props.messageId)}
                     v-slots={{icon: () => <UndoOutlined />}}
                   >
                     {locale.value.undo}

@@ -242,8 +242,7 @@ const ImSender = defineComponent({
       senderOnChange: (value: AttachmentValue) => void,
     ): void {
       const files = Array.isArray(next) ? next : next ? [next] : []
-      const sender = draftRef.value?.getSender()
-      if (!sender || !('key' in item) || !item.key) {
+      if (!('key' in item) || !item.key) {
         return
       }
       senderOnChange(files)

@@ -33,7 +33,7 @@ import {createLiveKitCallMedia} from '@loncra/antdv-chat-pro/im/call/livekit'
 | `FileEditor` | 文件预览与编辑（CodeMirror）：`panes/text/TextCodeEditor`、`filePaneKinds`、`FilePaneHost`（按类型分发）、`useFileEditor` / `useFilePane`、`panes/`、`tabs/`、`conversation/` | [说明](./src/file-editor/README.md) |
 | `SystemUserPanel` | 系统用户面板 | [说明](./src/system-user-panel/README.md) |
 
-不是控件、直接从根导出的还有：动作 `sendImMessage`、`sendAgentChat`、`interruptAgent`、`updateSessionMessage`，草稿绑定 `createImDraftBinding`、`createAgentDraftBinding`。
+不是控件、直接从根导出的还有：会话消息写回 `updateSessionMessage`，草稿绑定 `createImDraftBinding`、`createAgentDraftBinding`。发送侧不设公开动作，调用方直调 `@loncra/client` 的服务（IM `ChatMessageService.send`、Agent `AgentService.chat`）。
 
 ## 目录
 
@@ -42,7 +42,7 @@ import {createLiveKitCallMedia} from '@loncra/antdv-chat-pro/im/call/livekit'
 | 目录 | 内容 |
 | --- | --- |
 | `<控件>/` | 一个控件一个目录。骨架 `index.ts` / 主组件 `.tsx` / `style/index.ts` 见 [CONTRIBUTING.md](../CONTRIBUTING.md) 第 7 节，`types.ts` / `constants.ts` / `_util/` 按需（如 `file-editor/_util/validateName.ts`） |
-| `im/`、`agent/` | 两个套件目录，内部按 `bubble/`、`sender/`、`conversation/`、`history/`、`draft/` 分，每个子域各有 `style/`；`agent/` 另有 `hub/`（插件市场与版本变更），`im/` 另有 `chat/`、`contact/`、`room/`、`call/`。两套各自的 `history`（`useAgentHistory` / `useImHistory`）互不复用：切会话不恢复翻页锚点，切走前的草稿落点在宿主（`activateConversation`），翻页由气泡列表经 `AGENT_HISTORY_KEY` inject `loadMore`，页面不转发滚动翻页；分页 size 缺省与管理端一致（10）。`AgentSender` 的 `catalogPrefix`：该指令前缀的候选面板由宿主的 `toCatalogMenuItems` / `onCatalogClick` 接管（渲染为目录菜单，选中经 `group:id` 复合 key 回调）。Agent 的草稿 codec（`agent/draft`）只有 `slots`（点名芯片在 slots 里），无 IM 侧的 `refMessages`。`AgentChat` 主控件体量超阈值（约 470 逻辑行）不拆的理由：Splitter 三面板装配 + 单份会话状态（`current` / `conversations` / `pane`）协调，再拆会把同一份状态分散到多个 composable，协调成本大于收益 |
+| `im/`、`agent/` | 两个套件目录，内部按 `bubble/`、`sender/`、`conversation/`、`history/`、`draft/` 分，每个子域各有 `style/`；`agent/` 另有 `hub/`（插件市场与版本变更），`im/` 另有 `chat/`、`contact/`、`room/`、`call/`。两套各自的 `history`（`useAgentHistory` / `useImHistory`）互不复用：切会话不恢复翻页锚点，切走前的草稿落点在宿主（`activateConversation`），翻页由气泡列表经 `AGENT_HISTORY_KEY` inject `loadMore`，页面不转发滚动翻页；分页 size 缺省与管理端一致（10）。im 侧翻页由气泡列表经 `IM_HISTORY_KEY` inject `loadMore`（agent 侧同构为 `AGENT_HISTORY_KEY`），`loadMore` 的分页语义是 previous 插到头部、next 追加到尾部；`ImHistorySession` 是 `useImHistory` 读写会话的那段结构子集，管理端会话对象结构兼容可直接传入。会话列表状态唯一归属 `useImConversations`（排序 / 置顶 / 按房间增删改查，含删除确认与置顶、免打扰请求），socket 推进与页面操作都走它。`AgentSender` 的 `catalogPrefix`：该指令前缀的候选面板由宿主的 `toCatalogMenuItems` / `onCatalogClick` 接管（渲染为目录菜单，选中经 `group:id` 复合 key 回调）。Agent 的草稿 codec（`agent/draft`）只有 `slots`（点名芯片在 slots 里），无 IM 侧的 `refMessages`。`AgentChat` 主控件体量超阈值（约 470 逻辑行）不拆的理由：Splitter 三面板装配 + 单份会话状态（`current` / `conversations` / `pane`）协调，再拆会把同一份状态分散到多个 composable，协调成本大于收益 |
 | `session/` | 会话消息写回（`updateSessionMessage`） |
 | `history/`、`draft/` | 跨套件共享域：`history/revealAnchor`（IM / Agent 跳转锚定）、`draft/persistableSlots`（草稿槽位序列化），各自带 `index.ts` 出口。`persistableSlots` 序列化规则：入库只存可序列化字段——丢 `customRender`（函数进不了 IDB），文件只存 uid/name/size/type/response，`File` 本体经 `collectBlobsFromSlotConfig` 单独收集（只收 `originFileObj`）；还原时还原出的 `File` 用 `markRaw` 包（Vue 不能代理 File，否则发送时 `originFileObj` 对不上）；files 块还原需注入 `restoreFilesSlot`（IM 必须注入，否则芯片没有 customRender、点发送无法 upload；Agent 无附件槽可省略，未注入时该块跳过） |
 | `_util/` | `useLocale` |
@@ -51,7 +51,7 @@ import {createLiveKitCallMedia} from '@loncra/antdv-chat-pro/im/call/livekit'
 ## 本包的开发规范
 
 - **基础件复用，不复制**：`classNames` / `genStyleHooks` / `genFullSpinStyle` / `SPIN_KEYFRAMES` / `JUMP_KEYFRAMES` / `createUseLocale` / `fillLocale` / `useIsDark` 从 `@loncra/antdv` 引；`Provider` / `useAntdvConfig` / `Form` / `UserAvatar` / `AttachmentUpload` 等从 `@loncra/antdv-pro` 引；IM 与 Agent 的共性类型、纯函数从 `@loncra/chat-core` 引；后端调用经 `@loncra/client` 的子路径。
-- **不做 socket / SSE，不开长连接**：包内不出现 `EventSource` / `WebSocket`，唯一的实时连接是 `im/call/livekit` 的媒体实现会自己建媒体会话。实时数据由宿主经 host 契约推进来 —— IM 侧 `im/host.ts` 的 `ImHost` / `ImChatHost` / `ImChatCallHost` / `ImPageHost`，Agent 侧 `agent/conversation/useAgentConversations.ts` 的 `AgentConversationHost` 与 `agent/history/useAgentHistory.ts` 的 `AgentHistoryHost`；发送侧只出函数（`sendImMessage` / `sendAgentChat` / `interruptAgent`）。
+- **不做 socket / SSE，不开长连接**：包内不出现 `EventSource` / `WebSocket`，唯一的实时连接是 `im/call/livekit` 的媒体实现会自己建媒体会话。实时数据由宿主经 host 契约推进来 —— IM 侧 `im/host.ts` 的 `ImHost` / `ImChatHost` / `ImChatCallHost` / `ImPageHost`，Agent 侧 `agent/conversation/useAgentConversations.ts` 的 `AgentConversationHost` 与 `agent/history/useAgentHistory.ts` 的 `AgentHistoryHost`。`im/call/livekit` 的发布契约：进房先挂远端监听再 `connect`（对方已发布时不漏订阅）；本地采集落定后才发布，之后缺哪一路就明确关闭哪一路，对端不会看到"一直开着"；麦克风与摄像头共用一次授权，拒绝或无设备时只关对应开关、通话继续；再次开启会重新向浏览器要授权。
 - `prefixCls` 用 `config.getPrefixCls('<名>', '<前缀常量>')`，名默认与控件同名；`FileEditor` 另有 `file-pane` / `file-tabs` / `file-conversation` 三个子前缀。
 - `DraftSender` 没有自有样式，不建 `prefixCls` / `style/index.ts`。
 - 例外：交给 antdv-next 子组件的 `rootClass` 入参（`ConversationList` 给 `Menu`、`useBubbleList` 经 `toAxBubbleItem` 给气泡组件），那是替子组件传根类，不是本控件自己挂根类。

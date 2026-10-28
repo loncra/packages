@@ -13,7 +13,6 @@ export interface ImDraftLive {
   refMessages: UserChatMessageResponseBody[]
 }
 
-/** IM：槽 + 引用条。hydrate 必须注入当前 Sender 的 createFilesSlot。 */
 export function createImDraftCodec(
   factories: RestoreDraftSlotFactories,
 ): DraftCodec<ImDraftLive, ImDraftRecord> {

@@ -1,12 +1,13 @@
-import {computed, defineComponent, onMounted, onUnmounted, type PropType, ref} from 'vue'
+import {computed, defineComponent, type PropType, ref} from 'vue'
 import {Flex, Segmented, Table} from 'antdv-next'
 import {EyeInvisibleOutlined, EyeOutlined} from '@antdv-next/icons'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {classNames, fillLocale} from '@loncra/antdv'
 import {isEnumValue, YES_OR_NO_TYPE} from '@loncra/client/commons'
-import {ChatMessageService, type UserChatMessageReadResponseBody,} from '@loncra/client/message'
+import {type UserChatMessageReadResponseBody,} from '@loncra/client/message'
 import {useDateFormat, UserAvatar} from '@loncra/antdv-pro'
 import {useLocale} from '../../_util/useLocale.ts'
+import {useImMessageRead} from './useImMessageRead.ts'
 import useStyle, {IM_BUBBLE_PREFIX} from './style/index.ts'
 import type {ImChatHost} from '../host.ts'
 import {AuthServerService} from '@loncra/client/auth'
@@ -24,8 +25,7 @@ const ImMessageReadTable = defineComponent({
     const prefixCls = computed(() => config.value.getPrefixCls('im-bubble', IM_BUBBLE_PREFIX))
     const [hashId, cssVarCls] = useStyle(prefixCls)
     const active = ref<'read' | 'unread'>('read')
-    const loading = ref(false)
-    const dataSource = ref<UserChatMessageReadResponseBody[]>([])
+    const {loading, dataSource} = useImMessageRead(props.messageId, props.host)
 
     const readRows = computed(() =>
       dataSource.value.filter((item) => isEnumValue(item.readable, YES_OR_NO_TYPE.NO)),
@@ -40,27 +40,6 @@ const ImMessageReadTable = defineComponent({
         ? {title: locale.value.readTime, dataIndex: 'readTime', key: 'readTime', width: 210, ellipsis: true}
         : {title: locale.value.creationTime, dataIndex: 'creationTime', key: 'creationTime', width: 210, ellipsis: true},
     ])
-
-    onMounted(async () => {
-      loading.value = true
-      try {
-        const result = await ChatMessageService.findMessageRead(props.messageId)
-        dataSource.value = result.data ?? []
-      } finally {
-        loading.value = false
-      }
-      const stop = props.host.subscribeReadUpdate((updates) => {
-        for (const row of updates) {
-          const found = dataSource.value.find((item) => item.id === row.id)
-          if (!found) {
-            continue
-          }
-          found.readable = {value: YES_OR_NO_TYPE.NO, name: locale.value.read}
-          found.readTime = row.value
-        }
-      })
-      onUnmounted(stop)
-    })
 
     function nameOf(record: UserChatMessageReadResponseBody): string {
       if (record.principal === props.host.self.systemName) {

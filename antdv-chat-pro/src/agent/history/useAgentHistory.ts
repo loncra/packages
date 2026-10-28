@@ -85,7 +85,6 @@ export function useAgentHistory<TSession extends AgentHistoryConversation>(
     if (!canLoadHistory(current, tag)) {
       return
     }
-    // 锚点滚动恢复保持关闭，不调用 pageEdgeBubble。
     current.dataSource.number = stepPageNumber(current.dataSource.number, tag)
     await loadPage(current.dataSource.number)
     await nextTick()

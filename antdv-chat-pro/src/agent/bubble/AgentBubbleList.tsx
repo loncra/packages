@@ -5,6 +5,7 @@ import type {PlatformUser, UserMetadata} from '@loncra/client/auth'
 import {getEnumValue} from '@loncra/client/commons'
 import {CHAT_BUBBLE_TYPE, STREAM_RUNNING_STATUS_VALUE} from '@loncra/client/ai'
 import BubbleList from '../../bubble-list/BubbleList'
+import {createBubbleListExpose} from '../../bubble-list/createBubbleListExpose'
 import {DEFAULT_BUBBLE_LIST_ROLE} from '../../bubble-list/useBubbleList'
 import type {BubbleListExpose, BubbleListItem, BubbleSession} from '../../bubble-list/types'
 import AgentAssistantContent from './AgentAssistantContent'
@@ -54,21 +55,7 @@ const AgentBubbleList = defineComponent({
     const history = inject(AGENT_HISTORY_KEY, null)
     const listRef = ref<BubbleListExpose>()
 
-    expose({
-      getScrollBox: () => listRef.value?.getScrollBox(),
-      jumpToMessage: (
-        key: string,
-        flashPending?: boolean,
-        block?: ScrollLogicalPosition,
-        behavior?: ScrollBehavior,
-      ) => listRef.value?.jumpToMessage(key, flashPending, block, behavior),
-      scrollTo: (options: {
-        key?: string | number
-        top?: number | 'bottom' | 'top'
-        behavior?: ScrollBehavior
-        block?: ScrollLogicalPosition
-      }) => listRef.value?.scrollTo(options),
-    })
+    expose(createBubbleListExpose(listRef))
 
     return () => (
       <BubbleList

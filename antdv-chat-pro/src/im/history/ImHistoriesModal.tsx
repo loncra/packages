@@ -103,7 +103,6 @@ const ImHistoriesModal = defineComponent({
     const loading = ref(false)
     const messages = ref<TotalPage<UserChatMessageResponseBody>>(emptyTotalPage())
     const files = ref<ObjectItemInfo[]>([])
-    const checkedFiles = ref<ObjectItemInfo[]>([])
     const applied = ref<{keyword: string; date: [import('dayjs').Dayjs, import('dayjs').Dayjs] | null}>({
       keyword: '',
       date: null,
@@ -329,10 +328,6 @@ const ImHistoriesModal = defineComponent({
                           <AttachmentMasonry
                             bucket="temp"
                             dataSource={group.items}
-                            checkValue={checkedFiles.value}
-                            onUpdate:checkValue={(value: ObjectItemInfo[]) => {
-                              checkedFiles.value = value
-                            }}
                           />
                         </div>
                       ))

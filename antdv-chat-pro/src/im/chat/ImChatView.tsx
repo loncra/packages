@@ -20,7 +20,7 @@ import {
 } from '@loncra/client/message'
 import {appendMessages, type ImChatBubble, type ImContentBlock} from '@loncra/chat-core'
 import {CHAT_BUBBLE_TYPE} from '@loncra/client/ai'
-import {sendImMessage} from '../send/sendImMessage'
+import type {BubbleListHandle} from '../../bubble-list/createBubbleListExpose'
 import type {BubbleListItem} from '../../bubble-list/types'
 import type {ImHistorySession} from '../history/useImHistory'
 import ImBubbleList from '../bubble/ImBubbleList'
@@ -81,11 +81,7 @@ const ImChatView = defineComponent({
     const prefixCls = computed(() => config.value.getPrefixCls('im-chat-view', IM_CHAT_VIEW_PREFIX))
     const [hashId, cssVarCls] = useStyle(prefixCls)
     const senderRef = ref<ImSenderExpose>()
-    const listRef = ref<{
-      getScrollBox: () => HTMLElement | undefined
-      jumpToMessage: ImChatViewExpose['jumpToMessage']
-      scrollTo: ImChatViewExpose['scrollTo']
-    }>()
+    const listRef = ref<BubbleListHandle>()
     const refMessages = ref<UserChatMessageResponseBody[]>([])
     const readingSet = new Set<number>()
     const sentIds = new Set<number>()
@@ -305,7 +301,7 @@ const ImChatView = defineComponent({
       }
       props.session.sending = true
       try {
-        const result = await sendImMessage(String(roomId), content)
+        const result = await ChatMessageService.send(content, String(roomId))
         if (!result.data) {
           return
         }
@@ -324,7 +320,11 @@ const ImChatView = defineComponent({
       }
     }
 
-    function onReedit(content: unknown) {
+    function onReedit(bubble: ImChatBubble) {
+      props.session.dataSource.elements = props.session.dataSource.elements.filter(
+        (row) => row.key !== String(bubble.id),
+      )
+      const content = (bubble.metadata as {oldContent?: unknown} | undefined)?.oldContent
       if (!Array.isArray(content) || !senderRef.value || !props.session.item?.data) {
         return
       }

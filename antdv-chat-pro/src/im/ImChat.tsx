@@ -297,17 +297,20 @@ const ImChat = defineComponent({
                         draftPreview: props.host.draftPreview,
                       }}
                       storedDrafts={storedDrafts}
+                      actions={{
+                        remove: (item) => {
+                          conversations.removeConversation(item, () => {
+                            if (session.item?.data?.id === item.id) {
+                              clearCurrent()
+                            }
+                          })
+                        },
+                        toggleFlag: conversations.toggleFlag,
+                      }}
                       onActive={(key: string, messageId?: number) => {
                         const found = conversations.findById(Number(key))
                         const targetId = messageId ?? found?.mentions?.at(0)?.messageId
                         void openConversation(Number(key), targetId)
-                      }}
-                      onFlags={conversations.patchFlags}
-                      onDelete={(item: UserChatConversationResponseBody) => {
-                        conversations.remove(item.id)
-                        if (session.item?.data?.id === item.id) {
-                          clearCurrent()
-                        }
                       }}
                     />
                   )

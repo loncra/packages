@@ -3,6 +3,7 @@ import {UserAvatar} from '@loncra/antdv-pro'
 import {type ImChatBubble, type ImContentBlock, textBubble} from '@loncra/chat-core'
 import {CHAT_BUBBLE_TYPE} from '@loncra/client/ai'
 import BubbleList from '../../bubble-list/BubbleList.tsx'
+import {createBubbleListExpose} from '../../bubble-list/createBubbleListExpose.ts'
 import type {BubbleListExpose, BubbleListItem, BubbleRenderRow, BubbleSession} from '../../bubble-list/types.ts'
 import {type NameValueEnumMetadata} from '@loncra/client/commons'
 import ImBubbleContent from './ImBubbleContent.tsx'
@@ -30,28 +31,14 @@ const ImBubbleList = defineComponent({
   },
   emits: {
     visibleItems: (_items: BubbleListItem[]) => true,
-    reedit: (_oldContent: unknown) => true,
+    reedit: (_bubble: ImChatBubble) => true,
     reference: (_bubble: ImChatBubble) => true,
   },
   setup(props, {emit, slots, expose}) {
     const history = inject(IM_HISTORY_KEY, null)
     const listRef = ref<BubbleListExpose>()
 
-    expose({
-      getScrollBox: () => listRef.value?.getScrollBox(),
-      jumpToMessage: (
-        key: string,
-        flashPending?: boolean,
-        block?: ScrollLogicalPosition,
-        behavior?: ScrollBehavior,
-      ) => listRef.value?.jumpToMessage(key, flashPending, block, behavior),
-      scrollTo: (options: {
-        key?: string | number
-        top?: number | 'bottom' | 'top'
-        behavior?: ScrollBehavior
-        block?: ScrollLogicalPosition
-      }) => listRef.value?.scrollTo(options),
-    })
+    expose(createBubbleListExpose(listRef))
 
     function renderItem(messages: BubbleListItem[]): BubbleRenderRow[] {
       const sorted = [...messages.filter((item) => !item.hide)].sort(
@@ -129,12 +116,7 @@ const ImBubbleList = defineComponent({
                 principal={bubble.principal}
                 host={props.host}
                 onJump={(message) => listRef.value?.jumpToMessage(String(message.id))}
-                onReedit={() => {
-                  props.session.dataSource.elements = props.session.dataSource.elements.filter(
-                    (row) => row.key !== String(bubble.id),
-                  )
-                  emit('reedit', (bubble.metadata as {oldContent?: unknown} | undefined)?.oldContent)
-                }}
+                onReedit={() => emit('reedit', bubble)}
               />
             )
           },

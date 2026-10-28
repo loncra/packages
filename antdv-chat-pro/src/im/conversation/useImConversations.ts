@@ -1,6 +1,13 @@
 import {computed, type ComputedRef, type Ref, ref} from 'vue'
+import useApp from 'antdv-next/dist/app/useApp'
 import {ChatMessageService, type UserChatConversationResponseBody} from '@loncra/client/message'
 import {isEnumValue, YES_OR_NO_TYPE} from '@loncra/client/commons'
+import {useLocale} from '../../_util/useLocale'
+
+export interface ImConversationActions {
+  remove: (item: UserChatConversationResponseBody) => void
+  toggleFlag: (key: 'pinned' | 'muted', item: UserChatConversationResponseBody) => Promise<void>
+}
 
 export interface ImConversationsApi<T extends UserChatConversationResponseBody> {
   dataSource: Ref<T[]>
@@ -17,14 +24,14 @@ export interface ImConversationsApi<T extends UserChatConversationResponseBody> 
   load: () => Promise<void>
   refreshByRoomId: (roomId: number) => Promise<T | undefined>
   remove: (id: number | undefined) => void
+  removeConversation: (item: T, onRemoved?: () => void) => void
+  toggleFlag: (key: 'pinned' | 'muted', item: T) => Promise<void>
   patchFlags: (items: Array<{id?: number; pinned?: unknown; muted?: unknown}>) => void
 }
 
-/**
- * 会话列表状态与变更。排序、置顶、按房间替换都在这里。
- * socket 与页面继续调用这些方法名。
- */
 export function useImConversations<T extends UserChatConversationResponseBody>(): ImConversationsApi<T> {
+  const {modal, message} = useApp()
+  const locale = useLocale('ImConversation')
   const dataSource = ref<T[]>([]) as Ref<T[]>
 
   function isPinned(item: T): boolean {
@@ -128,6 +135,43 @@ export function useImConversations<T extends UserChatConversationResponseBody>()
     dataSource.value = dataSource.value.filter((d) => d.id !== id)
   }
 
+  function removeConversation(item: T, onRemoved?: () => void): void {
+    const id = Number(item.id)
+    if (!Number.isFinite(id)) {
+      return
+    }
+    const copy = locale.value
+    modal.confirm({
+      title: copy.deleteConfirmTitle,
+      content: copy.deleteConfirmSingle,
+      onOk: async () => doRemove([id], onRemoved),
+    })
+  }
+
+  async function doRemove(ids: number[], onRemoved?: () => void): Promise<void> {
+    try {
+      const result = await ChatMessageService.deleteConversation(ids)
+      message.success(result.message ?? '')
+      for (const id of ids) {
+        remove(id)
+      }
+      onRemoved?.()
+    } catch (e) {
+      message.error(e instanceof Error ? e.message : String(e))
+    }
+  }
+
+  async function toggleFlag(key: 'pinned' | 'muted', item: T): Promise<void> {
+    const id = Number(item.id)
+    if (!Number.isFinite(id)) {
+      return
+    }
+    const result = key === 'pinned'
+      ? await ChatMessageService.pinnedConversation([id])
+      : await ChatMessageService.mutedConversation([id])
+    patchFlags(result.data ?? [])
+  }
+
   function patchFlags(
     items: Array<{id?: number; pinned?: unknown; muted?: unknown}>,
   ): void {
@@ -160,6 +204,8 @@ export function useImConversations<T extends UserChatConversationResponseBody>()
     load,
     refreshByRoomId,
     remove,
+    removeConversation,
+    toggleFlag,
     patchFlags,
   }
 }

@@ -1,4 +1,6 @@
 export {default} from './BubbleList'
+export {createBubbleListExpose} from './createBubbleListExpose'
+export type {BubbleListHandle} from './createBubbleListExpose'
 export {createBubbleListRole, DEFAULT_BUBBLE_LIST_ROLE, toAxBubbleItem, useBubbleList} from './useBubbleList'
 export type {BubbleListApi} from './useBubbleList'
 export type {
