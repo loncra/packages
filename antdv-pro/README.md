@@ -42,6 +42,7 @@ import zhCN from '@loncra/antdv-pro/locale/zh_CN'
 | `CrudCardGrid` | 卡片形态门面：同样透传给 `QueryCardGrid` | [说明](./src/crud-card-grid/README.md) |
 | `crud-page` 套件 | 页面装配：`CrudHomePage` / `CrudFormPage` / `CrudFormModal` / `CrudDetailPage` / `CrudCardGridPage`、`OperationTraceTable` / `createOperationTracePage` / `isOperationTraceVisible` / `OPERATION_TRACE_VARIANT`，声明入口 `defineHomePage` / `defineFormPage` / `defineDetailPage` / `defineCardGridPage` | [说明](./src/crud-page/README.md) |
 | `useAppNotification` | hook：按分组去重的通知。需要宿主的 `<a-app>` 提供上下文 | [说明](./src/notification/README.md) |
+| `captcha` 套件 | 验证码发送唯一来源：`CaptchaSendButton`（点击即全链：`generateCaptchaToken` → 行为验证适配 → `generateCaptcha` → 倒计时冷却；`sent`/`canceled`/`failed` 事件）+ `useCaptchaSend` / `useBehaviorCaptcha` / `buildCaptchaSubmitParams` / `useTianaiCaptcha`。行为验证器插件化（`BehaviorVerifier`，默认 tianai），验证地址取 `modulePrefix(RESOURCE_SERVER)` | [说明](./src/captcha/README.md) |
 
 ## 目录
 
@@ -49,7 +50,7 @@ import zhCN from '@loncra/antdv-pro/locale/zh_CN'
 | --- | --- |
 | `<控件>/` | 一个控件一个目录。骨架 `index.ts` / 主组件 `.tsx` / `style/index.ts` 见 [CONTRIBUTING.md](../CONTRIBUTING.md) 第 7 节，`types.ts` 与 `constants.ts` 按需 |
 | `crud-page/` | 页面装配套件：`home/`、`form/`、`form-modal/`、`detail/`、`card-grid/`、`operation-trace/`，以及 `define.ts`（声明入口）、`registryKinds.ts` / `usePageRegistry.ts`（字段组件注册表）、`fieldSourcesKinds.ts`（枚举 / 字典来源 → props）、`types.ts` + `pageTypes.ts`（声明模型与页面壳契约） |
-| `_util/` | 包内共用基础件：`format.ts`（单元格格式化）、`attachmentList.ts` / `uploadFile.ts` / `media.ts`（附件）、`richText.ts`（富文本空值归一）、`useLocale.ts`，以及 `crud/`（`actions.ts` 动作解析、`defaultActions.ts` 默认动作、`useCollectionData.ts` 取数、`useCollectionModels.ts`（集合的四个受控模型）、`useCrudDelete.ts`、`useDrag.ts` / `useFlatDragDrop.ts` / `useTableRowDrag.ts`、`genDragStyle.ts`、`useMergeRowSelection.ts`、`dateUtils.ts` / `useDateFormat.ts`、`useStaleCheck.ts`、`navigate.ts`、`rowKey.ts`、`readPath.ts`、`sources.ts`、`collectionExpose.ts`） |
+| `_util/` | 包内共用基础件：`format.ts`（单元格格式化）、`attachmentList.ts` / `uploadFile.ts` / `media.ts`（附件）、`loadResource.ts`（`loadScript` / `loadCss` / `loadIcon` 动态资源加载）、`richText.ts`（富文本空值归一）、`useLocale.ts`，以及 `crud/`（`actions.ts` 动作解析、`defaultActions.ts` 默认动作、`useCollectionData.ts` 取数、`useCollectionModels.ts`（集合的四个受控模型）、`useCrudDelete.ts`、`useDrag.ts` / `useFlatDragDrop.ts` / `useTableRowDrag.ts`、`genDragStyle.ts`、`useMergeRowSelection.ts`、`dateUtils.ts` / `useDateFormat.ts`、`useStaleCheck.ts`、`navigate.ts`、`rowKey.ts`、`readPath.ts`、`sources.ts`、`collectionExpose.ts`） |
 | `locale/` | 本包 locale 与 `Locale` 类型 |
 | `notification/` | `useAppNotification` |
 

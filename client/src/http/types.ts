@@ -12,6 +12,7 @@ export interface HttpRequest {
 
 export interface HttpClient {
   request<T>(req: HttpRequest): Promise<T>
+  readonly baseUrl?: string
 }
 
 export type FormValueConvert = (key: string, value: unknown) => unknown

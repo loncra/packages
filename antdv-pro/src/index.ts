@@ -281,3 +281,7 @@ export type {
 } from './crud-page'
 
 export {useAppNotification} from './notification'
+
+export {CaptchaSendButton, useCaptchaSend, useBehaviorCaptcha, useTianaiCaptcha, buildCaptchaSubmitParams} from './captcha'
+export type {BehaviorVerifier, CaptchaSendResult, TianaiCaptchaInstance} from './captcha'
+export {loadCss, loadIcon, loadScript} from './_util/loadResource'

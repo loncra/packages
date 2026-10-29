@@ -35,6 +35,10 @@ export interface CaptchaGenerationResult {
   expired: TimeProperties
 }
 
+export type CaptchaSendOutcome =
+  | {kind: 'generated'; token: CaptchaToken; generateResult: CaptchaGenerationResult}
+  | {kind: 'intercepted'; token: CaptchaToken; interceptToken: CaptchaInterceptToken}
+
 export type CaptchaTokenType =
   | typeof RESOURCE_SERVER_CAPTCHA_TOKEN_TYPE.SMS
   | typeof RESOURCE_SERVER_CAPTCHA_TOKEN_TYPE.EMAIL
