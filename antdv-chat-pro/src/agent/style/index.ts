@@ -5,11 +5,27 @@ import {genStyleHooks} from '../../_util/genStyleLayer'
 export const AGENT_CHAT_PREFIX = 'loncra-agent-chat'
 
 function genAgentChatStyle(token: LoncraStyleToken): CSSInterpolation {
-  const {componentCls, paddingSM, colorBorderSecondary} = token
+  const {componentCls, paddingSM, colorBorderSecondary, boxShadowTertiary} = token
   return {
     [componentCls]: {
+      display: 'flex',
+      flexDirection: 'column',
       height: '100%',
       minHeight: 0,
+      boxShadow: boxShadowTertiary,
+      [`.ant-card-head`]: {
+        flexShrink: 0,
+      },
+      [`.ant-card-body`]: {
+        flex: '1 1 0',
+        minHeight: 0,
+        padding: 0,
+        overflow: 'hidden',
+      },
+      [`${componentCls}-splitter`]: {
+        height: '100%',
+        minHeight: 0,
+      },
       [`${componentCls}-side`]: {
         height: '100%',
         minHeight: 0,

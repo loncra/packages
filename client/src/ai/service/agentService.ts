@@ -1,19 +1,19 @@
 import {
-  type FilterRequest,
-  formUrlEncoded,
-  type PageRequest,
-  type PageResult,
-  type RestResult,
-  SYSTEM_MODULE_NAME,
+    type FilterRequest,
+    formUrlEncoded,
+    type PageRequest,
+    type PageResult,
+    type RestResult,
+    SYSTEM_MODULE_NAME,
 } from '../../commons'
 import {http, modulePrefix} from '../../http'
 import type {
-  AgentChatBasicResponseBody,
-  AgentChatRequestBody,
-  AgentChatResponseBody,
-  AgentConversationEntity,
-  AgentMessageEntity,
-  AgentResumeRequestBody,
+    AgentChatBasicResponseBody,
+    AgentChatRequestBody,
+    AgentChatResponseBody,
+    AgentConversationEntity,
+    AgentMessageEntity,
+    AgentResumeRequestBody,
 } from '../domain/agent.ts'
 
 export class AgentService {
@@ -35,6 +35,10 @@ export class AgentService {
 
   static get STREAM_URL(): string {
     return AgentService.CHAT_URL + '/stream'
+  }
+
+  static buildStreamUrl(assistantMessageId: number, loadHistory: boolean): string {
+    return `${AgentService.STREAM_URL}/${assistantMessageId}?loadHistory=${loadHistory}`
   }
 
   static get HISTORY_URL(): string {

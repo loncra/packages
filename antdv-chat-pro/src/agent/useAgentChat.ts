@@ -1,18 +1,24 @@
-﻿import {computed, onMounted, ref} from 'vue'
+import {computed, onMounted, ref} from 'vue'
 import dayjs from 'dayjs'
 import type {InstructionItem} from '@loncra/antdv-chat'
 import type {SlotConfigType} from '@antdv-next/x/dist/sender/interface'
 import type {ChatRole} from '@loncra/chat-core'
 import {getEnumValue} from '@loncra/client/commons'
 import {AuthServerService} from '@loncra/client/auth'
-import {CHAT_BUBBLE_TYPE, type UserPluginInstallResult} from '@loncra/client/ai'
+import {
+    AgentService,
+    type AgentStreamTransport,
+    CHAT_BUBBLE_TYPE,
+    type UserPluginInstallResult
+} from '@loncra/client/ai'
 import {useLocale} from '../_util/useLocale'
 import {createAgentDraftBinding} from './draft/createAgentDraftBinding'
 import {useAgentHistory} from './history/useAgentHistory'
 import {toCatalogItems, useAgentInstructionSlots} from './sender/useAgentInstructionSlots'
-import {isConversation, useAgentChatOptions} from './useAgentChatOptions'
+import {useAgentChatOptions} from './useAgentChatOptions'
 import {useAgentChatSessions} from './useAgentChatSessions'
 import {useAgentChatSend} from './useAgentChatSend'
+import {getConversationRuns, useAgentStream} from './stream/useAgentStream'
 import type {AgentSession, Self} from './types'
 import type {AgentSenderExpose} from './sender/AgentSender'
 import type {BubbleListExpose} from '../bubble-list/types'
@@ -26,8 +32,12 @@ function filterInstruction(keyword: string, dataSource: InstructionItem[]): Inst
 }
 
 export function useAgentChat(
-    props: {installs: UserPluginInstallResult[]; self: Self},
-    emit: (event: 'active', session: AgentSession | undefined) => void,
+    props: {
+        installs: UserPluginInstallResult[]
+        self: Self
+        buildHeaders?: () => Record<string, string>
+        transport?: AgentStreamTransport
+    },
 ) {
     const chatLocale = useLocale('AgentChat')
     const hubLocale = useLocale('AgentHub')
@@ -48,7 +58,6 @@ export function useAgentChat(
             }
             return CHAT_BUBBLE_TYPE.USER
         },
-        isWorkspace: isConversation,
         scrollToBottom: () => {
             bubbleListRef.value?.scrollTo({top: 'bottom', behavior: 'smooth'})
         },
@@ -57,11 +66,27 @@ export function useAgentChat(
         },
     })
 
+    const stream = useAgentStream({
+        current: () => sessions.current.value,
+        transport: props.transport,
+        buildHeaders: () => props.buildHeaders?.() ?? {},
+    })
+
+    function onSessionActive(session: AgentSession | undefined) {
+        stream.disconnectIfRunning()
+        if (!session) {
+            return
+        }
+        for (const run of getConversationRuns(session)) {
+            stream.connect(Number(run.id), false)
+        }
+    }
+
     const sessions = useAgentChatSessions({
         current,
         history,
         senderRef,
-        onActive: (session) => emit('active', session),
+        onActive: onSessionActive,
     })
 
     const catalogItems = computed<InstructionItem[]>(() =>
@@ -98,8 +123,15 @@ export function useAgentChat(
         form: options.form,
         placeConversation: sessions.placeConversation,
         updateMenu: sessions.updateMenu,
-        onActive: (session) => emit('active', session),
+        onActive: onSessionActive,
     })
+
+    async function onCancelSession(session: AgentSession) {
+        for (const run of getConversationRuns(session)) {
+            await AgentService.interrupt(Number(run.key))
+        }
+        stream.disconnectIfRunning()
+    }
 
     function readLive(): SlotConfigType[] {
         return senderRef.value?.getSlotConfigValue() ?? []
@@ -130,5 +162,7 @@ export function useAgentChat(
         options,
         isRunning: send.isRunning,
         onSubmit: send.onSubmit,
+        onCancelSession,
+        stream,
     }
 }

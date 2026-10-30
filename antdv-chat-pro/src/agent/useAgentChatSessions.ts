@@ -1,11 +1,11 @@
-﻿import {computed, ref, type Ref} from 'vue'
+import {computed, ref, type Ref} from 'vue'
 import dayjs from 'dayjs'
 import {emptyPageResult, filterTreeDeep, findFirstTreeNode, getEnumValue, unmergeTree} from '@loncra/client/commons'
 import {AGENT_WORKSPACE_TYPE_VALUE, type AgentConversationEntity} from '@loncra/client/ai'
 import type {AgentConversationHost, AgentConversationRecord} from './conversation'
 import {useAgentConversations} from './conversation'
 import type {AgentSession} from './types'
-import {isConversation} from './useAgentChatOptions'
+import {isWorkspaceConversation} from './conversation/useAgentConversations'
 import type {AgentSenderExpose} from './sender/AgentSender'
 import type {useAgentHistory} from './history/useAgentHistory'
 
@@ -70,7 +70,7 @@ export function useAgentChatSessions(options: {
         const session = ensureSession(item)
         updateMenu(session)
         current.value = session
-        if (!isConversation(session)) {
+        if (!isWorkspaceConversation(getEnumValue(session.type))) {
             return
         }
         await history.switchConversation(current, undefined, true)
@@ -100,7 +100,7 @@ export function useAgentChatSessions(options: {
         if (!session) {
             return undefined
         }
-        if (isConversation(session)) {
+        if (isWorkspaceConversation(getEnumValue(session.type))) {
             return session.parentId
         }
         return session.id

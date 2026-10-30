@@ -1,18 +1,31 @@
 import {ref, type Ref} from 'vue'
 import useApp from 'antdv-next/dist/app/useApp'
-import {findFirstTreeNode, isEnumValue} from '@loncra/client/commons'
+import {findFirstTreeNode, getEnumValue, isEnumValue} from '@loncra/client/commons'
 import {useLocale} from '../../_util/useLocale'
-import {
-  AgentService,
-  AI_SERVER_AGENT_CONVERSATION_TYPE,
-} from '@loncra/client/ai'
+import {AgentService, AI_SERVER_AGENT_CONVERSATION_TYPE,} from '@loncra/client/ai'
 import type {AgentConversationHost, AgentConversationMenuKey, AgentConversationRecord} from './types'
 
-export function agentMenuKeys(type: unknown): AgentConversationMenuKey[] {
-  if (isEnumValue(type as number, AI_SERVER_AGENT_CONVERSATION_TYPE.DEFAULT_WORKSPACE)) {
+export function isDefaultWorkspace(type: number): boolean {
+  return isEnumValue(type, AI_SERVER_AGENT_CONVERSATION_TYPE.DEFAULT_WORKSPACE)
+}
+
+export function isWorkspaceConversation(type: number): boolean {
+  return isEnumValue(type, AI_SERVER_AGENT_CONVERSATION_TYPE.WORKSPACE_CONVERSATION)
+}
+
+export function isCustomizeWorkspace(type: number): boolean {
+  return isEnumValue(type, AI_SERVER_AGENT_CONVERSATION_TYPE.CUSTOMIZE_WORKSPACE)
+}
+
+export function isWorkspace(type: number): boolean {
+  return isDefaultWorkspace(type) || isCustomizeWorkspace(type)
+}
+
+export function agentMenuKeys(type: number): AgentConversationMenuKey[] {
+  if (isDefaultWorkspace(type)) {
     return ['create']
   }
-  if (isEnumValue(type as number, AI_SERVER_AGENT_CONVERSATION_TYPE.WORKSPACE_CONVERSATION)) {
+  if (isWorkspaceConversation(type)) {
     return ['rename', 'delete']
   }
   return ['create', 'rename', 'delete']
@@ -72,8 +85,7 @@ export function useAgentConversations<T extends AgentConversationRecord>(
       host.afterLoad(conversations.value)
       const activate = switchItemId
         ? findFirstTreeNode((item) => item.id === switchItemId, conversations.value) as T | undefined
-        : conversations.value.find((item) =>
-          isEnumValue(item.type, AI_SERVER_AGENT_CONVERSATION_TYPE.DEFAULT_WORKSPACE))
+        : conversations.value.find((item) => isDefaultWorkspace(getEnumValue(item.type)))
       if (activate) {
         host.onOpen(activate)
       }

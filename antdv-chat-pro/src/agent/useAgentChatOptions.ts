@@ -3,14 +3,27 @@ import type {MenuItemType} from 'antdv-next'
 import {
     FolderOpenOutlined,
     FolderOutlined,
-    QuestionCircleOutlined,
     ProfileOutlined,
+    QuestionCircleOutlined,
     RobotOutlined,
 } from '@antdv-next/icons'
-import {getEnumValue, isEnumValue, type IdValueMetadata, ResourceServerService, SYSTEM_ENUM_TYPE, SYSTEM_MODULE_NAME} from '@loncra/client/commons'
-import {AI_SERVER_AGENT_CHAT_TYPE, AI_SERVER_AGENT_CONVERSATION_TYPE, AI_SERVER_MODEL_TYPE, ModelSettingService, type ModelSettingEntity} from '@loncra/client/ai'
+import {
+    getEnumValue,
+    type IdValueMetadata,
+    isEnumValue,
+    ResourceServerService,
+    SYSTEM_ENUM_TYPE,
+    SYSTEM_MODULE_NAME
+} from '@loncra/client/commons'
+import {
+    AI_SERVER_AGENT_CHAT_TYPE,
+    AI_SERVER_MODEL_TYPE,
+    type ModelSettingEntity,
+    ModelSettingService
+} from '@loncra/client/ai'
 import {toModelMenuItems} from './sender/agentMenus'
 import type {AgentSenderChoice, AgentSenderWorkspace} from './sender/AgentSender'
+import {isDefaultWorkspace, isWorkspaceConversation} from './conversation/useAgentConversations'
 import type {AgentConversationRecord} from './conversation'
 import type {AgentSession} from './types'
 
@@ -32,10 +45,6 @@ function typeColor(type: number): string {
         return 'pink'
     }
     return 'purple'
-}
-
-export function isConversation(item: {type?: unknown}): boolean {
-    return isEnumValue(item.type, AI_SERVER_AGENT_CONVERSATION_TYPE.WORKSPACE_CONVERSATION)
 }
 
 export function useAgentChatOptions(options: {
@@ -82,13 +91,13 @@ export function useAgentChatOptions(options: {
         if (!session) {
             return undefined
         }
-        const workspace = isConversation(session)
+        const workspace = isWorkspaceConversation(getEnumValue(session.type))
             ? options.conversations.value.find((item) => item.id === session.parentId)
             : session
         if (!workspace?.name) {
             return undefined
         }
-        const isDefault = isEnumValue(workspace.type, AI_SERVER_AGENT_CONVERSATION_TYPE.DEFAULT_WORKSPACE)
+        const isDefault = isDefaultWorkspace(getEnumValue(workspace.type))
         return {
             title: `${options.workspaceLabel()}: ${workspace.name}`,
             color: isDefault ? 'blue' : 'green',

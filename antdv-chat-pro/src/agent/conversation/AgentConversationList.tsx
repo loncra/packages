@@ -1,43 +1,35 @@
 import {computed, defineComponent, nextTick, type PropType, type VNode} from 'vue'
+import {Button, Divider, Flex, Input, Menu, type MenuItemType, SpaceCompact,} from 'antdv-next'
 import {
-  Button,
-  Divider,
-  Flex,
-  Input,
-  Menu,
-  SpaceCompact,
-  type MenuItemType,
-} from 'antdv-next'
-import {
-  CheckCircleOutlined,
-  CheckOutlined,
-  CloseCircleOutlined,
-  CloseOutlined,
-  CommentOutlined,
-  DeleteOutlined,
-  EditOutlined,
-  FolderOpenOutlined,
-  FolderOutlined,
-  LoadingOutlined,
-  PlusOutlined,
-  QuestionCircleOutlined,
-  ShopOutlined,
-  StopOutlined,
+    CheckCircleOutlined,
+    CheckOutlined,
+    CloseCircleOutlined,
+    CloseOutlined,
+    CommentOutlined,
+    DeleteOutlined,
+    EditOutlined,
+    FolderOpenOutlined,
+    FolderOutlined,
+    LoadingOutlined,
+    PlusOutlined,
+    QuestionCircleOutlined,
+    ShopOutlined,
+    StopOutlined,
 } from '@antdv-next/icons'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {classNames} from '@loncra/antdv'
 import {useLocale} from '../../_util/useLocale'
-import {getEnumValue, isEnumValue} from '@loncra/client/commons'
-import {AI_SERVER_AGENT_CHAT_STATUS, AI_SERVER_AGENT_CONVERSATION_TYPE} from '@loncra/client/ai'
+import {getEnumValue} from '@loncra/client/commons'
+import {AI_SERVER_AGENT_CHAT_STATUS} from '@loncra/client/ai'
+import {agentMenuKeys, isCustomizeWorkspace, isDefaultWorkspace, isWorkspaceConversation} from './useAgentConversations'
 import ConversationList from '../../conversation/ConversationList'
 import type {ConversationNode} from '../../conversation/types'
-import {agentMenuKeys} from './useAgentConversations'
 import useStyle, {AGENT_CONVERSATION_PREFIX} from './style/index'
 import type {
-  AgentConversationActions,
-  AgentConversationHost,
-  AgentConversationMenuKey,
-  AgentConversationRecord,
+    AgentConversationActions,
+    AgentConversationHost,
+    AgentConversationMenuKey,
+    AgentConversationRecord,
 } from './types'
 
 const STATUS_ICON = {
@@ -75,10 +67,9 @@ const AgentConversationList = defineComponent({
 
     function renderIcon(item: AgentConversationRecord) {
       const type = getEnumValue(item.type)
-      if (isEnumValue(type, AI_SERVER_AGENT_CONVERSATION_TYPE.DEFAULT_WORKSPACE)
-        || isEnumValue(type, AI_SERVER_AGENT_CONVERSATION_TYPE.CUSTOMIZE_WORKSPACE)) {
+      if (isDefaultWorkspace(type) || isCustomizeWorkspace(type)) {
         const Icon = props.openKeys.includes(String(item.key ?? item.id)) ? FolderOpenOutlined : FolderOutlined
-        const color = isEnumValue(type, AI_SERVER_AGENT_CONVERSATION_TYPE.DEFAULT_WORKSPACE)
+        const color = isDefaultWorkspace(type)
           ? 'primary'
           : 'success'
         return <Icon class={tone(color)} />
@@ -110,7 +101,7 @@ const AgentConversationList = defineComponent({
           icon: () => <DeleteOutlined />,
         },
       }
-      const keys = agentMenuKeys(item.type)
+      const keys = agentMenuKeys(getEnumValue(item.type))
       const items: MenuItemType[] = []
       for (const key of keys) {
         if (key === 'delete' && keys.length > 1) {
@@ -172,13 +163,13 @@ const AgentConversationList = defineComponent({
     function toNode(item: AgentConversationRecord, lookup: Map<string, AgentConversationRecord>): ConversationNode {
       const key = String(item.key ?? item.id)
       lookup.set(key, item)
-      const isConversation = isEnumValue(item.type, AI_SERVER_AGENT_CONVERSATION_TYPE.WORKSPACE_CONVERSATION)
+      const isConversationItem = isWorkspaceConversation(getEnumValue(item.type))
       const children = (item.children || []) as AgentConversationRecord[]
       return {
         key,
         name: item.name ?? '',
         editing: item.editing,
-        timeText: isConversation && item.creationTime != null
+        timeText: isConversationItem && item.creationTime != null
           ? props.host.timeText(item.creationTime)
           : undefined,
         children: children.length > 0 ? children.map((child) => toNode(child, lookup)) : undefined,

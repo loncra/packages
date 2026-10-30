@@ -1,20 +1,20 @@
-﻿import {computed, nextTick, type Ref} from 'vue'
+import {computed, nextTick, type Ref} from 'vue'
 import useApp from 'antdv-next/dist/app/useApp'
 import type {SlotConfigType} from '@antdv-next/x/dist/sender/interface'
 import {appendMessages} from '@loncra/chat-core'
 import {getEnumValue} from '@loncra/client/commons'
 import {
-    AI_SERVER_AGENT_CHAT_STATUS,
     type AgentChatResponseBody,
     type AgentConversationEntity,
     type AgentMessageEntity,
-    CHAT_BUBBLE_TYPE,
     AgentService,
+    AI_SERVER_AGENT_CHAT_STATUS,
+    CHAT_BUBBLE_TYPE,
     STREAM_RUNNING_STATUS_VALUE,
 } from '@loncra/client/ai'
 import type {AgentConversationRecord} from './conversation'
 import type {AgentSession} from './types'
-import {isConversation} from './useAgentChatOptions'
+import {isWorkspaceConversation} from './conversation/useAgentConversations'
 import type {AgentSenderExpose} from './sender/AgentSender'
 import type {BubbleListExpose} from '../bubble-list/types'
 import type {useAgentHistory} from './history/useAgentHistory'
@@ -110,7 +110,7 @@ export function useAgentChatSend(options: {
         options.updateMenu(node)
         pane.value = 'chat'
         current.value = node
-        if (isConversation(node)) {
+        if (isWorkspaceConversation(getEnumValue(node.type))) {
             await history.switchConversation(current, undefined, true)
         }
         onActive(current.value)

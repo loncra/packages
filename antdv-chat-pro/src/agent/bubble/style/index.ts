@@ -23,6 +23,7 @@ function genAgentBubbleStyle(token: LoncraStyleToken): CSSInterpolation {
     sizeXL,
     sizeXXL,
   } = token
+  console.info(componentCls)
   return {
     [`${componentCls}-token-list`]: {
         maxHeight: calc(sizeXXL).mul(5).equal(),
@@ -40,6 +41,9 @@ function genAgentBubbleStyle(token: LoncraStyleToken): CSSInterpolation {
       [`${componentCls}-footer`]: {
         display: 'flex',
         gap: marginXS,
+      },
+      [`${antCls}-alert`]: {
+        alignItems:'baseline'
       },
       [`${componentCls}-think`]: {
         [`${antCls}-card-body`]: {

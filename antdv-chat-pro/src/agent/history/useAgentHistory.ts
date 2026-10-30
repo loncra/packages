@@ -1,7 +1,9 @@
-import {nextTick, provide, type InjectionKey, type Ref} from 'vue'
+import {type InjectionKey, nextTick, provide, type Ref} from 'vue'
 import {revealAnchor} from '../../history'
 import type {PageResult, RestResult} from '@loncra/client/commons'
-import {AgentService, type AgentMessageEntity} from '@loncra/client/ai'
+import {getEnumValue} from '@loncra/client/commons'
+import {type AgentMessageEntity, AgentService} from '@loncra/client/ai'
+import {isWorkspaceConversation} from '../conversation/useAgentConversations'
 import {
   appendMessages,
   applyHistoryPage,
@@ -32,7 +34,6 @@ export interface AgentHistoryHost {
   noMoreText: () => string
   nowUnix: () => number
   resolveRole: (message: AgentMessageEntity) => ChatRole
-  isWorkspace: (conversation: {type?: unknown}) => boolean
   scrollToBottom: () => void
   jumpToMessage: (key: string) => void
 }
@@ -141,7 +142,7 @@ export function useAgentHistory<TSession extends AgentHistoryConversation>(
     messageId?: number,
     reload: boolean = false,
   ): Promise<void> {
-    if (!conversation.value || !host.isWorkspace(conversation.value)) {
+    if (!conversation.value || !isWorkspaceConversation(Number(getEnumValue(conversation.value.type)))) {
       return
     }
     if (!messageId) {
