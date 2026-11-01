@@ -107,7 +107,13 @@ const locale: Locale = {
   ImChat: {
     everyone: '所有人',
     undoMessage: '该消息已撤销',
+    selfUndo: '您已撤回此消息',
     undoTime: '撤销时间{time}',
+    previewImage: '[图片]',
+    previewVideo: '[视频]',
+    previewAudio: '[语音]',
+    previewFile: '[文件]',
+    mentionNotification: '{user} 在工作空间中提到了你',
     exitRoom: '您已退出本群',
     roomRemove: '您已被本群移除',
     disbandRoom: '本群已解散',

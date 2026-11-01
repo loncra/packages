@@ -20,6 +20,7 @@ import type {ImChatHost} from '../host.ts'
 import {AuthServerService} from '@loncra/client/auth'
 import ImCallBlock from '../call/ImCallBlock.tsx'
 import {useLocale} from '../../_util/useLocale.ts'
+import {useImContentPreview} from '../chat/contentPreview.ts'
 import useStyle, {IM_BUBBLE_PREFIX} from './style/index.ts'
 
 function instructionText(value: unknown): string {
@@ -44,6 +45,7 @@ const ImBubbleContent = defineComponent({
   },
   setup(props) {
     const locale = useLocale('ImBubble')
+    const previewApi = useImContentPreview({principal: () => props.host.self.systemName})
     const config = useConfig()
     const prefixCls = computed(() => config.value.getPrefixCls('im-bubble', IM_BUBBLE_PREFIX))
     const [hashId, cssVarCls] = useStyle(prefixCls)
@@ -68,7 +70,7 @@ const ImBubbleContent = defineComponent({
               :
             </Typography.Text>
             <Typography.Text class={`${prefixCls.value}-reference-preview`} type="secondary" ellipsis>
-              {props.host.messagePreview(message)}
+              {previewApi.messagePreview(message)}
             </Typography.Text>
           </Flex>
         </Tag>

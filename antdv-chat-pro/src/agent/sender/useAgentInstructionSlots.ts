@@ -1,4 +1,4 @@
-﻿import {computed, h, type Ref} from 'vue'
+import {computed, h, type Ref} from 'vue'
 import {Tag} from 'antdv-next'
 import type {SlotConfigType} from '@antdv-next/x/dist/sender/interface'
 import type {InstructionItem, InstructionMeasure, InstructionSenderHandle} from '@loncra/antdv-chat'
@@ -11,7 +11,7 @@ import {
     type UserPluginInstallResult,
 } from '@loncra/client/ai'
 import {MCP_PLUGIN_ICON, SKILL_PLUGIN_ICON} from '../pluginIcons'
-import type {AgentSenderExpose} from './AgentSender'
+import type {AgentSenderExpose} from './types.ts'
 
 export const TRIGGER = '/'
 export const MCP_PREFIX = '/mcp'

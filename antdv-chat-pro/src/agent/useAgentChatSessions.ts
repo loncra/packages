@@ -6,7 +6,7 @@ import type {AgentConversationHost, AgentConversationRecord} from './conversatio
 import {useAgentConversations} from './conversation'
 import type {AgentSession} from './types'
 import {isWorkspaceConversation} from './conversation/useAgentConversations'
-import type {AgentSenderExpose} from './sender/AgentSender'
+import type {AgentSenderExpose} from './sender/types.ts'
 import type {useAgentHistory} from './history/useAgentHistory'
 
 function nodeKey(item: {key?: string; id?: number}): string {

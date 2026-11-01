@@ -10,7 +10,6 @@ import {
   ChatMessageService,
   MESSAGE_SERVER_USER_CHAT_CONVERSATION_STATUS,
   MESSAGE_SERVER_USER_CHAT_ROOM_TYPE,
-  type UserChatConversationResponseBody,
   type UserChatMessageEntity,
   type UserChatMessageResponseBody,
   type UserChatParticipantEntity,
@@ -18,9 +17,10 @@ import {
 import {appendMessages, type ImChatBubble, type ImContentBlock} from '@loncra/chat-core'
 import {CHAT_BUBBLE_TYPE} from '@loncra/client/ai'
 import type {BubbleListHandle} from '../../bubble-list/createBubbleListExpose'
-import type {ImHistorySession} from '../history/useImHistory'
+import type {ImChatSession, ImChatViewExpose} from './types.ts'
 import ImBubbleList from '../bubble/ImBubbleList'
-import ImSender, {type ImSenderExpose} from '../sender/ImSender'
+import ImSender from '../sender/ImSender'
+import type {ImSenderExpose} from '../sender/types.ts'
 import ImCallButton from '../call/ImCallButton'
 import type {ImPageHost} from '../host'
 import {AuthServerService} from '@loncra/client/auth'
@@ -28,34 +28,6 @@ import {useLocale} from '../../_util/useLocale'
 import {useImReadReport} from './useImReadReport'
 import {useImMentionInstruction} from './useImMentionInstruction'
 import useStyle, {IM_CHAT_VIEW_PREFIX} from './style'
-
-export interface ImChatSession extends ImHistorySession<ImChatBubble> {
-  sending: boolean
-  item?: {
-    key: string
-    data?: UserChatConversationResponseBody
-  }
-}
-
-export interface ImChatViewExpose {
-  getScrollBox: () => HTMLElement | undefined
-  jumpToMessage: (
-    key: string,
-    flashPending?: boolean,
-    block?: ScrollLogicalPosition,
-    behavior?: ScrollBehavior,
-  ) => void
-  scrollTo: (options: {
-    key?: string | number
-    top?: number | 'bottom' | 'top'
-    behavior?: ScrollBehavior
-    block?: ScrollLogicalPosition
-  }) => void
-  persistSenderDraft: () => Promise<void>
-  getSenderSlotConfigValue: () => SlotConfigType[]
-  applyMessageUpdate: (message: UserChatMessageResponseBody | UserChatMessageEntity) => void
-  applyMessageUndo: (message: UserChatMessageEntity) => void
-}
 
 const ImChatView = defineComponent({
   name: 'LImChatView',

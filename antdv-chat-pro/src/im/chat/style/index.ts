@@ -5,7 +5,7 @@ import {genStyleHooks} from '../../../_util/genStyleLayer'
 export const IM_CHAT_VIEW_PREFIX = 'loncra-im-chat-view'
 
 function genImChatViewStyle(token: LoncraStyleToken): CSSInterpolation {
-  const {componentCls, paddingSM, marginSM, marginXS, lineWidth, lineType, colorBorderSecondary} = token
+  const {componentCls, paddingSM, marginSM, marginXS, lineWidth, lineType, colorBorderSecondary, boxShadowSecondary} = token
   return {
     [componentCls]: {
       display: 'flex',
@@ -26,7 +26,7 @@ function genImChatViewStyle(token: LoncraStyleToken): CSSInterpolation {
         marginTop: marginSM,
         left: '50%',
         zIndex: 1,
-        boxShadow: 'var(--ant-box-shadow-card)',
+        boxShadow: boxShadowSecondary,
         animationName: JUMP_KEYFRAMES,
         animationDuration: '1s',
         animationIterationCount: 'infinite',

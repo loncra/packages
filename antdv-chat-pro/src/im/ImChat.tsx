@@ -5,11 +5,10 @@ import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {classNames} from '@loncra/antdv'
 import {type RestResult} from '@loncra/client/commons'
 import {
-  type BasicUserChatConversation,
-  ChatMessageService,
-  type UserChatConversationResponseBody,
-  type UserChatMessageEntity,
-  type UserChatMessageResponseBody,
+    type BasicUserChatConversation,
+    ChatMessageService,
+    type UserChatConversationResponseBody,
+    type UserChatMessageResponseBody,
 } from '@loncra/client/message'
 import type {PlatformUser} from '@loncra/client/auth'
 import type {SystemUserContactItem} from '../system-user-panel'
@@ -18,22 +17,10 @@ import ImContact from './contact/ImContact'
 import ImChatView from './chat/ImChatView'
 import {ImRoomSettings} from './room'
 import type {ImPageHost} from './host'
+import type {ImChatExpose} from './types'
 import {useImChat} from './useImChat'
 import {useImRoomActions} from './room/useImRoomActions'
 import useStyle, {IM_CHAT_PREFIX} from './style'
-
-export interface ImChatExpose {
-  openConversation: (id: number, messageId?: number) => Promise<void>
-  setRoomSettingsOpen: (open: boolean) => void
-  applyIncomingMessage: (message: UserChatMessageResponseBody | UserChatMessageEntity) => void
-  applyMessageUpdate: (message: UserChatMessageResponseBody | UserChatMessageEntity) => void
-  applyMessageUndo: (message: UserChatMessageEntity) => void
-  addConversation: (conversation: UserChatConversationResponseBody) => Promise<void>
-  refreshConversationByRoom: (roomId: number) => Promise<void>
-  refreshConversations: () => Promise<void>
-  refreshParticipants: (roomId: number) => Promise<void>
-  scrollToBottom: () => void
-}
 
 const ImChat = defineComponent({
   name: 'LImChat',
@@ -80,14 +67,7 @@ const ImChat = defineComponent({
     expose({
       openConversation: chat.openConversation,
       setRoomSettingsOpen: chat.setRoomSettingsOpen,
-      applyIncomingMessage: chat.applyIncomingMessage,
-      applyMessageUpdate: (message: UserChatMessageResponseBody | UserChatMessageEntity) =>
-        chat.viewRef.value?.applyMessageUpdate(message),
-      applyMessageUndo: (message: UserChatMessageEntity) => chat.viewRef.value?.applyMessageUndo(message),
-      addConversation: chat.addConversation,
-      refreshConversationByRoom: chat.refreshConversationByRoom,
       refreshConversations: chat.refreshConversations,
-      refreshParticipants: chat.refreshParticipants,
       scrollToBottom: chat.scrollToBottom,
     } satisfies ImChatExpose)
 
@@ -108,8 +88,7 @@ const ImChat = defineComponent({
                       host={{
                         timeText: props.host.timeText,
                         unreadCount: props.host.unreadCount,
-                        messagePreview: props.host.messagePreview,
-                        draftPreview: props.host.draftPreview,
+                        principal: () => props.host.self.systemName,
                       }}
                       storedDrafts={chat.drafts.storedDrafts}
                       actions={{

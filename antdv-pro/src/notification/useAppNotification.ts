@@ -50,12 +50,19 @@ export function useAppNotification() {
     await addNotificationKey(group, key)
     const {classes: callerClassesProp, ...rest} = props
     const callerClasses = typeof callerClassesProp === 'function' ? undefined : callerClassesProp
+    const clickable = typeof rest.onClick === 'function'
     notification.info({
       key,
       ...rest,
       classes: {
         ...callerClasses,
-        root: classNames(prefixCls.value, hashId.value, cssVarCls.value, callerClasses?.root),
+        root: classNames(
+          prefixCls.value,
+          hashId.value,
+          cssVarCls.value,
+          clickable && `${prefixCls.value}-clickable`,
+          callerClasses?.root,
+        ),
         icon: classNames(`${prefixCls.value}-icon`, callerClasses?.icon),
         title: classNames(`${prefixCls.value}-title`, callerClasses?.title),
       },

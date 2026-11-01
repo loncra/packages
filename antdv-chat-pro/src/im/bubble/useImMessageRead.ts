@@ -3,6 +3,8 @@ import {ChatMessageService, type UserChatMessageReadResponseBody} from '@loncra/
 import {YES_OR_NO_TYPE} from '@loncra/client/commons'
 import {useLocale} from '../../_util/useLocale'
 import type {ImChatHost} from '../host.ts'
+import {IM_SOCKET_EVENT} from '../chat/socketEvents.ts'
+import {parseSocketRestPayload} from '../chat/parseSocket.ts'
 
 export function useImMessageRead(messageId: number, host: ImChatHost) {
   const locale = useLocale('ImBubble')
@@ -18,7 +20,9 @@ export function useImMessageRead(messageId: number, host: ImChatHost) {
     } finally {
       loading.value = false
     }
-    stop = host.subscribeReadUpdate((updates) => {
+    stop = host.subscribe(IM_SOCKET_EVENT.CHAT_MESSAGE_READ_UPDATE, (payload) => {
+      const result = parseSocketRestPayload<Array<{id: number; value: number}>>(payload)
+      const updates = result.data ?? []
       for (const row of updates) {
         const found = dataSource.value.find((item) => item.id === row.id)
         if (!found) {

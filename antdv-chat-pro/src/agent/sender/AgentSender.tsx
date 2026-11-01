@@ -1,45 +1,18 @@
-import {computed, defineComponent, h, type PropType, ref, type VNodeChild} from 'vue'
-import {Button, Dropdown, Menu, Tag} from 'antdv-next'
+import {computed, defineComponent, h, type PropType, ref} from 'vue'
 import type {MenuInfo, MenuItemType} from 'antdv-next'
-import {
-  ApiOutlined,
-  createFromIconfontCN,
-  PlusOutlined,
-  ProfileOutlined,
-  QuestionCircleOutlined,
-  RobotOutlined,
-} from '@antdv-next/icons'
+import {Button, Dropdown, Menu, Tag} from 'antdv-next'
+import {ApiOutlined, PlusOutlined, ProfileOutlined, QuestionCircleOutlined, RobotOutlined,} from '@antdv-next/icons'
 import {isEnumValue} from '@loncra/client/commons'
 import {AI_SERVER_AGENT_CHAT_TYPE} from '@loncra/client/ai'
 import {SenderHeader} from '@antdv-next/x'
 import type {SlotConfigType} from '@antdv-next/x/dist/sender/interface'
 import type {DraftRestoreResult} from '@loncra/chat-core'
-import {classNames} from '@loncra/antdv'
+import {classNames, iconFontNode} from '@loncra/antdv'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import DraftSender, {type DraftBinding, type DraftSenderExpose} from '../../draft-sender'
-import {
-  type InstructionItem,
-  type InstructionSenderHandle,
-  type InstructionSenderProps,
-} from '@loncra/antdv-chat'
+import {type InstructionItem, type InstructionSenderProps,} from '@loncra/antdv-chat'
+import type {AgentSenderChoice, AgentSenderWorkspace} from './types.ts'
 import useStyle from './style'
-
-export interface AgentSenderWorkspace {
-  title: string
-  color?: string
-  variant?: 'outlined' | 'filled' | 'solid'
-  icon?: () => VNodeChild
-}
-
-export interface AgentSenderChoice {
-  label?: string
-  color?: string
-  icon?: string | null
-  items: MenuItemType[]
-  selectedKeys: string[]
-}
-
-const IconFont = createFromIconfontCN()
 
 function chatTypeIcon(key: string | undefined) {
   const type = Number(key)
@@ -52,13 +25,6 @@ function chatTypeIcon(key: string | undefined) {
   return RobotOutlined
 }
 
-export interface AgentSenderExpose {
-  flush: () => Promise<void>
-  clearStored: () => Promise<void>
-  clear: () => void
-  getSlotConfigValue: () => SlotConfigType[]
-  getSender: () => InstructionSenderHandle | undefined
-}
 
 const AgentSender = defineComponent({
   name: 'LAgentSender',
@@ -254,7 +220,7 @@ const AgentSender = defineComponent({
                     size="small"
                     v-slots={{
                       icon: () => props.model?.icon
-                        ? <IconFont type={props.model.icon} />
+                        ? iconFontNode(props.model.icon)
                         : <ApiOutlined />,
                     }}
                   >

@@ -20,7 +20,7 @@ import {useAgentChatSessions} from './useAgentChatSessions'
 import {useAgentChatSend} from './useAgentChatSend'
 import {getConversationRuns, useAgentStream} from './stream/useAgentStream'
 import type {AgentSession, Self} from './types'
-import type {AgentSenderExpose} from './sender/AgentSender'
+import type {AgentSenderExpose} from './sender/types.ts'
 import type {BubbleListExpose} from '../bubble-list/types'
 
 function filterInstruction(keyword: string, dataSource: InstructionItem[]): InstructionItem[] {

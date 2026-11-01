@@ -4,17 +4,16 @@ import SystemUserPanel, {type SystemUserContactItem} from '../../system-user-pan
 import {fillLocale} from '@loncra/antdv'
 import {isEnumValue, type RestResult,} from '@loncra/client/commons'
 import {
-    MESSAGE_SERVER_USER_CHAT_PARTICIPANT_TYPE,
-    type UserChatConversationResponseBody,
-    type UserChatParticipantEntity,
+  MESSAGE_SERVER_USER_CHAT_PARTICIPANT_TYPE,
+  type UserChatConversationResponseBody,
+  type UserChatParticipantEntity,
 } from '@loncra/client/message'
 import type {ImHost} from '../host.ts'
 import {AuthServerService} from '@loncra/client/auth'
 import {participantTypeOf} from './imRoomKinds.ts'
 import {useImRoomMemberActions} from './useImRoomMemberActions.ts'
 import {useLocale} from '../../_util/useLocale.ts'
-
-export type ImRoomMemberModalMode = 'add' | 'member'
+import type {ImRoomMemberModalMode} from './types.ts'
 
 const ImRoomMemberModal = defineComponent({
   name: 'LImRoomMemberModal',

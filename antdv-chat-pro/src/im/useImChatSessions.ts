@@ -2,14 +2,14 @@ import {ref, type Ref} from 'vue'
 import {appendMessages, type ChatRole} from '@loncra/chat-core'
 import {emptyPageResult, isEnumValue} from '@loncra/client/commons'
 import {
-  MESSAGE_SERVER_USER_CHAT_CONVERSATION_STATUS,
-  MESSAGE_SERVER_USER_CHAT_MESSAGE_TYPE,
-  type UserChatConversationResponseBody,
-  type UserChatMessageEntity,
-  type UserChatMessageResponseBody,
+    MESSAGE_SERVER_USER_CHAT_CONVERSATION_STATUS,
+    MESSAGE_SERVER_USER_CHAT_MESSAGE_TYPE,
+    type UserChatConversationResponseBody,
+    type UserChatMessageEntity,
+    type UserChatMessageResponseBody,
 } from '@loncra/client/message'
 import {CHAT_BUBBLE_TYPE} from '@loncra/client/ai'
-import type {ImChatSession, ImChatViewExpose} from './chat/ImChatView'
+import type {ImChatSession, ImChatViewExpose} from './chat/types.ts'
 import type {ImConversationsApi} from './conversation/useImConversations'
 import {useImHistory} from './history/useImHistory'
 import type {ImPageHost} from './host'
@@ -30,14 +30,14 @@ export function emptySession(): ImChatSession {
 
 export function messageRole(
   message: UserChatMessageResponseBody | UserChatMessageEntity,
-  selfSystemName: string,
+  principal: string,
 ): ChatRole {
   if (isEnumValue(message.type, MESSAGE_SERVER_USER_CHAT_MESSAGE_TYPE.SYSTEM)) {
     return CHAT_BUBBLE_TYPE.SYSTEM
   }
   const details = (message as UserChatMessageResponseBody).participant?.metadata?.details as {systemName?: string} | undefined
   const sender = message.principal ?? details?.systemName
-  return sender === selfSystemName ? CHAT_BUBBLE_TYPE.USER : CHAT_BUBBLE_TYPE.AI
+  return sender === principal ? CHAT_BUBBLE_TYPE.USER : CHAT_BUBBLE_TYPE.AI
 }
 
 export function useImChatSessions(options: {

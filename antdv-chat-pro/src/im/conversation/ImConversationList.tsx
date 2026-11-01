@@ -19,18 +19,10 @@ import {type UserChatConversationResponseBody,} from '@loncra/client/message'
 import type {SlotConfigType} from '@antdv-next/x/dist/sender/interface'
 import ConversationList from '../../conversation/ConversationList.tsx'
 import type {ConversationNode} from '../../conversation/types.ts'
+import type {ImConversationHost} from './types.ts'
 import type {ImConversationActions} from './useImConversations.ts'
 import useStyle, {IM_CONVERSATION_PREFIX} from './style/index.ts'
-
-export interface ImConversationHost {
-  timeText: (unix?: number) => string
-  unreadCount: (id: string) => number
-  messagePreview: (
-    message: UserChatConversationResponseBody['lastUserMessage'] | undefined,
-    conversation: UserChatConversationResponseBody,
-  ) => string
-  draftPreview: (draft: UserChatConversationResponseBody['draft']) => string
-}
+import {useImContentPreview} from '../chat/contentPreview.ts'
 
 const ImConversationList = defineComponent({
   name: 'LImConversationList',
@@ -48,6 +40,7 @@ const ImConversationList = defineComponent({
   setup(props, {emit}) {
     const keyword = ref('')
     const locale = useLocale('ImConversation')
+    const previewApi = useImContentPreview({principal: () => props.host.principal()})
     const config = useConfig()
     const prefixCls = computed(() => config.value.getPrefixCls('im-conversation', IM_CONVERSATION_PREFIX))
     const [hashId, cssVarCls] = useStyle(prefixCls)
@@ -143,7 +136,7 @@ const ImConversationList = defineComponent({
 
     function renderSubtitle(item: UserChatConversationResponseBody) {
       const mentions = item.mentions || []
-      const preview = props.host.messagePreview(item.lastUserMessage, item)
+      const preview = previewApi.messagePreview(item.lastUserMessage, item)
       if (mentions.length > 0) {
         return (
           <Popover
@@ -192,7 +185,7 @@ const ImConversationList = defineComponent({
       if (draft && draft.length > 0) {
         return (
           <Typography.Text ellipsis type="danger">
-            {`[${locale.value.draft}]:${props.host.draftPreview(draft)}`}
+            {`[${locale.value.draft}]:${previewApi.draftPreview(draft)}`}
           </Typography.Text>
         )
       }

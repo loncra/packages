@@ -1,11 +1,12 @@
 import {computed, reactive, ref} from 'vue'
 import type {UserChatConversationResponseBody} from '@loncra/client/message'
 import {useLocale} from '../_util/useLocale'
-import type {ImChatViewExpose} from './chat/ImChatView'
+import type {ImChatViewExpose} from './chat/types.ts'
 import {useImConversations} from './conversation/useImConversations'
 import {useImHistory} from './history/useImHistory'
 import type {ImPageHost} from './host'
 import {useImChatDrafts} from './useImChatDrafts'
+import {useImSocketEvents} from './chat/useImSocketEvents'
 import {emptySession, messageRole, useImChatSessions} from './useImChatSessions'
 
 export function useImChat(options: {
@@ -43,6 +44,20 @@ export function useImChat(options: {
   })
 
   const sessions = useImChatSessions({session, conversations, history, viewRef, host, emitActive})
+
+  useImSocketEvents({
+    host,
+    handlers: {
+      onIncomingMessage: sessions.applyIncomingMessage,
+      onMessageRead: (message) => viewRef.value?.applyMessageUpdate(message),
+      onMessageUpdate: (message) => viewRef.value?.applyMessageUpdate(message),
+      onMessageUndo: (message) => viewRef.value?.applyMessageUndo(message),
+      onConversationCreate: sessions.addConversation,
+      onConversationRefresh: refreshConversations,
+      onConversationRefreshByRoom: sessions.refreshConversationByRoom,
+      onParticipantRefreshByRoom: sessions.refreshParticipants,
+    },
+  })
 
   async function refreshConversations() {
     const currentId = session.item?.data?.id

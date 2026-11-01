@@ -1,26 +1,20 @@
-import {computed, defineComponent, h, type PropType, ref} from 'vue'
+import {computed, defineComponent, type PropType, ref} from 'vue'
 import {Button, Card, Empty, Flex, Pagination, Space, Tag, Typography} from 'antdv-next'
 import {DeleteOutlined, DownloadOutlined} from '@antdv-next/icons'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import useApp from 'antdv-next/dist/app/useApp'
-import {classNames, IconSelect, ICON_SELECT_AVATAR_MODE_VALUE, iconFontNode} from '@loncra/antdv'
-import {fillLocale} from '@loncra/antdv'
+import {classNames, fillLocale, ICON_SELECT_AVATAR_MODE_VALUE, iconFontNode, IconSelect} from '@loncra/antdv'
 import type {TotalPage} from '@loncra/client/commons'
-import {
-  AiUserPluginInstallService,
-  type PluginPackageMetadata,
-  type UserPluginInstallResult,
-} from '@loncra/client/ai'
+import {AiUserPluginInstallService, type UserPluginInstallResult,} from '@loncra/client/ai'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import {useLocale} from '../../_util/useLocale'
 import PluginInstallModal from './PluginInstallModal'
 import type {AgentConversationRecord} from '../conversation'
 import useStyle, {AGENT_HUB_PREFIX} from './style'
+import type {PluginCardRecord} from './types.ts'
 
 dayjs.extend(relativeTime)
-
-export type PluginCardRecord = PluginPackageMetadata & {latestVersion?: string}
 
 const PluginCard = defineComponent({
   name: 'LAgentHubPluginCard',

@@ -68,7 +68,7 @@ function genImConversationStyle(token: LoncraStyleToken): CSSInterpolation {
         borderRadius: '50%',
         fontSize: fontSizeSM,
         lineHeight: 1,
-        opacity: 0.5,
+        opacity: 0.7,
       },
       [`${componentCls}-pin`]: {
         color: colorWhite,

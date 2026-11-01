@@ -15,7 +15,7 @@ import {
 import type {AgentConversationRecord} from './conversation'
 import type {AgentSession} from './types'
 import {isWorkspaceConversation} from './conversation/useAgentConversations'
-import type {AgentSenderExpose} from './sender/AgentSender'
+import type {AgentSenderExpose} from './sender/types.ts'
 import type {BubbleListExpose} from '../bubble-list/types'
 import type {useAgentHistory} from './history/useAgentHistory'
 

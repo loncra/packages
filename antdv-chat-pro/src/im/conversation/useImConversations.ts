@@ -1,6 +1,10 @@
-import {computed, reactive, type ComputedRef, type Ref, ref} from 'vue'
+import {computed, type ComputedRef, reactive, type Ref, ref} from 'vue'
 import useApp from 'antdv-next/dist/app/useApp'
-import {ChatMessageService, type BasicUserChatConversation, type UserChatConversationResponseBody} from '@loncra/client/message'
+import {
+  type BasicUserChatConversation,
+  ChatMessageService,
+  type UserChatConversationResponseBody
+} from '@loncra/client/message'
 import {isEnumValue, YES_OR_NO_TYPE} from '@loncra/client/commons'
 import {useLocale} from '../../_util/useLocale'
 
@@ -195,7 +199,7 @@ export function useImConversations<T extends UserChatConversationResponseBody>()
       if (returned) {
         patchFlags([returned])
       }
-      message.success(result.message)
+      //message.success(result.message)
       return returned
     } catch (error) {
       message.error(error instanceof Error ? error.message : String(error))

@@ -1,4 +1,4 @@
-﻿import {computed, h, reactive, ref, type Ref, watch} from 'vue'
+import {computed, h, reactive, ref, type Ref, watch} from 'vue'
 import type {MenuItemType} from 'antdv-next'
 import {
     FolderOpenOutlined,
@@ -22,7 +22,7 @@ import {
     ModelSettingService
 } from '@loncra/client/ai'
 import {toModelMenuItems} from './sender/agentMenus'
-import type {AgentSenderChoice, AgentSenderWorkspace} from './sender/AgentSender'
+import type {AgentSenderChoice, AgentSenderWorkspace} from './sender/types.ts'
 import {isDefaultWorkspace, isWorkspaceConversation} from './conversation/useAgentConversations'
 import type {AgentConversationRecord} from './conversation'
 import type {AgentSession} from './types'

@@ -1,22 +1,22 @@
-import {computed, ref, watch, type ComputedRef} from 'vue'
+import {computed, type ComputedRef, ref, watch} from 'vue'
 import useApp from 'antdv-next/dist/app/useApp'
 import {fillLocale} from '@loncra/antdv'
 import {isEnumValue} from '@loncra/client/commons'
 import {
-    MESSAGE_SERVER_USER_CHAT_CONVERSATION_STATUS,
-    MESSAGE_SERVER_USER_CHAT_ROOM_TYPE,
-    type BasicUserChatConversation,
-    type UserChatConversationResponseBody,
-    type UserChatParticipantEntity,
+  type BasicUserChatConversation,
+  MESSAGE_SERVER_USER_CHAT_CONVERSATION_STATUS,
+  MESSAGE_SERVER_USER_CHAT_ROOM_TYPE,
+  type UserChatConversationResponseBody,
+  type UserChatParticipantEntity,
 } from '@loncra/client/message'
 import type {ImChatHost} from '../host.ts'
-import type {ImRoomMemberModalMode} from './ImRoomMemberModal.ts'
+import type {ImRoomMemberModalMode} from './types.ts'
 import {isSelfManager, isSelfOwner} from './imRoomKinds.ts'
 import type {ImConversationsApi} from '../conversation/useImConversations.ts'
 import type {ImRoomActions} from './useImRoomActions.ts'
+import {useLocale} from '../../_util/useLocale.ts'
 
 export type {ImRoomActions}
-import {useLocale} from '../../_util/useLocale.ts'
 
 export function useImRoomSettings(options: {
   conversation: ComputedRef<UserChatConversationResponseBody | undefined>

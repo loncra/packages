@@ -1,8 +1,13 @@
 import {watch} from 'vue'
 import {isEnumValue, YES_OR_NO_TYPE} from '@loncra/client/commons'
-import {ChatMessageService, MESSAGE_SERVER_USER_CHAT_MESSAGE_TYPE, type UserChatMessageEntity, type UserChatMessageResponseBody,} from '@loncra/client/message'
+import {
+  ChatMessageService,
+  MESSAGE_SERVER_USER_CHAT_MESSAGE_TYPE,
+  type UserChatMessageEntity,
+  type UserChatMessageResponseBody,
+} from '@loncra/client/message'
 import type {BubbleListItem} from '../../bubble-list/types'
-import type {ImChatSession} from './ImChatView'
+import type {ImChatSession} from './types.ts'
 import type {ImPageHost} from '../host'
 
 export function useImReadReport(options: {

@@ -108,7 +108,13 @@ const locale: Locale = {
   ImChat: {
     everyone: 'Everyone',
     undoMessage: 'This message has been undone',
+    selfUndo: 'You have unsent this message',
     undoTime: 'Undone at {time}',
+    previewImage: '[Image]',
+    previewVideo: '[Video]',
+    previewAudio: '[Voice]',
+    previewFile: '[File]',
+    mentionNotification: '{user} mentioned you in the workspace',
     exitRoom: 'You have left this group',
     roomRemove: 'You were removed from this group',
     disbandRoom: 'This group has been disbanded',

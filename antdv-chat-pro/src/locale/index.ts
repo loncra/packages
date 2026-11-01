@@ -83,7 +83,13 @@ export interface ImHistoryLocale {
 export interface ImChatLocale {
   everyone: string
   undoMessage: string
+  selfUndo: string
   undoTime: string
+  previewImage: string
+  previewVideo: string
+  previewAudio: string
+  previewFile: string
+  mentionNotification: string
   exitRoom: string
   roomRemove: string
   disbandRoom: string

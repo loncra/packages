@@ -9,8 +9,8 @@ import {
 } from '@loncra/client/message'
 import {AuthServerService} from '@loncra/client/auth'
 import {useLocale} from '../../_util/useLocale'
-import type {ImSenderExpose} from '../sender/ImSender'
-import type {ImChatSession} from './ImChatView'
+import type {ImSenderExpose} from '../sender/types.ts'
+import type {ImChatSession} from './types.ts'
 import type {ImPageHost} from '../host'
 
 export function useImMentionInstruction(options: {

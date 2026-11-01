@@ -21,6 +21,9 @@ function genAppNotificationStyle(token: LoncraStyleToken): CSSInterpolation {
       [`${componentCls}-title`]: {
         fontWeight: 500,
       },
+      [`&${componentCls}-clickable`]: {
+        cursor: 'pointer',
+      },
     },
   }
 }

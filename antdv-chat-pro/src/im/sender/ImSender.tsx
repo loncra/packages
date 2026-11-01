@@ -1,20 +1,12 @@
 import {computed, defineComponent, type PropType, ref, unref} from 'vue'
 
 import {Flex, Tag, Typography} from 'antdv-next'
-import type {UploadFile} from 'antdv-next/dist/upload/interface'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import type {SlotConfigType} from '@antdv-next/x/dist/sender/interface'
-import type {
-    InstructionMeasure,
-    InstructionSenderHandle,
-    InstructionSenderProps
-} from '@loncra/antdv-chat'
+import type {InstructionMeasure, InstructionSenderHandle, InstructionSenderProps} from '@loncra/antdv-chat'
 import {EmojiButton} from '@loncra/antdv-chat'
 import {classNames} from '@loncra/antdv'
-import {
-    convertUploadFiles,
-    isUploadFile,
-} from '@loncra/antdv-pro'
+import {convertUploadFiles, isUploadFile,} from '@loncra/antdv-pro'
 import {getEnumName, type IdValueMetadata, isEnumValue} from '@loncra/client/commons'
 import type {ObjectWriteResult} from '@loncra/client/resource'
 import {MESSAGE_SERVER_USER_CHAT_PARTICIPANT_TYPE, type UserChatMessageResponseBody,} from '@loncra/client/message'
@@ -25,19 +17,10 @@ import type {ImDraftLive} from '../draft/imDraftCodec'
 import type {ImPageHost} from '../host'
 import {AuthServerService} from '@loncra/client/auth'
 import {useLocale} from '../../_util/useLocale'
+import {useImContentPreview} from '../chat/contentPreview.ts'
 import {useImFileUploadSlots} from './useImFileUploadSlots'
 import {useImInstructionSlots} from './useImInstructionSlots'
 import useStyle from './style'
-
-export interface ImSenderExpose {
-  flush: () => Promise<void>
-  clearStored: () => Promise<void>
-  clear: () => void
-  getSlotConfigValue: () => SlotConfigType[]
-  getSender: () => InstructionSenderHandle | undefined
-  convertContentBlockToSlotConfig: (content: ImContentBlock[]) => SlotConfigType[]
-  createFilesSlot: (files: UploadFile<ObjectWriteResult>[], key?: string) => SlotConfigType
-}
 
 const ImSender = defineComponent({
   name: 'LImSender',
@@ -73,6 +56,7 @@ const ImSender = defineComponent({
     const draftRef = ref<DraftSenderExpose>()
     const antdConfig = useConfig()
     const bubbleLocale = useLocale('ImBubble')
+    const previewApi = useImContentPreview({principal: () => props.host.self.systemName})
     const prefixCls = computed(() =>
       antdConfig.value.getPrefixCls('im-sender', props.prefixCls ?? 'loncra-im-sender'),
     )
@@ -336,7 +320,7 @@ const ImSender = defineComponent({
                                   type="secondary"
                                   ellipsis
                                 >
-                                  {props.host.messagePreview(message)}
+                                  {previewApi.messagePreview(message)}
                                 </Typography.Text>
                               </Flex>
                             </Tag>
