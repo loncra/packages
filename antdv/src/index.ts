@@ -49,7 +49,11 @@ export type { Locale } from './locale'
 export { createUseLocale, fillLocale, useLocale } from './_util/context/useLocale'
 export type { LocaleComponentName } from './_util/context/useLocale'
 export { classNames } from './_util/classNames'
-export { iconFontNode } from './_util/iconFontNode'
+export {
+  provideIconFontRender,
+  useIconFontRender,
+} from './_util/context/useIconFontRender'
+export type { IconFontRenderFn } from './_util/context/useIconFontRender'
 export { createStyleHooks } from './_util/style/factory'
 export type { LoncraStyleToken } from './_util/genStyleLayer'
 export {

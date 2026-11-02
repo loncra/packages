@@ -2,7 +2,7 @@ import {computed, defineComponent, type PropType} from 'vue'
 import {Flex, Skeleton, Spin, Tabs} from 'antdv-next'
 import {ApiOutlined} from '@antdv-next/icons'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
-import {iconFontNode} from '@loncra/antdv'
+import {useIconFontRender} from '@loncra/antdv'
 import {
     AI_SERVER_PLUGIN_TARGET_TYPE,
     AiMcpPackageService,
@@ -27,6 +27,7 @@ const McpMarket = defineComponent({
     },
     setup(props, {emit}) {
         const config = useConfig()
+        const iconFontRender = useIconFontRender()
         const prefixCls = computed(() => config.value.getPrefixCls('agent-hub', AGENT_HUB_PREFIX))
         const market = useAgentHubMarket(new AiMcpPackageService(), MCP_GROUP_CODE_PREFIX)
 
@@ -49,7 +50,7 @@ const McpMarket = defineComponent({
                         labelRender: ({item}: { item: { label?: string; metadata?: { icon?: string } } }) => (
                             <Flex gap="small">
                                 {item.metadata?.icon
-                                    ? iconFontNode(item.metadata.icon)
+                                    ? iconFontRender(item.metadata.icon)
                                     : <ApiOutlined/>}
                                 <span>{item.label}</span>
                             </Flex>

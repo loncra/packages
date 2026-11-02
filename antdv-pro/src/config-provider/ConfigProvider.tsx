@@ -1,9 +1,10 @@
-import {defineComponent, type PropType, type SlotsType} from 'vue'
+import {computed, defineComponent, type PropType, type SlotsType} from 'vue'
 import {ConfigProvider as AntdvNextConfigProvider} from 'antdv-next'
+import {provideIconFontRender} from '@loncra/antdv'
 import ClientProvider, {type ClientProviderProps} from '../client-provider'
 import CrudConfigProvider, {type CrudConfigProviderProps} from '../crud-config-provider'
 import {createAntdvConfig, provideAntdvConfig} from './useAntdvConfig'
-import type {AntdvConfig, AntdvConfigProviderSlots} from './types'
+import type {AntdvConfig, AntdvConfigProviderProps, AntdvConfigProviderSlots} from './types'
 
 export const antdvConfigProviderProps = {
   http: {type: Object as PropType<ClientProviderProps['http']>, required: true as const},
@@ -24,6 +25,7 @@ export const antdvConfigProviderProps = {
   staleCheck: Object as PropType<CrudConfigProviderProps['staleCheck']>,
   antdvConfig: Object as PropType<AntdvConfig>,
   localeMessage: Object as PropType<object>,
+  iconFontRender: Function as PropType<AntdvConfigProviderProps['iconFontRender']>,
 }
 
 const AntdvConfigProvider = defineComponent({
@@ -34,6 +36,7 @@ const AntdvConfigProvider = defineComponent({
   setup(props, {slots}) {
     const config = props.antdvConfig ?? createAntdvConfig()
     provideAntdvConfig(config)
+    provideIconFontRender(computed(() => props.iconFontRender))
 
     return () => (
       <ClientProvider

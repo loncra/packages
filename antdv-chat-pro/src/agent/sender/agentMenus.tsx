@@ -1,7 +1,7 @@
-﻿import {h, type Component} from 'vue'
-import {Space, type MenuItemType} from 'antdv-next'
+﻿import {type Component, h} from 'vue'
+import {type MenuItemType, Space} from 'antdv-next'
 import {ApiOutlined, StarOutlined} from '@antdv-next/icons'
-import {IconSelect, ICON_SELECT_AVATAR_MODE_VALUE, iconFontNode} from '@loncra/antdv'
+import {ICON_SELECT_AVATAR_MODE_VALUE, type IconFontRenderFn, IconSelect} from '@loncra/antdv'
 import type {InstructionItem} from '@loncra/antdv-chat'
 import type {ModelSettingEntity} from '@loncra/client/ai'
 
@@ -30,7 +30,6 @@ export function toCatalogMenuItems(items: InstructionItem[]): MenuItemType[] {
                     preview
                     size={"small"}
                     value={String(item.metadata?.icon || ICON_SELECT_AVATAR_MODE_VALUE.INPUT + item.value)}
-                    iconRender={(type: string) => (type ? iconFontNode(type) : null)}
                 />
             ),
         })
@@ -43,7 +42,7 @@ export function toCatalogMenuItems(items: InstructionItem[]): MenuItemType[] {
     }))
 }
 
-export function toModelMenuItems(rows: ModelSettingEntity[]): MenuItemType[] {
+export function toModelMenuItems(rows: ModelSettingEntity[], iconFontRender: IconFontRenderFn): MenuItemType[] {
     const groups = new Map<string, {label: string; icon?: string; children: MenuItemType[]}>()
     for (const item of rows) {
         const group = upsertModelGroup(groups, item)
@@ -51,13 +50,13 @@ export function toModelMenuItems(rows: ModelSettingEntity[]): MenuItemType[] {
         group.children.push({
             key: String(item.id),
             label: item.name,
-            icon: icon ? () => iconFontNode(icon) : () => h(ApiOutlined),
+            icon: icon ? () => iconFontRender(icon) : () => h(ApiOutlined),
         })
     }
     return Array.from(groups.entries()).map(([code, group]) => ({
         type: 'group' as const,
         key: code,
-        label: h(Space, {}, () => [iconFontNode(group.icon), h('span', {}, group.label)]),
+        label: h(Space, {}, () => [group.icon ? iconFontRender(group.icon) : null, h('span', {}, group.label)]),
         children: group.children,
     }))
 }

@@ -7,7 +7,7 @@ import {AI_SERVER_AGENT_CHAT_TYPE} from '@loncra/client/ai'
 import {SenderHeader} from '@antdv-next/x'
 import type {SlotConfigType} from '@antdv-next/x/dist/sender/interface'
 import type {DraftRestoreResult} from '@loncra/chat-core'
-import {classNames, iconFontNode} from '@loncra/antdv'
+import {classNames, useIconFontRender} from '@loncra/antdv'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import DraftSender, {type DraftBinding, type DraftSenderExpose} from '../../draft-sender'
 import {type InstructionItem, type InstructionSenderProps,} from '@loncra/antdv-chat'
@@ -78,6 +78,7 @@ const AgentSender = defineComponent({
   setup(props, {attrs, slots, emit, expose}) {
     const draftRef = ref<DraftSenderExpose>()
     const config = useConfig()
+    const iconFontRender = useIconFontRender()
     const prefixCls = computed(() =>
       config.value.getPrefixCls('agent-sender', props.prefixCls ?? 'loncra-agent-sender'),
     )
@@ -220,7 +221,7 @@ const AgentSender = defineComponent({
                     size="small"
                     v-slots={{
                       icon: () => props.model?.icon
-                        ? iconFontNode(props.model.icon)
+                        ? iconFontRender(props.model.icon)
                         : <ApiOutlined />,
                     }}
                   >

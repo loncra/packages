@@ -33,11 +33,21 @@ import zhCN from '@loncra/antdv/locale/zh_CN'
 | --- | --- |
 | `<控件>/` | 一个控件一个目录。骨架 `index.ts` / 主组件 `.tsx` / `types.ts` / `style/index.ts` 见 [CONTRIBUTING.md](../CONTRIBUTING.md) 第 7 节 |
 | `locale/` | 本包 locale 与 `Locale` 类型 |
-| `_util/` | 共用基础件：纯函数 `classNames`、`genStyleHooks`，依赖 vue / antdv-next 的 composable（`useFormItemTrigger` / `useTwoWayModel`，以及 `context/` 下的 `useLocale` / `createUseLocale` / `fillLocale` / `useIsDark`），样式机制与共享片段在 `style/`（工厂 `createStyleHooks`、`genFullSpinStyle`、`genScrollAreaStyle`、`SPIN_KEYFRAMES` / `JUMP_KEYFRAMES`） |
+| `_util/` | 共用基础件：纯函数 `classNames`、`genStyleHooks`，依赖 vue / antdv-next 的 composable（`useFormItemTrigger` / `useTwoWayModel`，以及 `context/` 下的 `useLocale` / `createUseLocale` / `fillLocale` / `useIsDark` / `useIconFontRender`），样式机制与共享片段在 `style/`（工厂 `createStyleHooks`、`genFullSpinStyle`、`genScrollAreaStyle`、`SPIN_KEYFRAMES` / `JUMP_KEYFRAMES`） |
+
+## iconFontRender 契约 {#icon-font-render}
+
+包内控件不持有 iconfont 资源，"按图标名渲染图标"这件事由宿主注入：
+
+- **契约**：`IconFontRenderFn = (type: string, attrs?: Record<string, unknown>) => VNodeChild`；`attrs` 是开放对象，常见键 `class` / `style` / `spin` / `rotate`，渲染方按需取用。
+- **注入**：`provideIconFontRender(render)`。标准挂点是 `antdv-pro` 的 `<l-provider icon-font-render="...">`，宿主不直接调它。
+- **消费**：`useIconFontRender()` 返回渲染函数，未注入时安全返回 `null`（不抛错）。
+- **对齐责任**：iconfont 与文字的基线对齐由宿主负责——渲染闭包里统一加基类、按图标名维护覆盖表；契约只透传 `attrs`，不承载样式语义。
+- **回落**：`IconSelect` 的 `iconRender` prop 未传时自动回落到注入的渲染器。
 
 ## 本包的开发规范
 
 - **写法对标 `antdv-next` 源码**：`.tsx` + `defineComponent` + JSX，不写管理端 SFC。
-- **图标渲染归宿主**：包内不解析宿主的全局 `IconFont`、不渲染宿主的图标字体。要画图标的地方一律由宿主注入 —— `IconSelect` 的 `iconRender`、`KeyValueTable` 的 `#title` 插槽；包内自带外观只用官方 `@antdv-next/icons`。
+- **图标渲染归宿主**：包内不解析宿主的全局 `IconFont`、不渲染宿主的图标字体。要画图标的地方一律经 [`iconFontRender` 契约](#icon-font-render)由宿主注入 —— 组件 setup 里 `useIconFontRender()` 取用；`IconSelect` 的 `iconRender` prop 仍可显式传入、优先于注入。包内自带外观只用官方 `@antdv-next/icons`。
 
 命名、类名挂法、样式与层的规则见 [CONTRIBUTING.md](../CONTRIBUTING.md) 第 9–11 节。

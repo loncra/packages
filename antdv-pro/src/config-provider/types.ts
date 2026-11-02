@@ -1,5 +1,6 @@
 import type {ComputedRef} from 'vue'
 import type {ThemeConfig} from 'antdv-next'
+import type {IconFontRenderFn} from '@loncra/antdv'
 import type {CrudConfigProviderProps} from '../crud-config-provider'
 import type {ClientProviderProps} from '../client-provider'
 
@@ -41,6 +42,7 @@ export interface AntdvConfig {
 export interface AntdvConfigProviderProps extends ClientProviderProps, CrudConfigProviderProps {
   antdvConfig?: AntdvConfig
   localeMessage?: object
+  iconFontRender?: IconFontRenderFn
 }
 
 export interface AntdvConfigProviderSlots {

@@ -38,7 +38,7 @@
 | --- | --- |
 | 客户端（ClientProvider） | `http`（必填）/ `runtimeMode`（必填）/ `getAccessToken` / `resourcePath` / `openAttachmentUrl` / `formValueConvert` / `uploadBlockSize` |
 | CRUD（CrudConfigProvider） | `hasPermission` / `i18nResolver` / `resolveDefaultTitle` / `onNavigate` / `fieldComponents` / `formatters` / `dateFormat` / `dateTimeFormat` |
-| antdv 配置 | `antdvConfig`（宿主自己初始化的实例，不传则内部建一份默认的）/ `localeMessage`（antd 的 locale 对象，宿主从自己的 i18n 里取） |
+| antdv 配置 | `antdvConfig`（宿主自己初始化的实例，不传则内部建一份默认的）/ `localeMessage`（antd 的 locale 对象，宿主从自己的 i18n 里取）/ `iconFontRender`（宿主的 iconfont 渲染闭包 `(type, attrs?) => VNodeChild`，包内控件经 `useIconFontRender` 消费，`IconSelect` 缺省回落） |
 
 ### 插槽 {#slots}
 

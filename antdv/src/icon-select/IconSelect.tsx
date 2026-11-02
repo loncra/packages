@@ -1,36 +1,37 @@
 import {computed, defineComponent, type PropType, type VNodeChild} from 'vue'
 import {
-  Avatar,
-  Button,
-  Flex,
-  Input,
-  InputSearch,
-  Popover,
-  Select,
-  Space,
-  SpaceAddon,
-  SpaceCompact,
-  Tabs,
-  type ButtonProps,
-  type PopoverProps,
-  type TabsProps,
+    Avatar,
+    Button,
+    type ButtonProps,
+    Flex,
+    Input,
+    InputSearch,
+    Popover,
+    type PopoverProps,
+    Select,
+    Space,
+    SpaceAddon,
+    SpaceCompact,
+    Tabs,
+    type TabsProps,
 } from 'antdv-next'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {SelectOutlined} from '@antdv-next/icons'
 import {classNames} from '../_util/classNames'
 import {useFormItemTrigger} from '../_util/useFormItemTrigger'
 import {useLocale} from '../_util/context/useLocale'
+import {useIconFontRender} from '../_util/context/useIconFontRender'
 import {avatarModeOptions, parseAvatarModel} from './iconSelectKinds'
 import {useIconSelect} from './useIconSelect'
 import useStyle from './style'
 import {ICON_SELECT_AVATAR_MODE_VALUE, ICON_SELECT_MODE} from './constants'
 import type {
-  IconfontJson,
-  IconSelectAvatarModeValueType,
-  IconSelectClasses,
-  IconSelectModeType,
-  IconSelectProps,
-  IconSelectStyles,
+    IconfontJson,
+    IconSelectAvatarModeValueType,
+    IconSelectClasses,
+    IconSelectModeType,
+    IconSelectProps,
+    IconSelectStyles,
 } from './types'
 
 interface GlyphGridParams {
@@ -220,6 +221,7 @@ const IconSelect = defineComponent({
   emits: ['update:value'],
   setup(props, { slots, attrs, emit }) {
     const locale = useLocale('IconSelect')
+    const iconFontRender = useIconFontRender()
     useFormItemTrigger(() => props.value)
     const config = useConfig()
     const prefixCls = computed(() =>
@@ -240,7 +242,7 @@ const IconSelect = defineComponent({
     const avatarOptions = computed(() => avatarModeOptions(props.options, locale.value))
 
     function renderIcon(type: string): VNodeChild {
-      return props.iconRender?.(type) ?? null
+      return props.iconRender ? props.iconRender(type) : iconFontRender(type)
     }
 
     function hashed(...names: (string | undefined)[]) {

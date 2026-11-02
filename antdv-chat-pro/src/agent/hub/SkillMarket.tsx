@@ -10,7 +10,7 @@ import {
     type SkillPackageEntity,
     type UserPluginInstallResult,
 } from '@loncra/client/ai'
-import {iconFontNode} from '@loncra/antdv'
+import {useIconFontRender} from '@loncra/antdv'
 import {useLocale} from '../../_util/useLocale'
 import type {AgentConversationRecord} from '../conversation'
 import PluginCard from './PluginCard'
@@ -31,6 +31,7 @@ const SkillMarket = defineComponent({
     setup(props, {emit}) {
         const locale = useLocale('AgentHub')
         const config = useConfig()
+        const iconFontRender = useIconFontRender()
         const prefixCls = computed(() => config.value.getPrefixCls('agent-hub', AGENT_HUB_PREFIX))
         const market = useAgentHubMarket(new AiSkillPackageService(), SKILL_GROUP_CODE_PREFIX)
 
@@ -52,7 +53,7 @@ const SkillMarket = defineComponent({
                     v-slots={{
                         labelRender: ({item}: { item: { label?: string; metadata?: { icon?: string } } }) => (
                             <Flex gap="small">
-                                {item.metadata?.icon ? iconFontNode(item.metadata.icon) : <StarOutlined/>}
+                                {item.metadata?.icon ? iconFontRender(item.metadata.icon) : <StarOutlined/>}
                                 <span>{item.label}</span>
                             </Flex>
                         ),

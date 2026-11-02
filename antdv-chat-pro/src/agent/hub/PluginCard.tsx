@@ -3,7 +3,7 @@ import {Button, Card, Empty, Flex, Pagination, Space, Tag, Typography} from 'ant
 import {DeleteOutlined, DownloadOutlined} from '@antdv-next/icons'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import useApp from 'antdv-next/dist/app/useApp'
-import {classNames, fillLocale, ICON_SELECT_AVATAR_MODE_VALUE, iconFontNode, IconSelect} from '@loncra/antdv'
+import {classNames, fillLocale, ICON_SELECT_AVATAR_MODE_VALUE, IconSelect} from '@loncra/antdv'
 import type {TotalPage} from '@loncra/client/commons'
 import {AiUserPluginInstallService, type UserPluginInstallResult,} from '@loncra/client/ai'
 import dayjs from 'dayjs'
@@ -115,7 +115,6 @@ const PluginCard = defineComponent({
                         <IconSelect
                           preview
                           value={record.icon || ICON_SELECT_AVATAR_MODE_VALUE.INPUT + record.name}
-                          iconRender={(type: string) => iconFontNode(type)}
                         />
                         <Flex gap="small" vertical>
                           <Flex justify="space-between" align="center">

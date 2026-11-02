@@ -21,6 +21,7 @@ import {
     type ModelSettingEntity,
     ModelSettingService
 } from '@loncra/client/ai'
+import {useIconFontRender} from '@loncra/antdv'
 import {toModelMenuItems} from './sender/agentMenus'
 import type {AgentSenderChoice, AgentSenderWorkspace} from './sender/types.ts'
 import {isDefaultWorkspace, isWorkspaceConversation} from './conversation/useAgentConversations'
@@ -52,6 +53,7 @@ export function useAgentChatOptions(options: {
     conversations: Ref<AgentConversationRecord[]>
     workspaceLabel: () => string
 }) {
+    const iconFontRender = useIconFontRender()
     const models = ref<ModelSettingEntity[]>([])
     const types = ref<IdValueMetadata<number, string>[]>([])
     const modelOptions = ref<MenuItemType[]>([])
@@ -77,7 +79,7 @@ export function useAgentChatOptions(options: {
             'filter_[type_eq]': AI_SERVER_MODEL_TYPE.CHAT,
         })
         models.value = model.data || []
-        modelOptions.value = toModelMenuItems(models.value)
+        modelOptions.value = toModelMenuItems(models.value, iconFontRender)
         const first = models.value[0]
         if (form.modelId == null && first?.id != null) {
             form.modelId = first.id

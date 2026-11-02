@@ -8,7 +8,7 @@
 - **表单里选图标**：走 `antdv-pro` 的 crud-page 注册表 `component: 'iconSelect'` —— 值绑定与 label 归 pro，这里只给组件自己的 `props`。
 - **裸组件用法**：`mode="view"` 图标库（按包分 Tab、可搜索、也可直接手输类名）、`mode="avatar"` 头像（图片链接 / 名称首字 / 图标）、`mode="input"` 纯文本。
 
-两条优先规则：`preview` 优先于 `mode`（命中即返回）；图标**不由本组件绘制**，必须由宿主传 `iconRender`，不传则图标位置空白 —— 但外壳照常渲染，`avatar://`（图片）与 `text://`（首字）两种协议也不受影响。
+两条优先规则：`preview` 优先于 `mode`（命中即返回）；图标**不由本组件绘制**——优先取 `iconRender` prop，未传时回落到 Provider 注入的 [`iconFontRender`](../../README.md#icon-font-render)，两者都缺则图标位置空白。外壳照常渲染，`avatar://`（图片）与 `text://`（首字）两种协议也不受影响。
 
 ## 代码演示 {#examples}
 
@@ -32,7 +32,7 @@
   props: () => ({
     class: 'w-full',
     mode: ICON_SELECT_MODE.AVATAR,
-    iconRender: (type: string) => renderIconFont(type),
+    iconRender: (type: string) => iconFontRender(type),
     options: iconOptions.value,
   }),
 }
@@ -50,7 +50,7 @@
 | options | 图标库。来自 iconfont 导出的 json；搜索按 `css_prefix_text + font_class` 匹配。**缺省时 `view` 形态基本是空壳**（无 Tab、无图标，仍有搜索框与类名输入框） | [IconfontJson[]](#iconfontjson) | `[]` | - |
 | mode | `view` 图标库 / `input` 纯文本 / `avatar` 头像。`avatar` 的三个选项（链接 / 名称 / 图标）文案来自本包 locale，其中「图标」只在 `options` 非空时出现 | [IconSelectModeType](#iconselectmodetype) | `'view'` | - |
 | preview | 只读预览：只画头像，不出选择器 | boolean | `false` | - |
-| iconRender | **图标唯一的绘制入口**，由宿主渲染；只收 `type` 一个参数。形式上可选，实际必填 | `(type: string) => VNodeChild` | - | - |
+| iconRender | 图标绘制入口，由宿主渲染；只收 `type` 一个参数。未传时回落 Provider 注入的 iconFontRender，两者都缺则图标空白 | `(type: string) => VNodeChild` | - | - |
 | prefixCls | 改前缀。默认值由组件内的 computed 兜底成 `'loncra-icon-select'`，这个非空兜底会**屏蔽 `ConfigProvider` 的 `prefixCls`** | string | - | - |
 | rootClass | 追加到根元素的类，与宿主透传的 `class` 同落点；它同时进弹层作用域串，`.ant-popover` 上也会出现一次 | string | - | - |
 | classes | 语义化 DOM 类名表，区域见 [语义化 DOM](#semantic-dom) | `IconSelectClasses` | - | - |
