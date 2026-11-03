@@ -47,6 +47,7 @@ const locale: Locale = {
     workspaceTitle: 'Workspace',
     workspacePlaceholder: 'Workspace name',
     createAgent: 'Create agent',
+    createWorkspace: 'New workspace',
     rename: 'Rename',
     delete: 'Delete',
     deleteConfirmTitle: 'Confirm deletion',

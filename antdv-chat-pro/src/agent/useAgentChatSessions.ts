@@ -31,6 +31,7 @@ export function useAgentChatSessions(options: {
     history: AgentChatHistory
     senderRef: Ref<AgentSenderExpose | undefined>
     onActive: (session: AgentSession | undefined) => void
+    conversationHost?: Partial<AgentConversationHost>
 }) {
     const {current, history, senderRef, onActive} = options
     const conversations = ref<AgentConversationRecord[]>([])
@@ -86,6 +87,9 @@ export function useAgentChatSessions(options: {
             pane.value = 'hub'
         },
         afterLoad: () => {},
+    }
+    if (options.conversationHost) {
+        Object.assign(host, options.conversationHost)
     }
     const conversationApi = useAgentConversations(conversations, host)
 

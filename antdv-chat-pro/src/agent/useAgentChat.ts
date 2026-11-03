@@ -19,6 +19,7 @@ import {useAgentChatOptions} from './useAgentChatOptions'
 import {useAgentChatSessions} from './useAgentChatSessions'
 import {useAgentChatSend} from './useAgentChatSend'
 import {getConversationRuns, useAgentStream} from './stream/useAgentStream'
+import type {AgentConversationHost} from './conversation/types'
 import type {AgentSession, Self} from './types'
 import type {AgentSenderExpose} from './sender/types.ts'
 import type {BubbleListExpose} from '../bubble-list/types'
@@ -37,6 +38,7 @@ export function useAgentChat(
         self: Self
         buildHeaders?: () => Record<string, string>
         transport?: AgentStreamTransport
+        conversationHost?: Partial<AgentConversationHost>
     },
 ) {
     const chatLocale = useLocale('AgentChat')
@@ -87,6 +89,7 @@ export function useAgentChat(
         history,
         senderRef,
         onActive: onSessionActive,
+        conversationHost: props.conversationHost,
     })
 
     const catalogItems = computed<InstructionItem[]>(() =>
@@ -112,6 +115,7 @@ export function useAgentChat(
         current,
         conversations: sessions.conversations,
         workspaceLabel: () => chatLocale.value.workspace,
+        conversationHost: props.conversationHost,
     })
 
     const send = useAgentChatSend({

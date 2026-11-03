@@ -1,4 +1,4 @@
-import {defineComponent, h, type PropType} from 'vue'
+import {defineComponent, h, type PropType, type VNode} from 'vue'
 import type {ButtonProps, ButtonSize} from 'antdv-next'
 import {Button, Dropdown} from 'antdv-next'
 import {EllipsisOutlined} from '@antdv-next/icons'
@@ -25,6 +25,10 @@ const ActionButton = defineComponent({
       default: false,
     },
     type: String as PropType<ButtonProps['type']>,
+    triggerIcon: {
+      type: Object as PropType<VNode>,
+      default: undefined,
+    },
     rootClass: String,
     classes: Object as PropType<ActionButtonProps['classes']>,
     styles: Object as PropType<ActionButtonProps['styles']>,
@@ -62,7 +66,7 @@ const ActionButton = defineComponent({
               type={props.type}
               size={props.size}
               aria-label={(rest['aria-label'] as string | undefined) ?? locale.value.action}
-              v-slots={{icon: () => h(EllipsisOutlined)}}
+              v-slots={{icon: () => props.triggerIcon ?? h(EllipsisOutlined)}}
             />
           </Dropdown>
         )
@@ -84,7 +88,7 @@ const ActionButton = defineComponent({
           onClick={() => dispatchAction(lone)}
           v-slots={{icon: () => lone.icon}}
         >
-          <span>{lone.label}</span>
+          {lone.label !== undefined ? <span>{lone.label}</span> : null}
         </Button>
       )
     }

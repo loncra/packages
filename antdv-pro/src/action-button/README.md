@@ -64,6 +64,7 @@ const actions = resolveRecordActions(defs, buildRecordActionContext({record, app
 | size | 透给 `Button`：单按钮分支影响按钮本体，下拉分支只影响触发按钮，**菜单项字号不跟随** | `ButtonSize` | `'small'` | - |
 | alwaysDropdown | 收进下拉。`false` 时要多于 1 个动作才走下拉；`true` 时**一个动作、甚至零个动作**也走下拉（零个会渲染出一个只有空菜单的可悬停按钮） | boolean | `false` | - |
 | type | 透给 `Button` 的 `type`（`'text'` / `'primary'` 等），下拉分支同样生效 | `ButtonProps['type']` | - | - |
+| triggerIcon | 下拉分支触发按钮的图标；只影响下拉分支，单动作按钮的图标走动作自身的 `icon` | `VNode` | `EllipsisOutlined` | - |
 | rootClass | 并入根元素（`Button`）的类名，位置在宿主 `class` 之前 | string | - | - |
 | classes | 区域表，见 [语义化 DOM](#semantic-dom)：`button` / `dropdown` | `ActionButtonClasses` | - | - |
 | styles | 同上区域的样式表 | `ActionButtonStyles` | - | - |
@@ -125,5 +126,5 @@ const actions = resolveRecordActions(defs, buildRecordActionContext({record, app
 
 - **弹层不在原地**：菜单渲染到 body 的 `.ant-dropdown` 下，**不吃宿主透传的 `class`**，要改菜单项用 `classes.dropdown.item` 这类语义键，或写 `.ant-dropdown-menu-item` 全局类名。`placement` 固定 `bottomRight`；触发方式没设，走 `Dropdown` 的默认值 **hover**（`trigger` 没有传，`@v-c/dropdown` 的默认是 `['hover']`），所以点一下不会展开菜单。
 - 菜单项 `key` 就是 `action.id`，分隔线是独立项、`key` 为 `<action.id>-divider`；`action` 事件按 `String(key)` 反查，所以某个动作的 `id` 若恰好叫 `xxx-divider`，会与分隔线撞名。
-- 触发按钮只有省略号图标，`aria-label` 默认取 `Crud.action`（zh「操作」/ en「Action」）；宿主通过 attrs 传 `aria-label` 时以宿主的为准。
+- 触发按钮图标默认省略号，添加类入口可经 `triggerIcon` 换成别的（如 `PlusOutlined`）；`aria-label` 默认取 `Crud.action`（zh「操作」/ en「Action」），宿主通过 attrs 传 `aria-label` 时以宿主的为准。
 - 单按钮分支的文字外面固定有一层 `<span>`；`label` 为空时按钮是空的。

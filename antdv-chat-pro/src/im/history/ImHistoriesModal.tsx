@@ -1,4 +1,5 @@
 import {computed, defineComponent, inject, nextTick, type PropType, ref, watch} from 'vue'
+import type {Dayjs} from 'dayjs'
 import {
     Button,
     DateRangePicker,
@@ -98,12 +99,12 @@ const ImHistoriesModal = defineComponent({
     const [hashId, cssVarCls] = useStyle(prefixCls)
 
     const keyword = ref('')
-    const dateRange = ref<[import('dayjs').Dayjs, import('dayjs').Dayjs] | null>(null)
+    const dateRange = ref<[Dayjs, Dayjs] | null>(null)
     const segment = ref<HistorySegment>('message')
     const loading = ref(false)
     const messages = ref<TotalPage<UserChatMessageResponseBody>>(emptyTotalPage())
     const files = ref<ObjectItemInfo[]>([])
-    const applied = ref<{keyword: string; date: [import('dayjs').Dayjs, import('dayjs').Dayjs] | null}>({
+    const applied = ref<{keyword: string; date: [Dayjs, Dayjs] | null}>({
       keyword: '',
       date: null,
     })

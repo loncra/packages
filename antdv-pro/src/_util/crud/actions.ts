@@ -90,7 +90,7 @@ export type RecordActionDefinition<TItem extends BasicIdMetadata<unknown>> = Act
 
 export interface ResolvedAction {
   id: string
-  label: string
+  label: string | undefined
   icon?: VNode | null
   danger?: boolean
   disabled: boolean

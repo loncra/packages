@@ -1,4 +1,5 @@
 import {computed, reactive, type Ref} from 'vue'
+import type {ObjectItemInfo} from '@loncra/client/resource'
 import {useLocale} from '../_util/useLocale'
 import {resolveDisplayName} from '@loncra/antdv-pro'
 import type {FileEditorState} from './types'
@@ -14,7 +15,7 @@ export function useFileTabs(deps: FileTabsDeps) {
   const paneSaves = new Map<string, () => Promise<void>>()
   const paneHostRefs = new Map<string, (el: unknown) => void>()
 
-  function openTab(item: import('@loncra/client/resource').ObjectItemInfo) {
+  function openTab(item: ObjectItemInfo) {
     if (item.dir) {
       return
     }
@@ -49,7 +50,7 @@ export function useFileTabs(deps: FileTabsDeps) {
     dropPane(id)
   }
 
-  function closeTabsForRemoved(item: import('@loncra/client/resource').ObjectItemInfo) {
+  function closeTabsForRemoved(item: ObjectItemInfo) {
     const remaining = deps.state.value.tabs.filter((t) => {
       if (t.id === item.id) {
         return false

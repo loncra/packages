@@ -25,7 +25,7 @@ import {useIconFontRender} from '@loncra/antdv'
 import {toModelMenuItems} from './sender/agentMenus'
 import type {AgentSenderChoice, AgentSenderWorkspace} from './sender/types.ts'
 import {isDefaultWorkspace, isWorkspaceConversation} from './conversation/useAgentConversations'
-import type {AgentConversationRecord} from './conversation'
+import type {AgentConversationHost, AgentConversationRecord} from './conversation'
 import type {AgentSession} from './types'
 
 function typeIcon(type: number) {
@@ -48,10 +48,44 @@ function typeColor(type: number): string {
     return 'purple'
 }
 
+const TONE_COLORS: Record<string, string> = {primary: 'blue', success: 'green', warning: 'gold'}
+
+function workspaceChipName(
+    workspace: AgentConversationRecord | undefined,
+    host?: Partial<AgentConversationHost>,
+): string | undefined {
+    return workspace ? (host?.displayName?.(workspace) ?? workspace.name) : undefined
+}
+
+function workspaceChipColor(workspace: AgentConversationRecord, tone: string | undefined): string {
+    if (tone !== undefined) {
+        return TONE_COLORS[tone] ?? 'default'
+    }
+    return isDefaultWorkspace(getEnumValue(workspace.type)) ? 'blue' : 'green'
+}
+
+function workspaceChip(
+    workspace: AgentConversationRecord | undefined,
+    label: string,
+    host?: Partial<AgentConversationHost>,
+): AgentSenderWorkspace | undefined {
+    const name = workspaceChipName(workspace, host)
+    if (!workspace || !name) {
+        return undefined
+    }
+    return {
+        title: `${label}: ${name}`,
+        color: workspaceChipColor(workspace, host?.iconTone?.(workspace)),
+        variant: 'outlined',
+        icon: () => h(isDefaultWorkspace(getEnumValue(workspace.type)) ? FolderOpenOutlined : FolderOutlined),
+    }
+}
+
 export function useAgentChatOptions(options: {
     current: Ref<AgentSession | undefined>
     conversations: Ref<AgentConversationRecord[]>
     workspaceLabel: () => string
+    conversationHost?: Partial<AgentConversationHost>
 }) {
     const iconFontRender = useIconFontRender()
     const models = ref<ModelSettingEntity[]>([])
@@ -96,16 +130,7 @@ export function useAgentChatOptions(options: {
         const workspace = isWorkspaceConversation(getEnumValue(session.type))
             ? options.conversations.value.find((item) => item.id === session.parentId)
             : session
-        if (!workspace?.name) {
-            return undefined
-        }
-        const isDefault = isDefaultWorkspace(getEnumValue(workspace.type))
-        return {
-            title: `${options.workspaceLabel()}: ${workspace.name}`,
-            color: isDefault ? 'blue' : 'green',
-            variant: 'outlined',
-            icon: () => h(isDefault ? FolderOpenOutlined : FolderOutlined),
-        }
+        return workspaceChip(workspace, options.workspaceLabel(), options.conversationHost)
     })
 
     const modelView = computed<AgentSenderChoice | undefined>(() => {

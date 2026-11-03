@@ -1,3 +1,4 @@
+import type {VNode} from 'vue'
 import type {ButtonProps, ButtonSize, DropdownProps} from 'antdv-next'
 import type {ResolvedAction} from '../_util/crud/actions'
 
@@ -16,6 +17,7 @@ export interface ActionButtonProps {
   size?: ButtonSize
   alwaysDropdown?: boolean
   type?: ButtonProps['type']
+  triggerIcon?: VNode
   rootClass?: string
   classes?: ActionButtonClasses
   styles?: ActionButtonStyles

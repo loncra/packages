@@ -18,6 +18,7 @@ export interface AgentConversationLocale {
   workspaceTitle: string
   workspacePlaceholder: string
   createAgent: string
+  createWorkspace: string
   rename: string
   delete: string
   deleteConfirmTitle: string

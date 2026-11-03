@@ -31,6 +31,12 @@ const self = {
 
 - **布局**：`Splitter` 左侧会话树（约 20%，可拖 15%–25%）+ 右侧主区。主区在 `chat` / `hub` 两个 pane 间切换，插件市场入口把 pane 切到 `hub`。
 - **会话树**：数据来自 `AgentService`；默认工作区只有「新建」，会话节点只有「重命名 / 删除」，其余节点全量菜单。选中与展开受控（`update:selectedKeys` / `update:openKeys` 走内部状态，宿主无感）。
+- **宿主扩展（`conversationHost`）**：套件保持环境无关，桌面端（Tauri 等）的本地工作空间、以及任何宿主自有数据源，都经 `AgentChat` 的 `conversationHost` prop 以 `AgentConversationHost` 可选钩子注入，未传时行为与纯云端完全一致：
+  - `conversationsLoader`：替换会话树数据源（宿主自行合并云端与本地列表，本地项排前）。
+  - `displayName` / `iconTone`：接管条目名称与文件夹图标的色阶（返回 `undefined` 落回默认推导：云端默认 primary、云端自定义 success）。
+  - `menuKeys`：接管条目右键菜单（返回 `undefined` 落回按 type 推导）。
+  - `onRemove`：删除接管——返回 `true` 表示宿主已处理（如清本地存储），包内跳过服务端删除并重载；返回 `false` 走服务端删除。
+  - `workspaceActions`：向树头「工作空间」旁的动作按钮追加动作项。按钮统一用 `@loncra/antdv-pro` 的 `ActionButton`：单动作渲染为普通按钮（浏览器端只有默认的「新建工作空间」），多动作自动折叠为下拉（桌面端多出「添加本地文件夹」等宿主动作）；`api.refresh` 供宿主动作完成后刷新会话树。
 - **发送**：`submit` 后指令 slot 被抽成块（`prefix` / `slotKind: 'instruction'`）连同文本一起交给 `AgentService.chat`；新会话首条消息会先落树再切换。运行中状态由 `isRunning`（会话加载中，或存在 READY / RUNNING——流式未完成——态的 AI 气泡）驱动发送区的停止按钮。
 - **指令芯片**：候选来自 `installs` 的过滤结果（targetType 为 MCP 或 SKILL、已激活、有 package、USER 装配或匹配当前工作区的 ORG 装）。触发前缀固定 `TRIGGER = '/'`，菜单项 key 为 `group:id`。
 - **目录菜单接管**：`AgentSender` 的 `catalogPrefix` 契约——传入 `catalogPrefix` 后，匹配该前缀的候选面板改由 `toCatalogMenuItems` 渲染、`onCatalogClick(key, pick)` 决定选中，`pick` 的执行权仍在调用方；前缀不匹配时回落到调用方自定义的指令面板（未传插槽则用默认渲染）。
@@ -49,6 +55,7 @@ const self = {
 | buildHeaders | SSE 连接的鉴权头工厂（如宿主的 `buildAuthHeaders`） | `() => Record<string, string>` | `() => ({})` | - |
 | transport | SSE 传输适配器覆盖（默认 x-sdk 实现；uniapp 等环境注入自己的实现） | `AgentStreamTransport` | x-sdk 实现 | - |
 | installs | 当前用户已安装插件列表，驱动 `/` 指令候选与「已安装」视图 | `UserPluginInstallResult[]` | `[]` | - |
+| conversationHost | 宿主扩展钩子（数据源 / 名称 / 图标 / 菜单 / 删除接管 / 树头追加动作），见行为节；未传则纯云端 | `Partial<AgentConversationHost>` | - | - |
 
 组件不声明 `expose`，无对外方法。
 

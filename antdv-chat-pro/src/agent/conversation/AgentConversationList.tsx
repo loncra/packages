@@ -1,10 +1,12 @@
 import {computed, defineComponent, nextTick, type PropType, type VNode} from 'vue'
 import {Button, Divider, Flex, Input, Menu, type MenuItemType, SpaceCompact,} from 'antdv-next'
+import {ActionButton} from '@loncra/antdv-pro'
 import {
     CheckCircleOutlined,
     CheckOutlined,
     CloseCircleOutlined,
     CloseOutlined,
+    CloudServerOutlined,
     CommentOutlined,
     DeleteOutlined,
     EditOutlined,
@@ -25,6 +27,7 @@ import {agentMenuKeys, isCustomizeWorkspace, isDefaultWorkspace, isWorkspaceConv
 import ConversationList from '../../conversation/ConversationList'
 import type {ConversationNode} from '../../conversation/types'
 import useStyle, {AGENT_CONVERSATION_PREFIX} from './style/index'
+import type {AgentConversationLocale} from '../../locale'
 import type {
     AgentConversationActions,
     AgentConversationHost,
@@ -40,6 +43,79 @@ const STATUS_ICON = {
   [AI_SERVER_AGENT_CHAT_STATUS.COMPLETED]: {icon: CheckCircleOutlined, className: 'success'},
   [AI_SERVER_AGENT_CHAT_STATUS.FAILED]: {icon: CloseCircleOutlined, className: 'error'},
 } as const
+
+function menuOf(
+  item: AgentConversationRecord,
+  host: AgentConversationHost,
+  locale: AgentConversationLocale,
+): MenuItemType[] {
+  const labels: Record<AgentConversationMenuKey, MenuItemType> = {
+    create: {
+      key: 'create',
+      label: locale.createAgent,
+      icon: () => <PlusOutlined />,
+    },
+    rename: {
+      key: 'rename',
+      label: locale.rename,
+      icon: () => <EditOutlined />,
+    },
+    delete: {
+      key: 'delete',
+      danger: true,
+      label: locale.delete,
+      icon: () => <DeleteOutlined />,
+    },
+  }
+  const keys = host.menuKeys?.(item) ?? agentMenuKeys(getEnumValue(item.type))
+  const items: MenuItemType[] = []
+  for (const key of keys) {
+    if (key === 'delete' && keys.length > 1) {
+      items.push({type: 'divider'})
+    }
+    items.push(labels[key])
+  }
+  return items
+}
+
+function renderEditor(
+  item: AgentConversationRecord,
+  locale: AgentConversationLocale,
+  loading: boolean,
+  actions: AgentConversationActions,
+) {
+  return (
+    <SpaceCompact size="small" block>
+      <Input
+        value={item.name}
+        placeholder={locale.workspacePlaceholder}
+        disabled={loading}
+        autoFocus
+        onVnodeMounted={(vnode: VNode) => {
+          const exposed = vnode.component?.exposed as {focus?: () => void} | null
+          void nextTick(() => exposed?.focus?.())
+        }}
+        onUpdate:value={(value: string) => {
+          item.name = value
+        }}
+        onPressEnter={() => actions.confirmEdit(item)}
+      />
+      <Button
+        type="primary"
+        loading={loading}
+        onClick={() => actions.confirmEdit(item)}
+        v-slots={{icon: () => <CheckOutlined />}}
+      />
+      <Button
+        type="primary"
+        danger
+        disabled={loading}
+        onClick={() => actions.cancelEdit(item)}
+        v-slots={{icon: () => <CloseOutlined />}}
+      />
+    </SpaceCompact>
+  )
+}
 
 const AgentConversationList = defineComponent({
   name: 'LAgentConversationList',
@@ -65,51 +141,31 @@ const AgentConversationList = defineComponent({
       return `${prefixCls.value}-${name}`
     }
 
+    function displayName(item: AgentConversationRecord): string {
+      return props.host.displayName?.(item) ?? item.name ?? ''
+    }
+
+    function iconTone(item: AgentConversationRecord): string {
+      const custom = props.host.iconTone?.(item)
+      if (custom !== undefined) {
+        return custom
+      }
+      const type = getEnumValue(item.type)
+      return isDefaultWorkspace(type) ? 'primary' : 'success'
+    }
+
     function renderIcon(item: AgentConversationRecord) {
       const type = getEnumValue(item.type)
       if (isDefaultWorkspace(type) || isCustomizeWorkspace(type)) {
         const Icon = props.openKeys.includes(String(item.key ?? item.id)) ? FolderOpenOutlined : FolderOutlined
-        const color = isDefaultWorkspace(type)
-          ? 'primary'
-          : 'success'
-        return <Icon class={tone(color)} />
+        const color = iconTone(item)
+        return <Icon class={color ? tone(color) : undefined} />
       }
       const status = getEnumValue(item.status as number)
       const spec = STATUS_ICON[status as keyof typeof STATUS_ICON]
         ?? STATUS_ICON[AI_SERVER_AGENT_CHAT_STATUS.READY]
       const Icon = spec.icon
       return <Icon class={tone(spec.className)} />
-    }
-
-    function menuOf(item: AgentConversationRecord): MenuItemType[] {
-      const copy = locale.value
-      const labels: Record<AgentConversationMenuKey, MenuItemType> = {
-        create: {
-          key: 'create',
-          label: copy.createAgent,
-          icon: () => <PlusOutlined />,
-        },
-        rename: {
-          key: 'rename',
-          label: copy.rename,
-          icon: () => <EditOutlined />,
-        },
-        delete: {
-          key: 'delete',
-          danger: true,
-          label: copy.delete,
-          icon: () => <DeleteOutlined />,
-        },
-      }
-      const keys = agentMenuKeys(getEnumValue(item.type))
-      const items: MenuItemType[] = []
-      for (const key of keys) {
-        if (key === 'delete' && keys.length > 1) {
-          items.push({type: 'divider'})
-        }
-        items.push(labels[key])
-      }
-      return items
     }
 
     function onMenu(key: string, item: AgentConversationRecord) {
@@ -126,40 +182,6 @@ const AgentConversationList = defineComponent({
       }
     }
 
-    function renderEditor(item: AgentConversationRecord) {
-      return (
-        <SpaceCompact size="small" block>
-          <Input
-            value={item.name}
-            placeholder={locale.value.workspacePlaceholder}
-            disabled={props.loading}
-            autoFocus
-            onVnodeMounted={(vnode: VNode) => {
-              const exposed = vnode.component?.exposed as {focus?: () => void} | null
-              void nextTick(() => exposed?.focus?.())
-            }}
-            onUpdate:value={(value: string) => {
-              item.name = value
-            }}
-            onPressEnter={() => props.actions.confirmEdit(item)}
-          />
-          <Button
-            type="primary"
-            loading={props.loading}
-            onClick={() => props.actions.confirmEdit(item)}
-            v-slots={{icon: () => <CheckOutlined />}}
-          />
-          <Button
-            type="primary"
-            danger
-            disabled={props.loading}
-            onClick={() => props.actions.cancelEdit(item)}
-            v-slots={{icon: () => <CloseOutlined />}}
-          />
-        </SpaceCompact>
-      )
-    }
-
     function toNode(item: AgentConversationRecord, lookup: Map<string, AgentConversationRecord>): ConversationNode {
       const key = String(item.key ?? item.id)
       lookup.set(key, item)
@@ -167,7 +189,7 @@ const AgentConversationList = defineComponent({
       const children = (item.children || []) as AgentConversationRecord[]
       return {
         key,
-        name: item.name ?? '',
+        name: displayName(item),
         editing: item.editing,
         timeText: isConversationItem && item.creationTime != null
           ? props.host.timeText(item.creationTime)
@@ -179,6 +201,7 @@ const AgentConversationList = defineComponent({
     return () => {
       const lookup = new Map<string, AgentConversationRecord>()
       const nodes = props.items.map((item) => toNode(item, lookup))
+      const workspaceActions = props.host.workspaceActions?.({refresh: props.actions.load}) ?? []
       return (
         <ConversationList
           class={classNames(prefixCls.value, hashId.value, cssVarCls.value)}
@@ -211,11 +234,20 @@ const AgentConversationList = defineComponent({
                   <Flex align="center" gap="small">
                     <FolderOutlined />
                     <span>{locale.value.workspaceTitle}</span>
-                    <Button
-                      type="text"
+                    <ActionButton
                       size="small"
-                      onClick={() => props.actions.startCreate()}
-                      v-slots={{icon: () => <PlusOutlined />}}
+                      type="text"
+                      triggerIcon={<PlusOutlined />}
+                      actions={[
+                        {
+                          id: 'create',
+                          label: workspaceActions.length > 0 ? locale.value.createWorkspace : undefined,
+                          icon: workspaceActions.length > 0 ? <CloudServerOutlined /> : <PlusOutlined />,
+                          disabled: props.loading,
+                          run: () => props.actions.startCreate(),
+                        },
+                        ...workspaceActions,
+                      ]}
                     />
                   </Flex>
                 </Divider>
@@ -227,16 +259,16 @@ const AgentConversationList = defineComponent({
             },
             editor: (node: ConversationNode) => {
               const item = lookup.get(node.key)
-              return item ? renderEditor(item) : null
+              return item ? renderEditor(item, locale.value, props.loading, props.actions) : null
             },
             actions: (node: ConversationNode) => {
               const item = lookup.get(node.key)
-              if (!item) {
+              if (!item || menuOf(item, props.host, locale.value).length === 0) {
                 return null
               }
               return (
                 <Menu
-                  items={menuOf(item)}
+                  items={menuOf(item, props.host, locale.value)}
                   onClick={(info: {key: string | number}) => onMenu(String(info.key), item)}
                 />
               )

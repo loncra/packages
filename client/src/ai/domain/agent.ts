@@ -38,6 +38,17 @@ export interface AgentChatRequestBody {
   agentConversationId?: number
 }
 
+export const AGENT_WORKSPACE_METADATA_KIND = 'kind'
+export const AGENT_WORKSPACE_KIND_LOCAL = 'local'
+export const AGENT_WORKSPACE_LOCAL_DEFAULT_NAME_KEY = 'local.default.workspace'
+
+export interface AgentWorkspaceMetadata {
+  kind: string
+  default?: boolean
+  nameKey?: string
+  roots?: string[]
+}
+
 export interface ConfirmResult {
   toolCallId: string
   confirmed: boolean

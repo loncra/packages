@@ -53,21 +53,28 @@ export function useAgentConversations<T extends AgentConversationRecord>(
   const locale = useLocale('AgentConversation')
 
   function remove(item: AgentConversationRecord): void {
-    if (item.id == null) {
+    if (item.id == null && !host.onRemove) {
       return
     }
     const copy = locale.value
     modal.confirm({
       title: copy.deleteConfirmTitle,
       content: copy.deleteConfirmSingle,
-      onOk: async () =>  doRemove([Number(item.id)])
+      onOk: async () => doRemove(item)
     })
   }
 
-  async function doRemove(ids:number[]) {
+  async function doRemove(item: AgentConversationRecord) {
     loading.value = true
     try {
-      const result = await AgentService.deleteConversation(ids)
+      if (await host.onRemove?.(item)) {
+        await load()
+        return
+      }
+      if (item.id == null) {
+        return
+      }
+      const result = await AgentService.deleteConversation([Number(item.id)])
       message.success(result.message ?? '')
       await load()
     } catch {
@@ -80,8 +87,10 @@ export function useAgentConversations<T extends AgentConversationRecord>(
   async function load(switchItemId?: number): Promise<void> {
     loading.value = true
     try {
-      const result = await AgentService.findConversation()
-      conversations.value = (result.data || []) as T[]
+      const source = host.conversationsLoader
+        ? await host.conversationsLoader()
+        : ((await AgentService.findConversation()).data || [])
+      conversations.value = source as T[]
       host.afterLoad(conversations.value)
       const activate = switchItemId
         ? findFirstTreeNode((item) => item.id === switchItemId, conversations.value) as T | undefined

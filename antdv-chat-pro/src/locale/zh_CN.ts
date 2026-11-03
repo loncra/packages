@@ -46,6 +46,7 @@ const locale: Locale = {
     workspaceTitle: '工作空间',
     workspacePlaceholder: '工作空间名称',
     createAgent: '创建智能体',
+    createWorkspace: '新建工作空间',
     rename: '修改名称',
     delete: '删除',
     deleteConfirmTitle: '删除确认',
