@@ -23,7 +23,6 @@ function genAgentBubbleStyle(token: LoncraStyleToken): CSSInterpolation {
     sizeXL,
     sizeXXL,
   } = token
-  console.info(componentCls)
   return {
     [`${componentCls}-token-list`]: {
         maxHeight: calc(sizeXXL).mul(5).equal(),
