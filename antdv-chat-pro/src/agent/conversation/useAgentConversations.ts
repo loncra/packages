@@ -2,7 +2,7 @@ import {ref, type Ref} from 'vue'
 import useApp from 'antdv-next/dist/app/useApp'
 import {findFirstTreeNode, getEnumValue, isEnumValue} from '@loncra/client/commons'
 import {useLocale} from '../../_util/useLocale'
-import {AgentService, AI_SERVER_AGENT_CONVERSATION_TYPE,} from '@loncra/client/ai'
+import {AgentService, AI_SERVER_AGENT_CONVERSATION_TYPE, AI_SERVER_EXECUTION_CHANNEL,} from '@loncra/client/ai'
 import type {AgentConversationHost, AgentConversationMenuKey, AgentConversationRecord} from './types'
 
 export function isDefaultWorkspace(type: number): boolean {
@@ -74,7 +74,10 @@ export function useAgentConversations<T extends AgentConversationRecord>(
       if (item.id == null) {
         return
       }
-      const result = await AgentService.deleteConversation([Number(item.id)])
+      const result = await AgentService.deleteConversation(
+        [String(item.id)],
+        item.metadata?.kind === AI_SERVER_EXECUTION_CHANNEL.LOCAL ? AI_SERVER_EXECUTION_CHANNEL.LOCAL : undefined,
+      )
       message.success(result.message ?? '')
       await load()
     } catch {
@@ -84,7 +87,7 @@ export function useAgentConversations<T extends AgentConversationRecord>(
     }
   }
 
-  async function load(switchItemId?: number): Promise<void> {
+  async function load(switchItemId?: string): Promise<void> {
     loading.value = true
     try {
       const source = host.conversationsLoader

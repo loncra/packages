@@ -100,7 +100,7 @@ const AgentChat = defineComponent({
                                 ref={chat.bubbleListRef}
                                 session={session}
                                 user={props.self}
-                                onResume={(id: number) => chat.stream.connect(id, false)}
+                                onResume={(id: string) => chat.stream.connect(id, false)}
                                 v-slots={{
                                   assistantAvatar: () => <Avatar size="large">{slots.agentAvatar?.()}</Avatar>,
                                 }}

@@ -9,7 +9,7 @@ import {isWorkspaceConversation} from './conversation/useAgentConversations'
 import type {AgentSenderExpose} from './sender/types.ts'
 import type {useAgentHistory} from './history/useAgentHistory'
 
-function nodeKey(item: {key?: string; id?: number}): string {
+function nodeKey(item: {key?: string; id?: string}): string {
     return String(item.key ?? item.id ?? '')
 }
 
@@ -99,7 +99,7 @@ export function useAgentChatSessions(options: {
         ),
     )
 
-    function currentWorkspaceId(): number | undefined {
+    function currentWorkspaceId(): string | undefined {
         const session = current.value
         if (!session) {
             return undefined
@@ -112,7 +112,7 @@ export function useAgentChatSessions(options: {
 
     function placeConversation(body: AgentConversationEntity): AgentSession {
         const found = findFirstTreeNode(
-            (item) => Number(item.id) === Number(body.id),
+            (item) => String(item.id) === String(body.id),
             conversations.value,
         )
         if (found) {

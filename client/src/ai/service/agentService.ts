@@ -15,6 +15,7 @@ import type {
     AgentMessageEntity,
     AgentResumeRequestBody,
 } from '../domain/agent.ts'
+import {AI_SERVER_EXECUTION_CHANNEL, type ExecutionChannel} from '../enumerate.ts'
 
 export class AgentService {
   static get BASE_URL(): string {
@@ -37,8 +38,12 @@ export class AgentService {
     return AgentService.CHAT_URL + '/stream'
   }
 
-  static buildStreamUrl(assistantMessageId: number, loadHistory: boolean): string {
-    return `${AgentService.STREAM_URL}/${assistantMessageId}?loadHistory=${loadHistory}`
+  static buildStreamUrl(
+    assistantMessageId: string,
+    loadHistory: boolean,
+    channel: ExecutionChannel = AI_SERVER_EXECUTION_CHANNEL.CLOUD,
+  ): string {
+    return `${AgentService.STREAM_URL}/${assistantMessageId}?loadHistory=${loadHistory}&channel=${channel}`
   }
 
   static get HISTORY_URL(): string {
@@ -51,26 +56,30 @@ export class AgentService {
 
   static findConversation(
     request: FilterRequest = {},
+    channel: ExecutionChannel = AI_SERVER_EXECUTION_CHANNEL.CLOUD,
   ): Promise<RestResult<AgentConversationEntity[]>> {
     return http().request({
       url: AgentService.CONVERSATION_URL,
       method: 'POST',
-      data: formUrlEncoded(request as Record<string, unknown>),
+      data: formUrlEncoded({...request, channel} as Record<string, unknown>),
       bodyType: 'form',
     })
   }
 
-  static deleteConversation(ids: number[]): Promise<RestResult<void>> {
+  static deleteConversation(ids: string[], channel: ExecutionChannel = AI_SERVER_EXECUTION_CHANNEL.CLOUD): Promise<RestResult<void>> {
     return http().request({
       url: AgentService.CONVERSATION_URL,
       method: 'DELETE',
-      params: formUrlEncoded({ids}),
+      params: formUrlEncoded({ids, channel}),
     })
   }
 
-  static saveConversation(entity: AgentConversationEntity): Promise<RestResult<number>> {
+  static saveConversation(
+    entity: AgentConversationEntity,
+    channel: ExecutionChannel = AI_SERVER_EXECUTION_CHANNEL.CLOUD,
+  ): Promise<RestResult<string>> {
     return http().request({
-      url: AgentService.CONVERSATION_URL,
+      url: AgentService.CONVERSATION_URL + '/' + channel,
       method: 'PUT',
       data: entity,
       bodyType: 'json',
@@ -79,12 +88,13 @@ export class AgentService {
 
   static histories(
     request: PageRequest,
-    conversationId: number,
+    conversationId: string,
+    channel: ExecutionChannel = AI_SERVER_EXECUTION_CHANNEL.CLOUD,
   ): Promise<RestResult<PageResult<AgentMessageEntity>>> {
     return http().request({
       url: AgentService.HISTORY_URL + '/' + conversationId,
       method: 'POST',
-      data: formUrlEncoded(request as Record<string, unknown>),
+      data: formUrlEncoded({...request, channel} as Record<string, unknown>),
       bodyType: 'form',
     })
   }
@@ -98,9 +108,10 @@ export class AgentService {
   }
 
   static positioningMessagePageNumber(
-    conversationId: number,
-    messageId: number,
+    conversationId: string,
+    messageId: string,
     size: number,
+    channel: ExecutionChannel = AI_SERVER_EXECUTION_CHANNEL.CLOUD,
   ): Promise<RestResult<number>> {
     return http().request({
       url:
@@ -110,7 +121,9 @@ export class AgentService {
         '/' +
         messageId +
         '/' +
-        size,
+        size +
+        '?channel=' +
+        channel,
       method: 'GET',
     })
   }
@@ -119,7 +132,7 @@ export class AgentService {
     return http().request({
       url: AgentService.CHAT_URL,
       method: 'POST',
-      data: body,
+      data: {...body, channel: body.channel ?? AI_SERVER_EXECUTION_CHANNEL.CLOUD},
       bodyType: 'json',
     })
   }
@@ -128,15 +141,16 @@ export class AgentService {
     return http().request({
       url: AgentService.CHAT_URL,
       method: 'PUT',
-      data: body,
+      data: {...body, channel: body.channel ?? AI_SERVER_EXECUTION_CHANNEL.CLOUD},
       bodyType: 'json',
     })
   }
 
-  static interrupt(assistantMessageId: number): Promise<RestResult<AgentChatBasicResponseBody>> {
+  static interrupt(assistantMessageId: string, channel: ExecutionChannel = AI_SERVER_EXECUTION_CHANNEL.CLOUD): Promise<RestResult<AgentChatBasicResponseBody>> {
     return http().request({
       url: AgentService.CHAT_URL + '/' + assistantMessageId,
       method: 'DELETE',
+      params: formUrlEncoded({channel}),
     })
   }
 }

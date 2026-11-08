@@ -9,16 +9,17 @@
  *
  * 不在本文件：BubbleListProps、BubbleListCallbacks（含 HTMLElement），留给 antdv-chat。
  */
-import type {PageResult, VersionEntityMetadata} from '@loncra/client/commons'
+import type {PageResult} from '@loncra/client/commons'
 import {CHAT_BUBBLE_TYPE} from '@loncra/client/ai'
 import type {TextBlock} from './content.ts'
 
 /** 气泡角色。divider 是列表分隔，不是服务端消息角色。 */
 export type ChatRole = (typeof CHAT_BUBBLE_TYPE)[keyof typeof CHAT_BUBBLE_TYPE]
 
-/** 来源：chat.ts BaseChatBubble。TBlock 至少有 TextBlock 的 type 和 value。 */
-export interface ChatBubbleBody<TBlock extends TextBlock<string, unknown>>
-  extends VersionEntityMetadata {
+/** 来源：chat.ts BaseChatBubble。TBlock 至少有 TextBlock 的 type 和 value。id 类型由业务气泡自己定义（IM number、Agent string）。 */
+export interface ChatBubbleBody<TBlock extends TextBlock<string, unknown>> {
+  creationTime?: number
+  version?: number
   content: TBlock[]
 }
 
@@ -89,7 +90,7 @@ export interface ActiveChatSession<
  * append 为 false 插到头部。
  */
 export function appendMessages<TBlock extends TextBlock<string, unknown>>(
-  body: ChatBubbleBody<TBlock>,
+  body: ChatBubbleBody<TBlock> & {id?: string | number},
   role: ChatRole,
   bubbleList: ChatBubbleItem<TBlock>[],
   append = false,

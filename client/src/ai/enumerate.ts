@@ -18,6 +18,13 @@ export const AI_SERVER_AGENT_CONVERSATION_TYPE = {
   WORKSPACE_CONVERSATION: 30,
 } as const
 
+export const AI_SERVER_EXECUTION_CHANNEL = {
+  CLOUD: 'cloud',
+  LOCAL: 'local',
+} as const
+
+export type ExecutionChannel = (typeof AI_SERVER_EXECUTION_CHANNEL)[keyof typeof AI_SERVER_EXECUTION_CHANNEL]
+
 export const AI_SERVER_AGENT_CHAT_TYPE = {
   ASK: 10,
   PLAN: 20,

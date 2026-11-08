@@ -59,20 +59,6 @@ export class BusinessError extends Error {
   }
 }
 
-export interface RunCommandData {
-  stdout: string
-  stderr: string
-  code: number
-}
-
-export interface ServerSentEvent<T> {
-  id: string
-  event: string
-  retry?: number
-  comment?: string
-  data?: T | string
-}
-
 export interface FilterRequest {
   sort?: IdNameMetadata[]
   [key: string]: unknown

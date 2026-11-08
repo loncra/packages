@@ -1,4 +1,4 @@
-import {computed, onMounted, ref} from 'vue'
+import {computed, onMounted, provide, ref} from 'vue'
 import dayjs from 'dayjs'
 import type {InstructionItem} from '@loncra/antdv-chat'
 import type {SlotConfigType} from '@antdv-next/x/dist/sender/interface'
@@ -8,6 +8,7 @@ import {AuthServerService} from '@loncra/client/auth'
 import {
     AgentService,
     type AgentStreamTransport,
+    AI_SERVER_EXECUTION_CHANNEL,
     CHAT_BUBBLE_TYPE,
     type UserPluginInstallResult
 } from '@loncra/client/ai'
@@ -19,6 +20,7 @@ import {useAgentChatOptions} from './useAgentChatOptions'
 import {useAgentChatSessions} from './useAgentChatSessions'
 import {useAgentChatSend} from './useAgentChatSend'
 import {getConversationRuns, useAgentStream} from './stream/useAgentStream'
+import {AGENT_RESUME_CONTEXT_KEY} from './bubble/useAgentAssistantContent'
 import type {AgentConversationHost} from './conversation/types'
 import type {AgentSession, Self} from './types'
 import type {AgentSenderExpose} from './sender/types.ts'
@@ -46,6 +48,16 @@ export function useAgentChat(
     const senderRef = ref<AgentSenderExpose>()
     const bubbleListRef = ref<BubbleListExpose>()
     const current = ref<AgentSession>()
+
+    provide(AGENT_RESUME_CONTEXT_KEY, () => {
+        const session = current.value
+        if (!session) {
+            return undefined
+        }
+        return {
+            channel: session.metadata?.kind === AI_SERVER_EXECUTION_CHANNEL.LOCAL ? AI_SERVER_EXECUTION_CHANNEL.LOCAL : undefined,
+        }
+    })
 
     const history = useAgentHistory(current, {
         noMoreText: () => chatLocale.value.noMore,
@@ -80,7 +92,7 @@ export function useAgentChat(
             return
         }
         for (const run of getConversationRuns(session)) {
-            stream.connect(Number(run.id), false)
+            stream.connect(String(run.id), false)
         }
     }
 
@@ -131,8 +143,9 @@ export function useAgentChat(
     })
 
     async function onCancelSession(session: AgentSession) {
+        const channel = session.metadata?.kind === AI_SERVER_EXECUTION_CHANNEL.LOCAL ? AI_SERVER_EXECUTION_CHANNEL.LOCAL : undefined
         for (const run of getConversationRuns(session)) {
-            await AgentService.interrupt(Number(run.key))
+            await AgentService.interrupt(String(run.key), channel)
         }
         stream.disconnectIfRunning()
     }

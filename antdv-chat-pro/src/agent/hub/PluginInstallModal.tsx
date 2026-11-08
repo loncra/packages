@@ -4,10 +4,10 @@ import useApp from 'antdv-next/dist/app/useApp'
 import {Form as LForm} from '@loncra/antdv-pro'
 import {getEnumValue} from '@loncra/client/commons'
 import {
-  AGENT_WORKSPACE_TYPE_VALUE,
-  AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE,
-  AiUserPluginInstallService,
-  type UserPluginInstallResult,
+    AGENT_WORKSPACE_TYPE_VALUE,
+    AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE,
+    AiUserPluginInstallService,
+    type UserPluginInstallResult,
 } from '@loncra/client/ai'
 import type {AgentConversationRecord} from '../conversation'
 import {useLocale} from '../../_util/useLocale'
@@ -33,14 +33,14 @@ const PluginInstallModal = defineComponent({
     const spinning = ref(false)
     const form = reactive({
       workspaceScope: AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE.USER as number,
-      agentConversationIds: [] as number[],
+      agentConversationIds: [] as string[],
     })
     const workspaceOptions = computed(() =>
       props.workspaces
         .filter((item) => item.id != null && AGENT_WORKSPACE_TYPE_VALUE.includes(getEnumValue(item.type)))
         .map((item) => ({
           label: item.name,
-          value: item.id as number,
+          value: item.id as string,
         })),
     )
     const scopeOptions = computed(() => [

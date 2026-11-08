@@ -6,8 +6,7 @@
  * AgentAnswerBlock、AgentErrorBlock。公共的 type / value 用 TextBlock，不另写一套。
  */
 import type {NameValueEnumMetadata} from '@loncra/client/commons'
-import type {AI_SERVER_AGENT_CONTENT_TYPE} from '@loncra/client/ai'
-import type {AgentMessageEntity} from '@loncra/client/ai'
+import type {AgentMessageEntity, AI_SERVER_AGENT_CONTENT_TYPE} from '@loncra/client/ai'
 import type {SharedContentBlock, TextBlock} from './content.ts'
 import type {ChatBubbleBody, ChatBubbleItem} from './session.ts'
 import type {DraftRecordBase} from './draft.ts'
@@ -15,7 +14,7 @@ import type {DraftRecordBase} from './draft.ts'
 /** 来源：agent.ts AgentSseMessageContent 里会进气泡的身份字段。 */
 interface AgentBlockIdentity {
   sseEventId: string
-  assistantMessageId: number
+  assistantMessageId: string
   id: string
 }
 

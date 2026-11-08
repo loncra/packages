@@ -1,25 +1,28 @@
-import type {NameValueEnumMetadata, ObjectWriteResult, VersionEntityMetadata} from '../../commons'
+import type {NameValueEnumMetadata, ObjectWriteResult, StringIdEntity} from '../../commons'
+import type {ExecutionChannel} from '../enumerate.ts'
 import type {ModelSettingMetadata} from './modelSetting.ts'
 
-export interface AgentConversationEntity extends VersionEntityMetadata {
+export interface AgentConversationEntity extends StringIdEntity {
+  version?: number
   name?: string
   status?: NameValueEnumMetadata<number> | number
   principal?: string
   tenantId?: string
   type: NameValueEnumMetadata<number> | number
   metadata?: Record<string, unknown>
-  parentId?: number
+  parentId?: string
   lastModel?: ModelSettingMetadata
   lastChatType?: NameValueEnumMetadata<number> | number
   children?: AgentConversationEntity[]
   key?: string
 }
 
-export interface AgentMessageEntity extends VersionEntityMetadata {
+export interface AgentMessageEntity extends StringIdEntity {
+  version?: number
   role: NameValueEnumMetadata<string> | string
-  agentConversationId: number
+  agentConversationId: string
   status: NameValueEnumMetadata<number> | number
-  parentId?: number
+  parentId?: string
   model: ModelSettingMetadata
   type: NameValueEnumMetadata<number> | number
   media?: string
@@ -30,24 +33,17 @@ export interface AgentMessageEntity extends VersionEntityMetadata {
 }
 
 export interface AgentChatRequestBody {
+  channel?: ExecutionChannel
   modelId?: number
   type: number
   content: any
   attachment?: ObjectWriteResult[]
   metadata?: Record<string, unknown>
-  agentConversationId?: number
+  agentConversationId?: string
+  workspaceId?: string
 }
 
 export const AGENT_WORKSPACE_METADATA_KIND = 'kind'
-export const AGENT_WORKSPACE_KIND_LOCAL = 'local'
-export const AGENT_WORKSPACE_LOCAL_DEFAULT_NAME_KEY = 'local.default.workspace'
-
-export interface AgentWorkspaceMetadata {
-  kind: string
-  default?: boolean
-  nameKey?: string
-  roots?: string[]
-}
 
 export interface ConfirmResult {
   toolCallId: string
@@ -55,13 +51,14 @@ export interface ConfirmResult {
 }
 
 export interface AgentResumeRequestBody {
-  assistantMessageId: number
+  channel?: ExecutionChannel
+  assistantMessageId: string
   confirmResults: ConfirmResult[]
 }
 
 export interface AgentChatBasicResponseBody {
-  userMessageId: number
-  assistantMessageId: number
+  userMessageId: string
+  assistantMessageId: string
 }
 
 export interface AgentChatResponseBody extends AgentChatBasicResponseBody {

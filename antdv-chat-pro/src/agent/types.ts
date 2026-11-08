@@ -13,7 +13,7 @@ export type Self = PlatformUser | (UserMetadata & {systemName: string})
 
 export interface AgentSseMessageContent {
   sseEventId: string
-  assistantMessageId: number
+  assistantMessageId: string
   id: string
   type: typeof AI_SERVER_AGENT_CONTENT_TYPE.THINK
     | typeof AI_SERVER_AGENT_CONTENT_TYPE.ANSWER

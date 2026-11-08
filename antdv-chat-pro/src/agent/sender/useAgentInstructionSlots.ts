@@ -27,7 +27,7 @@ function instructionIcon(prefix: string): typeof MCP_PLUGIN_ICON | typeof SKILL_
     return undefined
 }
 
-function matchesWorkspaceScope(item: UserPluginInstallResult, workspaceId: number | undefined): boolean {
+function matchesWorkspaceScope(item: UserPluginInstallResult, workspaceId: string | undefined): boolean {
     const scope = getEnumValue(item.workspaceScope)
     if (scope !== AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE.ORG) {
         return true
@@ -40,7 +40,7 @@ function matchesWorkspaceScope(item: UserPluginInstallResult, workspaceId: numbe
 
 export function toCatalogItems(
     installs: UserPluginInstallResult[],
-    workspaceId: number | undefined,
+    workspaceId: string | undefined,
     groupLabels: {mcp: string; skill: string},
 ): InstructionItem[] {
     const items: InstructionItem[] = []

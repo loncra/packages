@@ -1,22 +1,23 @@
 ﻿import {onUnmounted} from 'vue'
-import type {AgentToolCallBlock} from '@loncra/chat-core'
+import type {AgentChatBubble, AgentToolCallBlock} from '@loncra/chat-core'
 import type {
-  AgentSession,
-  AgentSseMessageContent,
-  AgentStatusChangeSse,
-  AgentTokenUsageContent,
-  BlockDeltaContentMetadata,
-  GenerateConversationName
+    AgentSession,
+    AgentSseMessageContent,
+    AgentStatusChangeSse,
+    AgentTokenUsageContent,
+    BlockDeltaContentMetadata,
+    GenerateConversationName
 } from '../types.ts'
 import type {AgentStreamConnection, AgentStreamTransport} from '@loncra/client/ai'
 import {
-  AgentService,
-  AI_SERVER_AGENT_BLOCK_STATUS,
-  AI_SERVER_AGENT_CONTENT_TYPE,
-  CHAT_BUBBLE_TYPE,
-  STREAM_APPEND_TYPES,
-  STREAM_RUNNING_STATUS_VALUE,
-  UPDATE_CONVERSATION_TYPES,
+    AgentService,
+    AI_SERVER_AGENT_BLOCK_STATUS,
+    AI_SERVER_AGENT_CONTENT_TYPE,
+    AI_SERVER_EXECUTION_CHANNEL,
+    CHAT_BUBBLE_TYPE,
+    STREAM_APPEND_TYPES,
+    STREAM_RUNNING_STATUS_VALUE,
+    UPDATE_CONVERSATION_TYPES,
 } from '@loncra/client/ai'
 import {getEnumValue} from '@loncra/client/commons'
 import {updateSessionMessage} from '../../session/write.ts'
@@ -24,8 +25,8 @@ import {createXAgentStreamTransport} from './xAgentStreamTransport.ts'
 
 const TOKEN_USAGE = AI_SERVER_AGENT_CONTENT_TYPE.TOKEN_USAGE
 
-export function getConversationRuns(conversation: AgentSession) {
-  return conversation.dataSource.elements.filter((item) => {
+export function getConversationRuns(conversation: AgentSession): AgentChatBubble[] {
+  return conversation.dataSource.elements.filter((item): item is AgentChatBubble => {
     if (item.role !== CHAT_BUBBLE_TYPE.AI) {
       return false
     }
@@ -62,19 +63,19 @@ export function useAgentStream(options: {
   buildHeaders: () => Record<string, string>
 }) {
   const {current, buildHeaders} = options
-  const connections = new Map<number, AgentStreamConnection>()
+  const connections = new Map<string, AgentStreamConnection>()
 
-  function getStreamBubble(assistantId: number) {
+  function getStreamBubble(assistantId: string) {
     const active = current()
     if (!active) {
       return
     }
     return active.dataSource.elements
-      .filter((item) => item.role === CHAT_BUBBLE_TYPE.AI)
-      .find((item) => Number(item.id) === assistantId)
+      .filter((item): item is AgentChatBubble => item.role === CHAT_BUBBLE_TYPE.AI)
+      .find((item) => String(item.id) === assistantId)
   }
 
-  function disconnect(assistantId: number): void {
+  function disconnect(assistantId: string): void {
     const connection = connections.get(assistantId)
     try {
       connection?.abort()
@@ -198,12 +199,13 @@ export function useAgentStream(options: {
     }
   }
 
-  function connect(assistantId: number, loadHistory: boolean = true): void {
+  function connect(assistantId: string, loadHistory: boolean = true): void {
     if (connections.has(assistantId) || !getStreamBubble(assistantId)) {
       return
     }
+    const channel = current()?.metadata?.kind === AI_SERVER_EXECUTION_CHANNEL.LOCAL ? AI_SERVER_EXECUTION_CHANNEL.LOCAL : undefined
     const connection = (options.transport ?? createXAgentStreamTransport()).open(
-      AgentService.buildStreamUrl(assistantId, loadHistory),
+      AgentService.buildStreamUrl(assistantId, loadHistory, channel),
       {
         ...buildHeaders(),
         Accept: 'text/event-stream',
@@ -226,7 +228,7 @@ export function useAgentStream(options: {
       return
     }
     for (const run of getConversationRuns(active)) {
-      disconnect(Number(run.id))
+      disconnect(String(run.id))
     }
   }
 

@@ -2,7 +2,7 @@ import {type InjectionKey, nextTick, provide, type Ref} from 'vue'
 import {revealAnchor} from '../../history'
 import type {PageResult, RestResult} from '@loncra/client/commons'
 import {getEnumValue} from '@loncra/client/commons'
-import {type AgentMessageEntity, AgentService} from '@loncra/client/ai'
+import {type AgentMessageEntity, AgentService, AI_SERVER_EXECUTION_CHANNEL,} from '@loncra/client/ai'
 import {isWorkspaceConversation} from '../conversation/useAgentConversations'
 import {
   appendMessages,
@@ -22,8 +22,9 @@ export type HistoryBubble = ChatBubbleItem<TextBlock<string, unknown>>
 const FALLBACK_PAGE_SIZE = 10
 
 export interface AgentHistoryConversation {
-  id?: number
+  id?: string
   type?: unknown
+  metadata?: Record<string, unknown>
   loading: boolean
   isOnFirstPage?: boolean
   isOnLastPage?: boolean
@@ -63,7 +64,8 @@ export function useAgentHistory<TSession extends AgentHistoryConversation>(
       pageLock = true
       const result: RestResult<PageResult<AgentMessageEntity>> = await AgentService.histories(
         {number, size: current.dataSource.size || FALLBACK_PAGE_SIZE},
-        Number(current.id),
+        String(current.id),
+        current.metadata?.kind === AI_SERVER_EXECUTION_CHANNEL.LOCAL ? AI_SERVER_EXECUTION_CHANNEL.LOCAL : undefined,
       )
       if (!result.data) {
         return
@@ -92,7 +94,7 @@ export function useAgentHistory<TSession extends AgentHistoryConversation>(
     prependNoMoreIfLast(current, tag, textBubble(host.nowUnix(), host.noMoreText()))
   }
 
-  async function positioningMessage(messageId: number): Promise<void> {
+  async function positioningMessage(messageId: string): Promise<void> {
     const current = active()
     if (!current) {
       return
@@ -100,9 +102,10 @@ export function useAgentHistory<TSession extends AgentHistoryConversation>(
     try {
       current.loading = true
       const result: RestResult<number> = await AgentService.positioningMessagePageNumber(
-        Number(current.id),
+        String(current.id),
         messageId,
         current.dataSource.size || FALLBACK_PAGE_SIZE,
+        current.metadata?.kind === AI_SERVER_EXECUTION_CHANNEL.LOCAL ? AI_SERVER_EXECUTION_CHANNEL.LOCAL : undefined,
       )
       if (result.data) {
         await jumpToAnchorPage(messageId, result.data)
@@ -113,7 +116,7 @@ export function useAgentHistory<TSession extends AgentHistoryConversation>(
   }
 
   async function jumpToAnchorPage(
-    messageId: number,
+    messageId: string,
     pageNumber: number,
     systemMessage?: string,
   ): Promise<void> {
@@ -139,7 +142,7 @@ export function useAgentHistory<TSession extends AgentHistoryConversation>(
 
   async function switchConversation(
     conversation: Ref<TSession | undefined>,
-    messageId?: number,
+    messageId?: string,
     reload: boolean = false,
   ): Promise<void> {
     if (!conversation.value || !isWorkspaceConversation(Number(getEnumValue(conversation.value.type)))) {

@@ -1,17 +1,24 @@
-import {computed, reactive} from 'vue'
+import {computed, inject, type InjectionKey, reactive} from 'vue'
 import useApp from 'antdv-next/dist/app/useApp'
 import type {ThoughtChainItemType} from '@antdv-next/x'
 import type {AgentContentBlock, AgentThinkBlock, AgentToolCallBlock} from '@loncra/chat-core'
+import type {RestResult} from '@loncra/client/commons'
 import {getEnumValue} from '@loncra/client/commons'
 import {
   AGENT_TOOL_BLOCK_CONFIRM_STATUS_VALUE,
+  type AgentChatBasicResponseBody,
+  AgentService,
   AI_SERVER_AGENT_BLOCK_STATUS,
   AI_SERVER_AGENT_CONTENT_TYPE,
   AI_SERVER_AGENT_TOOL_BLOCK_STATUS,
-  AgentService,
   BLOCK_RUNNING_STATUS_VALUE,
+  type ExecutionChannel,
 } from '@loncra/client/ai'
 import type {AgentAssistantItem, BlockGroup, ThoughtChainItemDataType} from './types'
+
+export const AGENT_RESUME_CONTEXT_KEY: InjectionKey<
+  () => {channel?: ExecutionChannel} | undefined
+> = Symbol('agent-resume-context')
 
 type ContentPiece = AgentContentBlock & {
   id?: string
@@ -125,9 +132,10 @@ function groupContentBlocks(content: ContentPiece[]): BlockGroup[] {
 
 export function useAgentAssistantContent(
   item: AgentAssistantItem,
-  onResume: (assistantMessageId: number) => void,
+  onResume: (assistantMessageId: string) => void,
 ) {
   const {message} = useApp()
+  const resolveResumeContext = inject(AGENT_RESUME_CONTEXT_KEY, () => undefined)
   const toolCallUserState = reactive<Record<string, boolean | undefined>>({})
 
   const groupedBlocks = computed<BlockGroup[]>(() => groupContentBlocks(item.content as ContentPiece[]))
@@ -159,8 +167,13 @@ export function useAgentAssistantContent(
       && block.userConfirmed !== undefined,
     )
     try {
-      const result = await AgentService.resume({
-        assistantMessageId: Number(item.key),
+      const resumeContext = resolveResumeContext()
+      if (!resumeContext) {
+        throw new Error('当前没有激活的会话，无法恢复确认')
+      }
+      const result: RestResult<AgentChatBasicResponseBody> = await AgentService.resume({
+        channel: resumeContext.channel,
+        assistantMessageId: String(item.key),
         confirmResults: decided.map((block) => ({
           toolCallId: block.id,
           confirmed: block.userConfirmed || false,
@@ -169,7 +182,7 @@ export function useAgentAssistantContent(
       if (!result.data) {
         throw new Error(result.message)
       }
-      onResume(Number(item.key))
+      onResume(String(item.key))
       decided.forEach((block) => {
         block.hitlStatus = AI_SERVER_AGENT_TOOL_BLOCK_STATUS.FINISHED
       })

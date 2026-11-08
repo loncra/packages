@@ -103,7 +103,7 @@ export function openPageEdges(session: {isOnFirstPage?: boolean; isOnLastPage?: 
  */
 export function locateAnchor<T extends ChatBubbleItem<TextBlock<string, unknown>>>(
   elements: T[],
-  messageId: number,
+  messageId: string | number,
   hint?: T,
 ): string | number | undefined {
   if (elements.length === 0) {

@@ -1,4 +1,4 @@
-import {defineComponent, inject, ref, type PropType} from 'vue'
+import {defineComponent, inject, type PropType, ref} from 'vue'
 import type {RoleType} from '@antdv-next/x/dist/bubble/interface'
 import {UserAvatar} from '@loncra/antdv-pro'
 import type {PlatformUser, UserMetadata} from '@loncra/client/auth'
@@ -49,7 +49,7 @@ const AgentBubbleList = defineComponent({
     },
   },
   emits: {
-    resume: (_assistantMessageId: number) => true,
+    resume: (_assistantMessageId: string) => true,
   },
   setup(props, {emit, slots, expose}) {
     const history = inject(AGENT_HISTORY_KEY, null)
@@ -78,7 +78,7 @@ const AgentBubbleList = defineComponent({
               return (
                 <AgentAssistantContent
                   item={item as unknown as AgentAssistantItem}
-                  onResume={(id: number) => emit('resume', id)}
+                  onResume={(id: string) => emit('resume', id)}
                 />
               )
             }

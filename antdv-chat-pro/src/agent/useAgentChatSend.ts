@@ -9,6 +9,7 @@ import {
     type AgentMessageEntity,
     AgentService,
     AI_SERVER_AGENT_CHAT_STATUS,
+    AI_SERVER_EXECUTION_CHANNEL,
     CHAT_BUBBLE_TYPE,
     STREAM_RUNNING_STATUS_VALUE,
 } from '@loncra/client/ai'
@@ -38,7 +39,7 @@ function running(session: AgentSession | undefined): boolean {
 function buildChatMessages(
     data: AgentChatResponseBody,
     blocks: unknown[],
-    conversationId: number,
+    conversationId: string,
 ): {user: AgentMessageEntity; assistant: AgentMessageEntity} {
     const userMessage: AgentMessageEntity = {
         model: data.conversation.lastModel!,
@@ -119,11 +120,11 @@ export function useAgentChatSend(options: {
     async function applyChatResult(data: AgentChatResponseBody, session: AgentSession, blocks: unknown[]): Promise<void> {
         senderRef.value?.clear()
         await senderRef.value?.clearStored()
-        if (data.conversation.id !== session.id) {
+        if (String(data.conversation.id) !== String(session.id)) {
             await openReturned(data)
             return
         }
-        const conversationId = Number(session.id)
+        const conversationId = String(session.id)
         const {user: userMessage, assistant: assistantMessage} = buildChatMessages(data, blocks, conversationId)
         appendMessages(userMessage, CHAT_BUBBLE_TYPE.USER, session.dataSource.elements, true)
         appendMessages(assistantMessage, CHAT_BUBBLE_TYPE.AI, session.dataSource.elements, true)
@@ -138,12 +139,15 @@ export function useAgentChatSend(options: {
             return
         }
         session.loading = true
+        const isLocal = session.metadata?.kind === AI_SERVER_EXECUTION_CHANNEL.LOCAL
         try {
             const result = await AgentService.chat({
+                channel: isLocal ? AI_SERVER_EXECUTION_CHANNEL.LOCAL : undefined,
                 modelId: form.modelId,
                 type: form.type,
                 content: blocksOf(slotConfig),
                 agentConversationId: session.id,
+                workspaceId: isLocal ? session.parentId ?? session.id : undefined,
             })
             if (!result.data?.conversation) {
                 return

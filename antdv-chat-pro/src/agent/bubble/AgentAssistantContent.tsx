@@ -19,7 +19,7 @@ const AgentAssistantContent = defineComponent({
       required: true,
     },
     onResume: {
-      type: Function as PropType<(assistantMessageId: number) => void>,
+      type: Function as PropType<(assistantMessageId: string) => void>,
       required: true,
     },
   },

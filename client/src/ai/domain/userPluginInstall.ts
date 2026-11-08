@@ -6,7 +6,7 @@ export interface UserPluginInstallRequestBody {
   targetType: number
   packageId: number
   workspaceScope: number
-  agentConversationIds?: number[]
+  agentConversationIds?: string[]
 }
 
 export interface UserPluginInstallMetadata {

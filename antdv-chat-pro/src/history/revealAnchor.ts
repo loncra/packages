@@ -1,10 +1,5 @@
 import {nextTick} from 'vue'
-import {
-  type ChatBubbleItem,
-  locateAnchor,
-  type TextBlock,
-  textBubble,
-} from '@loncra/chat-core'
+import {type ChatBubbleItem, locateAnchor, type TextBlock, textBubble,} from '@loncra/chat-core'
 import {CHAT_BUBBLE_TYPE} from '@loncra/client/ai'
 
 /**
@@ -13,7 +8,7 @@ import {CHAT_BUBBLE_TYPE} from '@loncra/client/ai'
  */
 export async function revealAnchor(
   elements: ChatBubbleItem<TextBlock<string, unknown>>[],
-  messageId: number,
+  messageId: string | number,
   systemMessage: string | undefined,
   now: number,
   jump: (key: string) => void,

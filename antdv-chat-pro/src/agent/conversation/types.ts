@@ -22,7 +22,7 @@ export interface AgentConversationHost {
 export type AgentConversationMenuKey = 'create' | 'rename' | 'delete'
 
 export interface AgentConversationActions {
-  load: (switchItemId?: number) => Promise<void>
+  load: (switchItemId?: string) => Promise<void>
   startCreate: () => void
   startRename: (item: AgentConversationRecord) => void
   cancelEdit: (item: AgentConversationRecord) => void
