@@ -2,6 +2,29 @@ import type {Locale} from './index'
 
 const locale: Locale = {
   locale: 'en-US',
+  FileView: {
+    untitled: 'Untitled',
+    refresh: 'Refresh',
+    locate: 'Select opened file',
+    download: 'Download',
+    unsupported: 'This file cannot be opened in the editor.',
+    tooLarge: 'File is too large. Download it instead.',
+  },
+  AttachmentFileEditor: {
+    uploadFile: 'Upload file',
+    uploadDirectory: 'Upload directory',
+    rename: 'Rename',
+    delete: 'Delete',
+    deleteConfirmTitle: 'Delete confirmation',
+    deleteConfirmSingle: 'Delete this item?',
+    save: 'Save',
+    unsavedConfirm:
+      'You have unsaved changes. Close this file anyway? Unsaved edits will be lost.',
+    nameEmpty: 'Name cannot be empty',
+    nameReserved: 'Name cannot be . or ..',
+    nameIllegal: 'Name cannot contain / \\ < > " | ? * or control characters',
+    nameTooLong: 'Name cannot exceed 255 characters',
+  },
   FileEditor: {
     untitled: 'Untitled',
     refresh: 'Refresh',

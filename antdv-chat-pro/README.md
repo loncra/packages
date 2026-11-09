@@ -31,6 +31,8 @@ import {createLiveKitCallMedia} from '@loncra/antdv-chat-pro/im/call/livekit'
 | `DraftSender` | 带草稿的发送器（`DraftBinding`） | [说明](./src/draft-sender/README.md) |
 | `ConversationList` | 会话列表底座（`ConversationNode`） | [说明](./src/conversation/README.md) |
 | `FileEditor` | 文件预览与编辑（CodeMirror）：`panes/text/TextCodeEditor`、`filePaneKinds`、`FilePaneHost`（按类型分发）、`useFileEditor` / `useFilePane`、`panes/`、`tabs/`、`conversation/` | [说明](./src/file-editor/README.md) |
+| `FileView` | 只读文件预览壳。目录与内容由 `FileViewSource` 提供 | [说明](./src/file-view/README.md) |
+| `AttachmentFileEditor` | 附件桶上的文件编辑，内部使用 `FileView` | [说明](./src/attachment-file-editor/README.md) |
 | `SystemUserPanel` | 系统用户面板 | [说明](./src/system-user-panel/README.md) |
 
 不是控件、直接从根导出的还有：会话消息写回 `updateSessionMessage`，草稿绑定 `createImDraftBinding`、`createAgentDraftBinding`。发送侧不设公开动作，调用方直调 `@loncra/client` 的服务（IM `ChatMessageService.send`、Agent `AgentService.chat`）。

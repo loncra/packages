@@ -91,6 +91,8 @@ chat-core     ← antdv-chat-pro
 | `DraftSender` | 带草稿的发送器 | [说明](./antdv-chat-pro/src/draft-sender/README.md) |
 | `ConversationList` | 会话列表底座 | [说明](./antdv-chat-pro/src/conversation/README.md) |
 | `FileEditor` | 文件预览与编辑（CodeMirror） | [说明](./antdv-chat-pro/src/file-editor/README.md) |
+| `FileView` | 只读文件预览壳 | [说明](./antdv-chat-pro/src/file-view/README.md) |
+| `AttachmentFileEditor` | 附件文件编辑器 | [说明](./antdv-chat-pro/src/attachment-file-editor/README.md) |
 | `SystemUserPanel` | 系统用户面板 | [说明](./antdv-chat-pro/src/system-user-panel/README.md) |
 
 ## 规范在哪

@@ -158,6 +158,30 @@ export interface AgentHubLocale {
   all: string
 }
 
+export interface FileViewLocale {
+  untitled: string
+  refresh: string
+  locate: string
+  download: string
+  unsupported: string
+  tooLarge: string
+}
+
+export interface AttachmentFileEditorLocale {
+  uploadFile: string
+  uploadDirectory: string
+  rename: string
+  delete: string
+  deleteConfirmTitle: string
+  deleteConfirmSingle: string
+  save: string
+  unsavedConfirm: string
+  nameEmpty: string
+  nameReserved: string
+  nameIllegal: string
+  nameTooLong: string
+}
+
 export interface FileEditorLocale {
   untitled: string
   refresh: string
@@ -198,5 +222,7 @@ export interface Locale {
   AgentChat?: AgentChatLocale
   AgentHub?: AgentHubLocale
   FileEditor?: FileEditorLocale
+  FileView?: FileViewLocale
+  AttachmentFileEditor?: AttachmentFileEditorLocale
   SystemUserPanel?: SystemUserPanelLocale
 }

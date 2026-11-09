@@ -49,6 +49,12 @@ function genConversationListStyle(token: LoncraStyleToken): CSSInterpolation {
           color: colorText,
           backgroundColor: colorBgTextActive,
         },
+        [`${antCls}-menu-title-content`]: {
+          flex: 'auto',
+          minWidth: 0,
+          overflow: 'hidden',
+          lineHeight,
+        },
         [`${antCls}-menu-sub`]: {
           backgroundColor: 'transparent',
         },

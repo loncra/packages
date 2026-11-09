@@ -22,10 +22,14 @@ function stopRowBubble(event: MouseEvent) {
   event.stopPropagation()
 }
 
+function readText(value: unknown): string {
+  return typeof value === 'string' || typeof value === 'number' ? String(value).trim() : ''
+}
+
 function asNode(item: RenderItem): ConversationNode {
   return {
     key: String(item.key),
-    name: String(item.name ?? item.label ?? ''),
+    name: readText(item.name) || readText(item.label),
     timeText: typeof item.timeText === 'string' ? item.timeText : undefined,
     editing: item.editing === true,
     children: Array.isArray(item.children) ? item.children as ConversationNode[] : undefined,
@@ -33,11 +37,13 @@ function asNode(item: RenderItem): ConversationNode {
 }
 
 function toMenuItem(node: ConversationNode): ItemType {
+  const children = node.children?.length ? node.children.map(toMenuItem) : undefined
   return {
-    ...node,
     key: node.key,
+    name: node.name,
     label: node.name,
-    children: node.children?.map(toMenuItem),
+    editing: node.editing,
+    ...(children ? {children} : {}),
   } as ItemType
 }
 
@@ -67,11 +73,17 @@ const ConversationList = defineComponent({
 
     function renderLabel(node: ConversationNode) {
       if (node.editing) {
-        return (
-          <div onClick={stopRowBubble} onMousedown={stopRowBubble}>
-            {slots.editor?.(node)}
-          </div>
-        )
+        const editor = slots.editor?.(node)
+        if (editor != null && editor !== false) {
+          return (
+            <div onClick={stopRowBubble} onMousedown={stopRowBubble}>
+              {editor}
+            </div>
+          )
+        }
+      }
+      if (!node.name) {
+        return null
       }
       return (
         <Flex vertical>

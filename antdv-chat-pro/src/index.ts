@@ -77,6 +77,19 @@ export type {
   FileEditorProps,
   FileEditorStyles,
 } from './file-editor'
+export {default as FileView} from './file-view'
+export type {
+  FileViewClasses,
+  FileViewExpose,
+  FileViewNode,
+  FileViewOpenResult,
+  FileViewProps,
+  FileViewSlots,
+  FileViewSource,
+  FileViewStyles,
+} from './file-view'
+export {default as AttachmentFileEditor} from './attachment-file-editor'
+export type {AttachmentFileEditorProps, FileEditorNode} from './attachment-file-editor'
 
 export {default as SystemUserPanel} from './system-user-panel'
 export type {
