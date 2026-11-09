@@ -58,6 +58,7 @@ export interface FileViewProps {
   maxHeight?: string | number
   getIcon?: (node: FileViewNode) => VNodeChild
   confirmClose?: (node: FileViewNode) => Promise<boolean>
+  dirty?: (node: FileViewNode) => boolean
   onDownload?: (node: FileViewNode) => void
   toolbarActions?: ResolvedAction[]
   menuItems?: (node: FileViewNode) => MenuItemType[]

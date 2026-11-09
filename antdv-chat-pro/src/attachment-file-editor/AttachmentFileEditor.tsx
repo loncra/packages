@@ -108,6 +108,7 @@ const AttachmentFileEditor = defineComponent({
             class={attrClass}
             style={attrStyle}
             confirmClose={(node) => confirmDirtyClose(entries[node.id], locale.value.unsavedConfirm, modal)}
+            dirty={(node) => entries[node.id]?.dirty === true}
             onDownload={(node) => AttachmentService.download(props.bucket, readExtra(node).objectName)}
             toolbarActions={props.readonly ? undefined : createToolbarActions(locale.value, write)}
             menuItems={props.readonly ? undefined : createMenuItems(locale.value, write)}

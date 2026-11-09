@@ -48,7 +48,7 @@ function genFileTabsStyle(token: LoncraStyleToken): CSSObject {
       marginBottom: 0,
     },
     [`${componentCls}-tab-label`]: {
-      overflow: 'hidden',
+      overflow: 'visible',
     },
     [`${componentCls}-tab-close`]: {
       position: 'absolute',

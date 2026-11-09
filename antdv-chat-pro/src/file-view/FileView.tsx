@@ -34,6 +34,7 @@ const FileView = defineComponent({
     maxHeight: [String, Number],
     getIcon: Function as PropType<FileViewProps['getIcon']>,
     confirmClose: Function as PropType<FileViewProps['confirmClose']>,
+    dirty: Function as PropType<FileViewProps['dirty']>,
     onDownload: Function as PropType<FileViewProps['onDownload']>,
     toolbarActions: Array as PropType<FileViewProps['toolbarActions']>,
     menuItems: Function as PropType<FileViewProps['menuItems']>,
@@ -111,6 +112,7 @@ const FileView = defineComponent({
               <FileTabs
                 model={model}
                 locate={reveal}
+                dirty={props.dirty}
                 onDownload={props.onDownload}
                 open={(node) => props.source.open(node)}
                 tabExtra={slots.tabExtra

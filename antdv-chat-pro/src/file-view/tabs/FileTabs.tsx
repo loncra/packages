@@ -1,5 +1,5 @@
 import {computed, defineComponent, h, type PropType, type VNodeChild} from 'vue'
-import {Button, Empty, Flex, SpaceCompact, Tabs, Tooltip, TypographyText} from 'antdv-next'
+import {Badge, Button, Empty, Flex, SpaceCompact, Tabs, Tooltip, TypographyText} from 'antdv-next'
 import {AimOutlined, CloseOutlined, DownloadOutlined} from '@antdv-next/icons'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {classNames} from '@loncra/antdv'
@@ -22,6 +22,7 @@ const FileTabs = defineComponent({
       type: Function as PropType<(id: string) => void>,
       required: true,
     },
+    dirty: Function as PropType<(node: FileViewNode) => boolean>,
     onDownload: Function as PropType<(node: FileViewNode) => void>,
     open: {
       type: Function as PropType<(node: FileViewNode) => ReturnType<import('../types').FileViewSource['open']>>,
@@ -74,7 +75,9 @@ const FileTabs = defineComponent({
             v-slots={{
               labelRender: ({item}: {item: {key: string; label: string; file: FileViewNode}}) => (
                 <Flex align="center" gap="small" class={hashed(`${prefixCls.value}-tab-label`)}>
-                  {resolveIcon(item.file)}
+                  <Badge dot={props.dirty?.(item.file) === true} offset={[0, 0]}>
+                    {resolveIcon(item.file)}
+                  </Badge>
                   <TypographyText
                     class={hashed(`${prefixCls.value}-grow`)}
                     ellipsis={{tooltip: {title: item.label, mouseEnterDelay: 1}}}
