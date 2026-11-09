@@ -31,7 +31,7 @@ import {createLiveKitCallMedia} from '@loncra/antdv-chat-pro/im/call/livekit'
 | `DraftSender` | 带草稿的发送器（`DraftBinding`） | [说明](./src/draft-sender/README.md) |
 | `ConversationList` | 会话列表底座（`ConversationNode`） | [说明](./src/conversation/README.md) |
 | `FileEditor` | 文件预览与编辑（CodeMirror）：`panes/text/TextCodeEditor`、`filePaneKinds`、`FilePaneHost`（按类型分发）、`useFileEditor` / `useFilePane`、`panes/`、`tabs/`、`conversation/` | [说明](./src/file-editor/README.md) |
-| `FileView` | 只读文件预览壳。目录与内容由 `FileViewSource` 提供 | [说明](./src/file-view/README.md) |
+| `FileView` | 只读文件预览壳。目录与内容由 `FileViewSource` 提供，预览按类型经 `FilePaneRenderer` 分发 | [说明](./src/file-view/README.md) |
 | `AttachmentFileEditor` | 附件桶上的文件编辑，内部使用 `FileView` | [说明](./src/attachment-file-editor/README.md) |
 | `SystemUserPanel` | 系统用户面板 | [说明](./src/system-user-panel/README.md) |
 
@@ -47,7 +47,7 @@ import {createLiveKitCallMedia} from '@loncra/antdv-chat-pro/im/call/livekit'
 | `im/`、`agent/` | 两个套件目录，内部按 `bubble/`、`sender/`、`conversation/`、`history/`、`draft/` 分，每个子域各有 `style/`；`agent/` 另有 `hub/`（插件市场与版本变更），`im/` 另有 `chat/`、`contact/`、`room/`、`call/`。两套各自的 `history`（`useAgentHistory` / `useImHistory`）互不复用：切会话不恢复翻页锚点，切走前的草稿落点在宿主（`activateConversation`），翻页由气泡列表 inject 各自的 `AGENT_HISTORY_KEY` / `IM_HISTORY_KEY` 调 `loadMore`，页面不转发滚动翻页；Agent 的草稿只有 `slots`，无 IM 侧的 `refMessages`；分页 size 缺省与管理端一致（10）。行为契约、host 注入与内部件清单见 [im/README](./src/im/README.md) 与 [agent/README](./src/agent/README.md) |
 | `session/` | 会话消息写回（`updateSessionMessage`） |
 | `history/`、`draft/` | 跨套件共享域：`history/revealAnchor`（IM / Agent 跳转锚定）、`draft/persistableSlots`（草稿槽位序列化），各自带 `index.ts` 出口。`persistableSlots` 序列化规则：入库只存可序列化字段——丢 `customRender`（函数进不了 IDB），文件只存 uid/name/size/type/response，`File` 本体经 `collectBlobsFromSlotConfig` 单独收集（只收 `originFileObj`）；还原时还原出的 `File` 用 `markRaw` 包（Vue 不能代理 File，否则发送时 `originFileObj` 对不上）；files 块还原需注入 `restoreFilesSlot`（IM 必须注入，否则芯片没有 customRender、点发送无法 upload；Agent 无附件槽可省略，未注入时该块跳过） |
-| `_util/` | `useLocale` |
+| `_util/` | `useLocale`、`readSize`、`style/fragments` |
 | `locale/` | 本包 locale 与 `Locale` 类型 |
 
 ## 本包的开发规范

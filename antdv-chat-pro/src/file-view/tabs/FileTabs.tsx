@@ -1,13 +1,12 @@
-import {computed, defineComponent, h, type PropType, type VNodeChild} from 'vue'
+import {computed, defineComponent, h, type PropType} from 'vue'
 import {Badge, Button, Empty, Flex, SpaceCompact, Tabs, Tooltip, TypographyText} from 'antdv-next'
 import {AimOutlined, CloseOutlined, DownloadOutlined} from '@antdv-next/icons'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {classNames} from '@loncra/antdv'
 import {useLocale} from '../../_util/useLocale'
-import FilePaneHost from '../FilePaneHost'
-import {hasSlotContent} from '../slotContent'
-import type {FileViewNode} from '../types'
-import type {useFileView} from '../useFileView'
+import FilePaneRenderer from '../FilePaneRenderer'
+import {hasSlotContent} from '../_util/slotContent'
+import type {FileTabsProps, FileViewNode} from '../types'
 import useStyle from './style'
 
 const FileTabs = defineComponent({
@@ -15,21 +14,21 @@ const FileTabs = defineComponent({
   inheritAttrs: false,
   props: {
     model: {
-      type: Object as PropType<ReturnType<typeof useFileView>>,
+      type: Object as PropType<FileTabsProps['model']>,
       required: true,
     },
     locate: {
-      type: Function as PropType<(id: string) => void>,
+      type: Function as PropType<FileTabsProps['locate']>,
       required: true,
     },
-    dirty: Function as PropType<(node: FileViewNode) => boolean>,
-    onDownload: Function as PropType<(node: FileViewNode) => void>,
+    dirty: Function as PropType<FileTabsProps['dirty']>,
+    onDownload: Function as PropType<FileTabsProps['onDownload']>,
     open: {
-      type: Function as PropType<(node: FileViewNode) => ReturnType<import('../types').FileViewSource['open']>>,
+      type: Function as PropType<FileTabsProps['open']>,
       required: true,
     },
-    tabExtra: Function as PropType<(node: FileViewNode) => VNodeChild>,
-    pane: Function as PropType<(node: FileViewNode) => VNodeChild>,
+    tabExtra: Function as PropType<FileTabsProps['tabExtra']>,
+    pane: Function as PropType<FileTabsProps['pane']>,
   },
   setup(props) {
     const config = useConfig()
@@ -109,7 +108,7 @@ const FileTabs = defineComponent({
                   return custom
                 }
                 return (
-                  <FilePaneHost
+                  <FilePaneRenderer
                     key={item.key}
                     node={item.file}
                     open={() => props.open(item.file as FileViewNode)}

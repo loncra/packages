@@ -1,6 +1,7 @@
 import type {CSSProperties, VNodeChild} from 'vue'
 import type {MenuItemType} from 'antdv-next'
 import type {ResolvedAction} from '@loncra/antdv-pro'
+import type {useFileView} from './useFileView'
 
 export type FilePaneKindId = 'image' | 'video' | 'audio' | 'text' | 'fallback'
 export type FilePaneMode = 'view' | 'edit'
@@ -86,4 +87,29 @@ export interface FileViewState {
   selected?: FileViewNode
   tabs: FileViewNode[]
   dataSource: FileViewNode[]
+}
+
+export type FileViewModel = ReturnType<typeof useFileView>
+
+export interface FileConversationProps {
+  model: FileViewModel
+  name?: string
+  toolbarActions?: ResolvedAction[]
+  menuItems?: (node: FileViewNode) => MenuItemType[]
+  title?: (node: FileViewNode) => VNodeChild
+}
+
+export interface FileTabsProps {
+  model: FileViewModel
+  locate: (id: string) => void
+  dirty?: (node: FileViewNode) => boolean
+  onDownload?: (node: FileViewNode) => void
+  open: (node: FileViewNode) => Promise<FileViewOpenResult>
+  tabExtra?: (node: FileViewNode) => VNodeChild
+  pane?: (node: FileViewNode) => VNodeChild
+}
+
+export interface FilePaneRendererProps {
+  node: FileViewNode
+  open: () => Promise<FileViewOpenResult>
 }

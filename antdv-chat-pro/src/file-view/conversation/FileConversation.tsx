@@ -8,9 +8,8 @@ import {ActionButton, type ResolvedAction} from '@loncra/antdv-pro'
 import type {ConversationNode} from '../../conversation'
 import ConversationList from '../../conversation'
 import {useLocale} from '../../_util/useLocale'
-import {hasSlotContent} from '../slotContent'
-import type {FileViewNode} from '../types'
-import type {useFileView} from '../useFileView'
+import {hasSlotContent} from '../_util/slotContent'
+import type {FileConversationProps, FileViewNode} from '../types'
 import useStyle from './style'
 
 const FileConversation = defineComponent({
@@ -18,13 +17,13 @@ const FileConversation = defineComponent({
   inheritAttrs: false,
   props: {
     model: {
-      type: Object as PropType<ReturnType<typeof useFileView>>,
+      type: Object as PropType<FileConversationProps['model']>,
       required: true,
     },
     name: String,
-    toolbarActions: Array as PropType<ResolvedAction[]>,
-    menuItems: Function as PropType<(node: FileViewNode) => MenuItemType[]>,
-    title: Function as PropType<(node: FileViewNode) => VNodeChild>,
+    toolbarActions: Array as PropType<FileConversationProps['toolbarActions']>,
+    menuItems: Function as PropType<FileConversationProps['menuItems']>,
+    title: Function as PropType<FileConversationProps['title']>,
   },
   setup(props, {expose}) {
     const config = useConfig()

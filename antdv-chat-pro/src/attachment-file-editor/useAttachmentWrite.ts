@@ -1,12 +1,12 @@
-import {ref, type Ref} from 'vue'
+import {reactive, ref, type Ref} from 'vue'
 import type {UploadChangeParam, UploadFile} from 'antdv-next'
 import {uploadFile} from '@loncra/antdv-pro'
 import {isBusinessSuccess} from '@loncra/client/commons'
 import {AttachmentService} from '@loncra/client/resource'
-import type {FileViewExpose} from '../file-view'
+import type {FileViewExpose, FileViewNode} from '../file-view'
 import {validateFileOrFolderName} from './_util/validateName'
 import {readExtra} from './useAttachmentSource'
-import type {FileEditorNode} from './types'
+import type {FileEditorNode, TextEditorEntry} from './types'
 import type {AttachmentFileEditorLocale} from '../locale'
 
 function renamedObjectName(objectName: string, name: string): string | undefined {
@@ -28,8 +28,10 @@ export function useAttachmentWrite(options: {
     success: (content: string) => void
   }
   confirm: (options: {title: string; content: string; onOk: () => void}) => void
+  decide: (content: string) => Promise<boolean>
   view: Ref<FileViewExpose | undefined>
 }) {
+  const entries = reactive<Record<string, TextEditorEntry>>({})
   const fileUploadTrigger = ref<HTMLElement>()
   const dirUploadTrigger = ref<HTMLElement>()
   const uploadTarget = ref<FileEditorNode>()
@@ -140,7 +142,31 @@ export function useAttachmentWrite(options: {
     })
   }
 
+  function register(id: string, entry: TextEditorEntry | undefined) {
+    if (entry) {
+      entries[id] = entry
+    } else {
+      delete entries[id]
+    }
+  }
+
+  function dirty(node: FileViewNode) {
+    return entries[node.id]?.dirty === true
+  }
+
+  function confirmClose(node: FileViewNode) {
+    if (!entries[node.id]?.dirty) {
+      return Promise.resolve(true)
+    }
+    return options.decide(options.locale().unsavedConfirm)
+  }
+
+  function download(node: FileViewNode) {
+    AttachmentService.download(options.bucket(), readExtra(node).objectName)
+  }
+
   return {
+    entries,
     fileUploadTrigger,
     dirUploadTrigger,
     session,
@@ -150,5 +176,9 @@ export function useAttachmentWrite(options: {
     cancelRename,
     commitRename,
     removeNode,
+    register,
+    dirty,
+    confirmClose,
+    download,
   }
 }

@@ -1,15 +1,12 @@
 import type {CSSObject} from '@antdv-next/cssinjs'
-import {genFullSpinStyle, type LoncraStyleToken} from '@loncra/antdv'
+import type {LoncraStyleToken} from '@loncra/antdv'
 import {genStyleHooks} from '../../../_util/genStyleLayer'
+import {genFilePaneChromeStyle} from '../../../_util/style/fragments'
 
 function genFilePaneStyle(token: LoncraStyleToken): CSSObject {
   const {componentCls, colorBgLayout, paddingXS} = token
   return {
-    [`${componentCls}-pane`]: {
-      width: '100%',
-      height: '100%',
-      minHeight: 0,
-    },
+    ...genFilePaneChromeStyle(token),
     [`${componentCls}-media`]: {
       display: 'flex',
       width: '100%',
@@ -31,13 +28,6 @@ function genFilePaneStyle(token: LoncraStyleToken): CSSObject {
       width: '100%',
       maxWidth: '36rem',
     },
-    [`${componentCls}-editor`]: {
-      width: '100%',
-      height: '100%',
-      minHeight: 0,
-      overflow: 'hidden',
-    },
-    ...genFullSpinStyle(token),
   }
 }
 

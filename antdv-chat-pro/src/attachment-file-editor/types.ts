@@ -31,3 +31,21 @@ export interface TextEditorEntry {
   dirty: boolean
   save: () => Promise<void>
 }
+
+export interface AttachmentRenameTitleProps {
+  node: FileEditorNode
+  onCommit: (node: FileEditorNode) => void
+  onCancel: (node: FileEditorNode) => void
+}
+
+export interface AttachmentSaveButtonProps {
+  entry: TextEditorEntry
+  label: string
+}
+
+export interface AttachmentTextPaneProps {
+  node: FileEditorNode
+  bucket: string
+  prefixCls: string
+  register: (id: string, entry: TextEditorEntry | undefined) => void
+}

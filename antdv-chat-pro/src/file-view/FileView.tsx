@@ -2,24 +2,12 @@ import {computed, defineComponent, ref, type PropType} from 'vue'
 import {Splitter, SplitterPanel} from 'antdv-next'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {classNames} from '@loncra/antdv'
+import {readSize} from '../_util/readSize'
 import FileConversation from './conversation/FileConversation'
 import FileTabs from './tabs/FileTabs'
 import type {FileViewClasses, FileViewProps, FileViewStyles} from './types'
 import {useFileView} from './useFileView'
 import useStyle from './style'
-
-function readSize(height?: string | number, maxHeight?: string | number): Record<string, string> {
-  const sizeStyle: Record<string, string> = {}
-  if (height != null && height !== '') {
-    const value = typeof height === 'number' ? `${height}px` : height
-    sizeStyle.height = value
-    sizeStyle.minHeight = value
-  }
-  if (maxHeight != null && maxHeight !== '') {
-    sizeStyle.maxHeight = typeof maxHeight === 'number' ? `${maxHeight}px` : maxHeight
-  }
-  return sizeStyle
-}
 
 const FileView = defineComponent({
   name: 'LFileView',
@@ -80,7 +68,14 @@ const FileView = defineComponent({
       return (
         <div
           {...rest}
-          class={hashed(prefixCls.value, props.classes?.root, props.rootClass, attrClass as string)}
+          class={classNames(
+            prefixCls.value,
+            hashId.value,
+            cssVarCls.value,
+            props.classes?.root,
+            props.rootClass,
+            attrClass as string,
+          )}
           style={[sizeStyle, props.styles?.root, attrStyle] as never}
         >
           <Splitter

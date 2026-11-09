@@ -5,7 +5,7 @@
 ## 何时使用 {#when-to-use}
 
 - 需要同一套目录树、刷新、预览和定位，而文件来自不同存储时。
-- 上传、重命名、删除、保存由外层控件通过插槽补上。附件场景用 `AttachmentFileEditor`。
+- 上传、重命名、删除、保存由外层控件通过 `toolbarActions`、`menuItems` 和插槽补上。附件场景用 `AttachmentFileEditor`。
 
 ## 代码演示 {#examples}
 
@@ -35,19 +35,21 @@ const source: FileViewSource = {
 | height / maxHeight | 根容器高度 | `string \| number` | - | - |
 | getIcon | 目录树和页签共用的文件图标 | `(node: FileViewNode) => VNodeChild` | 文件夹 / 文件图标 | - |
 | confirmClose | 关闭页签前的确认。返回 `false` 则留下该页 | `(node: FileViewNode) => Promise<boolean>` | - | - |
+| dirty | 页签图标是否显示圆点。渲染页签时调用 | `(node: FileViewNode) => boolean` | - | - |
+| onDownload | 页签栏下载按钮的点击。不传时按钮仍在，点击无效果 | `(node: FileViewNode) => void` | - | - |
 | toolbarActions | 接在刷新后面的工具栏动作，和刷新一起放进同一个 `ActionButton` | `ResolvedAction[]` | - | - |
 | menuItems | 行上「…」菜单的追加项。目录本身已有刷新 | `(node: FileViewNode) => MenuItemType[]` | - | - |
 | classes / styles | 语义化区域 | 见下 | - | - |
 | prefixCls / rootClass | 前缀 / 根类名 | `string` | - | - |
 
-没有 `readonly`。文本页始终只读。`source` 对象身份变化时会重新加载根目录。
+没有 `readonly`。本控件自己的文本页始终只读；`pane` 返回内容时改由调用方渲染。页签栏始终有下载和定位。`source` 对象身份变化时会重新加载根目录。按类型分发的预览是 `FilePaneRenderer`。
 
 ### 插槽 {#slots}
 
 | 插槽 | 说明 | 类型 | 版本 |
 | --- | --- | --- | --- |
 | title | 替换行标题。返回空则显示 `name` | `(props: {node}) => VNode` | - |
-| tabExtra | 定位按钮之前的内容 | `(props: {node}) => VNode` | - |
+| tabExtra | 下载按钮之前的内容。与下载、定位同在一个 `size="small"` 的 `SpaceCompact` 里 | `(props: {node}) => VNode` | - |
 | pane | 替换当前页。返回空则按类型做只读预览 | `(props: {node}) => VNode` | - |
 
 ### 方法 {#methods}
@@ -74,6 +76,6 @@ const source: FileViewSource = {
 
 | 区域 | 说明 |
 | --- | --- |
-| root | 根 div：`loncra-file-view` + `hashId` + `cssVarCls` + `classes.root` + `rootClass` + 宿主 `class` / `style` |
+| root | 根 div。类名顺序：`prefixCls`、`hashId`、`cssVarCls`、`classes.root`、`rootClass`、宿主 `class`。`style` 为高度、`styles.root`、宿主 `style` |
 | splitter | 左右分栏 |
 | panel / panelMain | 左树 / 右页签 |

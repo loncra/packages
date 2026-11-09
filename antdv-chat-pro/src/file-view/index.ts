@@ -16,3 +16,4 @@ export type {
   ResolvedFilePaneKind,
 } from './types'
 export {buildFilePaneContext, isTextTooLarge, resolveFilePaneKind} from './filePaneKinds'
+export {default as FileTextCodeEditor} from './panes/text/TextCodeEditor'

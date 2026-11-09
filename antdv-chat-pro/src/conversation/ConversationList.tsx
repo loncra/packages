@@ -74,7 +74,7 @@ const ConversationList = defineComponent({
     function renderLabel(node: ConversationNode) {
       if (node.editing) {
         const editor = slots.editor?.(node)
-        if (editor != null && editor !== false) {
+        if (editor != null) {
           return (
             <div onClick={stopRowBubble} onMousedown={stopRowBubble}>
               {editor}

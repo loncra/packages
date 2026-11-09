@@ -9,7 +9,7 @@ import UnsupportedPane from './panes/unsupported/UnsupportedPane'
 import VideoPane from './panes/video/VideoPane'
 import useStyle from './panes/style'
 import {useFilePane} from './useFilePane'
-import type {FilePaneKindId, FileViewNode, FileViewOpenResult} from './types'
+import type {FilePaneKindId, FilePaneRendererProps} from './types'
 
 interface PaneShared {
   prefixCls: string
@@ -39,16 +39,16 @@ const PANE_RENDERERS = {
   fallback: (ctx: PaneRenderContext) => <UnsupportedPane reason="unsupported" {...ctx.shared} />,
 } satisfies Record<FilePaneKindId, (ctx: PaneRenderContext) => unknown>
 
-const FilePaneHost = defineComponent({
-  name: 'LFilePaneHost',
+const FilePaneRenderer = defineComponent({
+  name: 'LFilePaneRenderer',
   inheritAttrs: false,
   props: {
     node: {
-      type: Object as PropType<FileViewNode>,
+      type: Object as PropType<FilePaneRendererProps['node']>,
       required: true,
     },
     open: {
-      type: Function as PropType<() => Promise<FileViewOpenResult>>,
+      type: Function as PropType<FilePaneRendererProps['open']>,
       required: true,
     },
   },
@@ -86,4 +86,4 @@ const FilePaneHost = defineComponent({
   },
 })
 
-export default FilePaneHost
+export default FilePaneRenderer
