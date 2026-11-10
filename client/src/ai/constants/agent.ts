@@ -7,6 +7,10 @@ import {
   AI_SERVER_MCP_CLIENT_TYPE,
 } from '../enumerate.ts'
 
+export const AGENT_WORKSPACE_METADATA_KIND = 'kind'
+
+export const AGENT_WORKSPACE_METADATA_ROOTS = 'roots'
+
 export const BLOCK_RUNNING_STATUS_VALUE: ReadonlyArray<string> = [
   AI_SERVER_AGENT_BLOCK_STATUS.READY,
   AI_SERVER_AGENT_BLOCK_STATUS.PENDING,

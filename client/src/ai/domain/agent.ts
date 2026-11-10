@@ -43,8 +43,6 @@ export interface AgentChatRequestBody {
   workspaceId?: string
 }
 
-export const AGENT_WORKSPACE_METADATA_KIND = 'kind'
-
 export interface ConfirmResult {
   toolCallId: string
   confirmed: boolean
