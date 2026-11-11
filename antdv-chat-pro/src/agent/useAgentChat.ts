@@ -55,7 +55,7 @@ export function useAgentChat(
             return undefined
         }
         return {
-            channel: session.metadata?.kind === AI_SERVER_EXECUTION_CHANNEL.LOCAL ? AI_SERVER_EXECUTION_CHANNEL.LOCAL : undefined,
+            channel: session.metadata?.kind === AI_SERVER_EXECUTION_CHANNEL.CLIENT ? AI_SERVER_EXECUTION_CHANNEL.CLIENT : undefined,
         }
     })
 
@@ -143,7 +143,7 @@ export function useAgentChat(
     })
 
     async function onCancelSession(session: AgentSession) {
-        const channel = session.metadata?.kind === AI_SERVER_EXECUTION_CHANNEL.LOCAL ? AI_SERVER_EXECUTION_CHANNEL.LOCAL : undefined
+        const channel = session.metadata?.kind === AI_SERVER_EXECUTION_CHANNEL.CLIENT ? AI_SERVER_EXECUTION_CHANNEL.CLIENT : undefined
         for (const run of getConversationRuns(session)) {
             await AgentService.interrupt(String(run.key), channel)
         }

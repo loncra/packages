@@ -203,7 +203,7 @@ export function useAgentStream(options: {
     if (connections.has(assistantId) || !getStreamBubble(assistantId)) {
       return
     }
-    const channel = current()?.metadata?.kind === AI_SERVER_EXECUTION_CHANNEL.LOCAL ? AI_SERVER_EXECUTION_CHANNEL.LOCAL : undefined
+    const channel = current()?.metadata?.kind === AI_SERVER_EXECUTION_CHANNEL.CLIENT ? AI_SERVER_EXECUTION_CHANNEL.CLIENT : undefined
     const connection = (options.transport ?? createXAgentStreamTransport()).open(
       AgentService.buildStreamUrl(assistantId, loadHistory, channel),
       {

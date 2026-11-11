@@ -139,10 +139,10 @@ export function useAgentChatSend(options: {
             return
         }
         session.loading = true
-        const isLocal = session.metadata?.kind === AI_SERVER_EXECUTION_CHANNEL.LOCAL
+        const isLocal = session.metadata?.kind === AI_SERVER_EXECUTION_CHANNEL.CLIENT
         try {
             const result = await AgentService.chat({
-                channel: isLocal ? AI_SERVER_EXECUTION_CHANNEL.LOCAL : undefined,
+                channel: isLocal ? AI_SERVER_EXECUTION_CHANNEL.CLIENT : undefined,
                 modelId: form.modelId,
                 type: form.type,
                 content: blocksOf(slotConfig),

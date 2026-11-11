@@ -65,7 +65,7 @@ export function useAgentHistory<TSession extends AgentHistoryConversation>(
       const result: RestResult<PageResult<AgentMessageEntity>> = await AgentService.histories(
         {number, size: current.dataSource.size || FALLBACK_PAGE_SIZE},
         String(current.id),
-        current.metadata?.kind === AI_SERVER_EXECUTION_CHANNEL.LOCAL ? AI_SERVER_EXECUTION_CHANNEL.LOCAL : undefined,
+        current.metadata?.kind === AI_SERVER_EXECUTION_CHANNEL.CLIENT ? AI_SERVER_EXECUTION_CHANNEL.CLIENT : undefined,
       )
       if (!result.data) {
         return
@@ -105,7 +105,7 @@ export function useAgentHistory<TSession extends AgentHistoryConversation>(
         String(current.id),
         messageId,
         current.dataSource.size || FALLBACK_PAGE_SIZE,
-        current.metadata?.kind === AI_SERVER_EXECUTION_CHANNEL.LOCAL ? AI_SERVER_EXECUTION_CHANNEL.LOCAL : undefined,
+        current.metadata?.kind === AI_SERVER_EXECUTION_CHANNEL.CLIENT ? AI_SERVER_EXECUTION_CHANNEL.CLIENT : undefined,
       )
       if (result.data) {
         await jumpToAnchorPage(messageId, result.data)

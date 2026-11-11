@@ -76,7 +76,7 @@ export function useAgentConversations<T extends AgentConversationRecord>(
       }
       const result = await AgentService.deleteConversation(
         [String(item.id)],
-        item.metadata?.kind === AI_SERVER_EXECUTION_CHANNEL.LOCAL ? AI_SERVER_EXECUTION_CHANNEL.LOCAL : undefined,
+        item.metadata?.kind === AI_SERVER_EXECUTION_CHANNEL.CLIENT ? AI_SERVER_EXECUTION_CHANNEL.CLIENT : undefined,
       )
       message.success(result.message ?? '')
       await load()

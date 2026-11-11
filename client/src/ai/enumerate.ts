@@ -20,7 +20,7 @@ export const AI_SERVER_AGENT_CONVERSATION_TYPE = {
 
 export const AI_SERVER_EXECUTION_CHANNEL = {
   CLOUD: 'cloud',
-  LOCAL: 'local',
+  CLIENT: 'client',
 } as const
 
 export type ExecutionChannel = (typeof AI_SERVER_EXECUTION_CHANNEL)[keyof typeof AI_SERVER_EXECUTION_CHANNEL]
