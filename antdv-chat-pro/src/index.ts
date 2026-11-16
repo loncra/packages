@@ -56,7 +56,7 @@ export {default as ImContact} from './im/contact/ImContact'
 export {default as ImChatView} from './im/chat/ImChatView'
 export type {ImChatViewExpose} from './im/chat/types.ts'
 export {ImRoomSettings} from './im/room'
-export {useAgentConversations, agentMenuKeys} from './agent/conversation'
+export {useAgentConversations, agentMenuKeys, isDefaultWorkspace} from './agent/conversation'
 export type {
   AgentConversationActions,
   AgentConversationHost,

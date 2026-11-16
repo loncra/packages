@@ -1,4 +1,4 @@
-export {useAgentConversations, agentMenuKeys} from './useAgentConversations'
+export {isDefaultWorkspace, useAgentConversations, agentMenuKeys} from './useAgentConversations'
 export type {
   AgentConversationActions,
   AgentConversationHost,
