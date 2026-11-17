@@ -84,6 +84,7 @@ const PluginCard = defineComponent({
                   <Card
                     key={record.id}
                     size="small"
+                    classes={{body:cls('card-body')}}
                     v-slots={{
                       title: () => slots.title?.({record}),
                       extra: () => isInstalled(record)

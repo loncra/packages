@@ -5,7 +5,7 @@ import {genStyleHooks} from '../../../_util/genStyleLayer'
 export const AGENT_HUB_PREFIX = 'loncra-agent-hub'
 
 function genAgentHubStyle(token: LoncraStyleToken): CSSInterpolation {
-  const {componentCls, marginSM,antCls, padding, paddingXXS, fontSizeSM, colorBorderSecondary} = token
+  const {componentCls, marginSM,antCls, padding, paddingXS, paddingXXS, fontSizeSM, colorBorderSecondary} = token
   return {
     [componentCls]: {
       display: 'flex',
@@ -27,6 +27,12 @@ function genAgentHubStyle(token: LoncraStyleToken): CSSInterpolation {
         flex: '1 1 0',
         minHeight: 0,
         overflow: 'hidden',
+      },
+      [`${componentCls}-card-body`]: {
+        padding:padding,
+      },
+      [`${componentCls}-release-change-log-tabs-item`]: {
+        padding:`${paddingXXS} ${paddingXS}`,
       },
       [`${componentCls}-tabs`]: {
         height: '100%',

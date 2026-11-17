@@ -64,6 +64,7 @@ const SkillReleaseChangeLog = defineComponent({
                   activeKey={activeKey.value}
                   tabPlacement="start"
                   size="small"
+                  classes={{item:`${prefixCls.value}-release-change-log-tabs-item`}}
                   items={tabItems.value}
                   onUpdate:activeKey={(key: string) => {
                     activeKey.value = key
@@ -72,7 +73,7 @@ const SkillReleaseChangeLog = defineComponent({
                     contentRender: () => release
                       ? (
                         <Flex vertical gap="small" class={rootClass}>
-                          <Flex justify="space-between" align="center">
+                          {/*<Flex justify="space-between" align="center">
                             <span>{release.releaseVersion}</span>
                             {release.releaseTime
                               ? (
@@ -81,7 +82,14 @@ const SkillReleaseChangeLog = defineComponent({
                                 </Typography.Text>
                               )
                               : null}
-                          </Flex>
+                          </Flex>*/}
+                          {release.releaseTime
+                              ? (
+                                  <Typography.Text type="secondary" class={`${prefixCls.value}-time`}>
+                                    {dayjs(release.releaseTime).fromNow()}
+                                  </Typography.Text>
+                              )
+                              : null}
                           {changelog ? <div class={`${prefixCls.value}-changelog-content`}>{changelog}</div> : <Empty />}
                         </Flex>
                       )

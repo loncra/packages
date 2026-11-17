@@ -73,7 +73,7 @@ const SkillMarket = defineComponent({
                                         title: ({record}: { record: SkillPackageEntity }) => (
                                             <Badge
                                                 dot={AiUserPluginInstallService.isSkillOutdated(props.installs, record)}>
-                                                {record.name} {record.latestVersion}
+                                                {record.name} {/*{record.latestVersion}*/}
                                             </Badge>
                                         ),
                                         after: ({record}: { record: SkillPackageEntity }) => (
