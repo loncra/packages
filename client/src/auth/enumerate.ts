@@ -11,6 +11,11 @@ export const AUTH_SERVER_LOGIN_TYPE = {
   QR_CODE: 'QR_CODE',
 } as const
 
+export const AUTH_SERVER_TERMINAL_TYPE = {
+  CLIENT: 'CLIENT',
+  BROWSER: 'BROWSER',
+} as const
+
 export const AUTH_SERVER_RESOURCE_TYPE = {
   ROOT: 'root',
   DIRECTORY: 'directory',
