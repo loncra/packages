@@ -3,20 +3,20 @@ import {http, modulePrefix} from '../../http'
 import type {UserPluginInstallRequestBody, UserPluginInstallResult} from '../domain/userPluginInstall.ts'
 import {AI_SERVER_PLUGIN_TARGET_TYPE} from '../enumerate.ts'
 
-export class AiUserPluginInstallService {
+export class AgentHubService {
   static get BASE_URL(): string {
     return modulePrefix(SYSTEM_MODULE_NAME.AI_SERVER)
   }
 
   static get SERVICE_URL(): string {
-    return AiUserPluginInstallService.BASE_URL + '/ai/user/plugin/install'
+    return AgentHubService.BASE_URL + '/agent/hub'
   }
 
   static install(
     body: UserPluginInstallRequestBody,
   ): Promise<RestResult<UserPluginInstallResult>> {
     return http().request({
-      url: AiUserPluginInstallService.SERVICE_URL,
+      url: AgentHubService.SERVICE_URL,
       method: 'POST',
       data: body,
       bodyType: 'json',
@@ -25,14 +25,14 @@ export class AiUserPluginInstallService {
 
   static my(): Promise<RestResult<UserPluginInstallResult[]>> {
     return http().request({
-      url: AiUserPluginInstallService.SERVICE_URL + '/my',
+      url: AgentHubService.SERVICE_URL + '/my',
       method: 'POST',
     })
   }
 
   static uninstall(id: number): Promise<RestResult<void>> {
     return http().request({
-      url: AiUserPluginInstallService.SERVICE_URL + '/' + id,
+      url: AgentHubService.SERVICE_URL + '/' + id,
       method: 'DELETE',
     })
   }

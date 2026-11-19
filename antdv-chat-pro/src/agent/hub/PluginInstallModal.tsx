@@ -5,8 +5,8 @@ import {Form as LForm} from '@loncra/antdv-pro'
 import {getEnumValue} from '@loncra/client/commons'
 import {
     AGENT_WORKSPACE_TYPE_VALUE,
+    AgentHubService,
     AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE,
-    AiUserPluginInstallService,
     type UserPluginInstallResult,
 } from '@loncra/client/ai'
 import type {AgentConversationRecord} from '../conversation'
@@ -77,7 +77,7 @@ const PluginInstallModal = defineComponent({
       }
       spinning.value = true
       try {
-        const result = await AiUserPluginInstallService.install({
+        const result = await AgentHubService.install({
           targetType: props.targetType,
           packageId: props.packageId,
           workspaceScope: form.workspaceScope,

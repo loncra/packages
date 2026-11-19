@@ -5,7 +5,7 @@ import {useConfig} from 'antdv-next/dist/config-provider/context'
 import useApp from 'antdv-next/dist/app/useApp'
 import {classNames, fillLocale, ICON_SELECT_AVATAR_MODE_VALUE, IconSelect} from '@loncra/antdv'
 import type {TotalPage} from '@loncra/client/commons'
-import {AiUserPluginInstallService, type UserPluginInstallResult,} from '@loncra/client/ai'
+import {AgentHubService, type UserPluginInstallResult,} from '@loncra/client/ai'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import {useLocale} from '../../_util/useLocale'
@@ -38,7 +38,7 @@ const PluginCard = defineComponent({
     const installOpen = ref(false)
     const installPackage = ref<PluginCardRecord>()
     const installByPackageId = computed(() =>
-      AiUserPluginInstallService.mapInstallsByPackageId(props.installs, props.targetType),
+      AgentHubService.mapInstallsByPackageId(props.installs, props.targetType),
     )
 
     function isInstalled(record: PluginCardRecord): boolean {
@@ -54,7 +54,7 @@ const PluginCard = defineComponent({
     }
 
     async function doUninstall(id: number): Promise<void> {
-      const result = await AiUserPluginInstallService.uninstall(id)
+      const result = await AgentHubService.uninstall(id)
       message.success(result.message)
       emit('uninstalled', id)
     }

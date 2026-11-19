@@ -12,8 +12,8 @@ import {
   type TotalPage,
 } from '@loncra/client/commons'
 import {
+  AgentHubService,
   AI_SERVER_PLUGIN_TARGET_TYPE,
-  AiUserPluginInstallService,
   type McpPackageEntity,
   type SkillPackageEntity,
   type UserPluginInstallResult,
@@ -79,7 +79,7 @@ const InstalledPlugins = defineComponent({
       if (record.id == null) {
         return []
       }
-      return AiUserPluginInstallService.mapInstallsByPackageId(props.installs, targetType).get(record.id)?.workspaces || []
+      return AgentHubService.mapInstallsByPackageId(props.installs, targetType).get(record.id)?.workspaces || []
     }
 
     function workspaceTags(record: {id?: number}, targetType: number) {
@@ -164,8 +164,8 @@ const InstalledPlugins = defineComponent({
                       onUninstalled={(id: number) => emit('uninstalled', id)}
                       v-slots={{
                         title: ({record}: {record: SkillPackageEntity}) => (
-                          <Badge dot={AiUserPluginInstallService.isSkillOutdated(props.installs, record)}>
-                            {record.name} {record.latestVersion}
+                          <Badge dot={AgentHubService.isSkillOutdated(props.installs, record)}>
+                            {record.name + ' ' + record.latestVersion}
                           </Badge>
                         ),
                         after: ({record}: {record: SkillPackageEntity}) => (

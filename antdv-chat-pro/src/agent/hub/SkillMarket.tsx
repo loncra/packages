@@ -3,9 +3,9 @@ import {Badge, Collapse, Flex, Skeleton, Spin, Tabs} from 'antdv-next'
 import {StarOutlined} from '@antdv-next/icons'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {
+    AgentHubService,
     AI_SERVER_PLUGIN_TARGET_TYPE,
     AiSkillPackageService,
-    AiUserPluginInstallService,
     SKILL_GROUP_CODE_PREFIX,
     type SkillPackageEntity,
     type UserPluginInstallResult,
@@ -72,7 +72,7 @@ const SkillMarket = defineComponent({
                                     v-slots={{
                                         title: ({record}: { record: SkillPackageEntity }) => (
                                             <Badge
-                                                dot={AiUserPluginInstallService.isSkillOutdated(props.installs, record)}>
+                                                dot={AgentHubService.isSkillOutdated(props.installs, record)}>
                                                 {record.name} {/*{record.latestVersion}*/}
                                             </Badge>
                                         ),
