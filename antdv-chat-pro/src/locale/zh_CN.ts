@@ -182,8 +182,6 @@ const locale: Locale = {
     noMore: '没有更多的数据了',
   },
   AgentHub: {
-    mcp: 'MCP 插件',
-    skill: '技能插件',
     myPlugin: '我的插件',
     changelog: '更新日志',
     install: '安装',

@@ -107,8 +107,7 @@ export function useAgentChat(
     const catalogItems = computed<InstructionItem[]>(() =>
         toCatalogItems(
             props.installs,
-            sessions.currentWorkspaceId(),
-            {mcp: hubLocale.value.mcp, skill: hubLocale.value.skill},
+            sessions.currentWorkspaceId()
         ),
     )
 
@@ -127,7 +126,6 @@ export function useAgentChat(
         current,
         conversations: sessions.conversations,
         workspaceLabel: () => chatLocale.value.workspace,
-        conversationHost: props.conversationHost,
     })
 
     const send = useAgentChatSend({

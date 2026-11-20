@@ -1,11 +1,12 @@
 import type {CSSInterpolation} from '@antdv-next/cssinjs'
 import {SPIN_KEYFRAMES, type LoncraStyleToken} from '@loncra/antdv'
 import {genStyleHooks} from '../../../_util/genStyleLayer'
+import {genToneColorStyle} from '../../../_util/style/fragments'
 
 export const AGENT_CONVERSATION_PREFIX = 'loncra-agent-conversation'
 
 function genAgentConversationStyle(token: LoncraStyleToken): CSSInterpolation {
-  const {componentCls, colorPrimary, colorSuccess, colorWarning, colorError, colorTextSecondary, padding, antCls} = token
+  const {componentCls, colorPrimary, padding, antCls} = token
   return {
     [componentCls]: {
       [`${componentCls}-header`]: {
@@ -14,11 +15,7 @@ function genAgentConversationStyle(token: LoncraStyleToken): CSSInterpolation {
       [`${antCls}-divider`]: {
         marginTop: 0
       },
-      [`${componentCls}-primary`]: {color: colorPrimary},
-      [`${componentCls}-success`]: {color: colorSuccess},
-      [`${componentCls}-warning`]: {color: colorWarning},
-      [`${componentCls}-error`]: {color: colorError},
-      [`${componentCls}-secondary`]: {color: colorTextSecondary},
+      ...genToneColorStyle(token),
       [`${componentCls}-running`]: {
         color: colorPrimary,
         animationName: SPIN_KEYFRAMES,

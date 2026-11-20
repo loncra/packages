@@ -30,10 +30,16 @@ const self = {
 ## 行为 {#behavior}
 
 - **布局**：`Splitter` 左侧会话树（约 20%，可拖 15%–25%）+ 右侧主区。主区在 `chat` / `hub` 两个 pane 间切换，插件市场入口把 pane 切到 `hub`。
+- **插件市场扩展（`plugins`）**：`hub` pane 由内部 `AgentHub` 渲染，宿主经 `plugins` 条目（`{id, label?, icon?, component}`）扩展或覆盖插件市场；条目与内置三类（`skill` / `mcp` / `installed`，图标映射统一在 `hub/constants.ts`）按 `id` 浅合并：
+  - 命中内置 id：覆盖对应字段（宿主只写要改的字段，如把某个市场的渲染组件换掉）。
+  - 新 id：追加为新分段，排在 server 枚举项之后；`label` 缺省用 `id`，`icon` 缺省用兜底图标，`component` 必填、缺了整条丢弃。
+  - `installed` 是保留 id（「我的插件」分段，`label` 缺省走文案 `myPlugin`），允许覆盖。
+  - `component` 须接受与内置市场一致的 props（`installs` / `workspaces` / `onInstalled` / `onUninstalled`）。
 - **会话树**：数据来自 `AgentService`；默认工作区只有「新建」，会话节点只有「重命名 / 删除」，其余节点全量菜单。选中与展开受控（`update:selectedKeys` / `update:openKeys` 走内部状态，宿主无感）。
 - **宿主扩展（`conversationHost`）**：套件保持环境无关，桌面端（Tauri 等）的本地工作空间、以及任何宿主自有数据源，都经 `AgentChat` 的 `conversationHost` prop 以 `AgentConversationHost` 可选钩子注入，未传时行为与纯云端完全一致：
   - `conversationsLoader`：替换会话树数据源（宿主自行合并云端与本地列表，本地项排前）。
-  - `displayName` / `iconTone`：接管条目名称与文件夹图标的色阶（返回 `undefined` 落回默认推导：云端默认 primary、云端自定义 success）。
+  - `displayName`：接管条目名称——会话树数据载入时解析一次并写回 `name`，会话树、发送区工作空间 chip、插件安装弹窗的工作空间选项、header 会话名统一读 `name`；实现须由条目自身字段（如 `type`）推导，不得依赖上次解析结果（每次载入都会重复执行）。
+  - `iconTone`：接管文件夹图标的色阶——与 `displayName` 同时在载入时解析一次写回 `tone`（仅工作空间条目），会话树、发送区工作空间 chip、插件安装弹窗的选项图标统一读 `tone`；返回 `undefined` 落回默认推导（云端默认 primary、云端自定义 success）。
   - `menuKeys`：接管条目右键菜单（返回 `undefined` 落回按 type 推导）。
   - `onRemove`：删除接管——返回 `true` 表示宿主已处理（如清本地存储），包内跳过服务端删除并重载；返回 `false` 走服务端删除。
   - `workspaceActions`：向树头「工作空间」旁的动作按钮追加动作项。按钮统一用 `@loncra/antdv-pro` 的 `ActionButton`：单动作渲染为普通按钮（浏览器端只有默认的「新建工作空间」），多动作自动折叠为下拉（桌面端多出「添加本地文件夹」等宿主动作）；`api.refresh` 供宿主动作完成后刷新会话树。
@@ -56,6 +62,7 @@ const self = {
 | transport | SSE 传输适配器覆盖（默认 x-sdk 实现；uniapp 等环境注入自己的实现） | `AgentStreamTransport` | x-sdk 实现 | - |
 | installs | 当前用户已安装插件列表，驱动 `/` 指令候选与「已安装」视图 | `UserPluginInstallResult[]` | `[]` | - |
 | conversationHost | 宿主扩展钩子（数据源 / 名称 / 图标 / 菜单 / 删除接管 / 树头追加动作），见行为节；未传则纯云端 | `Partial<AgentConversationHost>` | - | - |
+| plugins | 插件市场扩展条目（按 id 覆盖内置类型或追加新类型），语义见行为节 | `PluginOverride[]` | `[]` | - |
 
 组件不声明 `expose`，无对外方法。
 
@@ -90,6 +97,17 @@ const self = {
 
 `systemName` 用作草稿 principal；头像与名称展示由 `self` 整体经 `getPrincipalNameByUserDetails` 推导。
 
+### PluginOverride {#pluginoverride}
+
+插件市场扩展条目：`{id: string} & Partial<Omit<PluginComponent, 'id'>>`
+
+| 参数 | 说明 | 类型 | 默认值 | 版本 |
+| --- | --- | --- | --- | --- |
+| id | 插件类型 id：内置 `skill` / `mcp` / `installed`，或宿主自定义 | `string` | - | - |
+| label | 分段文案；缺省时内置项走 server 枚举文案、`installed` 走 `myPlugin`、新类型用 `id` | `string` | - | - |
+| icon | 分段图标；缺省用兜底图标 | `Component` | - | - |
+| component | 该类型的市场渲染组件；追加新类型时必填，缺了整条丢弃 | `Component` | - | - |
+
 ## 套件内部件
 
 宿主通常只装配 `AgentChat`；以下部件已进包根出口，供自绘场景单独使用：
@@ -107,6 +125,6 @@ const self = {
 | `createAgentDraftBinding` | 草稿绑定（scope `agent`，只含 slots） |
 | `SkillReleaseChangeLog` | Skill 版本变更记录（也可脱离套件单独使用） |
 
-未进包根出口的内部实现：`AgentHub` 及其市场子件（`McpMarket` / `SkillMarket` / `InstalledPlugins` / `PluginCard` / `PluginInstallModal` / `useAgentHubMarket`）、`AgentThinkBlock` / `AgentToolCallCard` / `AgentAnswerBlock`、`useAgentChat*` 系列 composable、`stream/`（`useAgentStream` 流编排与运行中 run 判定 + `xAgentStreamTransport` x-sdk 适配）、`useAgentInstructionSlots` / `agentMenus`、`pluginIcons`、草稿 codec。
+未进包根出口的内部实现：`AgentHub` 及其市场子件（`McpMarket` / `SkillMarket` / `InstalledPlugins` / `PluginCard` / `PluginInstallModal` / `useAgentHubPluginMarket`）、`AgentThinkBlock` / `AgentToolCallCard` / `AgentAnswerBlock`、`useAgentChat*` 系列 composable、`stream/`（`useAgentStream` 流编排与运行中 run 判定 + `xAgentStreamTransport` x-sdk 适配）、`useAgentInstructionSlots` / `agentMenus`、草稿 codec。
 
 样式：各子域独立 `genStyleHooks`，前缀 `loncra-agent-chat`（含卡片壳 `-card-root` / `-card-header` / `-card-body`）/ `loncra-agent-bubble` / `loncra-agent-conversation` / `loncra-agent-hub` / `loncra-agent-sender`，均可经 ConfigProvider 的 `getPrefixCls` 覆盖。

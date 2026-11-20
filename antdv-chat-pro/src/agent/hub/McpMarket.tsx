@@ -1,5 +1,5 @@
 import {computed, defineComponent, type PropType} from 'vue'
-import {Flex, Skeleton, Spin, Tabs} from 'antdv-next'
+import {Flex, Spin, Tabs} from 'antdv-next'
 import {ApiOutlined} from '@antdv-next/icons'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {useIconFontRender} from '@loncra/antdv'
@@ -9,11 +9,12 @@ import {
     MCP_GROUP_CODE_PREFIX,
     type McpPackageEntity,
     type UserPluginInstallResult,
+    type UserPluginMetadata,
 } from '@loncra/client/ai'
 import type {AgentConversationRecord} from '../conversation'
 import PluginCard from './PluginCard'
 import {AGENT_HUB_PREFIX} from './style'
-import {useAgentHubMarket} from './useAgentHubMarket'
+import {useAgentHubPluginMarket} from './useAgentHubPluginMarket.ts'
 
 const McpMarket = defineComponent({
     name: 'LAgentHubMcp',
@@ -23,16 +24,16 @@ const McpMarket = defineComponent({
     },
     emits: {
       installed: (_result: UserPluginInstallResult) => true,
-      uninstalled: (_id: number) => true,
+      uninstalled: (_event: UserPluginMetadata) => true,
     },
     setup(props, {emit}) {
         const config = useConfig()
         const iconFontRender = useIconFontRender()
         const prefixCls = computed(() => config.value.getPrefixCls('agent-hub', AGENT_HUB_PREFIX))
-        const market = useAgentHubMarket(new AiMcpPackageService(), MCP_GROUP_CODE_PREFIX)
+        const market = useAgentHubPluginMarket(new AiMcpPackageService(), MCP_GROUP_CODE_PREFIX)
 
         return () => (
-            <Skeleton active loading={market.install.value}>
+            <Spin spinning={market.install.value} class={`${prefixCls.value}-full-spin`}>
                 <Tabs
                     class={`${prefixCls.value}-tabs`}
                     tabPlacement="start"
@@ -66,7 +67,7 @@ const McpMarket = defineComponent({
                                         void market.loadData({number: page, size: pageSize})
                                     }}
                                     onInstalled={(result: UserPluginInstallResult) => emit('installed', result)}
-                                    onUninstalled={(id: number) => emit('uninstalled', id)}
+                                    onUninstalled={(event: UserPluginMetadata) => emit('uninstalled', event)}
                                     v-slots={{
                                         title: ({record}: { record: McpPackageEntity }) => record.name,
                                     }}
@@ -75,7 +76,7 @@ const McpMarket = defineComponent({
                         ),
                     }}
                 />
-            </Skeleton>
+            </Spin>
         )
     },
 })

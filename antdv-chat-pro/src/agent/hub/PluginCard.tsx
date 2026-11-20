@@ -5,7 +5,7 @@ import {useConfig} from 'antdv-next/dist/config-provider/context'
 import useApp from 'antdv-next/dist/app/useApp'
 import {classNames, fillLocale, ICON_SELECT_AVATAR_MODE_VALUE, IconSelect} from '@loncra/antdv'
 import type {TotalPage} from '@loncra/client/commons'
-import {AgentHubService, type UserPluginInstallResult,} from '@loncra/client/ai'
+import {AgentHubService, type UserPluginInstallResult, type UserPluginMetadata,} from '@loncra/client/ai'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import {useLocale} from '../../_util/useLocale'
@@ -21,17 +21,17 @@ const PluginCard = defineComponent({
   props: {
     dataSource: {type: Object as PropType<TotalPage<PluginCardRecord>>, required: true},
     installs: {type: Array as PropType<UserPluginInstallResult[]>, default: () => []},
-    targetType: {type: Number, required: true},
+    targetType: {type: String, required: true},
     workspaces: {type: Array as PropType<AgentConversationRecord[]>, default: () => []},
   },
   emits: {
     changePage: (_page: number, _pageSize: number) => true,
     installed: (_result: UserPluginInstallResult) => true,
-    uninstalled: (_id: number) => true,
+    uninstalled: (_event: UserPluginMetadata) => true,
   },
   setup(props, {emit, slots}) {
     const locale = useLocale('AgentHub')
-    const {modal, message} = useApp()
+    const {modal} = useApp()
     const config = useConfig()
     const prefixCls = computed(() => config.value.getPrefixCls('agent-hub', AGENT_HUB_PREFIX))
     const [hashId, cssVarCls] = useStyle(prefixCls)
@@ -53,21 +53,33 @@ const PluginCard = defineComponent({
       installOpen.value = true
     }
 
-    async function doUninstall(id: number): Promise<void> {
-      const result = await AgentHubService.uninstall(id)
-      message.success(result.message)
-      emit('uninstalled', id)
+    async function doUninstall(record: PluginCardRecord): Promise<void> {
+      if (record.id == null) {
+        return
+      }
+      //const install = installByPackageId.value.get(record.id)
+      //const specified = install?.workspace != null
+      /*const result = await AgentHubService.uninstall({
+        targetType: props.targetType,
+        packageId: record.id,
+        workspaceScope: specified
+          ? AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE.SPECIFIED
+          : AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE.ALL,
+        workspaces: specified ? [install?.workspace as UserPluginInstallResult['workspace']] : undefined,
+      })
+      message.success(result.message)*/
+      emit('uninstalled', {targetType: props.targetType, packageId: record.id})
     }
 
     function onUninstall(record: PluginCardRecord): void {
       const install = record.id == null ? undefined : installByPackageId.value.get(record.id)
-      if (install?.id == null) {
+      if (install == null) {
         return
       }
       modal.confirm({
         title: locale.value.uninstallConfirmTitle,
         content: fillLocale(locale.value.uninstallConfirmSingle, {name: record.name}),
-        onOk: () => doUninstall(install.id as number),
+        onOk: () => doUninstall(record),
       })
     }
 
@@ -159,9 +171,7 @@ const PluginCard = defineComponent({
             packageId={installPackage.value?.id}
             packageName={installPackage.value?.name}
             workspaces={props.workspaces}
-            onUpdate:open={(open: boolean) => {
-              installOpen.value = open
-            }}
+            onUpdate:open={(open: boolean) => installOpen.value = open}
             onInstalled={(result: UserPluginInstallResult) => emit('installed', result)}
           />
         </div>

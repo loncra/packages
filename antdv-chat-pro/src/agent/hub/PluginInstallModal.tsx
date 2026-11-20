@@ -1,23 +1,30 @@
 import {computed, defineComponent, type PropType, reactive, ref, watch} from 'vue'
-import {CheckboxGroup, Empty, FormItem, Modal, RadioGroup} from 'antdv-next'
+import {CheckboxGroup, Empty, Flex, FormItem, Modal, RadioGroup} from 'antdv-next'
+import {FolderOpenOutlined, FolderOutlined} from '@antdv-next/icons'
 import useApp from 'antdv-next/dist/app/useApp'
+import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {Form as LForm} from '@loncra/antdv-pro'
 import {getEnumValue} from '@loncra/client/commons'
 import {
     AGENT_WORKSPACE_TYPE_VALUE,
     AgentHubService,
+    AI_SERVER_EXECUTION_CHANNEL,
     AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE,
+    type ExecutionChannel,
     type UserPluginInstallResult,
 } from '@loncra/client/ai'
+import {classNames} from '@loncra/antdv'
 import type {AgentConversationRecord} from '../conversation'
+import {isDefaultWorkspace} from '../conversation/useAgentConversations'
 import {useLocale} from '../../_util/useLocale'
+import useStyle, {AGENT_HUB_PREFIX} from './style'
 import {fillLocale} from '@loncra/antdv'
 
 const PluginInstallModal = defineComponent({
   name: 'LAgentHubPluginInstall',
   props: {
     open: {type: Boolean, required: true},
-    targetType: {type: Number, required: true},
+    targetType: {type: String, required: true},
     packageId: Number,
     packageName: String,
     workspaces: {type: Array as PropType<AgentConversationRecord[]>, default: () => []},
@@ -29,31 +36,44 @@ const PluginInstallModal = defineComponent({
   setup(props, {emit}) {
     const locale = useLocale('AgentHub')
     const {message} = useApp()
+    const config = useConfig()
+    const prefixCls = computed(() => config.value.getPrefixCls('agent-hub', AGENT_HUB_PREFIX))
+    const [hashId] = useStyle(prefixCls)
     const formRef = ref<{validate: () => Promise<unknown>}>()
     const spinning = ref(false)
     const form = reactive({
-      workspaceScope: AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE.USER as number,
-      agentConversationIds: [] as string[],
+      workspaceScope: AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE.ALL as number,
+      workspaces: [] as string[],
     })
-    const workspaceOptions = computed(() =>
+    const workspaceRecords = computed(() =>
       props.workspaces
-        .filter((item) => item.id != null && AGENT_WORKSPACE_TYPE_VALUE.includes(getEnumValue(item.type)))
-        .map((item) => ({
-          label: item.name,
-          value: item.id as string,
-        })),
+        .filter((item) => item.id != null && AGENT_WORKSPACE_TYPE_VALUE.includes(getEnumValue(item.type))),
+    )
+    const workspaceOptions = computed(() =>
+      workspaceRecords.value.map((item) => ({
+        label: item.name,
+        value: item.id as string,
+      })),
     )
     const scopeOptions = computed(() => [
-      {value: AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE.USER, label: locale.value.workspaceScopeAll},
-      {value: AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE.ORG, label: locale.value.workspaceScopeSpecific},
+      {value: AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE.ALL, label: locale.value.workspaceScopeAll},
+      {value: AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE.SPECIFIED, label: locale.value.workspaceScopeSpecific},
     ])
+
+    function channelOfWorkspace(id: string): ExecutionChannel {
+      const workspace = props.workspaces.find(item => item.id === id)
+      const kind = getEnumValue(workspace?.metadata?.kind)
+      return kind === AI_SERVER_EXECUTION_CHANNEL.CLIENT
+        ? AI_SERVER_EXECUTION_CHANNEL.CLIENT
+        : AI_SERVER_EXECUTION_CHANNEL.CLOUD
+    }
 
     watch(() => props.open, (open) => {
       if (!open) {
         return
       }
-      form.workspaceScope = AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE.USER
-      form.agentConversationIds = []
+      form.workspaceScope = AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE.ALL
+      form.workspaces = []
     })
 
     function close(): void {
@@ -61,10 +81,10 @@ const PluginInstallModal = defineComponent({
     }
 
     async function validateWorkspaces(): Promise<void> {
-      if (form.workspaceScope !== AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE.ORG) {
+      if (form.workspaceScope !== AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE.SPECIFIED) {
         return
       }
-      if (form.agentConversationIds.length > 0) {
+      if (form.workspaces.length > 0) {
         return
       }
       return Promise.reject(locale.value.workspaceRequired)
@@ -77,17 +97,17 @@ const PluginInstallModal = defineComponent({
       }
       spinning.value = true
       try {
-        const result = await AgentHubService.install({
+        const results = await AgentHubService.install({
           targetType: props.targetType,
           packageId: props.packageId,
           workspaceScope: form.workspaceScope,
-          agentConversationIds: form.workspaceScope === AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE.ORG
-            ? form.agentConversationIds
+          workspaces: form.workspaceScope === AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE.SPECIFIED
+            ? form.workspaces.map(id => ({id, value: channelOfWorkspace(id)}))
             : undefined,
         })
-        message.success(result.message)
-        if (result.data) {
-          emit('installed', result.data)
+        message.success(results.message)
+        for (const item of results.data ?? []) {
+          emit('installed', item)
         }
         close()
       } finally {
@@ -110,18 +130,38 @@ const PluginInstallModal = defineComponent({
           <FormItem name="workspaceScope" label={locale.value.workspaceScope} rules={[{required: true}]}>
             <RadioGroup v-model:value={form.workspaceScope} options={scopeOptions.value} />
           </FormItem>
-          {form.workspaceScope === AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE.ORG
+          {form.workspaceScope === AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE.SPECIFIED
             ? (
               <FormItem
-                name="agentConversationIds"
+                name="workspaces"
                 label={locale.value.workspace}
                 rules={[{validator: validateWorkspaces, trigger: 'change'}]}
               >
                 {workspaceOptions.value.length > 0
                   ? (
                     <CheckboxGroup
-                      v-model:value={form.agentConversationIds}
+                      v-model:value={form.workspaces}
                       options={workspaceOptions.value}
+                      v-slots={{
+                        labelRender: ({index}: {item: unknown; index: number}) => {
+                          const item = workspaceRecords.value[index]
+                          if (!item) {
+                            return null
+                          }
+                          const Icon = isDefaultWorkspace(getEnumValue(item.type)) ? FolderOpenOutlined : FolderOutlined
+                          return (
+                            <Flex align="center" gap="small">
+                              <Icon
+                                class={classNames(
+                                  hashId.value,
+                                  item.tone ? `${prefixCls.value}-${item.tone}` : undefined,
+                                )}
+                              />
+                              <span>{item.name}</span>
+                            </Flex>
+                          )
+                        },
+                      }}
                     />
                   )
                   : <Empty description={locale.value.workspaceEmpty} />}

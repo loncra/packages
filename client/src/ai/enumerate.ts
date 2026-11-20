@@ -86,13 +86,18 @@ export const AI_SERVER_PACKAGE_TYPE = {
 } as const
 
 export const AI_SERVER_PLUGIN_TARGET_TYPE = {
-  SKILL: 10,
-  MCP: 20,
+  SKILL: 'skill',
+  MCP: 'mcp',
 } as const
 
 export const AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE = {
+  ALL: 10,
+  SPECIFIED: 20,
+} as const
+
+export const AI_SERVER_PLUGIN_INSTALL_USER_SCOPE = {
   USER: 10,
-  ORG: 20,
+  ENTERPRISE: 20,
 } as const
 
 export const AI_SERVER_PLUGIN_INSTALL_STATUS = {

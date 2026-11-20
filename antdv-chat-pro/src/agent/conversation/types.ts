@@ -4,6 +4,7 @@ import type {AgentConversationEntity} from '@loncra/client/ai'
 export interface AgentConversationRecord extends AgentConversationEntity {
   editing?: boolean
   original?: string
+  tone?: string
 }
 
 export interface AgentConversationHost {

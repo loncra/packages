@@ -1,6 +1,7 @@
 import type {CSSInterpolation} from '@antdv-next/cssinjs'
 import {genFullSpinStyle, type LoncraStyleToken} from '@loncra/antdv'
 import {genStyleHooks} from '../../../_util/genStyleLayer'
+import {genToneColorStyle} from '../../../_util/style/fragments'
 
 export const AGENT_HUB_PREFIX = 'loncra-agent-hub'
 
@@ -13,6 +14,7 @@ function genAgentHubStyle(token: LoncraStyleToken): CSSInterpolation {
       height: '100%',
       minHeight: 0,
       overflow: 'hidden',
+      ...genToneColorStyle(token),
       [`${componentCls}-switch`]: {
         flexShrink: 0,
         padding:padding,

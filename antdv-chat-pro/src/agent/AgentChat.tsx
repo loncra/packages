@@ -4,10 +4,11 @@ import {Welcome} from '@antdv-next/x'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {classNames} from '@loncra/antdv'
 import {getEnumValue} from '@loncra/client/commons'
-import type {AgentStreamTransport, UserPluginInstallResult} from '@loncra/client/ai'
+import type {AgentStreamTransport, UserPluginInstallResult, UserPluginMetadata} from '@loncra/client/ai'
 import type {SlotConfigType} from '@antdv-next/x/dist/sender/interface'
 import type {Self} from './types'
 import type {AgentConversationHost} from './conversation/types'
+import type {PluginOverride} from './hub/types'
 import {DataLoadingCard} from '@loncra/antdv-pro'
 import {useLocale} from '../_util/useLocale'
 import {toCatalogMenuItems} from './sender/agentMenus'
@@ -29,12 +30,13 @@ const AgentChat = defineComponent({
     buildHeaders: {type: Function as PropType<() => Record<string, string>>, default: undefined},
     transport: {type: Object as PropType<AgentStreamTransport>, default: undefined},
     conversationHost: {type: Object as PropType<Partial<AgentConversationHost>>, default: undefined},
+    plugins: {type: Array as PropType<PluginOverride[]>, default: () => []},
     prefixCls: String,
     rootClass: String,
   },
   emits: {
     installed: (_result: UserPluginInstallResult) => true,
-    uninstalled: (_id: number) => true,
+    uninstalled: (_event: UserPluginMetadata) => true,
   },
   setup(props, {emit, slots, attrs}) {
     const chatLocale = useLocale('AgentChat')
@@ -87,8 +89,9 @@ const AgentChat = defineComponent({
                       <AgentHub
                         installs={props.installs}
                         workspaces={chat.workspaces.value}
+                        plugins={props.plugins}
                         onInstalled={(result: UserPluginInstallResult) => emit('installed', result)}
-                        onUninstalled={(id: number) => emit('uninstalled', id)}
+                        onUninstalled={(event: UserPluginMetadata) => emit('uninstalled', event)}
                       />
                     )
                     : (

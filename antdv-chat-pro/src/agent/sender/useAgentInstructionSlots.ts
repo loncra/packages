@@ -3,71 +3,52 @@ import {Tag} from 'antdv-next'
 import type {SlotConfigType} from '@antdv-next/x/dist/sender/interface'
 import type {InstructionItem, InstructionMeasure, InstructionSenderHandle} from '@loncra/antdv-chat'
 import type {InstructionBlock} from '@loncra/chat-core'
-import {getEnumValue, type IdValueMetadata} from '@loncra/client/commons'
+import {getEnumName, getEnumValue, type IdValueMetadata} from '@loncra/client/commons'
 import {
     AI_SERVER_PLUGIN_INSTALL_STATUS,
     AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE,
-    AI_SERVER_PLUGIN_TARGET_TYPE,
     type UserPluginInstallResult,
 } from '@loncra/client/ai'
-import {MCP_PLUGIN_ICON, SKILL_PLUGIN_ICON} from '../pluginIcons'
+import {pluginTypeIcon} from '../hub/constants'
 import type {AgentSenderExpose} from './types.ts'
 
 export const TRIGGER = '/'
-export const MCP_PREFIX = '/mcp'
-export const SKILL_PREFIX = '/skill'
-
-function instructionIcon(prefix: string): typeof MCP_PLUGIN_ICON | typeof SKILL_PLUGIN_ICON | undefined {
-    if (prefix === MCP_PREFIX) {
-        return MCP_PLUGIN_ICON
-    }
-    if (prefix === SKILL_PREFIX) {
-        return SKILL_PLUGIN_ICON
-    }
-    return undefined
-}
 
 function matchesWorkspaceScope(item: UserPluginInstallResult, workspaceId: string | undefined): boolean {
     const scope = getEnumValue(item.workspaceScope)
-    if (scope !== AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE.ORG) {
+    if (scope !== AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE.SPECIFIED) {
         return true
     }
     if (workspaceId == null) {
         return false
     }
-    return item.workspaces?.some((workspace) => String(workspace.id) === String(workspaceId)) ?? false
+    return String(item.workspace?.id ?? '') === String(workspaceId)
 }
 
 export function toCatalogItems(
     installs: UserPluginInstallResult[],
-    workspaceId: string | undefined,
-    groupLabels: {mcp: string; skill: string},
+    workspaceId: string | undefined
 ): InstructionItem[] {
     const items: InstructionItem[] = []
     for (const item of installs) {
         if (getEnumValue(item.status) !== AI_SERVER_PLUGIN_INSTALL_STATUS.ACTIVATED) {
             continue
         }
-        if (!item.pluginPackage || item.packageId == null) {
+        if (!item.pluginPackage) {
             continue
         }
         if (!matchesWorkspaceScope(item, workspaceId)) {
             continue
         }
         const targetType = getEnumValue(item.targetType)
-        const isMcp = targetType === AI_SERVER_PLUGIN_TARGET_TYPE.MCP
-        const isSkill = targetType === AI_SERVER_PLUGIN_TARGET_TYPE.SKILL
-        if (!isMcp && !isSkill) {
-            continue
-        }
         items.push({
-            id: String(item.packageId),
+            id: String(targetType + ':' + item.pluginPackage.id),
             value: item.pluginPackage.name,
             metadata: {
                 trigger: TRIGGER,
-                group: isMcp ? 'mcp' : 'skill',
-                groupLabel: isMcp ? groupLabels.mcp : groupLabels.skill,
-                slotPrefix: isMcp ? MCP_PREFIX : SKILL_PREFIX,
+                group: targetType,
+                groupLabel: getEnumName(item.targetType),
+                slotPrefix: targetType,
                 icon: item.pluginPackage.icon,
             },
         })
@@ -91,7 +72,7 @@ export function useAgentInstructionSlots(options: {
                 const prefix = item.type === 'custom'
                     ? String((item.props as {prefix?: string} | undefined)?.prefix ?? '')
                     : ''
-                const icon = instructionIcon(prefix)
+                const icon = pluginTypeIcon(prefix.replace('/', ''))
                 return h(Tag, {key: slotKey, variant: 'outlined'}, {
                     icon: icon ? () => h(icon) : undefined,
                     default: () => value.value,

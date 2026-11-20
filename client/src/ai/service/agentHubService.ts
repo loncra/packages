@@ -1,7 +1,12 @@
 import {getEnumValue, type RestResult, SYSTEM_MODULE_NAME} from '../../commons'
 import {http, modulePrefix} from '../../http'
-import type {UserPluginInstallRequestBody, UserPluginInstallResult} from '../domain/userPluginInstall.ts'
+import type {
+  UserPluginInstallResult,
+  UserPluginRequestBody,
+  UserPluginSkillMetadata
+} from '../domain/userPluginInstall.ts'
 import {AI_SERVER_PLUGIN_TARGET_TYPE} from '../enumerate.ts'
+import type {PluginPackageUpdatePolicyMetadata} from "../domain/plugin.ts";
 
 export class AgentHubService {
   static get BASE_URL(): string {
@@ -13,8 +18,8 @@ export class AgentHubService {
   }
 
   static install(
-    body: UserPluginInstallRequestBody,
-  ): Promise<RestResult<UserPluginInstallResult>> {
+    body: UserPluginRequestBody,
+  ): Promise<RestResult<UserPluginInstallResult[]>> {
     return http().request({
       url: AgentHubService.SERVICE_URL,
       method: 'POST',
@@ -30,39 +35,44 @@ export class AgentHubService {
     })
   }
 
-  static uninstall(id: number): Promise<RestResult<void>> {
+  static uninstall(body: UserPluginRequestBody): Promise<RestResult<void>> {
     return http().request({
-      url: AgentHubService.SERVICE_URL + '/' + id,
+      url: AgentHubService.SERVICE_URL,
       method: 'DELETE',
+      data: body,
+      bodyType: 'json',
     })
   }
 
   static mapInstallsByPackageId(
     installs: UserPluginInstallResult[],
-    targetType: number,
+    targetType: string,
   ): Map<number, UserPluginInstallResult> {
     const map = new Map<number, UserPluginInstallResult>()
     for (const install of installs) {
-      if (install.packageId == null || getEnumValue(install.targetType) !== targetType) {
+      if (install.pluginPackage.id == null || getEnumValue(install.targetType) !== targetType) {
         continue
       }
-      map.set(install.packageId, install)
+      map.set(install.pluginPackage.id, install)
     }
     return map
   }
 
-  static isSkillOutdated(
+  static isPluginOutdated(
     installs: UserPluginInstallResult[],
-    record: {id?: number; latestVersion?: string},
+    record: PluginPackageUpdatePolicyMetadata,
+    targetType:string
   ): boolean {
     if (record.id == null || !record.latestVersion) {
       return false
     }
-    const install = installs.find(
-      (item) =>
-        getEnumValue(item.targetType) === AI_SERVER_PLUGIN_TARGET_TYPE.SKILL && item.packageId === record.id,
-    )
-    const locked = install?.metadata?.releaseVersion
+    const install = installs.filter(item => getEnumValue(item.targetType) === targetType)
+        .find(item => item.pluginPackage.id === record.id)
+    if (!install) {
+      return false
+    }
+    const skillMetadata = install.metadata as UserPluginSkillMetadata;
+    const locked = skillMetadata.releaseVersion
     return Boolean(locked) && locked !== record.latestVersion
   }
 }

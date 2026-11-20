@@ -184,8 +184,6 @@ const locale: Locale = {
     noMore: 'No more data available',
   },
   AgentHub: {
-    mcp: 'MCP plugins',
-    skill: 'Skill plugins',
     myPlugin: 'My plugins',
     changelog: 'Changelog',
     install: 'Install',

@@ -2,7 +2,7 @@ import {ref, type Ref} from 'vue'
 import useApp from 'antdv-next/dist/app/useApp'
 import {findFirstTreeNode, getEnumValue, isEnumValue} from '@loncra/client/commons'
 import {useLocale} from '../../_util/useLocale'
-import {AgentService, AI_SERVER_AGENT_CONVERSATION_TYPE, AI_SERVER_EXECUTION_CHANNEL,} from '@loncra/client/ai'
+import {AGENT_WORKSPACE_TYPE_VALUE, AgentService, AI_SERVER_AGENT_CONVERSATION_TYPE, AI_SERVER_EXECUTION_CHANNEL,} from '@loncra/client/ai'
 import type {AgentConversationHost, AgentConversationMenuKey, AgentConversationRecord} from './types'
 
 export function isDefaultWorkspace(type: number): boolean {
@@ -13,12 +13,22 @@ export function isWorkspaceConversation(type: number): boolean {
   return isEnumValue(type, AI_SERVER_AGENT_CONVERSATION_TYPE.WORKSPACE_CONVERSATION)
 }
 
-export function isCustomizeWorkspace(type: number): boolean {
-  return isEnumValue(type, AI_SERVER_AGENT_CONVERSATION_TYPE.CUSTOMIZE_WORKSPACE)
+function bakeDisplayNames(items: AgentConversationRecord[], host: AgentConversationHost): void {
+  for (const item of items) {
+    item.name = host.displayName?.(item) ?? item.name
+    const type = getEnumValue(item.type)
+    if (AGENT_WORKSPACE_TYPE_VALUE.includes(type)) {
+      item.tone = host.iconTone?.(item) ?? (isDefaultWorkspace(type) ? 'primary' : 'success')
+    }
+    const children = (item.children ?? []) as AgentConversationRecord[]
+    if (children.length > 0) {
+      bakeDisplayNames(children, host)
+    }
+  }
 }
 
-export function isWorkspace(type: number): boolean {
-  return isDefaultWorkspace(type) || isCustomizeWorkspace(type)
+export function isCustomizeWorkspace(type: number): boolean {
+  return isEnumValue(type, AI_SERVER_AGENT_CONVERSATION_TYPE.CUSTOMIZE_WORKSPACE)
 }
 
 export function agentMenuKeys(type: number): AgentConversationMenuKey[] {
@@ -92,8 +102,9 @@ export function useAgentConversations<T extends AgentConversationRecord>(
     try {
       const source = host.conversationsLoader
         ? await host.conversationsLoader()
-        : ((await AgentService.findConversation()).data || [])
+        : ((await AgentService.findConversations()).data || [])
       conversations.value = source as T[]
+      bakeDisplayNames(conversations.value, host)
       host.afterLoad(conversations.value)
       const activate = switchItemId
         ? findFirstTreeNode((item) => item.id === switchItemId, conversations.value) as T | undefined

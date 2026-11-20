@@ -1,4 +1,4 @@
-import type {CSSObject} from '@antdv-next/cssinjs'
+import type {CSSInterpolation, CSSObject} from '@antdv-next/cssinjs'
 import {genFullSpinStyle, type LoncraStyleToken} from '@loncra/antdv'
 
 export function genFilePaneChromeStyle(token: LoncraStyleToken): CSSObject {
@@ -16,5 +16,16 @@ export function genFilePaneChromeStyle(token: LoncraStyleToken): CSSObject {
       overflow: 'hidden',
     },
     ...genFullSpinStyle(token),
+  }
+}
+
+export function genToneColorStyle(token: LoncraStyleToken): CSSInterpolation {
+  const {colorPrimary, colorSuccess, colorWarning, colorError, colorTextSecondary} = token
+  return {
+    '&-primary': {color: colorPrimary},
+    '&-success': {color: colorSuccess},
+    '&-warning': {color: colorWarning},
+    '&-error': {color: colorError},
+    '&-secondary': {color: colorTextSecondary},
   }
 }

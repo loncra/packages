@@ -23,7 +23,7 @@ interface PageEnabledService<T> {
     pageEnabled: (request: PageRequest) => Promise<RestResult<TotalPage<T>>>
 }
 
-export function useAgentHubMarket<T>(service: PageEnabledService<T>, groupCodePrefix: string) {
+export function useAgentHubPluginMarket<T>(service: PageEnabledService<T>, groupCodePrefix: string) {
     const locale = useLocale('AgentHub')
     const loading = ref(false)
     const install = ref(false)

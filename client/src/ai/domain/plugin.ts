@@ -12,3 +12,8 @@ export interface PluginPackageMetadata extends VersionEntityMetadata {
   icon: string
   category?: DataDictionaryMetadata
 }
+
+export interface PluginPackageUpdatePolicyMetadata extends PluginPackageMetadata{
+  latestVersion?: string
+  defaultUpdatePolicy: NameValueEnumMetadata<number> | number
+}

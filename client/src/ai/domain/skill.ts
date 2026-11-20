@@ -1,6 +1,6 @@
 import type {NameValueEnumMetadata, TimeProperties} from '../../commons'
 import type {AI_SERVER_SKILL_SOURCE_TYPE} from '../enumerate.ts'
-import type {PluginPackageMetadata} from './plugin.ts'
+import type {PluginPackageMetadata, PluginPackageUpdatePolicyMetadata} from './plugin.ts'
 
 export type SkillSourceMetadataType =
   | typeof AI_SERVER_SKILL_SOURCE_TYPE.GIT
@@ -27,9 +27,7 @@ export interface SkillPackageMetadata {
   updatePolicyTime?: TimeProperties
 }
 
-export interface SkillPackageSavePayload extends PluginPackageMetadata {
-  latestVersion?: string
-  defaultUpdatePolicy: NameValueEnumMetadata<number> | number
+export interface SkillPackageSavePayload extends PluginPackageUpdatePolicyMetadata {
   sourceType?: NameValueEnumMetadata<number> | number
   metadata: SkillPackageMetadata
   executeStatus?: NameValueEnumMetadata<number> | number

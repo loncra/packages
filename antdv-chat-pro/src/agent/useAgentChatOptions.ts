@@ -25,7 +25,7 @@ import {useIconFontRender} from '@loncra/antdv'
 import {toModelMenuItems} from './sender/agentMenus'
 import type {AgentSenderChoice, AgentSenderWorkspace} from './sender/types.ts'
 import {isDefaultWorkspace, isWorkspaceConversation} from './conversation/useAgentConversations'
-import type {AgentConversationHost, AgentConversationRecord} from './conversation'
+import type {AgentConversationRecord} from './conversation'
 import type {AgentSession} from './types'
 
 function typeIcon(type: number) {
@@ -50,13 +50,6 @@ function typeColor(type: number): string {
 
 const TONE_COLORS: Record<string, string> = {primary: 'blue', success: 'green', warning: 'gold'}
 
-function workspaceChipName(
-    workspace: AgentConversationRecord | undefined,
-    host?: Partial<AgentConversationHost>,
-): string | undefined {
-    return workspace ? (host?.displayName?.(workspace) ?? workspace.name) : undefined
-}
-
 function workspaceChipColor(workspace: AgentConversationRecord, tone: string | undefined): string {
     if (tone !== undefined) {
         return TONE_COLORS[tone] ?? 'default'
@@ -67,15 +60,14 @@ function workspaceChipColor(workspace: AgentConversationRecord, tone: string | u
 function workspaceChip(
     workspace: AgentConversationRecord | undefined,
     label: string,
-    host?: Partial<AgentConversationHost>,
 ): AgentSenderWorkspace | undefined {
-    const name = workspaceChipName(workspace, host)
+    const name = workspace?.name
     if (!workspace || !name) {
         return undefined
     }
     return {
         title: `${label}: ${name}`,
-        color: workspaceChipColor(workspace, host?.iconTone?.(workspace)),
+        color: workspaceChipColor(workspace, workspace.tone),
         variant: 'outlined',
         icon: () => h(isDefaultWorkspace(getEnumValue(workspace.type)) ? FolderOpenOutlined : FolderOutlined),
     }
@@ -85,7 +77,6 @@ export function useAgentChatOptions(options: {
     current: Ref<AgentSession | undefined>
     conversations: Ref<AgentConversationRecord[]>
     workspaceLabel: () => string
-    conversationHost?: Partial<AgentConversationHost>
 }) {
     const iconFontRender = useIconFontRender()
     const models = ref<ModelSettingEntity[]>([])
@@ -130,7 +121,7 @@ export function useAgentChatOptions(options: {
         const workspace = isWorkspaceConversation(getEnumValue(session.type))
             ? options.conversations.value.find((item) => item.id === session.parentId)
             : session
-        return workspaceChip(workspace, options.workspaceLabel(), options.conversationHost)
+        return workspaceChip(workspace, options.workspaceLabel())
     })
 
     const modelView = computed<AgentSenderChoice | undefined>(() => {

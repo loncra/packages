@@ -140,8 +140,6 @@ export interface AgentChatLocale {
 }
 
 export interface AgentHubLocale {
-  mcp: string
-  skill: string
   myPlugin: string
   changelog: string
   install: string

@@ -1,5 +1,4 @@
 import {
-    type FilterRequest,
     formUrlEncoded,
     type PageRequest,
     type PageResult,
@@ -54,15 +53,17 @@ export class AgentService {
     return AgentService.MESSAGE_URL + '/positioning/page/number'
   }
 
-  static findConversation(
-    request: FilterRequest = {},
-    channel: ExecutionChannel = AI_SERVER_EXECUTION_CHANNEL.CLOUD,
-  ): Promise<RestResult<AgentConversationEntity[]>> {
+  static findConversations(): Promise<RestResult<AgentConversationEntity[]>> {
     return http().request({
       url: AgentService.CONVERSATION_URL,
       method: 'POST',
-      data: formUrlEncoded({...request, channel} as Record<string, unknown>),
-      bodyType: 'form',
+    })
+  }
+
+  static findWorkspaces(): Promise<RestResult<AgentConversationEntity[]>> {
+    return http().request({
+      url: AgentService.BASE_URL + '/agent/workspace',
+      method: 'POST',
     })
   }
 
@@ -70,7 +71,8 @@ export class AgentService {
     return http().request({
       url: AgentService.CONVERSATION_URL,
       method: 'DELETE',
-      params: formUrlEncoded({ids, channel}),
+      data: ids.map(id => ({id, value: channel})),
+      bodyType: 'json',
     })
   }
 

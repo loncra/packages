@@ -141,25 +141,11 @@ const AgentConversationList = defineComponent({
       return `${prefixCls.value}-${name}`
     }
 
-    function displayName(item: AgentConversationRecord): string {
-      return props.host.displayName?.(item) ?? item.name ?? ''
-    }
-
-    function iconTone(item: AgentConversationRecord): string {
-      const custom = props.host.iconTone?.(item)
-      if (custom !== undefined) {
-        return custom
-      }
-      const type = getEnumValue(item.type)
-      return isDefaultWorkspace(type) ? 'primary' : 'success'
-    }
-
     function renderIcon(item: AgentConversationRecord) {
       const type = getEnumValue(item.type)
       if (isDefaultWorkspace(type) || isCustomizeWorkspace(type)) {
         const Icon = props.openKeys.includes(String(item.key ?? item.id)) ? FolderOpenOutlined : FolderOutlined
-        const color = iconTone(item)
-        return <Icon class={color ? tone(color) : undefined} />
+        return <Icon class={item.tone ? tone(item.tone) : undefined} />
       }
       const status = getEnumValue(item.status as number)
       const spec = STATUS_ICON[status as keyof typeof STATUS_ICON]
@@ -189,7 +175,7 @@ const AgentConversationList = defineComponent({
       const children = (item.children || []) as AgentConversationRecord[]
       return {
         key,
-        name: displayName(item),
+        name: item.name ?? '',
         editing: item.editing,
         timeText: isConversationItem && item.creationTime != null
           ? props.host.timeText(item.creationTime)

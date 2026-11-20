@@ -9,6 +9,7 @@ import {
     SKILL_GROUP_CODE_PREFIX,
     type SkillPackageEntity,
     type UserPluginInstallResult,
+    type UserPluginMetadata,
 } from '@loncra/client/ai'
 import {useIconFontRender} from '@loncra/antdv'
 import {useLocale} from '../../_util/useLocale'
@@ -16,7 +17,7 @@ import type {AgentConversationRecord} from '../conversation'
 import PluginCard from './PluginCard'
 import SkillReleaseChangeLog from './SkillReleaseChangeLog'
 import {AGENT_HUB_PREFIX} from './style'
-import {useAgentHubMarket} from './useAgentHubMarket'
+import {useAgentHubPluginMarket} from './useAgentHubPluginMarket.ts'
 
 const SkillMarket = defineComponent({
     name: 'LAgentHubSkill',
@@ -26,14 +27,14 @@ const SkillMarket = defineComponent({
     },
     emits: {
       installed: (_result: UserPluginInstallResult) => true,
-      uninstalled: (_id: number) => true,
+      uninstalled: (_event: UserPluginMetadata) => true,
     },
     setup(props, {emit}) {
         const locale = useLocale('AgentHub')
         const config = useConfig()
         const iconFontRender = useIconFontRender()
         const prefixCls = computed(() => config.value.getPrefixCls('agent-hub', AGENT_HUB_PREFIX))
-        const market = useAgentHubMarket(new AiSkillPackageService(), SKILL_GROUP_CODE_PREFIX)
+        const market = useAgentHubPluginMarket(new AiSkillPackageService(), SKILL_GROUP_CODE_PREFIX)
 
         return () => (
             <Skeleton active loading={market.install.value}>
@@ -68,12 +69,12 @@ const SkillMarket = defineComponent({
                                         void market.loadData({number: page, size: pageSize})
                                     }}
                                     onInstalled={(result: UserPluginInstallResult) => emit('installed', result)}
-                                    onUninstalled={(id: number) => emit('uninstalled', id)}
+                                    onUninstalled={(event: UserPluginMetadata) => emit('uninstalled', event)}
                                     v-slots={{
                                         title: ({record}: { record: SkillPackageEntity }) => (
                                             <Badge
-                                                dot={AgentHubService.isSkillOutdated(props.installs, record)}>
-                                                {record.name} {/*{record.latestVersion}*/}
+                                                dot={AgentHubService.isPluginOutdated(props.installs, record, AI_SERVER_PLUGIN_TARGET_TYPE.SKILL)}>
+                                                {record.name}
                                             </Badge>
                                         ),
                                         after: ({record}: { record: SkillPackageEntity }) => (

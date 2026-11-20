@@ -1,37 +1,33 @@
-import {computed, defineComponent, h, type PropType, ref} from 'vue'
+import {computed, defineComponent, h, type PropType} from 'vue'
 import {Divider, Segmented} from 'antdv-next'
-import {ApiOutlined, AppstoreOutlined, ThunderboltOutlined} from '@antdv-next/icons'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {classNames} from '@loncra/antdv'
-import type {UserPluginInstallResult} from '@loncra/client/ai'
-import {useLocale} from '../../_util/useLocale'
+import type {UserPluginInstallResult, UserPluginMetadata} from '@loncra/client/ai'
 import type {AgentConversationRecord} from '../conversation'
-import McpMarket from './McpMarket'
-import SkillMarket from './SkillMarket'
-import InstalledPlugins from './InstalledPlugins'
 import useStyle, {AGENT_HUB_PREFIX} from './style'
+import type {PluginOverride} from "./types.ts";
+import {useAgentHub} from "./useAgentHub.ts";
 
 const AgentHub = defineComponent({
   name: 'LAgentHub',
   props: {
     installs: {type: Array as PropType<UserPluginInstallResult[]>, default: () => []},
     workspaces: {type: Array as PropType<AgentConversationRecord[]>, default: () => []},
+    plugins:{type: Array as PropType<PluginOverride[]>, default: () => []},
   },
   emits: {
     installed: (_result: UserPluginInstallResult) => true,
-    uninstalled: (_id: number) => true,
+    uninstalled: (_event: UserPluginMetadata) => true,
   },
   setup(props, {emit}) {
-    const locale = useLocale('AgentHub')
     const config = useConfig()
     const prefixCls = computed(() => config.value.getPrefixCls('agent-hub', AGENT_HUB_PREFIX))
     const [hashId, cssVarCls] = useStyle(prefixCls)
-    const section = ref<'mcp' | 'skill' | 'installed'>('mcp')
-    const options = computed(() => [
-      {value: 'mcp', label: locale.value.mcp, icon: h(ApiOutlined)},
-      {value: 'skill', label: locale.value.skill, icon: h(ThunderboltOutlined)},
-      {value: 'installed', label: locale.value.myPlugin, icon: h(AppstoreOutlined)},
-    ])
+    const {
+      options,
+      section,
+      activeComponent,
+    } = useAgentHub(props.plugins)
 
     return () => {
       const rootClass = classNames(prefixCls.value, hashId.value, cssVarCls.value)
@@ -40,7 +36,7 @@ const AgentHub = defineComponent({
         installs: props.installs,
         workspaces: props.workspaces,
         onInstalled: (result: UserPluginInstallResult) => emit('installed', result),
-        onUninstalled: (id: number) => emit('uninstalled', id),
+        onUninstalled: (event: UserPluginMetadata) => emit('uninstalled', event),
       }
       return (
         <div class={rootClass}>
@@ -50,18 +46,13 @@ const AgentHub = defineComponent({
               shape="round"
               options={options.value}
               onChange={(value) => {
-                const next = String(value)
-                section.value = next === 'skill' || next === 'installed' ? next : 'mcp'
+                section.value = String(value)
               }}
             />
           </div>
           <Divider class={cls('divider')} />
           <div class={cls('body')}>
-            {section.value === 'skill'
-              ? <SkillMarket {...marketProps} />
-              : section.value === 'installed'
-                ? <InstalledPlugins {...marketProps} />
-                : <McpMarket {...marketProps} />}
+            {activeComponent.value ? h(activeComponent.value, marketProps) : null}
           </div>
         </div>
       )
