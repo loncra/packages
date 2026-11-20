@@ -26,18 +26,20 @@ const AgentHub = defineComponent({
     const {
       options,
       section,
-      activeComponent,
-    } = useAgentHub(props.plugins)
+      active,
+    } = useAgentHub({
+      overrides: props.plugins,
+      installs: () => props.installs,
+      workspaces: () => props.workspaces,
+      handlers: {
+        onInstalled: (result: UserPluginInstallResult) => emit('installed', result),
+        onUninstalled: (event: UserPluginMetadata) => emit('uninstalled', event),
+      },
+    })
 
     return () => {
       const rootClass = classNames(prefixCls.value, hashId.value, cssVarCls.value)
       const cls = (name: string) => `${prefixCls.value}-${name}`
-      const marketProps = {
-        installs: props.installs,
-        workspaces: props.workspaces,
-        onInstalled: (result: UserPluginInstallResult) => emit('installed', result),
-        onUninstalled: (event: UserPluginMetadata) => emit('uninstalled', event),
-      }
       return (
         <div class={rootClass}>
           <div class={cls('switch')}>
@@ -52,7 +54,7 @@ const AgentHub = defineComponent({
           </div>
           <Divider class={cls('divider')} />
           <div class={cls('body')}>
-            {activeComponent.value ? h(activeComponent.value, marketProps) : null}
+            {active.value?.component ? h(active.value.component, active.value.props()) : null}
           </div>
         </div>
       )

@@ -34,7 +34,7 @@ const self = {
   - 命中内置 id：覆盖对应字段（宿主只写要改的字段，如把某个市场的渲染组件换掉）。
   - 新 id：追加为新分段，排在 server 枚举项之后；`label` 缺省用 `id`，`icon` 缺省用兜底图标，`component` 必填、缺了整条丢弃。
   - `installed` 是保留 id（「我的插件」分段，`label` 缺省走文案 `myPlugin`），允许覆盖。
-  - `component` 须接受与内置市场一致的 props（`installs` / `workspaces` / `onInstalled` / `onUninstalled`）。
+  - `component` 须接受市场 props 契约（`installs` / `workspaces` / `onInstalled` / `onUninstalled`）；各分段组件的 props 由 `useAgentHub` 在 options 表项上按 `props(ctx)` 函数形态装配（渲染时求值），market 子件不感知插件类型枚举；`installed` 保留 id 的组件额外接收 `pluginTypes`（server `PLUGIN_TARGET_TYPE_ENUM` 原始枚举，驱动「我的插件」的 Tabs）。
 - **会话树**：数据来自 `AgentService`；默认工作区只有「新建」，会话节点只有「重命名 / 删除」，其余节点全量菜单。选中与展开受控（`update:selectedKeys` / `update:openKeys` 走内部状态，宿主无感）。
 - **宿主扩展（`conversationHost`）**：套件保持环境无关，桌面端（Tauri 等）的本地工作空间、以及任何宿主自有数据源，都经 `AgentChat` 的 `conversationHost` prop 以 `AgentConversationHost` 可选钩子注入，未传时行为与纯云端完全一致：
   - `conversationsLoader`：替换会话树数据源（宿主自行合并云端与本地列表，本地项排前）。

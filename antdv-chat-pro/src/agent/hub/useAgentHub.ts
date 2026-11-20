@@ -7,8 +7,10 @@ import {
     SYSTEM_ENUM_TYPE,
     SYSTEM_MODULE_NAME
 } from "@loncra/client";
+import type {UserPluginInstallResult, UserPluginMetadata} from "@loncra/client/ai";
 import InstalledPlugins from "./InstalledPlugins.tsx";
 import {useLocale} from "../../_util/useLocale.ts";
+import type {AgentConversationRecord} from "../conversation";
 import type {PluginComponent, PluginOverride} from "./types.ts";
 import McpMarket from "./McpMarket.tsx";
 import SkillMarket from "./SkillMarket.tsx";
@@ -19,6 +21,7 @@ interface AgentHubOption {
     label: string;
     icon: VNode;
     component?: Component;
+    props: () => Record<string, unknown>;
 }
 
 export const USER_INSTALLED_PLUGIN_NAME = 'installed'
@@ -60,12 +63,63 @@ export function mergePlugins(base: PluginComponent[], overrides: PluginOverride[
     return merged
 }
 
-export function useAgentHub(overrides: PluginOverride[]) {
+export interface AgentHubHandlers {
+    onInstalled: (result: UserPluginInstallResult) => void
+    onUninstalled: (event: UserPluginMetadata) => void
+}
+
+export function useAgentHub(input: {
+    overrides: PluginOverride[];
+    installs: () => UserPluginInstallResult[];
+    workspaces: () => AgentConversationRecord[];
+    handlers: AgentHubHandlers;
+}) {
+    const {overrides, installs, workspaces, handlers} = input
     const locale = useLocale('AgentHub')
     const section = ref<string>('')
     const install = ref<boolean>(false)
+    const pluginTypes = ref<IdValueMetadata<string, string>[]>([])
 
     const options = ref<AgentHubOption[]>([])
+
+    const marketPropsOf = (extra?: Record<string, unknown>) => (): Record<string, unknown> => ({
+        installs: installs(),
+        workspaces: workspaces(),
+        onInstalled: handlers.onInstalled,
+        onUninstalled: handlers.onUninstalled,
+        ...extra,
+    })
+
+    function buildOptions(enumData: IdValueMetadata<string, string>[]): AgentHubOption[] {
+        const enumIds = new Set(enumData.map(item => String(item.id)))
+        const plugins = mergePlugins(DEFAULT_PLUGINS, overrides)
+        const labelOf = (item: PluginComponent) =>
+            item.label ?? (item.id === USER_INSTALLED_PLUGIN_NAME ? locale.value.myPlugin : item.id)
+        const entries: AgentHubOption[] = []
+        for (const item of enumData) {
+            const p = plugins.find(p => p.id === String(item.id))
+            entries.push({
+                value: String(item.id),
+                label: item.value,
+                icon: h(p?.icon || PLUGIN_TYPE_FALLBACK_ICON),
+                component: p?.component,
+                props: marketPropsOf(),
+            })
+        }
+        for (const p of plugins) {
+            if (enumIds.has(p.id)) {
+                continue
+            }
+            entries.push({
+                value: p.id,
+                label: labelOf(p),
+                icon: h(p.icon),
+                component: p.component,
+                props: marketPropsOf(p.id === USER_INSTALLED_PLUGIN_NAME ? {pluginTypes: pluginTypes.value} : undefined),
+            })
+        }
+        return entries
+    }
 
     onMounted(async () => {
         install.value = true
@@ -75,41 +129,19 @@ export function useAgentHub(overrides: PluginOverride[]) {
                 SYSTEM_ENUM_TYPE.PLUGIN_TARGET_TYPE_ENUM,
             )
             const enumData = result.data || []
-            const enumIds = new Set(enumData.map(item => String(item.id)))
-            const plugins = mergePlugins(DEFAULT_PLUGINS, overrides)
-            const labelOf = (item: PluginComponent) =>
-                item.label ?? (item.id === USER_INSTALLED_PLUGIN_NAME ? locale.value.myPlugin : item.id)
-            for (const item of enumData) {
-                const p = plugins.find(p => p.id === String(item.id))
-                options.value.push({
-                    value: String(item.id),
-                    label: item.value,
-                    icon: h(p?.icon || PLUGIN_TYPE_FALLBACK_ICON),
-                    component: p?.component
-                })
-            }
-            for (const p of plugins) {
-                if (enumIds.has(p.id)) {
-                    continue
-                }
-                options.value.push({
-                    value: p.id,
-                    label: labelOf(p),
-                    icon: h(p.icon),
-                    component: p.component
-                })
-            }
+            pluginTypes.value = enumData
+            options.value = buildOptions(enumData)
             section.value = options.value.at(0)?.value ?? ''
         } finally {
             install.value = false
         }
     })
 
-    const activeComponent = computed(() => options.value.find(p => p.value === section.value)?.component)
+    const active = computed(() => options.value.find(p => p.value === section.value))
     return {
         options,
         section,
         install,
-        activeComponent,
+        active,
     }
 }

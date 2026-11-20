@@ -37,7 +37,7 @@ const InstalledPlugins = defineComponent({
   props: {
     installs: {type: Array as PropType<UserPluginInstallResult[]>, default: () => []},
     workspaces: {type: Array as PropType<AgentConversationRecord[]>, default: () => []},
-    pluginTypes:{type: Array as PropType<IdValueMetadata<number, string>[]>, default: () => []}
+    pluginTypes:{type: Array as PropType<IdValueMetadata<string, string>[]>, default: () => []}
   },
   emits: {
     installed: (_result: UserPluginInstallResult) => true,
