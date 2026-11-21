@@ -144,6 +144,8 @@ export interface AgentHubLocale {
   changelog: string
   install: string
   installed: string
+  upgrade: string
+  upgradeSelected: string
   installTitle: string
   uninstall: string
   manage: string

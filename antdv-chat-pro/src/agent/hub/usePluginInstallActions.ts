@@ -6,6 +6,7 @@ import {
   AgentHubService,
   AI_SERVER_PLUGIN_INSTALL_USER_SCOPE,
   AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE,
+  AI_SERVER_PLUGIN_UPDATE_POLICY,
   type PluginInstallGroup,
   type PluginPackageUpdatePolicyMetadata,
   type UserPluginInstallResult,
@@ -43,6 +44,11 @@ export function groupInstallsByPackageId(
   return groups
 }
 
+export function isInstallOutdated(install: UserPluginInstallResult, record: PluginPackageUpdatePolicyMetadata): boolean {
+  const locked = (install.metadata as UserPluginSkillMetadata).releaseVersion
+  return Boolean(locked) && locked !== record.latestVersion
+}
+
 export function isPluginOutdated(
   installs: UserPluginInstallResult[],
   record: PluginPackageUpdatePolicyMetadata,
@@ -51,23 +57,24 @@ export function isPluginOutdated(
   if (record.id == null || !record.latestVersion) {
     return false
   }
-  const install = installs.filter(item => getEnumValue(item.targetType) === targetType)
-    .find(item => item.pluginPackage.id === record.id)
-  if (!install) {
-    return false
-  }
-  const skillMetadata = install.metadata as UserPluginSkillMetadata
-  const locked = skillMetadata.releaseVersion
-  return Boolean(locked) && locked !== record.latestVersion
+  return installs
+    .filter(item => getEnumValue(item.targetType) === targetType && item.pluginPackage.id === record.id)
+    .some(item => isInstallOutdated(item, record))
+}
+
+export function isRecordUpgradeable(record: PluginCardRecord): boolean {
+  return record.defaultUpdatePolicy != null
+    && getEnumValue(record.defaultUpdatePolicy) === AI_SERVER_PLUGIN_UPDATE_POLICY.MANUAL
 }
 
 export function usePluginInstallActions(options: {
   targetType: string
   installs: Ref<UserPluginInstallResult[]>
   self: Ref<Self | undefined>
+  onInstalled: (result: UserPluginInstallResult) => void
   onUninstalled: (event: UserPluginMetadata) => void
 }) {
-  const {targetType, installs, self, onUninstalled} = options
+  const {targetType, installs, self, onInstalled, onUninstalled} = options
   const locale = useLocale('AgentHub')
   const {modal, message} = useApp()
 
@@ -94,17 +101,23 @@ export function usePluginInstallActions(options: {
       }
     }
     if (group.userAll != null) {
-      return {targetType, packageId: record.id!, workspaceScope: AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE.ALL}
+      return {
+        targetType,
+        packageId: record.id!,
+        workspaceScope: AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE.ALL,
+        scope: AI_SERVER_PLUGIN_INSTALL_USER_SCOPE.USER
+      }
     }
     return {
       targetType,
       packageId: record.id!,
       workspaceScope: AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE.SPECIFIED,
       workspaces: selected,
+      scope: AI_SERVER_PLUGIN_INSTALL_USER_SCOPE.USER
     }
   }
 
-  async function doUninstall(record: PluginCardRecord, body: UserPluginRequestBody): Promise<void> {
+  async function doUninstall(body: UserPluginRequestBody): Promise<void> {
     const result = await AgentHubService.uninstall(body)
     message.success(result.message)
     onUninstalled(body)
@@ -121,13 +134,54 @@ export function usePluginInstallActions(options: {
     modal.confirm({
       title: locale.value.uninstallConfirmTitle,
       content,
-      onOk: () => doUninstall(record, uninstallBody(record, group, selected)),
+      onOk: () => doUninstall(uninstallBody(record, group, selected)),
     })
+  }
+
+  function upgradeBody(
+    record: PluginCardRecord,
+    group: PluginInstallGroup,
+    selected: WorkspaceMeta[],
+  ): UserPluginRequestBody {
+    if (group.enterprise != null) {
+      return {
+        targetType,
+        packageId: record.id!,
+        scope: AI_SERVER_PLUGIN_INSTALL_USER_SCOPE.ENTERPRISE,
+        workspaceScope: AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE.ALL,
+      }
+    }
+    if (group.userAll != null) {
+      return {targetType, packageId: record.id!, workspaceScope: AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE.ALL}
+    }
+    return {
+      targetType,
+      packageId: record.id!,
+      workspaceScope: AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE.SPECIFIED,
+      workspaces: selected,
+    }
+  }
+
+  async function doUpgrade(record: PluginCardRecord, body: UserPluginRequestBody): Promise<void> {
+    const results = await AgentHubService.install(body)
+    message.success(results.message)
+    for (const item of results.data ?? []) {
+      onInstalled(item)
+    }
+  }
+
+  function onUpgrade(record: PluginCardRecord, selected: WorkspaceMeta[]): void {
+    const group = record.id == null ? undefined : installGroups.value.get(record.id)
+    if (group == null || record.id == null) {
+      return
+    }
+    void doUpgrade(record, upgradeBody(record, group, selected))
   }
 
   return {
     installGroups,
     isOrgOwner,
     onUninstall,
+    onUpgrade,
   }
 }

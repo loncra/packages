@@ -15,15 +15,18 @@ export interface UserPluginInstallMetadata {
   type: NameValueEnumMetadata<string> | string
 }
 
-export interface UserPluginRequestBody extends UserPluginMetadata{
+export interface UpdatePolicyUserPluginInstallMetadata extends UserPluginInstallMetadata{
+  releaseVersion: string
+  releaseId: number
+}
+
+export interface UserPluginRequestBody extends UserPluginMetadata {
   scope?: number
   workspaceScope: number
   workspaces?: IdValueMetadata<string, ExecutionChannel>[]
 }
 
-export interface UserPluginSkillMetadata extends UserPluginInstallMetadata{
-  releaseVersion: string
-  releaseId: number
+export interface UserPluginSkillMetadata extends UpdatePolicyUserPluginInstallMetadata {
   contentHash:string
   updatePolicy:NameValueEnumMetadata<number>| number
 }

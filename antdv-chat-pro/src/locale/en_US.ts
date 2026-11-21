@@ -188,6 +188,8 @@ const locale: Locale = {
     changelog: 'Changelog',
     install: 'Install',
     installed: 'Installed',
+    upgrade: 'Upgrade to {version}',
+    upgradeSelected: 'Upgrade selected',
     installTitle: 'Install {name}',
     uninstall: 'Uninstall',
     manage: 'Manage',

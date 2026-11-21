@@ -1,20 +1,15 @@
 import {computed, defineComponent, type PropType, ref, toRef} from 'vue'
-import {Alert, Button, Card, Empty, Flex, Pagination, Popover, Space, Tag, Typography} from 'antdv-next'
-import {DeleteOutlined, DownloadOutlined, SettingOutlined} from '@antdv-next/icons'
+import {Alert, Card, Empty, Flex, Pagination, Space, Tag, Typography} from 'antdv-next'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {classNames, ICON_SELECT_AVATAR_MODE_VALUE, IconSelect} from '@loncra/antdv'
 import type {TotalPage} from '@loncra/client/commons'
-import {
-  AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE,
-  type UserPluginInstallResult,
-  type UserPluginMetadata
-} from '@loncra/client/ai'
+import {type UserPluginInstallResult, type UserPluginMetadata} from '@loncra/client/ai'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import {useLocale} from '../../_util/useLocale'
 import PluginInstallModal from './PluginInstallModal'
-import {usePluginInstallActions} from './usePluginInstallActions'
-import PluginWorkspaceCheckList from './PluginWorkspaceCheckList'
+import {usePluginInstallActions, type WorkspaceMeta} from './usePluginInstallActions'
+import PluginCardAction from './PluginCardAction'
 import type {AgentConversationRecord} from '../conversation'
 import type {Self} from '../types'
 import useStyle, {AGENT_HUB_PREFIX} from './style'
@@ -45,10 +40,11 @@ const PluginCard = defineComponent({
     const installOpen = ref(false)
     const installPackage = ref<PluginCardRecord>()
     const installScope = ref<number>()
-    const {installGroups, isOrgOwner, onUninstall} = usePluginInstallActions({
+    const {installGroups, isOrgOwner, onUninstall, onUpgrade} = usePluginInstallActions({
       targetType: props.targetType,
       installs: toRef(props, 'installs'),
       self: toRef(props, 'self'),
+      onInstalled: (result: UserPluginInstallResult) => emit('installed', result),
       onUninstalled: (event: UserPluginMetadata) => emit('uninstalled', event),
     })
     const modalWorkspaces = computed(() => {
@@ -71,71 +67,20 @@ const PluginCard = defineComponent({
       installOpen.value = true
     }
 
-    function renderInstallButton(record: PluginCardRecord) {
-      return (
-        <Button
-          size="small"
-          type="primary"
-          onClick={() => onInstall(record)}
-          v-slots={{icon: () => <DownloadOutlined />}}
-        >
-          {locale.value.install}
-        </Button>
-      )
-    }
-
-    function renderUninstallButton(record: PluginCardRecord) {
-      return (
-        <Button
-          size="small"
-          danger
-          type="primary"
-          onClick={() => onUninstall(record, [])}
-          v-slots={{icon: () => <DeleteOutlined />}}
-        >
-          {locale.value.uninstall}
-        </Button>
-      )
-    }
-
-    function renderManageButton() {
-      return (
-        <Button size="small" v-slots={{icon: () => <SettingOutlined />}}>
-          {locale.value.manage}
-        </Button>
-      )
-    }
-
     function renderAction(record: PluginCardRecord) {
       const group = record.id == null ? undefined : installGroups.value.get(record.id)
-      if (group == null) {
-        return renderInstallButton(record)
-      }
-      if (group.enterprise != null) {
-        if (!isOrgOwner.value) {
-          return <Typography.Text type="success">{locale.value.installed}</Typography.Text>
-        }
-        return renderUninstallButton(record)
-      }
-      if (group.userAll != null) {
-        return renderUninstallButton(record)
-      }
       return (
-        <Popover
-          trigger={['hover', 'click']}
-          placement="bottomRight"
-          content={() => (
-            <PluginWorkspaceCheckList
-              workspaces={group.workspaces.map(item => item.workspace!)}
-              conversationWorkspaces={props.workspaces}
-              showAddButton={props.workspaces.length > group.workspaces.length}
-              onUninstall={(selected) => onUninstall(record, selected)}
-              onAddWorkspace={() => onInstall(record, AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE.SPECIFIED)}
-            />
-          )}
-        >
-          {renderManageButton()}
-        </Popover>
+        <PluginCardAction
+          record={record}
+          group={group}
+          installs={props.installs}
+          workspaces={props.workspaces}
+          self={props.self}
+          targetType={props.targetType}
+          onInstall={(scope?: number) => onInstall(record, scope)}
+          onUninstall={(selected: WorkspaceMeta[]) => onUninstall(record, selected)}
+          onUpgrade={(selected: WorkspaceMeta[]) => onUpgrade(record, selected)}
+        />
       )
     }
 

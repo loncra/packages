@@ -1,7 +1,7 @@
-﻿import type {PluginPackageMetadata} from '@loncra/client/ai'
+﻿import type {PluginPackageUpdatePolicyMetadata} from '@loncra/client/ai'
 import type {Component} from "vue";
 
-export type PluginCardRecord = PluginPackageMetadata & {latestVersion?: string}
+export type PluginCardRecord = PluginPackageUpdatePolicyMetadata
 
 
 export interface PluginComponent {

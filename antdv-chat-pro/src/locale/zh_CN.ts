@@ -186,6 +186,8 @@ const locale: Locale = {
     changelog: '更新日志',
     install: '安装',
     installed: '已安装',
+    upgrade: '升级到 {version}',
+    upgradeSelected: '升级选中',
     installTitle: '安装 {name}',
     uninstall: '卸载',
     manage: '管理',
