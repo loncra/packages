@@ -9,15 +9,19 @@ import {
   AGENT_WORKSPACE_TYPE_VALUE,
   AgentHubService,
   AI_SERVER_EXECUTION_CHANNEL,
+  AI_SERVER_PLUGIN_INSTALL_USER_SCOPE,
   AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE,
   type ExecutionChannel,
   type UserPluginInstallResult,
+  type UserPluginRequestBody,
 } from '@loncra/client/ai'
 import {classNames, fillLocale} from '@loncra/antdv'
 import type {AgentConversationRecord} from '../conversation'
 import {isDefaultWorkspace} from '../conversation/useAgentConversations'
 import {useLocale} from '../../_util/useLocale'
 import useStyle, {AGENT_HUB_PREFIX} from './style'
+
+type ScopeOption = 'all' | 'enterprise' | 'specified'
 
 const PluginInstallModal = defineComponent({
   name: 'LAgentHubPluginInstall',
@@ -28,6 +32,7 @@ const PluginInstallModal = defineComponent({
     packageName: String,
     workspaces: {type: Array as PropType<AgentConversationRecord[]>, default: () => []},
     scope: {type: Number, default: undefined},
+    enterpriseOption: {type: Boolean, default: false},
   },
   emits: {
     'update:open': (_open: boolean) => true,
@@ -42,7 +47,7 @@ const PluginInstallModal = defineComponent({
     const formRef = ref<{validate: () => Promise<unknown>}>()
     const spinning = ref(false)
     const form = reactive({
-      workspaceScope: AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE.ALL as number,
+      scopeOption: 'all' as ScopeOption,
       workspaces: [] as string[],
     })
     const workspaceRecords = computed(() =>
@@ -55,10 +60,16 @@ const PluginInstallModal = defineComponent({
         value: item.id as string,
       })),
     )
-    const scopeOptions = computed(() => [
-      {value: AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE.ALL, label: locale.value.workspaceScopeAll},
-      {value: AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE.SPECIFIED, label: locale.value.workspaceScopeSpecific},
-    ])
+    const scopeOptions = computed(() => {
+      const options: {value: ScopeOption; label: string}[] = [
+        {value: 'all', label: locale.value.workspaceScopeAll},
+      ]
+      if (props.enterpriseOption) {
+        options.push({value: 'enterprise', label: locale.value.workspaceScopeEnterprise})
+      }
+      options.push({value: 'specified', label: locale.value.workspaceScopeSpecific})
+      return options
+    })
 
     function channelOfWorkspace(id: string): ExecutionChannel {
       const workspace = props.workspaces.find(item => item.id === id)
@@ -72,7 +83,7 @@ const PluginInstallModal = defineComponent({
       if (!open) {
         return
       }
-      form.workspaceScope = props.scope ?? AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE.ALL
+      form.scopeOption = props.scope != null ? 'specified' : 'all'
       form.workspaces = []
     })
 
@@ -81,13 +92,28 @@ const PluginInstallModal = defineComponent({
     }
 
     async function validateWorkspaces(): Promise<void> {
-      if (form.workspaceScope !== AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE.SPECIFIED) {
+      if (form.scopeOption !== 'specified') {
         return
       }
       if (form.workspaces.length > 0) {
         return
       }
       return Promise.reject(locale.value.workspaceRequired)
+    }
+
+    function installBody(): UserPluginRequestBody {
+      const body: UserPluginRequestBody = {
+        targetType: props.targetType,
+        packageId: props.packageId!,
+        workspaceScope: AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE.ALL,
+      }
+      if (form.scopeOption === 'enterprise') {
+        body.scope = AI_SERVER_PLUGIN_INSTALL_USER_SCOPE.ENTERPRISE
+      } else if (form.scopeOption === 'specified') {
+        body.workspaceScope = AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE.SPECIFIED
+        body.workspaces = form.workspaces.map(id => ({id, value: channelOfWorkspace(id)}))
+      }
+      return body
     }
 
     async function onOk(): Promise<void> {
@@ -97,14 +123,7 @@ const PluginInstallModal = defineComponent({
       }
       spinning.value = true
       try {
-        const results = await AgentHubService.install({
-          targetType: props.targetType,
-          packageId: props.packageId,
-          workspaceScope: form.workspaceScope,
-          workspaces: form.workspaceScope === AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE.SPECIFIED
-            ? form.workspaces.map(id => ({id, value: channelOfWorkspace(id)}))
-            : undefined,
-        })
+        const results = await AgentHubService.install(installBody())
         message.success(results.message)
         for (const item of results.data ?? []) {
           emit('installed', item)
@@ -129,12 +148,12 @@ const PluginInstallModal = defineComponent({
         <LForm ref={formRef} model={form}>
           {props.scope == null
             ? (
-              <FormItem name="workspaceScope" label={locale.value.workspaceScope} rules={[{required: true}]}>
-                <RadioGroup v-model:value={form.workspaceScope} options={scopeOptions.value} />
+              <FormItem name="scopeOption" label={locale.value.workspaceScope} rules={[{required: true}]}>
+                <RadioGroup v-model:value={form.scopeOption} options={scopeOptions.value} />
               </FormItem>
             )
             : null}
-          {form.workspaceScope === AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE.SPECIFIED
+          {form.scopeOption === 'specified'
             ? (
               <FormItem
                 name="workspaces"

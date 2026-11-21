@@ -15,16 +15,18 @@ import type {AgentConversationRecord} from '../conversation'
 import PluginCard from './PluginCard'
 import {AGENT_HUB_PREFIX} from './style'
 import {useAgentHubPluginMarket} from './useAgentHubPluginMarket.ts'
+import type {Self} from "../types.ts";
 
 const McpMarket = defineComponent({
     name: 'LAgentHubMcp',
     props: {
         installs: {type: Array as PropType<UserPluginInstallResult[]>, default: () => []},
+        self: {type: Object as PropType<Self>, default: undefined},
         workspaces: {type: Array as PropType<AgentConversationRecord[]>, default: () => []},
     },
     emits: {
-      installed: (_result: UserPluginInstallResult) => true,
-      uninstalled: (_event: UserPluginMetadata) => true,
+        installed: (_result: UserPluginInstallResult) => true,
+        uninstalled: (_event: UserPluginMetadata) => true,
     },
     setup(props, {emit}) {
         const config = useConfig()
@@ -62,6 +64,7 @@ const McpMarket = defineComponent({
                                     dataSource={market.dataSource.value}
                                     installs={props.installs}
                                     workspaces={props.workspaces}
+                                    self={props.self}
                                     targetType={AI_SERVER_PLUGIN_TARGET_TYPE.MCP}
                                     onChangePage={(page: number, pageSize: number) => {
                                         void market.loadData({number: page, size: pageSize})

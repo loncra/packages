@@ -18,11 +18,13 @@ import PluginCard from './PluginCard'
 import SkillReleaseChangeLog from './SkillReleaseChangeLog'
 import {AGENT_HUB_PREFIX} from './style'
 import {useAgentHubPluginMarket} from './useAgentHubPluginMarket.ts'
+import type {Self} from "../types.ts";
 
 const SkillMarket = defineComponent({
     name: 'LAgentHubSkill',
     props: {
         installs: {type: Array as PropType<UserPluginInstallResult[]>, default: () => []},
+        self: {type: Object as PropType<Self>, default: undefined},
         workspaces: {type: Array as PropType<AgentConversationRecord[]>, default: () => []},
     },
     emits: {
@@ -37,7 +39,7 @@ const SkillMarket = defineComponent({
         const market = useAgentHubPluginMarket(new AiSkillPackageService(), SKILL_GROUP_CODE_PREFIX)
 
         return () => (
-            <Skeleton active loading={market.install.value}>
+            <Spin spinning={market.install.value} class={`${prefixCls.value}-full-spin`}>
                 <Tabs
                     class={`${prefixCls.value}-tabs`}
                     tabPlacement="start"
@@ -63,6 +65,7 @@ const SkillMarket = defineComponent({
                                 <PluginCard
                                     dataSource={market.dataSource.value}
                                     installs={props.installs}
+                                    self={props.self}
                                     workspaces={props.workspaces}
                                     targetType={AI_SERVER_PLUGIN_TARGET_TYPE.SKILL}
                                     onChangePage={(page: number, pageSize: number) => {
@@ -95,7 +98,7 @@ const SkillMarket = defineComponent({
                         ),
                     }}
                 />
-            </Skeleton>
+            </Spin>
         )
     }
 })

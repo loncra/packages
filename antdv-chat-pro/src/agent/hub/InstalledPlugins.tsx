@@ -12,6 +12,7 @@ import {
 import type {AgentConversationRecord} from '../conversation'
 import PluginCard from './PluginCard'
 import {AGENT_HUB_PREFIX} from './style'
+import type {Self} from "../types.ts";
 
 function toPage<T>(elements: T[]): TotalPage<T> {
     return {
@@ -30,6 +31,7 @@ const InstalledPlugins = defineComponent({
     name: 'LAgentHubInstalled',
     props: {
         installs: {type: Array as PropType<UserPluginInstallResult[]>, default: () => []},
+        self: {type: Object as PropType<Self>, default: undefined},
         workspaces: {type: Array as PropType<AgentConversationRecord[]>, default: () => []},
         pluginTypes: {type: Array as PropType<IdValueMetadata<string, string>[]>, default: () => []}
     },
@@ -85,6 +87,7 @@ const InstalledPlugins = defineComponent({
                                     <PluginCard
                                         dataSource={dataSource.value}
                                         installs={props.installs}
+                                        self={props.self}
                                         workspaces={props.workspaces}
                                         targetType={activeKey.value}
                                         onInstalled={(result: UserPluginInstallResult) => emit('installed', result)}

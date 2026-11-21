@@ -224,6 +224,7 @@ const PluginCard = defineComponent({
             packageName={installPackage.value?.name}
             workspaces={modalWorkspaces.value}
             scope={installScope.value}
+            enterpriseOption={isOrgOwner.value}
             onUpdate:open={(open: boolean) => installOpen.value = open}
             onInstalled={(result: UserPluginInstallResult) => emit('installed', result)}
           />

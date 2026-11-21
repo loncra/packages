@@ -153,6 +153,7 @@ export interface AgentHubLocale {
   addWorkspace: string
   workspaceScope: string
   workspaceScopeAll: string
+  workspaceScopeEnterprise: string
   workspaceScopeSpecific: string
   workspaceRequired: string
   workspaceEmpty: string
