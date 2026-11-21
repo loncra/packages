@@ -1,17 +1,17 @@
-import {computed, defineComponent, ref, toRef, type PropType} from 'vue'
+import {computed, defineComponent, type PropType, ref, toRef} from 'vue'
 import {Button, Card, Empty, Flex, Pagination, Popover, Space, Tag, Typography} from 'antdv-next'
-import {DeleteOutlined, DownloadOutlined, FolderOpenOutlined, FolderOutlined} from '@antdv-next/icons'
+import {DeleteOutlined, DownloadOutlined} from '@antdv-next/icons'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {classNames, ICON_SELECT_AVATAR_MODE_VALUE, IconSelect} from '@loncra/antdv'
-import {getEnumValue, type TotalPage} from '@loncra/client/commons'
-import {type PluginInstallGroup, type UserPluginInstallResult, type UserPluginMetadata} from '@loncra/client/ai'
+import type {TotalPage} from '@loncra/client/commons'
+import {type UserPluginInstallResult, type UserPluginMetadata} from '@loncra/client/ai'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import {useLocale} from '../../_util/useLocale'
 import PluginInstallModal from './PluginInstallModal'
 import {usePluginInstallActions} from './usePluginInstallActions'
+import PluginWorkspaceCheckList from './PluginWorkspaceCheckList'
 import type {AgentConversationRecord} from '../conversation'
-import {isDefaultWorkspace} from '../conversation'
 import type {Self} from '../types'
 import useStyle, {AGENT_HUB_PREFIX} from './style'
 import type {PluginCardRecord} from './types.ts'
@@ -40,7 +40,7 @@ const PluginCard = defineComponent({
     const cls = (name: string) => `${prefixCls.value}-${name}`
     const installOpen = ref(false)
     const installPackage = ref<PluginCardRecord>()
-    const {installGroups, isOrgOwner, onUninstall, onUninstallWorkspace} = usePluginInstallActions({
+    const {installGroups, isOrgOwner, onUninstall} = usePluginInstallActions({
       targetType: props.targetType,
       installs: toRef(props, 'installs'),
       self: toRef(props, 'self'),
@@ -68,52 +68,17 @@ const PluginCard = defineComponent({
       )
     }
 
-    function renderUninstallButton(record: PluginCardRecord, click:boolean) {
+    function renderUninstallButton(record: PluginCardRecord, click: boolean) {
       return (
         <Button
           size="small"
           danger
           type="primary"
-          onClick={() => click ? onUninstall(record) : null}
+          onClick={click ? () => onUninstall(record, []) : undefined}
           v-slots={{icon: () => <DeleteOutlined />}}
         >
           {locale.value.uninstall}
         </Button>
-      )
-    }
-
-    function renderWorkspaceList(record: PluginCardRecord, group: PluginInstallGroup) {
-      const rows = group.workspaces.map((install) => {
-        const workspace = install.workspace!
-        const workspaceRecord = props.workspaces.find(item => String(item.id) === workspace.id)
-        const Icon = workspaceRecord && isDefaultWorkspace(getEnumValue(workspaceRecord.type))
-          ? FolderOpenOutlined
-          : FolderOutlined
-        return (
-          <Flex key={workspace.id} justify="space-between" align="center" class={cls('popover-row')}>
-            <Flex align="center" gap="small">
-              <Icon
-                class={classNames(
-                  hashId.value,
-                  workspaceRecord?.tone ? `${prefixCls.value}-${workspaceRecord.tone}` : undefined,
-                )}
-              />
-              <span>{workspace.name}</span>
-            </Flex>
-          </Flex>
-        )
-      })
-      return (
-        <Flex vertical gap="small">
-          {rows}
-          {group.workspaces.length > 1
-            ? (
-              <Button size="small" type="link" block danger onClick={() => onUninstall(record)}>
-                {locale.value.uninstallAll}
-              </Button>
-            )
-            : null}
-        </Flex>
       )
     }
 
@@ -129,7 +94,7 @@ const PluginCard = defineComponent({
             danger
             type="primary"
             disabled={!isOrgOwner.value}
-            onClick={() => onUninstall(record)}
+            onClick={() => onUninstall(record, [])}
             v-slots={{icon: () => <DeleteOutlined />}}
           >
             {locale.value.uninstall}
@@ -143,9 +108,15 @@ const PluginCard = defineComponent({
         <Popover
           trigger="hover"
           placement="bottomRight"
-          content={() => renderWorkspaceList(record, group)}
+          content={() => (
+            <PluginWorkspaceCheckList
+              workspaces={group.workspaces.map(item => item.workspace!)}
+              conversationWorkspaces={props.workspaces}
+              onUninstall={(selected) => onUninstall(record, selected)}
+            />
+          )}
         >
-          {renderUninstallButton(record, group.workspaces.length === 1)}
+          {renderUninstallButton(record, false)}
         </Popover>
       )
     }

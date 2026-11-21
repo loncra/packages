@@ -2,13 +2,13 @@ import {computed, type Ref} from 'vue'
 import useApp from 'antdv-next/dist/app/useApp'
 import {fillLocale} from '@loncra/antdv'
 import {
+  AgentHubService,
   AI_SERVER_PLUGIN_INSTALL_USER_SCOPE,
   AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE,
-  AgentHubService,
   type PluginInstallGroup,
   type UserPluginInstallResult,
-  type UserPluginRequestBody,
   type UserPluginMetadata,
+  type UserPluginRequestBody,
 } from '@loncra/client/ai'
 import {AUTH_SERVER_AUTHENTICATION_TYPE} from '@loncra/client/auth'
 import {useLocale} from '../../_util/useLocale'
@@ -53,7 +53,11 @@ export function usePluginInstallActions(options: {
     && (self.value?.authorities ?? []).includes('ROLE_ENTERPRISE_OWNER'),
   )
 
-  function uninstallBody(record: PluginCardRecord, group: PluginInstallGroup): UserPluginRequestBody {
+  function uninstallBody(
+    record: PluginCardRecord,
+    group: PluginInstallGroup,
+    selected: WorkspaceMeta[],
+  ): UserPluginRequestBody {
     if (group.enterprise != null) {
       return {
         targetType,
@@ -69,7 +73,7 @@ export function usePluginInstallActions(options: {
       targetType,
       packageId: record.id!,
       workspaceScope: AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE.SPECIFIED,
-      workspaces: group.workspaces.map(item => item.workspace!),
+      workspaces: selected,
     }
   }
 
@@ -79,31 +83,18 @@ export function usePluginInstallActions(options: {
     onUninstalled(body)
   }
 
-  function onUninstall(record: PluginCardRecord): void {
+  function onUninstall(record: PluginCardRecord, selected: WorkspaceMeta[]): void {
     const group = record.id == null ? undefined : installGroups.value.get(record.id)
     if (group == null || record.id == null) {
       return
     }
-    const count = group.workspaces.length
-    const content = count > 1
-      ? fillLocale(locale.value.uninstallAllConfirmSingle, {name: record.name, count})
+    const content = selected.length > 1
+      ? fillLocale(locale.value.uninstallSelectedConfirm, {name: record.name, count: selected.length})
       : fillLocale(locale.value.uninstallConfirmSingle, {name: record.name})
     modal.confirm({
       title: locale.value.uninstallConfirmTitle,
       content,
-      onOk: () => doUninstall(record, uninstallBody(record, group)),
-    })
-  }
-
-  async function onUninstallWorkspace(record: PluginCardRecord, workspace: WorkspaceMeta): Promise<void> {
-    if (record.id == null) {
-      return
-    }
-    await doUninstall(record, {
-      targetType,
-      packageId: record.id,
-      workspaceScope: AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE.SPECIFIED,
-      workspaces: [workspace],
+      onOk: () => doUninstall(record, uninstallBody(record, group, selected)),
     })
   }
 
@@ -111,6 +102,5 @@ export function usePluginInstallActions(options: {
     installGroups,
     isOrgOwner,
     onUninstall,
-    onUninstallWorkspace,
   }
 }

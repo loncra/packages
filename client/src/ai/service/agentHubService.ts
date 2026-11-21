@@ -1,12 +1,10 @@
 import {getEnumValue, type RestResult, SYSTEM_MODULE_NAME} from '../../commons'
 import {http, modulePrefix} from '../../http'
 import type {
-  PluginInstallGroup,
   UserPluginInstallResult,
   UserPluginRequestBody,
   UserPluginSkillMetadata
 } from '../domain/userPluginInstall.ts'
-import {AI_SERVER_PLUGIN_INSTALL_USER_SCOPE} from '../enumerate.ts'
 import type {PluginPackageUpdatePolicyMetadata} from "../domain/plugin.ts";
 
 export class AgentHubService {

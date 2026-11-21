@@ -1,15 +1,9 @@
 import {computed, defineComponent, h, type PropType, ref} from 'vue'
-import {Badge, Empty, Flex, Tabs} from 'antdv-next'
+import {Empty, Flex, Tabs} from 'antdv-next'
 import {pluginTypeIcon} from './constants'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
+import {getEnumValue, type IdValueMetadata, type TotalPage,} from '@loncra/client/commons'
 import {
-    getEnumValue,
-    type IdValueMetadata,
-    type TotalPage,
-} from '@loncra/client/commons'
-import {
-    AgentHubService,
-    AI_SERVER_PLUGIN_TARGET_TYPE,
     type McpPackageEntity,
     type SkillPackageEntity,
     type UserPluginInstallResult,
