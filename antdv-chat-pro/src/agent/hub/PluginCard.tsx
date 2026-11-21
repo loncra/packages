@@ -1,6 +1,6 @@
 import {computed, defineComponent, type PropType, ref, toRef} from 'vue'
 import {Button, Card, Empty, Flex, Pagination, Popover, Space, Tag, Typography} from 'antdv-next'
-import {DeleteOutlined, DownloadOutlined} from '@antdv-next/icons'
+import {DeleteOutlined, DownloadOutlined, SettingOutlined} from '@antdv-next/icons'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {classNames, ICON_SELECT_AVATAR_MODE_VALUE, IconSelect} from '@loncra/antdv'
 import type {TotalPage} from '@loncra/client/commons'
@@ -84,16 +84,24 @@ const PluginCard = defineComponent({
       )
     }
 
-    function renderUninstallButton(record: PluginCardRecord, click: boolean) {
+    function renderUninstallButton(record: PluginCardRecord) {
       return (
         <Button
           size="small"
           danger
           type="primary"
-          onClick={click ? () => onUninstall(record, []) : undefined}
+          onClick={() => onUninstall(record, [])}
           v-slots={{icon: () => <DeleteOutlined />}}
         >
           {locale.value.uninstall}
+        </Button>
+      )
+    }
+
+    function renderManageButton() {
+      return (
+        <Button size="small" v-slots={{icon: () => <SettingOutlined />}}>
+          {locale.value.manage}
         </Button>
       )
     }
@@ -118,11 +126,11 @@ const PluginCard = defineComponent({
         )
       }
       if (group.userAll != null) {
-        return renderUninstallButton(record, true)
+        return renderUninstallButton(record)
       }
       return (
         <Popover
-          trigger="hover"
+          trigger={['hover', 'click']}
           placement="bottomRight"
           content={() => (
             <PluginWorkspaceCheckList
@@ -134,7 +142,7 @@ const PluginCard = defineComponent({
             />
           )}
         >
-          {renderUninstallButton(record, false)}
+          {renderManageButton()}
         </Popover>
       )
     }

@@ -126,6 +126,6 @@ const self = {
 | `createAgentDraftBinding` | 草稿绑定（scope `agent`，只含 slots） |
 | `SkillReleaseChangeLog` | Skill 版本变更记录（也可脱离套件单独使用） |
 
-未进包根出口的内部实现：`AgentHub` 及其市场子件（`McpMarket` / `SkillMarket` / `InstalledPlugins` / `PluginCard` / `PluginInstallModal` / `useAgentHubPluginMarket`）、`AgentThinkBlock` / `AgentToolCallCard` / `AgentAnswerBlock`、`useAgentChat*` 系列 composable、`stream/`（`useAgentStream` 流编排与运行中 run 判定 + `xAgentStreamTransport` x-sdk 适配）、`useAgentInstructionSlots` / `agentMenus`、草稿 codec。
+未进包根出口的内部实现：`AgentHub` 及其市场子件（`McpMarket` / `SkillMarket` / `InstalledPlugins` / `PluginCard` / `PluginInstallModal` / `PluginWorkspaceCheckList` / `useAgentHub` / `usePluginInstallActions` / `useAgentHubPluginMarket` / `hub/constants.ts`）、`AgentThinkBlock` / `AgentToolCallCard` / `AgentAnswerBlock`、`useAgentChat*` 系列 composable、`stream/`（`useAgentStream` 流编排与运行中 run 判定 + `xAgentStreamTransport` x-sdk 适配）、`useAgentInstructionSlots` / `agentMenus`、草稿 codec。
 
 样式：各子域独立 `genStyleHooks`，前缀 `loncra-agent-chat`（含卡片壳 `-card-root` / `-card-header` / `-card-body`）/ `loncra-agent-bubble` / `loncra-agent-conversation` / `loncra-agent-hub` / `loncra-agent-sender`，均可经 ConfigProvider 的 `getPrefixCls` 覆盖。

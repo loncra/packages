@@ -189,6 +189,7 @@ const locale: Locale = {
     install: 'Install',
     installTitle: 'Install {name}',
     uninstall: 'Uninstall',
+    manage: 'Manage',
     uninstallSelected: 'Uninstall selected',
     uninstallConfirmTitle: 'Confirm uninstall',
     uninstallConfirmSingle: 'Are you sure you want to uninstall {name}?',

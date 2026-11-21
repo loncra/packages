@@ -187,6 +187,7 @@ const locale: Locale = {
     install: '安装',
     installTitle: '安装 {name}',
     uninstall: '卸载',
+    manage: '管理',
     uninstallSelected: '卸载选中',
     uninstallConfirmTitle: '卸载确认',
     uninstallConfirmSingle: '确定要卸载 {name} 吗？',

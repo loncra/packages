@@ -145,6 +145,7 @@ export interface AgentHubLocale {
   install: string
   installTitle: string
   uninstall: string
+  manage: string
   uninstallSelected: string
   uninstallConfirmTitle: string
   uninstallConfirmSingle: string
