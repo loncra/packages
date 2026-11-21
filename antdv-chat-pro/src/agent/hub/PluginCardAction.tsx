@@ -45,14 +45,15 @@ const PluginCardAction = defineComponent({
 
     function renderInstallButton() {
       return (
-        <Button
-          size="small"
-          type="primary"
-          onClick={() => emit('install', undefined)}
-          v-slots={{icon: () => <DownloadOutlined />}}
-        >
-          {locale.value.install}
-        </Button>
+          <Tooltip title={locale.value.install}>
+            <Button
+              size="small"
+              type="primary"
+              onClick={() => emit('install', undefined)}
+              v-slots={{icon: () => <DownloadOutlined />}}
+            >
+            </Button>
+          </Tooltip>
       )
     }
 
@@ -72,15 +73,16 @@ const PluginCardAction = defineComponent({
 
     function renderUninstallButton() {
       const uninstall = (
-        <Button
-          size="small"
-          danger
-          type="primary"
-          onClick={() => emit('uninstall', [])}
-          v-slots={{icon: () => <DeleteOutlined />}}
-        >
-          {locale.value.uninstall}
-        </Button>
+          <Tooltip title={locale.value.uninstall}>
+            <Button
+              size="small"
+              danger
+              type="primary"
+              onClick={() => emit('uninstall', [])}
+              v-slots={{icon: () => <DeleteOutlined />}}
+            >
+            </Button>
+          </Tooltip>
       )
       return (
         <Badge dot={isUpgradePending()}>
