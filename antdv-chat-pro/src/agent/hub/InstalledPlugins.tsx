@@ -1,16 +1,19 @@
 import {computed, defineComponent, h, type PropType, ref} from 'vue'
-import {Empty, Flex, Tabs} from 'antdv-next'
+import {Empty, Flex, Tabs, Tag} from 'antdv-next'
+import {BankOutlined, FolderOutlined, UserOutlined} from '@antdv-next/icons'
 import {pluginTypeIcon} from './constants'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {getEnumValue, type IdValueMetadata, type TotalPage,} from '@loncra/client/commons'
 import {
     type McpPackageEntity,
+    type PluginInstallGroup,
     type SkillPackageEntity,
     type UserPluginInstallResult,
     type UserPluginMetadata,
 } from '@loncra/client/ai'
 import type {AgentConversationRecord} from '../conversation'
 import PluginCard from './PluginCard'
+import {groupInstallsByPackageId} from './usePluginInstallActions'
 import {AGENT_HUB_PREFIX} from './style'
 import type {Self} from "../types.ts";
 
@@ -62,6 +65,29 @@ const InstalledPlugins = defineComponent({
         }
 
         const dataSource = computed(() => toPage(packagesOf(activeKey.value) as SkillPackageEntity[]))
+        const installGroups = computed(() =>
+            activeKey.value
+                ? groupInstallsByPackageId(props.installs, activeKey.value)
+                : new Map<number, PluginInstallGroup>(),
+        )
+        const SCOPE_TAG_META = {
+            enterprise: {color: 'warning', icon: BankOutlined},
+            personal: {color: 'success', icon: UserOutlined},
+            workspace: {color: 'default', icon: FolderOutlined},
+        } as const
+        type ScopeTagType = keyof typeof SCOPE_TAG_META
+
+        function scopeTagTypeOf(recordId: number | undefined): ScopeTagType {
+            const group = recordId == null ? undefined : installGroups.value.get(recordId)
+            if (group?.enterprise != null) {
+                return 'enterprise'
+            }
+            if (group?.userAll != null) {
+                return 'personal'
+            }
+            return 'workspace'
+        }
+
         return () => {
             return (
                 <Tabs
@@ -93,7 +119,12 @@ const InstalledPlugins = defineComponent({
                                         onInstalled={(result: UserPluginInstallResult) => emit('installed', result)}
                                         onUninstalled={(event: UserPluginMetadata) => emit('uninstalled', event)}
                                         v-slots={{
-                                            title: ({record}: { record: McpPackageEntity }) => record.name,
+                                            title: ({record}: { record: McpPackageEntity }) => {
+                                                const meta = SCOPE_TAG_META[scopeTagTypeOf(record.id)]
+                                                return (
+                                                    <Tag color={meta.color} icon={<meta.icon />}>{record.name}</Tag>
+                                                )
+                                            },
                                         }}
                                     />
                                 )

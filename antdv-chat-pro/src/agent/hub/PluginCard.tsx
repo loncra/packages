@@ -1,5 +1,5 @@
 import {computed, defineComponent, type PropType, ref, toRef} from 'vue'
-import {Button, Card, Empty, Flex, Pagination, Popover, Space, Tag, Typography} from 'antdv-next'
+import {Alert, Button, Card, Empty, Flex, Pagination, Popover, Space, Tag, Typography} from 'antdv-next'
 import {DeleteOutlined, DownloadOutlined, SettingOutlined} from '@antdv-next/icons'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {classNames, ICON_SELECT_AVATAR_MODE_VALUE, IconSelect} from '@loncra/antdv'
@@ -112,18 +112,10 @@ const PluginCard = defineComponent({
         return renderInstallButton(record)
       }
       if (group.enterprise != null) {
-        return (
-          <Button
-            size="small"
-            danger
-            type="primary"
-            disabled={!isOrgOwner.value}
-            onClick={() => onUninstall(record, [])}
-            v-slots={{icon: () => <DeleteOutlined />}}
-          >
-            {locale.value.uninstall}
-          </Button>
-        )
+        if (!isOrgOwner.value) {
+          return <Typography.Text type="success">{locale.value.installed}</Typography.Text>
+        }
+        return renderUninstallButton(record)
       }
       if (group.userAll != null) {
         return renderUninstallButton(record)
@@ -148,6 +140,8 @@ const PluginCard = defineComponent({
     }
 
     function renderCard(record: PluginCardRecord) {
+      const group = record.id == null ? undefined : installGroups.value.get(record.id)
+      const showEnterpriseAlert = group?.enterprise != null && !isOrgOwner.value
       return (
         <Card
           key={record.id}
@@ -181,6 +175,15 @@ const PluginCard = defineComponent({
                 {slots.after?.({record})}
               </Flex>
             </Flex>
+            {showEnterpriseAlert
+              ? (
+                <Alert
+                  type="warning"
+                  showIcon
+                  description={locale.value.enterpriseInstalledDescription}
+                />
+              )
+              : null}
           </Flex>
         </Card>
       )

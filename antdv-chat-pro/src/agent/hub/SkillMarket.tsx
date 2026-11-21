@@ -1,9 +1,8 @@
 import {computed, defineComponent, type PropType} from 'vue'
-import {Badge, Collapse, Flex, Skeleton, Spin, Tabs} from 'antdv-next'
+import {Badge, Collapse, Flex, Spin, Tabs} from 'antdv-next'
 import {StarOutlined} from '@antdv-next/icons'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {
-    AgentHubService,
     AI_SERVER_PLUGIN_TARGET_TYPE,
     AiSkillPackageService,
     SKILL_GROUP_CODE_PREFIX,
@@ -16,6 +15,7 @@ import {useLocale} from '../../_util/useLocale'
 import type {AgentConversationRecord} from '../conversation'
 import PluginCard from './PluginCard'
 import SkillReleaseChangeLog from './SkillReleaseChangeLog'
+import {isPluginOutdated} from './usePluginInstallActions'
 import {AGENT_HUB_PREFIX} from './style'
 import {useAgentHubPluginMarket} from './useAgentHubPluginMarket.ts'
 import type {Self} from "../types.ts";
@@ -65,7 +65,7 @@ const SkillMarket = defineComponent({
                                 <PluginCard
                                     dataSource={market.dataSource.value}
                                     installs={props.installs}
-                                    self={props.self}
+                                    /*self={props.self}*/
                                     workspaces={props.workspaces}
                                     targetType={AI_SERVER_PLUGIN_TARGET_TYPE.SKILL}
                                     onChangePage={(page: number, pageSize: number) => {
@@ -76,7 +76,7 @@ const SkillMarket = defineComponent({
                                     v-slots={{
                                         title: ({record}: { record: SkillPackageEntity }) => (
                                             <Badge
-                                                dot={AgentHubService.isPluginOutdated(props.installs, record, AI_SERVER_PLUGIN_TARGET_TYPE.SKILL)}>
+                                                dot={isPluginOutdated(props.installs, record, AI_SERVER_PLUGIN_TARGET_TYPE.SKILL)}>
                                                 {record.name}
                                             </Badge>
                                         ),

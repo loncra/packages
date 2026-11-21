@@ -143,6 +143,7 @@ export interface AgentHubLocale {
   myPlugin: string
   changelog: string
   install: string
+  installed: string
   installTitle: string
   uninstall: string
   manage: string
@@ -151,6 +152,7 @@ export interface AgentHubLocale {
   uninstallConfirmSingle: string
   uninstallSelectedConfirm: string
   addWorkspace: string
+  enterpriseInstalledDescription: string
   workspaceScope: string
   workspaceScopeAll: string
   workspaceScopeEnterprise: string

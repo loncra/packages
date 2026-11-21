@@ -1,22 +1,65 @@
 import {computed, type Ref} from 'vue'
 import useApp from 'antdv-next/dist/app/useApp'
 import {fillLocale} from '@loncra/antdv'
+import {getEnumValue} from '@loncra/client/commons'
 import {
   AgentHubService,
   AI_SERVER_PLUGIN_INSTALL_USER_SCOPE,
   AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE,
   type PluginInstallGroup,
+  type PluginPackageUpdatePolicyMetadata,
   type UserPluginInstallResult,
   type UserPluginMetadata,
   type UserPluginRequestBody,
+  type UserPluginSkillMetadata,
 } from '@loncra/client/ai'
 import {AUTH_SERVER_AUTHENTICATION_TYPE} from '@loncra/client/auth'
 import {useLocale} from '../../_util/useLocale'
 import type {Self} from '../types'
 import type {PluginCardRecord} from './types.ts'
-import {getEnumValue} from "@loncra/client";
 
 export type WorkspaceMeta = NonNullable<UserPluginInstallResult['workspace']>
+
+export function groupInstallsByPackageId(
+  installs: UserPluginInstallResult[],
+  targetType: string,
+): Map<number, PluginInstallGroup> {
+  const groups = new Map<number, PluginInstallGroup>()
+  for (const install of installs) {
+    const packageId = install.pluginPackage?.id
+    if (packageId == null || getEnumValue(install.targetType) !== targetType) {
+      continue
+    }
+    const group = groups.get(packageId) ?? {workspaces: []}
+    if (getEnumValue(install.scope) === AI_SERVER_PLUGIN_INSTALL_USER_SCOPE.ENTERPRISE) {
+      group.enterprise = install
+    } else if (install.workspace != null) {
+      group.workspaces.push(install)
+    } else {
+      group.userAll = install
+    }
+    groups.set(packageId, group)
+  }
+  return groups
+}
+
+export function isPluginOutdated(
+  installs: UserPluginInstallResult[],
+  record: PluginPackageUpdatePolicyMetadata,
+  targetType: string,
+): boolean {
+  if (record.id == null || !record.latestVersion) {
+    return false
+  }
+  const install = installs.filter(item => getEnumValue(item.targetType) === targetType)
+    .find(item => item.pluginPackage.id === record.id)
+  if (!install) {
+    return false
+  }
+  const skillMetadata = install.metadata as UserPluginSkillMetadata
+  const locked = skillMetadata.releaseVersion
+  return Boolean(locked) && locked !== record.latestVersion
+}
 
 export function usePluginInstallActions(options: {
   targetType: string
@@ -28,25 +71,9 @@ export function usePluginInstallActions(options: {
   const locale = useLocale('AgentHub')
   const {modal, message} = useApp()
 
-  const installGroups = computed(() => {
-      const groups = new Map<number, PluginInstallGroup>()
-      for (const install of installs.value) {
-        const packageId = install.pluginPackage?.id
-        if (packageId == null || getEnumValue(install.targetType) !== targetType) {
-          continue
-        }
-        const group = groups.get(packageId) ?? {workspaces: []}
-        if (getEnumValue(install.scope) === AI_SERVER_PLUGIN_INSTALL_USER_SCOPE.ENTERPRISE) {
-          group.enterprise = install
-        } else if (install.workspace != null) {
-          group.workspaces.push(install)
-        } else {
-          group.userAll = install
-        }
-        groups.set(packageId, group)
-      }
-      return groups
-  })
+  const installGroups = computed(() =>
+    groupInstallsByPackageId(installs.value, targetType),
+  )
 
   const isOrgOwner = computed(() =>
     self.value?.type === AUTH_SERVER_AUTHENTICATION_TYPE.ENTERPRISE

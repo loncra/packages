@@ -1,11 +1,6 @@
-import {getEnumValue, type RestResult, SYSTEM_MODULE_NAME} from '../../commons'
+import {type RestResult, SYSTEM_MODULE_NAME} from '../../commons'
 import {http, modulePrefix} from '../../http'
-import type {
-  UserPluginInstallResult,
-  UserPluginRequestBody,
-  UserPluginSkillMetadata
-} from '../domain/userPluginInstall.ts'
-import type {PluginPackageUpdatePolicyMetadata} from "../domain/plugin.ts";
+import type {UserPluginInstallResult, UserPluginRequestBody,} from '../domain/userPluginInstall.ts'
 
 export class AgentHubService {
   static get BASE_URL(): string {
@@ -43,21 +38,4 @@ export class AgentHubService {
     })
   }
 
-  static isPluginOutdated(
-    installs: UserPluginInstallResult[],
-    record: PluginPackageUpdatePolicyMetadata,
-    targetType:string
-  ): boolean {
-    if (record.id == null || !record.latestVersion) {
-      return false
-    }
-    const install = installs.filter(item => getEnumValue(item.targetType) === targetType)
-        .find(item => item.pluginPackage.id === record.id)
-    if (!install) {
-      return false
-    }
-    const skillMetadata = install.metadata as UserPluginSkillMetadata;
-    const locked = skillMetadata.releaseVersion
-    return Boolean(locked) && locked !== record.latestVersion
-  }
 }
