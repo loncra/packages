@@ -6,19 +6,18 @@ import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {Form as LForm} from '@loncra/antdv-pro'
 import {getEnumValue} from '@loncra/client/commons'
 import {
-    AGENT_WORKSPACE_TYPE_VALUE,
-    AgentHubService,
-    AI_SERVER_EXECUTION_CHANNEL,
-    AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE,
-    type ExecutionChannel,
-    type UserPluginInstallResult,
+  AGENT_WORKSPACE_TYPE_VALUE,
+  AgentHubService,
+  AI_SERVER_EXECUTION_CHANNEL,
+  AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE,
+  type ExecutionChannel,
+  type UserPluginInstallResult,
 } from '@loncra/client/ai'
-import {classNames} from '@loncra/antdv'
+import {classNames, fillLocale} from '@loncra/antdv'
 import type {AgentConversationRecord} from '../conversation'
 import {isDefaultWorkspace} from '../conversation/useAgentConversations'
 import {useLocale} from '../../_util/useLocale'
 import useStyle, {AGENT_HUB_PREFIX} from './style'
-import {fillLocale} from '@loncra/antdv'
 
 const PluginInstallModal = defineComponent({
   name: 'LAgentHubPluginInstall',
@@ -28,6 +27,7 @@ const PluginInstallModal = defineComponent({
     packageId: Number,
     packageName: String,
     workspaces: {type: Array as PropType<AgentConversationRecord[]>, default: () => []},
+    scope: {type: Number, default: undefined},
   },
   emits: {
     'update:open': (_open: boolean) => true,
@@ -72,7 +72,7 @@ const PluginInstallModal = defineComponent({
       if (!open) {
         return
       }
-      form.workspaceScope = AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE.ALL
+      form.workspaceScope = props.scope ?? AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE.ALL
       form.workspaces = []
     })
 
@@ -127,9 +127,13 @@ const PluginInstallModal = defineComponent({
         onCancel={close}
       >
         <LForm ref={formRef} model={form}>
-          <FormItem name="workspaceScope" label={locale.value.workspaceScope} rules={[{required: true}]}>
-            <RadioGroup v-model:value={form.workspaceScope} options={scopeOptions.value} />
-          </FormItem>
+          {props.scope == null
+            ? (
+              <FormItem name="workspaceScope" label={locale.value.workspaceScope} rules={[{required: true}]}>
+                <RadioGroup v-model:value={form.workspaceScope} options={scopeOptions.value} />
+              </FormItem>
+            )
+            : null}
           {form.workspaceScope === AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE.SPECIFIED
             ? (
               <FormItem

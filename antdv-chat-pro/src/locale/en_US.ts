@@ -193,6 +193,7 @@ const locale: Locale = {
     uninstallConfirmTitle: 'Confirm uninstall',
     uninstallConfirmSingle: 'Are you sure you want to uninstall {name}?',
     uninstallSelectedConfirm: 'Are you sure you want to uninstall {name} from all {count} workspaces?',
+    addWorkspace: 'Add workspaces',
     workspaceScope: 'Scope',
     workspaceScopeAll: 'All workspaces',
     workspaceScopeSpecific: 'Selected workspaces',

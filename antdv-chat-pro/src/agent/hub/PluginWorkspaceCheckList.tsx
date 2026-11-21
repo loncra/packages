@@ -1,6 +1,6 @@
 import {computed, defineComponent, type PropType, ref} from 'vue'
-import {Button, Checkbox, Flex} from 'antdv-next'
-import {DeleteOutlined, FolderOpenOutlined, FolderOutlined} from '@antdv-next/icons'
+import {Button, Checkbox, Flex, SpaceCompact} from 'antdv-next'
+import {DeleteOutlined, FolderOpenOutlined, FolderOutlined, PlusOutlined} from '@antdv-next/icons'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {classNames} from '@loncra/antdv'
 import {getEnumValue} from '@loncra/client/commons'
@@ -15,9 +15,11 @@ const PluginWorkspaceCheckList = defineComponent({
   props: {
     workspaces: {type: Array as PropType<WorkspaceMeta[]>, required: true},
     conversationWorkspaces: {type: Array as PropType<AgentConversationRecord[]>, default: () => []},
+    showAddButton: {type: Boolean, default: false},
   },
   emits: {
     uninstall: (_selected: WorkspaceMeta[]) => true,
+    addWorkspace: () => true,
   },
   setup(props, {emit}) {
     const locale = useLocale('AgentHub')
@@ -61,20 +63,33 @@ const PluginWorkspaceCheckList = defineComponent({
       return (
         <Flex vertical gap="small">
           {rows}
-          <Button
-            size="small"
-            type="primary"
-            block
-            danger
-            disabled={selected.value.length === 0}
-            onClick={() => {
-              emit('uninstall', selected.value)
-              checked.value = []
-            }}
-            v-slots={{icon: () => <DeleteOutlined />}}
-          >
-            {locale.value.uninstallSelected}
-          </Button>
+          <SpaceCompact block>
+            <Button
+              size="small"
+              type="primary"
+              danger
+              disabled={selected.value.length === 0}
+              onClick={() => {
+                emit('uninstall', selected.value)
+                checked.value = []
+              }}
+              v-slots={{icon: () => <DeleteOutlined />}}
+            >
+              {locale.value.uninstallSelected}
+            </Button>
+            {props.showAddButton
+              ? (
+                <Button
+                  size="small"
+                  type="primary"
+                  onClick={() => emit('addWorkspace')}
+                  v-slots={{icon: () => <PlusOutlined />}}
+                >
+                  {locale.value.addWorkspace}
+                </Button>
+              )
+              : null}
+          </SpaceCompact>
         </Flex>
       )
     }

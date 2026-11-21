@@ -4,7 +4,11 @@ import {DeleteOutlined, DownloadOutlined} from '@antdv-next/icons'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {classNames, ICON_SELECT_AVATAR_MODE_VALUE, IconSelect} from '@loncra/antdv'
 import type {TotalPage} from '@loncra/client/commons'
-import {type UserPluginInstallResult, type UserPluginMetadata} from '@loncra/client/ai'
+import {
+  AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE,
+  type UserPluginInstallResult,
+  type UserPluginMetadata
+} from '@loncra/client/ai'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import {useLocale} from '../../_util/useLocale'
@@ -40,18 +44,30 @@ const PluginCard = defineComponent({
     const cls = (name: string) => `${prefixCls.value}-${name}`
     const installOpen = ref(false)
     const installPackage = ref<PluginCardRecord>()
+    const installScope = ref<number>()
     const {installGroups, isOrgOwner, onUninstall} = usePluginInstallActions({
       targetType: props.targetType,
       installs: toRef(props, 'installs'),
       self: toRef(props, 'self'),
       onUninstalled: (event: UserPluginMetadata) => emit('uninstalled', event),
     })
+    const modalWorkspaces = computed(() => {
+      if (installScope.value == null || installPackage.value?.id == null) {
+        return props.workspaces
+      }
+      const installedIds = installGroups.value
+        .get(installPackage.value.id)
+        ?.workspaces
+        .map(item => item.workspace?.id)
+      return props.workspaces.filter(item => !installedIds?.includes(String(item.id)))
+    })
 
-    function onInstall(record: PluginCardRecord): void {
+    function onInstall(record: PluginCardRecord, scope?: number): void {
       if (record.id == null) {
         return
       }
       installPackage.value = record
+      installScope.value = scope
       installOpen.value = true
     }
 
@@ -112,7 +128,9 @@ const PluginCard = defineComponent({
             <PluginWorkspaceCheckList
               workspaces={group.workspaces.map(item => item.workspace!)}
               conversationWorkspaces={props.workspaces}
+              showAddButton={props.workspaces.length > group.workspaces.length}
               onUninstall={(selected) => onUninstall(record, selected)}
+              onAddWorkspace={() => onInstall(record, AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE.SPECIFIED)}
             />
           )}
         >
@@ -196,7 +214,8 @@ const PluginCard = defineComponent({
             targetType={props.targetType}
             packageId={installPackage.value?.id}
             packageName={installPackage.value?.name}
-            workspaces={props.workspaces}
+            workspaces={modalWorkspaces.value}
+            scope={installScope.value}
             onUpdate:open={(open: boolean) => installOpen.value = open}
             onInstalled={(result: UserPluginInstallResult) => emit('installed', result)}
           />

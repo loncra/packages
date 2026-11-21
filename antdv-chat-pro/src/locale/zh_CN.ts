@@ -191,6 +191,7 @@ const locale: Locale = {
     uninstallConfirmTitle: '卸载确认',
     uninstallConfirmSingle: '确定要卸载 {name} 吗？',
     uninstallSelectedConfirm: '确定要从全部 {count} 个工作空间卸载 {name} 吗？',
+    addWorkspace: '添加工作空间',
     workspaceScope: '生效范围',
     workspaceScopeAll: '全部工作空间',
     workspaceScopeSpecific: '指定工作空间',
