@@ -145,8 +145,10 @@ export interface AgentHubLocale {
   install: string
   installTitle: string
   uninstall: string
+  uninstallAll: string
   uninstallConfirmTitle: string
   uninstallConfirmSingle: string
+  uninstallAllConfirmSingle: string
   workspaceScope: string
   workspaceScopeAll: string
   workspaceScopeSpecific: string

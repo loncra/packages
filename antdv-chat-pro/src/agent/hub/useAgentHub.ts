@@ -11,6 +11,7 @@ import type {UserPluginInstallResult, UserPluginMetadata} from "@loncra/client/a
 import InstalledPlugins from "./InstalledPlugins.tsx";
 import {useLocale} from "../../_util/useLocale.ts";
 import type {AgentConversationRecord} from "../conversation";
+import type {Self} from "../types";
 import type {PluginComponent, PluginOverride} from "./types.ts";
 import McpMarket from "./McpMarket.tsx";
 import SkillMarket from "./SkillMarket.tsx";
@@ -72,9 +73,10 @@ export function useAgentHub(input: {
     overrides: PluginOverride[];
     installs: () => UserPluginInstallResult[];
     workspaces: () => AgentConversationRecord[];
+    self: () => Self;
     handlers: AgentHubHandlers;
 }) {
-    const {overrides, installs, workspaces, handlers} = input
+    const {overrides, installs, workspaces, self, handlers} = input
     const locale = useLocale('AgentHub')
     const section = ref<string>('')
     const install = ref<boolean>(false)
@@ -85,6 +87,7 @@ export function useAgentHub(input: {
     const marketPropsOf = (extra?: Record<string, unknown>) => (): Record<string, unknown> => ({
         installs: installs(),
         workspaces: workspaces(),
+        self: self(),
         onInstalled: handlers.onInstalled,
         onUninstalled: handlers.onUninstalled,
         ...extra,

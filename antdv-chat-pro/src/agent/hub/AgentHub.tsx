@@ -4,6 +4,7 @@ import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {classNames} from '@loncra/antdv'
 import type {UserPluginInstallResult, UserPluginMetadata} from '@loncra/client/ai'
 import type {AgentConversationRecord} from '../conversation'
+import type {Self} from '../types'
 import useStyle, {AGENT_HUB_PREFIX} from './style'
 import type {PluginOverride} from "./types.ts";
 import {useAgentHub} from "./useAgentHub.ts";
@@ -13,6 +14,7 @@ const AgentHub = defineComponent({
   props: {
     installs: {type: Array as PropType<UserPluginInstallResult[]>, default: () => []},
     workspaces: {type: Array as PropType<AgentConversationRecord[]>, default: () => []},
+    self: {type: Object as PropType<Self>, required: true},
     plugins:{type: Array as PropType<PluginOverride[]>, default: () => []},
   },
   emits: {
@@ -31,6 +33,7 @@ const AgentHub = defineComponent({
       overrides: props.plugins,
       installs: () => props.installs,
       workspaces: () => props.workspaces,
+      self: () => props.self,
       handlers: {
         onInstalled: (result: UserPluginInstallResult) => emit('installed', result),
         onUninstalled: (event: UserPluginMetadata) => emit('uninstalled', event),

@@ -1,6 +1,6 @@
 import type {NameValueEnumMetadata, TimeProperties} from '../../commons'
 import type {AI_SERVER_SKILL_SOURCE_TYPE} from '../enumerate.ts'
-import type {PluginPackageMetadata, PluginPackageUpdatePolicyMetadata} from './plugin.ts'
+import type {PluginPackageUpdatePolicyMetadata} from './plugin.ts'
 
 export type SkillSourceMetadataType =
   | typeof AI_SERVER_SKILL_SOURCE_TYPE.GIT

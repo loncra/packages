@@ -89,6 +89,7 @@ const AgentChat = defineComponent({
                       <AgentHub
                         installs={props.installs}
                         workspaces={chat.workspaces.value}
+                        self={props.self}
                         plugins={props.plugins}
                         onInstalled={(result: UserPluginInstallResult) => emit('installed', result)}
                         onUninstalled={(event: UserPluginMetadata) => emit('uninstalled', event)}

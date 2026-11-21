@@ -32,6 +32,7 @@ const self = {
 - **布局**：`Splitter` 左侧会话树（约 20%，可拖 15%–25%）+ 右侧主区。主区在 `chat` / `hub` 两个 pane 间切换，插件市场入口把 pane 切到 `hub`。
 - **插件市场扩展（`plugins`）**：`hub` pane 由内部 `AgentHub` 渲染，宿主经 `plugins` 条目（`{id, label?, icon?, component}`）扩展或覆盖插件市场；条目与内置三类（`skill` / `mcp` / `installed`，图标映射统一在 `hub/constants.ts`）按 `id` 浅合并：
   - 命中内置 id：覆盖对应字段（宿主只写要改的字段，如把某个市场的渲染组件换掉）。
+- **市场卡片按钮四态（`PluginCard`，判定与卸载动作在 `hub/usePluginInstallActions.ts`）**：① 未安装 → 「安装」弹选择范围弹窗；② 用户级（scope=USER、全部工作空间）→ 「卸载」直接确认；③ 工作空间级 ×N → 「卸载」外包 Popover（hover 列出已装工作空间，行内移除、多空间时附「全部卸载」），按钮本体为全量卸载确认；④ 企业级（scope=ENTERPRISE）→ 仅企业登录且 `grantedAuthorities` 含 `ROLE_ENTERPRISE_OWNER`（`self.type === ENTERPRISE` 前置）时可卸载，否则按钮禁用。
   - 新 id：追加为新分段，排在 server 枚举项之后；`label` 缺省用 `id`，`icon` 缺省用兜底图标，`component` 必填、缺了整条丢弃。
   - `installed` 是保留 id（「我的插件」分段，`label` 缺省走文案 `myPlugin`），允许覆盖。
   - `component` 须接受市场 props 契约（`installs` / `workspaces` / `onInstalled` / `onUninstalled`）；各分段组件的 props 由 `useAgentHub` 在 options 表项上按 `props(ctx)` 函数形态装配（渲染时求值），market 子件不感知插件类型枚举；`installed` 保留 id 的组件额外接收 `pluginTypes`（server `PLUGIN_TARGET_TYPE_ENUM` 原始枚举，驱动「我的插件」的 Tabs）。
@@ -71,7 +72,7 @@ const self = {
 | 事件 | 说明 | 类型 | 版本 |
 | --- | --- | --- | --- |
 | installed | 插件安装成功（市场与确认弹窗上报） | `(result: UserPluginInstallResult) => void` | - |
-| uninstalled | 插件卸载成功 | `(id: number) => void` | - |
+| uninstalled | 插件卸载成功（载荷含 `scope` / `workspaceScope` / `workspaces`——`workspaces` 有值时 store 按工作空间精确移除，缺省移除该插件的全部安装记录） | `(event: UserPluginMetadata) => void` | - |
 
 ### 插槽 {#slots}
 

@@ -1,11 +1,12 @@
 import {getEnumValue, type RestResult, SYSTEM_MODULE_NAME} from '../../commons'
 import {http, modulePrefix} from '../../http'
 import type {
+  PluginInstallGroup,
   UserPluginInstallResult,
   UserPluginRequestBody,
   UserPluginSkillMetadata
 } from '../domain/userPluginInstall.ts'
-import {AI_SERVER_PLUGIN_TARGET_TYPE} from '../enumerate.ts'
+import {AI_SERVER_PLUGIN_INSTALL_USER_SCOPE} from '../enumerate.ts'
 import type {PluginPackageUpdatePolicyMetadata} from "../domain/plugin.ts";
 
 export class AgentHubService {
@@ -42,20 +43,6 @@ export class AgentHubService {
       data: body,
       bodyType: 'json',
     })
-  }
-
-  static mapInstallsByPackageId(
-    installs: UserPluginInstallResult[],
-    targetType: string,
-  ): Map<number, UserPluginInstallResult> {
-    const map = new Map<number, UserPluginInstallResult>()
-    for (const install of installs) {
-      if (install.pluginPackage.id == null || getEnumValue(install.targetType) !== targetType) {
-        continue
-      }
-      map.set(install.pluginPackage.id, install)
-    }
-    return map
   }
 
   static isPluginOutdated(

@@ -1,16 +1,18 @@
-import {computed, defineComponent, type PropType, ref} from 'vue'
-import {Button, Card, Empty, Flex, Pagination, Space, Tag, Typography} from 'antdv-next'
-import {DeleteOutlined, DownloadOutlined} from '@antdv-next/icons'
+import {computed, defineComponent, ref, toRef, type PropType} from 'vue'
+import {Button, Card, Empty, Flex, Pagination, Popover, Space, Tag, Typography} from 'antdv-next'
+import {DeleteOutlined, DownloadOutlined, FolderOpenOutlined, FolderOutlined} from '@antdv-next/icons'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
-import useApp from 'antdv-next/dist/app/useApp'
-import {classNames, fillLocale, ICON_SELECT_AVATAR_MODE_VALUE, IconSelect} from '@loncra/antdv'
-import type {TotalPage} from '@loncra/client/commons'
-import {AgentHubService, type UserPluginInstallResult, type UserPluginMetadata,} from '@loncra/client/ai'
+import {classNames, ICON_SELECT_AVATAR_MODE_VALUE, IconSelect} from '@loncra/antdv'
+import {getEnumValue, type TotalPage} from '@loncra/client/commons'
+import {type PluginInstallGroup, type UserPluginInstallResult, type UserPluginMetadata} from '@loncra/client/ai'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import {useLocale} from '../../_util/useLocale'
 import PluginInstallModal from './PluginInstallModal'
+import {usePluginInstallActions} from './usePluginInstallActions'
 import type {AgentConversationRecord} from '../conversation'
+import {isDefaultWorkspace} from '../conversation'
+import type {Self} from '../types'
 import useStyle, {AGENT_HUB_PREFIX} from './style'
 import type {PluginCardRecord} from './types.ts'
 
@@ -23,6 +25,7 @@ const PluginCard = defineComponent({
     installs: {type: Array as PropType<UserPluginInstallResult[]>, default: () => []},
     targetType: {type: String, required: true},
     workspaces: {type: Array as PropType<AgentConversationRecord[]>, default: () => []},
+    self: {type: Object as PropType<Self>, default: undefined},
   },
   emits: {
     changePage: (_page: number, _pageSize: number) => true,
@@ -31,19 +34,18 @@ const PluginCard = defineComponent({
   },
   setup(props, {emit, slots}) {
     const locale = useLocale('AgentHub')
-    const {modal} = useApp()
     const config = useConfig()
     const prefixCls = computed(() => config.value.getPrefixCls('agent-hub', AGENT_HUB_PREFIX))
     const [hashId, cssVarCls] = useStyle(prefixCls)
+    const cls = (name: string) => `${prefixCls.value}-${name}`
     const installOpen = ref(false)
     const installPackage = ref<PluginCardRecord>()
-    const installByPackageId = computed(() =>
-      AgentHubService.mapInstallsByPackageId(props.installs, props.targetType),
-    )
-
-    function isInstalled(record: PluginCardRecord): boolean {
-      return record.id != null && installByPackageId.value.has(record.id)
-    }
+    const {installGroups, isOrgOwner, onUninstall, onUninstallWorkspace} = usePluginInstallActions({
+      targetType: props.targetType,
+      installs: toRef(props, 'installs'),
+      self: toRef(props, 'self'),
+      onUninstalled: (event: UserPluginMetadata) => emit('uninstalled', event),
+    })
 
     function onInstall(record: PluginCardRecord): void {
       if (record.id == null) {
@@ -53,118 +55,171 @@ const PluginCard = defineComponent({
       installOpen.value = true
     }
 
-    async function doUninstall(record: PluginCardRecord): Promise<void> {
-      if (record.id == null) {
-        return
-      }
-      //const install = installByPackageId.value.get(record.id)
-      //const specified = install?.workspace != null
-      /*const result = await AgentHubService.uninstall({
-        targetType: props.targetType,
-        packageId: record.id,
-        workspaceScope: specified
-          ? AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE.SPECIFIED
-          : AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE.ALL,
-        workspaces: specified ? [install?.workspace as UserPluginInstallResult['workspace']] : undefined,
-      })
-      message.success(result.message)*/
-      emit('uninstalled', {targetType: props.targetType, packageId: record.id})
+    function renderInstallButton(record: PluginCardRecord) {
+      return (
+        <Button
+          size="small"
+          type="primary"
+          onClick={() => onInstall(record)}
+          v-slots={{icon: () => <DownloadOutlined />}}
+        >
+          {locale.value.install}
+        </Button>
+      )
     }
 
-    function onUninstall(record: PluginCardRecord): void {
-      const install = record.id == null ? undefined : installByPackageId.value.get(record.id)
-      if (install == null) {
-        return
-      }
-      modal.confirm({
-        title: locale.value.uninstallConfirmTitle,
-        content: fillLocale(locale.value.uninstallConfirmSingle, {name: record.name}),
-        onOk: () => doUninstall(record),
+    function renderUninstallButton(record: PluginCardRecord, click:boolean) {
+      return (
+        <Button
+          size="small"
+          danger
+          type="primary"
+          onClick={() => click ? onUninstall(record) : null}
+          v-slots={{icon: () => <DeleteOutlined />}}
+        >
+          {locale.value.uninstall}
+        </Button>
+      )
+    }
+
+    function renderWorkspaceList(record: PluginCardRecord, group: PluginInstallGroup) {
+      const rows = group.workspaces.map((install) => {
+        const workspace = install.workspace!
+        const workspaceRecord = props.workspaces.find(item => String(item.id) === workspace.id)
+        const Icon = workspaceRecord && isDefaultWorkspace(getEnumValue(workspaceRecord.type))
+          ? FolderOpenOutlined
+          : FolderOutlined
+        return (
+          <Flex key={workspace.id} justify="space-between" align="center" class={cls('popover-row')}>
+            <Flex align="center" gap="small">
+              <Icon
+                class={classNames(
+                  hashId.value,
+                  workspaceRecord?.tone ? `${prefixCls.value}-${workspaceRecord.tone}` : undefined,
+                )}
+              />
+              <span>{workspace.name}</span>
+            </Flex>
+          </Flex>
+        )
       })
+      return (
+        <Flex vertical gap="small">
+          {rows}
+          {group.workspaces.length > 1
+            ? (
+              <Button size="small" type="link" block danger onClick={() => onUninstall(record)}>
+                {locale.value.uninstallAll}
+              </Button>
+            )
+            : null}
+        </Flex>
+      )
+    }
+
+    function renderAction(record: PluginCardRecord) {
+      const group = record.id == null ? undefined : installGroups.value.get(record.id)
+      if (group == null) {
+        return renderInstallButton(record)
+      }
+      if (group.enterprise != null) {
+        return (
+          <Button
+            size="small"
+            danger
+            type="primary"
+            disabled={!isOrgOwner.value}
+            onClick={() => onUninstall(record)}
+            v-slots={{icon: () => <DeleteOutlined />}}
+          >
+            {locale.value.uninstall}
+          </Button>
+        )
+      }
+      if (group.userAll != null) {
+        return renderUninstallButton(record, true)
+      }
+      return (
+        <Popover
+          trigger="hover"
+          placement="bottomRight"
+          content={() => renderWorkspaceList(record, group)}
+        >
+          {renderUninstallButton(record, group.workspaces.length === 1)}
+        </Popover>
+      )
+    }
+
+    function renderCard(record: PluginCardRecord) {
+      return (
+        <Card
+          key={record.id}
+          size="small"
+          classes={{body: cls('card-body')}}
+          v-slots={{
+            title: () => slots.title?.({record}),
+            extra: () => renderAction(record),
+          }}
+        >
+          <Flex gap="middle" vertical >
+            <Flex gap="middle">
+              <IconSelect
+                preview
+                value={record.icon || ICON_SELECT_AVATAR_MODE_VALUE.INPUT + record.name}
+              />
+              <Flex gap="small" vertical>
+                <Flex justify="space-between" align="center">
+                  <Space wrap>
+                    {(record.tags || []).map((tag) => <Tag key={tag}>{tag}</Tag>)}
+                  </Space>
+                  {record.creationTime
+                    ? (
+                      <Typography.Text type="secondary" class={cls('time')}>
+                        {dayjs(record.creationTime).fromNow()}
+                      </Typography.Text>
+                    )
+                    : null}
+                </Flex>
+                <div class={cls('summary')}>{record.summary}</div>
+                {slots.after?.({record})}
+              </Flex>
+            </Flex>
+          </Flex>
+        </Card>
+      )
+    }
+
+    function renderCardList(elements: PluginCardRecord[]) {
+      return (
+        <Flex vertical class={cls('scroll')} gap="large">
+          {elements.map((record) => renderCard(record))}
+          <Pagination
+            size="small"
+            align="center"
+            current={props.dataSource.number}
+            hideOnSinglePage
+            pageSize={props.dataSource.size}
+            total={props.dataSource.totalCount}
+            onChange={(page: number, pageSize: number) => emit('changePage', page, pageSize)}
+          />
+        </Flex>
+      )
+    }
+
+    function renderEmpty() {
+      return (
+        <Flex class={cls('empty')} justify="center" align="center">
+          <Empty />
+        </Flex>
+      )
     }
 
     return () => {
       const rootClass = classNames(prefixCls.value, hashId.value, cssVarCls.value)
       const elements = props.dataSource.elements || []
-      const cls = (name: string) => `${prefixCls.value}-${name}`
       return (
         <div class={rootClass}>
-          {elements.length > 0
-            ? (
-              <Flex vertical class={cls('scroll')} gap="large">
-                {elements.map((record) => (
-                  <Card
-                    key={record.id}
-                    size="small"
-                    classes={{body:cls('card-body')}}
-                    v-slots={{
-                      title: () => slots.title?.({record}),
-                      extra: () => isInstalled(record)
-                        ? (
-                          <Button
-                            size="small"
-                            danger
-                            type="primary"
-                            onClick={() => onUninstall(record)}
-                            v-slots={{icon: () => <DeleteOutlined />}}
-                          >
-                            {locale.value.uninstall}
-                          </Button>
-                        )
-                        : (
-                          <Button
-                            size="small"
-                            type="primary"
-                            onClick={() => onInstall(record)}
-                            v-slots={{icon: () => <DownloadOutlined />}}
-                          >
-                            {locale.value.install}
-                          </Button>
-                        ),
-                    }}
-                  >
-                    <Flex gap="middle" vertical >
-                      <Flex gap="middle">
-                        <IconSelect
-                          preview
-                          value={record.icon || ICON_SELECT_AVATAR_MODE_VALUE.INPUT + record.name}
-                        />
-                        <Flex gap="small" vertical>
-                          <Flex justify="space-between" align="center">
-                            <Space wrap>
-                              {(record.tags || []).map((tag) => <Tag key={tag}>{tag}</Tag>)}
-                            </Space>
-                            {record.creationTime
-                              ? (
-                                <Typography.Text type="secondary" class={cls('time')}>
-                                  {dayjs(record.creationTime).fromNow()}
-                                </Typography.Text>
-                              )
-                              : null}
-                          </Flex>
-                          <div class={cls('summary')}>{record.summary}</div>
-                          {slots.after?.({record})}
-                        </Flex>
-                      </Flex>
-                    </Flex>
-                  </Card>
-                ))}
-                <Pagination
-                  size="small"
-                  align="center"
-                  current={props.dataSource.number}
-                  hideOnSinglePage
-                  pageSize={props.dataSource.size}
-                  total={props.dataSource.totalCount}
-                  onChange={(page: number, pageSize: number) => emit('changePage', page, pageSize)}
-                />
-              </Flex>
-            )
-            : (
-              <Flex class={cls('empty')} justify="center" align="center">
-                <Empty />
-              </Flex>
-            )}
+          {elements.length > 0 ? renderCardList(elements) : renderEmpty()}
           <PluginInstallModal
             open={installOpen.value}
             targetType={props.targetType}
