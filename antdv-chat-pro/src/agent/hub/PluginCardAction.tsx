@@ -58,7 +58,7 @@ const PluginCardAction = defineComponent({
 
     function renderUpgradeButton() {
       return (
-          <Tooltip title={fillLocale(locale.value.upgrade, {version: props.record.latestVersion})}>
+          <Tooltip title={fillLocale(locale.value.upgrade, {version: props.record.latestVersion ?? ''})}>
             <Button
                 size="small"
                 type="primary"
@@ -118,8 +118,9 @@ const PluginCardAction = defineComponent({
       }
       return (
           <Popover
-            trigger={['hover', 'click']}
+            trigger={['click']}
             placement="bottomRight"
+            styles={{container:{maxWidth:'400px'}}}
             content={() => (
               <PluginWorkspaceCheckList
                 installs={group.workspaces}

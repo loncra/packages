@@ -6,9 +6,8 @@ import {
   AgentHubService,
   AI_SERVER_PLUGIN_INSTALL_USER_SCOPE,
   AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE,
-  AI_SERVER_PLUGIN_UPDATE_POLICY,
+  AI_SERVER_SKILL_UPDATE_POLICY,
   type PluginInstallGroup,
-  type PluginPackageUpdatePolicyMetadata,
   type UserPluginInstallResult,
   type UserPluginMetadata,
   type UserPluginRequestBody,
@@ -44,14 +43,14 @@ export function groupInstallsByPackageId(
   return groups
 }
 
-export function isInstallOutdated(install: UserPluginInstallResult, record: PluginPackageUpdatePolicyMetadata): boolean {
+export function isInstallOutdated(install: UserPluginInstallResult, record: {id?: number, latestVersion?: string}): boolean {
   const locked = (install.metadata as UserPluginSkillMetadata).releaseVersion
   return Boolean(locked) && locked !== record.latestVersion
 }
 
 export function isPluginOutdated(
   installs: UserPluginInstallResult[],
-  record: PluginPackageUpdatePolicyMetadata,
+  record: {id?: number, latestVersion?: string},
   targetType: string,
 ): boolean {
   if (record.id == null || !record.latestVersion) {
@@ -64,7 +63,7 @@ export function isPluginOutdated(
 
 export function isRecordUpgradeable(record: PluginCardRecord): boolean {
   return record.defaultUpdatePolicy != null
-    && getEnumValue(record.defaultUpdatePolicy) === AI_SERVER_PLUGIN_UPDATE_POLICY.MANUAL
+    && getEnumValue(record.defaultUpdatePolicy) === AI_SERVER_SKILL_UPDATE_POLICY.MANUAL
 }
 
 export function usePluginInstallActions(options: {

@@ -1,7 +1,11 @@
-﻿import type {PluginPackageUpdatePolicyMetadata} from '@loncra/client/ai'
+﻿import type {NameValueEnumMetadata} from '@loncra/client/commons'
+import type {PluginPackageMetadata} from '@loncra/client/ai'
 import type {Component} from "vue";
 
-export type PluginCardRecord = PluginPackageUpdatePolicyMetadata
+export type PluginCardRecord = PluginPackageMetadata & {
+  latestVersion?: string
+  defaultUpdatePolicy?: NameValueEnumMetadata<number> | number
+}
 
 
 export interface PluginComponent {

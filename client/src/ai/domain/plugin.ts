@@ -14,6 +14,5 @@ export interface PluginPackageMetadata extends VersionEntityMetadata {
 }
 
 export interface PluginPackageUpdatePolicyMetadata extends PluginPackageMetadata{
-  latestVersion: string
   defaultUpdatePolicy?: NameValueEnumMetadata<number> | number
 }

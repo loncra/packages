@@ -100,11 +100,6 @@ export const AI_SERVER_PLUGIN_INSTALL_USER_SCOPE = {
   ENTERPRISE: 20,
 } as const
 
-export const AI_SERVER_PLUGIN_UPDATE_POLICY = {
-  MANUAL: 10,
-  AUTOMATIC: 20,
-} as const
-
 export const AI_SERVER_PLUGIN_INSTALL_STATUS = {
   PENDING: 10,
   ACTIVATED: 20,

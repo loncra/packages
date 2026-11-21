@@ -27,13 +27,15 @@ export interface SkillPackageMetadata {
   updatePolicyTime?: TimeProperties
 }
 
-export interface SkillPackageSavePayload extends PluginPackageUpdatePolicyMetadata {
+export interface SkillPackageSavePayload extends Omit<PluginPackageUpdatePolicyMetadata, 'latestVersion'> {
   sourceType?: NameValueEnumMetadata<number> | number
   metadata: SkillPackageMetadata
   executeStatus?: NameValueEnumMetadata<number> | number
 }
 
-export interface SkillPackageEntity extends SkillPackageSavePayload {}
+export interface SkillPackageEntity extends SkillPackageSavePayload {
+  latestVersion: string
+}
 
 export interface SkillPackageSnapshotPayload {
   releaseVersion: string
