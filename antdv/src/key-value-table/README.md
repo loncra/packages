@@ -6,6 +6,7 @@
 
 - 表单里需要维护一组「名称 → 值」，条数不固定。
 - 值只有一项时用普通输入；一项或多项混用时开 `multipleValue`。
+- 行数固定的场景（如安装时按包配置收集密钥）：`addable=false` 关掉「新增」，`columns` 把某列设为 `readonly`，行数据自带 `editing: true` 即为内联输入模式。
 
 ## 代码演示 {#examples}
 
@@ -42,10 +43,11 @@ async function submit() {
 | 属性 | 说明 | 类型 | 默认值 | 版本 |
 | --- | --- | --- | --- | --- |
 | value | 行数据，配合 `v-model:value` | [KeyValueRow[]](#keyvaluerow) | `[]` | - |
-| formItemNamePrefix | 编辑态单元格 `FormItem` 的 `name` 前缀，完整 `name` 是 `[...前缀, index, 'key' 或 'value']` | string[] | `[]` | - |
+| formItemNamePrefix | 编辑态单元格 `FormItem` 的 `name` 前缀，完整 `name` 是 `[...前缀, index, 列字段名]`（列字段名见 [columns](#columns) 的 `field`） | string[] | `[]` | - |
 | title | 标题栏文案；只有标题栏存在时才有「新增」按钮（空串等同没有） | string | - | - |
 | multipleValue | 值列用 `mode="tags"` 的 `Select`，值存成 `string[]`；新增行的初值是空数组（单值模式给空字符串） | boolean | `false` | - |
-| edit | 是否可编辑；关掉后没有编辑 / 删除 / 新增入口。**数据行自带 `editing: true` 时不要关它**：操作列消失、单元格仍是编辑器，这一行会卡在编辑态 | boolean | `true` | - |
+| addable | 是否显示「新增」按钮（仅控制新增入口；新增行的行对象是响应式的，编辑可正常触发校验） | boolean | `true` | - |
+| columns | 列配置，`key` / `value` 各接受一个 [KeyValueColumnConfig](#keyvaluecolumnconfig)：`title` 列头文案、`readonly` 列只读（恒文本、无输入控件）、`field` 行字段名映射（`FormItem` name 随之变化）、`rules` 编辑态校验规则（`null` / 空数组 = 不校验）；两列缺省均可编辑，列头回落 locale（名称 / 值） | `{key?: KeyValueColumnConfig, value?: KeyValueColumnConfig}` | - | - |
 | prefixCls | 改根前缀 | string | -（组件内兜底 `loncra-key-value-table`） | - |
 | rootClass | 追加到根元素 | string | - | - |
 | classes | 语义化 DOM 类名表，区域见 [语义化 DOM](#semantic-dom) | `KeyValueTableClasses` | - | - |
@@ -76,7 +78,7 @@ async function submit() {
 | --- | --- | --- | --- |
 | confirmAllEditingRows | 把仍在编辑态的行逐行确认（每行发一次 `change`）。**不发 `update:value`**、也不做校验（提交链路上表单校验已经先跑过） | `() => void` | - |
 
-「确定」按钮（操作列的 `✓`）会先用外层 `Form` 的 `validateFields` 校验本行「名称」「值」两个单元格，未通过就留在编辑态，错误沿用 `TooltipValidationFormItem` 的提示；组件不在 `Form` 内时拿不到表单实例，按原样直接确认。
+「确定」按钮（操作列的 `✓`）会先用外层 `Form` 的 `validateFields` 按列字段名校验本行两个单元格（`field` 映射后即为映射字段），未通过就留在编辑态，错误沿用 `TooltipValidationFormItem` 的提示；组件不在 `Form` 内时拿不到表单实例，按原样直接确认。
 
 ## 类型 {#types}
 
@@ -86,9 +88,21 @@ async function submit() {
 | --- | --- | --- | --- | --- |
 | id | 行标识，新增时由组件用 `crypto.randomUUID()` 生成 | string | - | - |
 | key | 名称列的值 | string | - | - |
-| value | 值列的值；`multipleValue` 为真时是 `string[]` | string[] \| string | - | - |
+| value | 值列的值（`columns.value.field` 未映射时）；`multipleValue` 为真时是 `string[]` | string[] \| string | - | - |
 | editing | 是否处于编辑态 | boolean | - | - |
 | origin | 进入编辑时的快照，仅编辑期间存在；取消编辑用它回滚 | [KeyValueRow](#keyvaluerow) | - | - |
+| placeholder | 值列编辑态输入框的占位提示（行级） | string | - | - |
+
+### KeyValueColumnConfig {#keyvaluecolumnconfig}
+
+| 属性 | 说明 | 类型 | 默认值 | 版本 |
+| --- | --- | --- | --- | --- |
+| title | 列头文案覆盖；缺省回落组件内 locale（名称 / 值） | string | - | - |
+| readonly | 该列恒为文本展示（编辑态也不渲染输入控件） | boolean | `false` | - |
+| field | 该列绑定的行字段名；`FormItem` name 的最后一段也随之变化 | string | `key` / `value` | - |
+| rules | 编辑态单元格的校验规则；**显式 `null` 或空数组 = 不校验**，缺省 `[{required: true}]` | `FormItemProps['rules'] \| null` | - | - |
+
+「名称」列的 `field` 缺省是 `key`、「值」列缺省是 `value`；用 `field` 映射到自定义字段（如 `placeholder`）时，行对象要携带该字段，且列校验规则建议显式给出（映射列缺省仍会挂必填）。
 
 ## 语义化 DOM {#semantic-dom}
 
@@ -102,6 +116,6 @@ async function submit() {
 | valueSelect | 编辑态值列的 `Select`（`multipleValue` 为真时），自有类名 `-value-select` |
 | action | 操作列的按钮组 `SpaceCompact`（编辑态「确定 / 取消」，非编辑态「编辑 / 删除」） |
 
-- 列固定：「名称（`width: 120`）/ 值 / 操作（`width: 100`、`align: center`、`fixed: right`）」，操作列只在 `edit` 为真时出现。
+- 列固定：「名称（`width: 120`）/ 值 / 操作（`width: 100`、`align: center`、`fixed: right`）」，操作列只在**任一列可编辑**（`columns` 里没有全部 `readonly`）时出现。
 - **没有自有类名**的节点：`.ant-table` 容器、操作列的三个按钮、标题栏的「新增」按钮 —— 要定制走 `classes.table` 或从根往下写选择器。
 - 编辑态每个单元格结构是 `FormItem(noStyle, hasFeedback) > TooltipValidationFormItem > Input / Select`，必填校验由这个 `FormItem` 自己承担。

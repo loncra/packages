@@ -59,7 +59,7 @@ export interface StreamableHttpMcpClientTransportMetadata extends SseMcpClientTr
 
 export interface McpPackageManualAuthMetadata {
   position: 'header' | 'param'
-  items: {key: string, value: string}[]
+  items: {key: string, placeholder: string}[]
 }
 
 export interface McpPackageMetadata {

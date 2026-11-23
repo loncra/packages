@@ -1,12 +1,20 @@
 import type {CSSProperties} from 'vue'
-import type {InputProps, SelectProps, TableProps} from 'antdv-next'
+import type {FormItemProps, InputProps, SelectProps, TableProps} from 'antdv-next'
 
 export interface KeyValueRow {
   id: string
   key: string
-  value: string[] | string
+  value?: string[] | string
   editing: boolean
   origin?: KeyValueRow
+  placeholder?: string
+}
+
+export interface KeyValueColumnConfig {
+  title?: string
+  readonly?: boolean
+  field?: string
+  rules?: FormItemProps['rules'] | null
 }
 
 export interface KeyValueTableClasses {
@@ -34,7 +42,11 @@ export interface KeyValueTableProps {
   formItemNamePrefix?: string[]
   title?: string
   multipleValue?: boolean
-  edit?: boolean
+  addable?: boolean
+  columns?: {
+    key?: KeyValueColumnConfig
+    value?: KeyValueColumnConfig
+  }
   prefixCls?: string
   class?: unknown
   rootClass?: string

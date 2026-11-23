@@ -8,6 +8,7 @@ import {
   SpaceCompact,
   Table,
   useFormInstance,
+  type FormItemProps,
   type TableColumnType,
 } from 'antdv-next'
 import {CheckOutlined, CloseOutlined, DeleteOutlined, EditOutlined, PlusOutlined} from '@antdv-next/icons'
@@ -17,8 +18,67 @@ import {classNames} from '../_util/classNames'
 import {useLocale} from '../_util/context/useLocale'
 import {KEY_VALUE_COLUMNS, TABLE_SCROLL_Y} from './constants'
 import {useKeyValueTable} from './useKeyValueTable'
-import type {KeyValueRow, KeyValueTableProps} from './types'
+import type {KeyValueColumnConfig, KeyValueRow, KeyValueTableProps} from './types'
 import useStyle from './style'
+
+function resolveColumnRules(
+  config: KeyValueColumnConfig | undefined,
+): FormItemProps['rules'] | undefined {
+  if (config == null) {
+    return [{ required: true }]
+  }
+  if (config.rules === null || (Array.isArray(config.rules) && config.rules.length === 0)) {
+    return undefined
+  }
+  return config.rules ?? [{ required: true }]
+}
+
+function readRowField(record: KeyValueRow, field: string): string | string[] | undefined {
+  return (record as unknown as Record<string, string | string[]>)[field]
+}
+
+function writeRowField(record: KeyValueRow, field: string, value: string | string[]): void {
+  ;(record as unknown as Record<string, string | string[]>)[field] = value
+}
+
+interface ValueControlOptions {
+  multipleValue: boolean
+  valueField: string
+  classes?: KeyValueTableProps['classes']
+  styles?: KeyValueTableProps['styles']
+  prefixCls: string
+}
+
+function renderValueControl(
+  record: KeyValueRow,
+  current: string | string[] | undefined,
+  options: ValueControlOptions,
+) {
+  return options.multipleValue ? (
+    <Select
+      mode="tags"
+      class={`${options.prefixCls}-value-select`}
+      classes={options.classes?.valueSelect}
+      styles={options.styles?.valueSelect}
+      maxTagCount="responsive"
+      placeholder={record.placeholder}
+      value={Array.isArray(current) ? current : current ? [current] : []}
+      onUpdate:value={(value) => {
+        writeRowField(record, options.valueField, Array.isArray(value) ? value.map(String) : [])
+      }}
+    />
+  ) : (
+    <Input
+      classes={options.classes?.valueInput}
+      styles={options.styles?.valueInput}
+      placeholder={record.placeholder}
+      value={current as string}
+      onUpdate:value={(value: string) => {
+        writeRowField(record, options.valueField, value)
+      }}
+    />
+  )
+}
 
 const KeyValueTable = defineComponent({
   name: 'LKeyValueTable',
@@ -37,9 +97,13 @@ const KeyValueTable = defineComponent({
       type: Boolean,
       default: false,
     },
-    edit: {
+    addable: {
       type: Boolean,
-      default: true,
+      default: undefined,
+    },
+    columns: {
+      type: Object as PropType<KeyValueTableProps['columns']>,
+      default: undefined,
     },
     prefixCls: String,
     rootClass: String,
@@ -65,6 +129,14 @@ const KeyValueTable = defineComponent({
     )
     const [hashId, cssVarCls] = useStyle(prefixCls)
 
+    const keyColumn = computed(() => props.columns?.key ?? {})
+    const valueColumn = computed(() => props.columns?.value ?? {})
+    const keyField = computed(() => keyColumn.value.field ?? 'key')
+    const valueField = computed(() => valueColumn.value.field ?? 'value')
+    const hasEditableCell = computed(
+      () => keyColumn.value.readonly !== true || valueColumn.value.readonly !== true,
+    )
+
     const {
       rows,
       addRow,
@@ -76,9 +148,21 @@ const KeyValueTable = defineComponent({
     } = useKeyValueTable(props, emit)
 
     const columns = computed<TableColumnType<KeyValueRow>[]>(() => [
-      {...KEY_VALUE_COLUMNS.key, title: locale.value.name},
-      {...KEY_VALUE_COLUMNS.value, title: locale.value.value},
-      ...(props.edit ? [{...KEY_VALUE_COLUMNS.action, title: locale.value.action}] : []),
+      {
+        ...KEY_VALUE_COLUMNS.key,
+        key: keyField.value,
+        dataIndex: keyField.value,
+        title: keyColumn.value.title ?? locale.value.name,
+      },
+      {
+        ...KEY_VALUE_COLUMNS.value,
+        key: valueField.value,
+        dataIndex: valueField.value,
+        title: valueColumn.value.title ?? locale.value.value,
+      },
+      ...(hasEditableCell.value
+        ? [{...KEY_VALUE_COLUMNS.action, title: locale.value.action}]
+        : []),
     ])
 
     expose({ confirmAllEditingRows })
@@ -87,8 +171,8 @@ const KeyValueTable = defineComponent({
       if (formInstance) {
         try {
           await formInstance.validateFields([
-            [...props.formItemNamePrefix, index, 'key'],
-            [...props.formItemNamePrefix, index, 'value'],
+            [...props.formItemNamePrefix, index, keyField.value],
+            [...props.formItemNamePrefix, index, valueField.value],
           ])
         } catch {
           return
@@ -98,15 +182,15 @@ const KeyValueTable = defineComponent({
     }
 
     function renderKeyCell(index: number, column: TableColumnType<KeyValueRow>, record: KeyValueRow) {
-      if (!record.editing) {
+      if (!record.editing || keyColumn.value.readonly === true) {
         return record.key
       }
       return (
         <FormItem
           noStyle
           hasFeedback
-          rules={[{ required: true }]}
-          name={[...props.formItemNamePrefix, index, column.key]}
+          rules={resolveColumnRules(keyColumn.value)}
+          name={[...props.formItemNamePrefix, index, keyField.value]}
           messageVariables={{ label: String(column.title ?? '') }}
         >
           <TooltipValidationFormItem>
@@ -124,40 +208,26 @@ const KeyValueTable = defineComponent({
     }
 
     function renderValueCell(index: number, column: TableColumnType<KeyValueRow>, record: KeyValueRow) {
-      if (!record.editing) {
-        return Array.isArray(record.value) ? record.value.join(', ') : record.value
+      const current = readRowField(record, valueField.value)
+      if (!record.editing || valueColumn.value.readonly === true) {
+        return Array.isArray(current) ? current.join(', ') : current
       }
       return (
         <FormItem
           noStyle
           hasFeedback
-          rules={[{ required: true }]}
-          name={[...props.formItemNamePrefix, index, column.key]}
+          rules={resolveColumnRules(valueColumn.value)}
+          name={[...props.formItemNamePrefix, index, valueField.value]}
           messageVariables={{ label: String(column.title ?? '') }}
         >
           <TooltipValidationFormItem>
-            {props.multipleValue ? (
-              <Select
-                mode="tags"
-                class={`${prefixCls.value}-value-select`}
-                classes={props.classes?.valueSelect}
-                styles={props.styles?.valueSelect}
-                maxTagCount="responsive"
-                value={Array.isArray(record.value) ? record.value : record.value ? [record.value] : []}
-                onUpdate:value={(value) => {
-                  record.value = Array.isArray(value) ? value.map(String) : []
-                }}
-              />
-            ) : (
-              <Input
-                classes={props.classes?.valueInput}
-                styles={props.styles?.valueInput}
-                value={record.value as string}
-                onUpdate:value={(value: string) => {
-                  record.value = value
-                }}
-              />
-            )}
+            {renderValueControl(record, current, {
+              multipleValue: props.multipleValue,
+              valueField: valueField.value,
+              classes: props.classes,
+              styles: props.styles,
+              prefixCls: prefixCls.value,
+            })}
           </TooltipValidationFormItem>
         </FormItem>
       )
@@ -223,7 +293,7 @@ const KeyValueTable = defineComponent({
                         style={props.styles?.title}
                       >
                         {slots.title ? slots.title({ title: props.title }) : props.title}
-                        {props.edit ? (
+                        {props.addable !== false ? (
                           <Button size="small" onClick={addRow}>{h(PlusOutlined)}</Button>
                         ) : null}
                       </Flex>
@@ -238,10 +308,10 @@ const KeyValueTable = defineComponent({
                 column: TableColumnType<KeyValueRow>
                 record: KeyValueRow
               }) => {
-                if (column.dataIndex === 'key') {
+                if (column.dataIndex === keyField.value) {
                   return renderKeyCell(index, column, record)
                 }
-                if (column.dataIndex === 'value') {
+                if (column.dataIndex === valueField.value) {
                   return renderValueCell(index, column, record)
                 }
                 if (column.dataIndex === 'action') {
