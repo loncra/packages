@@ -1,4 +1,4 @@
-import {type Ref} from 'vue'
+import {reactive, type Ref} from 'vue'
 import {type ModelEmit, useTwoWayModel} from '../_util/useTwoWayModel'
 import {cancelEditing, confirmEditing, createRow, excludeRow, startEditing,} from './keyValueTableKinds'
 import type {KeyValueRow} from './types'
@@ -12,7 +12,7 @@ export function useKeyValueTable(props: KeyValueTableSource, emit: ModelEmit) {
   const rows = useTwoWayModel(props, 'value', emit) as unknown as Ref<KeyValueRow[]>
 
   function addRow() {
-    rows.value = [...rows.value, createRow(crypto.randomUUID(), props.multipleValue ? [] : '')]
+    rows.value = [...rows.value, reactive(createRow(crypto.randomUUID(), props.multipleValue ? [] : ''))]
   }
 
   function removeRow(record: KeyValueRow) {

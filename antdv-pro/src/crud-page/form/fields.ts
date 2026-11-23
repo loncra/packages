@@ -31,6 +31,8 @@ export interface BuiltFormField<TBody> {
   ownFormItem: boolean
   beforeSubmit?: (expose: unknown) => void | Promise<void>
   render?: (ctx: PageFieldRenderContext<TBody>) => unknown
+  beforeSlot?: string
+  afterSlot?: string
 }
 
 export interface BuildFormFieldsOptions<TBody extends object, TEntity extends TBody & object> {
@@ -124,6 +126,8 @@ function buildField<TBody extends object, TEntity extends TBody & object>(
     ownFormItem: componentSpec?.ownFormItem ?? false,
     beforeSubmit: componentSpec?.beforeSubmit,
     render: field.render,
+    beforeSlot: field.beforeSlot,
+    afterSlot: field.afterSlot,
   }
 }
 

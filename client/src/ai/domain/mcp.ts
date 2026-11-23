@@ -57,9 +57,15 @@ export interface StreamableHttpMcpClientTransportMetadata extends SseMcpClientTr
   resumableStreams?: boolean | number
 }
 
+export interface McpPackageManualAuthMetadata {
+  position: 'header' | 'param'
+  items: {key: string, value: string}[]
+}
+
 export interface McpPackageMetadata {
   client: McpClientTransportMetadata
   clarifyPolicies: McpClarifyToolPolicyMetadata[]
+  authConfig?: McpPackageManualAuthMetadata
 }
 
 export interface McpPackageSavePayload extends PluginPackageMetadata {

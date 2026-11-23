@@ -19,7 +19,7 @@ export const SYSTEM_ENUM_TYPE = {
   EXECUTE_STATUS_ENUM: 'ExecuteStatus',
   GENDER_ENUM: 'GenderEnum',
   IMPORT_EXPORT_TYPE_ENUM: 'ImportExportTypeEnum',
-  MCP_PACKAGE_AUTH_MODE_ENUM: 'McpPackageAuthModeEnum',
+  API_KEY_MODE_ENUM: 'ApiKeyModeEnum',
   MCP_PACKAGE_TYPE_ENUM: 'PackageTypeEnum',
   MCP_CLIENT_TYPE_ENUM: 'McpClientTypeEnum',
   MESSAGE_TYPE_ENUM: 'MessageTypeEnum',

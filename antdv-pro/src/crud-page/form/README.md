@@ -79,6 +79,9 @@ export const roleFormPage = defineFormPage<RoleSavePayload, RoleEntity>(
 | --- | --- |
 | default | 字段行之后（子表这类）；参数 `{entity, extra, buckets, dictionaries}` |
 | buttons | 整排按钮交宿主：参数带 `submitButton` / `resetButton` 两颗现成按钮与 `loading`，想留哪颗放回哪颗 |
+| 字段插槽 | 字段声明 `beforeSlot` / `afterSlot`（值为插槽名）时，在该字段 Col 之前/之后渲染同名插槽，参数同 default；用于把自定义块插进字段流中间 |
+
+示例：`{key: 'origin', afterSlot: 'afterOrigin'}` → 宿主模板 `<template #afterOrigin="{entity}">` 的内容渲染在“来源”字段之后。
 
 ### 方法 {#methods}
 

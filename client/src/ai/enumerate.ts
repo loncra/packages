@@ -95,6 +95,12 @@ export const AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE = {
   SPECIFIED: 20,
 } as const
 
+export const AI_SERVER_API_KEY_MODE = {
+  MANUAL: 10,
+  OAUTH: 20,
+  NONE: 30,
+} as const
+
 export const AI_SERVER_PLUGIN_INSTALL_USER_SCOPE = {
   USER: 10,
   ENTERPRISE: 20,

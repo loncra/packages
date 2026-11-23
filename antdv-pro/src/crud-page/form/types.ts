@@ -31,6 +31,8 @@ export interface PageFormField<TBody> extends PageLookupFieldSpec {
   slots?: PageFormFieldSlots
   render?: (ctx: PageFieldRenderContext<TBody>) => unknown
   visible?: (ctx: PageDeclContext) => boolean
+  beforeSlot?: string
+  afterSlot?: string
 }
 
 export interface PageFormContext<TBody> extends PageDeclContext {
@@ -116,6 +118,7 @@ export interface CrudFormPageSlots<TBody extends object> {
     submitButton: () => VNodeChild
     resetButton: () => VNodeChild
   }) => unknown
+  [name: string]: ((arg: any) => unknown) | undefined
 }
 
 export type CrudFormPageConstructor = new <

@@ -1,4 +1,4 @@
-import {defineComponent, h, type PropType, type SlotsType, type VNodeChild} from 'vue'
+import {defineComponent, Fragment, h, type PropType, type SlotsType, type VNodeChild} from 'vue'
 import {Button, Col, Divider, Flex, FormItem, Row, Space, theme} from 'antdv-next'
 import {HistoryOutlined, SaveOutlined, UndoOutlined} from '@antdv-next/icons'
 import {classNames} from '@loncra/antdv'
@@ -139,15 +139,19 @@ const CrudFormPage = defineComponent({
                     withFieldCtx(field.slots, fieldCtx),
                   )
               return (
-                <Col key={String(field.key)} {...field.col}>
-                  {field.ownFormItem ? (
-                    control
-                  ) : (
-                    <FormItem name={field.name} label={field.label} rules={field.rules}>
-                      {control}
-                    </FormItem>
-                  )}
-                </Col>
+                <Fragment key={String(field.key)}>
+                  {field.beforeSlot ? slots[field.beforeSlot]?.(fieldCtx) : null}
+                  <Col {...field.col}>
+                    {field.ownFormItem ? (
+                      control
+                    ) : (
+                      <FormItem name={field.name} label={field.label} rules={field.rules}>
+                        {control}
+                      </FormItem>
+                    )}
+                  </Col>
+                  {field.afterSlot ? slots[field.afterSlot]?.(fieldCtx) : null}
+                </Fragment>
               )
             })}
           </Row>
