@@ -191,6 +191,7 @@ const locale: Locale = {
     upgrade: 'Upgrade to {version}',
     upgradeSelected: 'Upgrade selected',
     installTitle: 'Install {name}',
+    auth: 'Authentication',
     uninstall: 'Uninstall',
     manage: 'Manage',
     uninstallSelected: 'Uninstall selected',

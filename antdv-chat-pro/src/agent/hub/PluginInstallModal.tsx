@@ -1,4 +1,4 @@
-import {computed, defineComponent, type PropType, reactive, ref, watch} from 'vue'
+import {computed, defineComponent, type PropType, type SlotsType, reactive, ref, watch} from 'vue'
 import {CheckboxGroup, Empty, Flex, FormItem, Modal, RadioGroup} from 'antdv-next'
 import {FolderOpenOutlined, FolderOutlined} from '@antdv-next/icons'
 import useApp from 'antdv-next/dist/app/useApp'
@@ -23,6 +23,11 @@ import useStyle, {AGENT_HUB_PREFIX} from './style'
 
 type ScopeOption = 'all' | 'enterprise' | 'specified'
 
+export interface PluginInstallForm extends Pick<UserPluginRequestBody, 'metadata'> {
+  scopeOption: ScopeOption
+  workspaces: string[]
+}
+
 const PluginInstallModal = defineComponent({
   name: 'LAgentHubPluginInstall',
   props: {
@@ -38,7 +43,10 @@ const PluginInstallModal = defineComponent({
     'update:open': (_open: boolean) => true,
     installed: (_result: UserPluginInstallResult) => true,
   },
-  setup(props, {emit}) {
+  slots: Object as SlotsType<{
+    afterScope?: (ctx: {form: PluginInstallForm}) => unknown
+  }>,
+  setup(props, {emit, slots}) {
     const locale = useLocale('AgentHub')
     const {message} = useApp()
     const config = useConfig()
@@ -46,9 +54,10 @@ const PluginInstallModal = defineComponent({
     const [hashId] = useStyle(prefixCls)
     const formRef = ref<{validate: () => Promise<unknown>}>()
     const spinning = ref(false)
-    const form = reactive({
-      scopeOption: 'all' as ScopeOption,
-      workspaces: [] as string[],
+    const form = reactive<PluginInstallForm>({
+      scopeOption: 'all',
+      workspaces: [],
+      metadata: {},
     })
     const workspaceRecords = computed(() =>
       props.workspaces
@@ -85,6 +94,7 @@ const PluginInstallModal = defineComponent({
       }
       form.scopeOption = props.scope != null ? 'specified' : 'all'
       form.workspaces = []
+      form.metadata = {}
     })
 
     function close(): void {
@@ -113,6 +123,7 @@ const PluginInstallModal = defineComponent({
         body.workspaceScope = AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE.SPECIFIED
         body.workspaces = form.workspaces.map(id => ({id, value: channelOfWorkspace(id)}))
       }
+      body.metadata = {...form.metadata}
       return body
     }
 
@@ -191,6 +202,7 @@ const PluginInstallModal = defineComponent({
               </FormItem>
             )
             : null}
+          {slots.afterScope?.({form})}
         </LForm>
       </Modal>
     )

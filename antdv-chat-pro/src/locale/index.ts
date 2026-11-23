@@ -163,6 +163,7 @@ export interface AgentHubLocale {
   workspaceEmpty: string
   workspace: string
   all: string
+  auth: string
 }
 
 export interface FileViewLocale {

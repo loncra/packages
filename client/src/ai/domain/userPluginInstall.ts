@@ -24,6 +24,7 @@ export interface UserPluginRequestBody extends UserPluginMetadata {
   scope?: number
   workspaceScope: number
   workspaces?: IdValueMetadata<string, ExecutionChannel>[]
+  metadata?: Record<string, unknown>
 }
 
 export interface UserPluginSkillMetadata extends UpdatePolicyUserPluginInstallMetadata {

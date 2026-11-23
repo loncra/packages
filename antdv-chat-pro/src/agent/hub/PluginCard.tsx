@@ -175,6 +175,12 @@ const PluginCard = defineComponent({
             enterpriseOption={isOrgOwner.value}
             onUpdate:open={(open: boolean) => installOpen.value = open}
             onInstalled={(result: UserPluginInstallResult) => emit('installed', result)}
+            v-slots={{
+              afterScope: (ctx: Record<string, unknown>) => slots.afterScope?.({
+                ...ctx,
+                record: installPackage.value,
+              }),
+            }}
           />
         </div>
       )

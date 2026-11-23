@@ -1,9 +1,11 @@
 import {computed, defineComponent, type PropType} from 'vue'
-import {Flex, Spin, Tabs} from 'antdv-next'
-import {ApiOutlined} from '@antdv-next/icons'
+import {Divider, Flex, Space, Spin, Tabs} from 'antdv-next'
+import {ApiOutlined, KeyOutlined} from '@antdv-next/icons'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
+import {KeyValueTable, type KeyValueRow} from '@loncra/antdv'
 import {useIconFontRender} from '@loncra/antdv'
 import {
+    AI_SERVER_API_KEY_MODE,
     AI_SERVER_PLUGIN_TARGET_TYPE,
     AiMcpPackageService,
     MCP_GROUP_CODE_PREFIX,
@@ -11,11 +13,13 @@ import {
     type UserPluginInstallResult,
     type UserPluginMetadata,
 } from '@loncra/client/ai'
+import {getEnumValue} from '@loncra/client/commons'
 import type {AgentConversationRecord} from '../conversation'
 import PluginCard from './PluginCard'
 import {AGENT_HUB_PREFIX} from './style'
 import {useAgentHubPluginMarket} from './useAgentHubPluginMarket.ts'
 import type {Self} from "../types.ts";
+import {useLocale} from "../../_util/useLocale.ts";
 
 const McpMarket = defineComponent({
     name: 'LAgentHubMcp',
@@ -33,7 +37,7 @@ const McpMarket = defineComponent({
         const iconFontRender = useIconFontRender()
         const prefixCls = computed(() => config.value.getPrefixCls('agent-hub', AGENT_HUB_PREFIX))
         const market = useAgentHubPluginMarket(new AiMcpPackageService(), MCP_GROUP_CODE_PREFIX)
-
+        const locale = useLocale('AgentHub')
         return () => (
             <Spin spinning={market.install.value} class={`${prefixCls.value}-full-spin`}>
                 <Tabs
@@ -73,6 +77,34 @@ const McpMarket = defineComponent({
                                     onUninstalled={(event: UserPluginMetadata) => emit('uninstalled', event)}
                                     v-slots={{
                                         title: ({record}: { record: McpPackageEntity }) => record.name,
+                                        afterScope: ({form, record}: { form: Record<string, any>; record: unknown }) => {
+                                            const pkg = record as McpPackageEntity
+                                            const items = pkg.metadata?.authConfig?.items ?? []
+                                            if (getEnumValue(pkg.authMode) !== AI_SERVER_API_KEY_MODE.MANUAL
+                                                || items.length === 0) {
+                                                return null
+                                            }
+                                            form.metadata.authConfig ??= items.map((item) => ({
+                                                id: item.key, key: item.key, value: '', placeholder: item.placeholder, editing: true,
+                                            }))
+                                            return (
+                                                <>
+                                                    <Divider title-placement="start" plain>
+                                                        <Space>
+                                                            <KeyOutlined />
+                                                            <span>{locale.value.auth}</span>
+                                                        </Space>
+                                                    </Divider>
+                                                    <KeyValueTable
+                                                        addable={false}
+                                                        formItemNamePrefix={['metadata', 'authConfig']}
+                                                        columns={{key: {readonly: true, field: 'id'}}}
+                                                        value={form.metadata.authConfig as KeyValueRow[]}
+                                                        onUpdate:value={(rows: KeyValueRow[]) => form.metadata.authConfig = rows}
+                                                    />
+                                                </>
+                                            )
+                                        },
                                     }}
                                 />
                             </Spin>
