@@ -62,6 +62,13 @@ export const AI_SERVER_MCP_CLIENT_TYPE = {
   STREAMABLE_HTTP: 'streamableHttp',
 } as const
 
+export const AI_SERVER_MCP_CLIENT_AUTH_FIELD = {
+  HEADERS: 'headers',
+  QUERY_PARAMS: 'queryParams',
+  ENV: 'env',
+  ARGS: 'args',
+} as const
+
 export const AI_SERVER_SKILL_SOURCE_TYPE = {
   MANUAL: 20,
   GIT: 10,

@@ -1,5 +1,5 @@
 import type {NameValueEnumMetadata, TimeProperties} from '../../commons'
-import type {AI_SERVER_MCP_CLIENT_TYPE} from '../enumerate.ts'
+import {AI_SERVER_MCP_CLIENT_AUTH_FIELD, type AI_SERVER_MCP_CLIENT_TYPE} from '../enumerate.ts'
 import type {PluginPackageMetadata} from './plugin.ts'
 
 export type McpClientType =
@@ -58,7 +58,7 @@ export interface StreamableHttpMcpClientTransportMetadata extends SseMcpClientTr
 }
 
 export interface McpPackageManualAuthMetadata {
-  position: 'header' | 'param'
+  position: typeof AI_SERVER_MCP_CLIENT_AUTH_FIELD.ARGS | typeof AI_SERVER_MCP_CLIENT_AUTH_FIELD.ENV | typeof AI_SERVER_MCP_CLIENT_AUTH_FIELD.HEADERS | typeof AI_SERVER_MCP_CLIENT_AUTH_FIELD.QUERY_PARAMS
   items: {key: string, placeholder: string}[]
 }
 

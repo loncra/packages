@@ -2,8 +2,7 @@ import {computed, defineComponent, type PropType} from 'vue'
 import {Divider, Flex, Space, Spin, Tabs} from 'antdv-next'
 import {ApiOutlined, KeyOutlined} from '@antdv-next/icons'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
-import {KeyValueTable, type KeyValueRow} from '@loncra/antdv'
-import {useIconFontRender} from '@loncra/antdv'
+import {type KeyValueRow, KeyValueTable, useIconFontRender} from '@loncra/antdv'
 import {
     AI_SERVER_API_KEY_MODE,
     AI_SERVER_PLUGIN_TARGET_TYPE,
@@ -79,12 +78,17 @@ const McpMarket = defineComponent({
                                         title: ({record}: { record: McpPackageEntity }) => record.name,
                                         afterScope: ({form, record}: { form: Record<string, any>; record: unknown }) => {
                                             const pkg = record as McpPackageEntity
-                                            const items = pkg.metadata?.authConfig?.items ?? []
-                                            if (getEnumValue(pkg.authMode) !== AI_SERVER_API_KEY_MODE.MANUAL
-                                                || items.length === 0) {
+                                            if (getEnumValue(pkg.authMode) !== AI_SERVER_API_KEY_MODE.MANUAL) {
                                                 return null
                                             }
-                                            form.metadata.authConfig ??= items.map((item) => ({
+
+                                            const items = pkg.metadata?.authConfig?.items ?? []
+                                            const position = pkg.metadata?.authConfig?.position
+                                            if (items.length === 0 || position === undefined) {
+                                                return null
+                                            }
+
+                                            form.metadata[position] ??= items.map((item) => ({
                                                 id: item.key, key: item.key, value: '', placeholder: item.placeholder, editing: true,
                                             }))
                                             return (
@@ -97,10 +101,10 @@ const McpMarket = defineComponent({
                                                     </Divider>
                                                     <KeyValueTable
                                                         addable={false}
-                                                        formItemNamePrefix={['metadata', 'authConfig']}
+                                                        formItemNamePrefix={['metadata', position]}
                                                         columns={{key: {readonly: true, field: 'id'}}}
-                                                        value={form.metadata.authConfig as KeyValueRow[]}
-                                                        onUpdate:value={(rows: KeyValueRow[]) => form.metadata.authConfig = rows}
+                                                        value={form.metadata[position] as KeyValueRow[]}
+                                                        onUpdate:value={(rows: KeyValueRow[]) => form.metadata[position] = rows}
                                                     />
                                                 </>
                                             )
