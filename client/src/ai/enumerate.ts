@@ -117,6 +117,7 @@ export const AI_SERVER_PLUGIN_INSTALL_STATUS = {
   PENDING: 10,
   ACTIVATED: 20,
   DISABLED: 30,
+  FAILURE: 99,
 } as const
 
 export const CHAT_BUBBLE_TYPE = {

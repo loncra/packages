@@ -2,6 +2,10 @@
 import type {PluginPackageMetadata} from '@loncra/client/ai'
 import type {Component} from "vue";
 
+import type {PluginInstallScopeOption} from './constants'
+
+export type ScopeOption = PluginInstallScopeOption
+
 export type PluginCardRecord = PluginPackageMetadata & {
   latestVersion?: string
   defaultUpdatePolicy?: NameValueEnumMetadata<number> | number

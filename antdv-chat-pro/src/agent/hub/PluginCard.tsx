@@ -1,13 +1,14 @@
-import {computed, defineComponent, type PropType, ref, toRef} from 'vue'
+import {computed, defineComponent, type PropType, reactive, ref, toRef} from 'vue'
 import {Alert, Card, Empty, Flex, Pagination, Space, Tag, Typography} from 'antdv-next'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {classNames, ICON_SELECT_AVATAR_MODE_VALUE, IconSelect} from '@loncra/antdv'
 import type {TotalPage} from '@loncra/client/commons'
-import {type UserPluginInstallResult, type UserPluginMetadata} from '@loncra/client/ai'
+import {type PluginInstallGroup, type UserPluginInstallResult, type UserPluginMetadata} from '@loncra/client/ai'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import {useLocale} from '../../_util/useLocale'
-import PluginInstallModal from './PluginInstallModal'
+import PluginInstallModal, {type PluginInstallForm} from './PluginInstallModal'
+import {PLUGIN_INSTALL_SCOPE_OPTION} from './constants'
 import {usePluginInstallActions, type WorkspaceMeta} from './usePluginInstallActions'
 import PluginCardAction from './PluginCardAction'
 import type {AgentConversationRecord} from '../conversation'
@@ -39,47 +40,57 @@ const PluginCard = defineComponent({
     const cls = (name: string) => `${prefixCls.value}-${name}`
     const installOpen = ref(false)
     const installPackage = ref<PluginCardRecord>()
-    const installScope = ref<number>()
-    const {installGroups, isOrgOwner, onUninstall, onUpgrade} = usePluginInstallActions({
+    const {installGroups, isOrgOwner, onUninstall} = usePluginInstallActions({
       targetType: props.targetType,
       installs: toRef(props, 'installs'),
       self: toRef(props, 'self'),
       onInstalled: (result: UserPluginInstallResult) => emit('installed', result),
       onUninstalled: (event: UserPluginMetadata) => emit('uninstalled', event),
     })
-    const modalWorkspaces = computed(() => {
-      if (installScope.value == null || installPackage.value?.id == null) {
-        return props.workspaces
-      }
-      const installedIds = installGroups.value
-        .get(installPackage.value.id)
-        ?.workspaces
-        .map(item => item.workspace?.id)
-      return props.workspaces.filter(item => !installedIds?.includes(String(item.id)))
+    const installForm = reactive<PluginInstallForm>({
+      scopeOption: 'all',
+      workspaces: [],
+      metadata: {},
     })
 
-    function onInstall(record: PluginCardRecord, scope?: number): void {
+    function onInstall(record: PluginCardRecord): void {
       if (record.id == null) {
         return
       }
       installPackage.value = record
-      installScope.value = scope
+      installForm.scopeOption = PLUGIN_INSTALL_SCOPE_OPTION.ALL
+      installForm.workspaces = []
+      installForm.metadata = {}
+      installOpen.value = true
+    }
+
+    function onManage(record: PluginCardRecord, group?: PluginInstallGroup): void {
+      if (record.id == null || group == null) {
+        return
+      }
+      const row = group.enterprise ?? group.userAll ?? group.workspaces[0]
+      installPackage.value = record
+      installForm.scopeOption = group.enterprise != null
+        ? PLUGIN_INSTALL_SCOPE_OPTION.ENTERPRISE
+        : group.userAll != null ? PLUGIN_INSTALL_SCOPE_OPTION.ALL : PLUGIN_INSTALL_SCOPE_OPTION.SPECIFIED
+      installForm.workspaces = group.workspaces
+        .filter((item) => item.workspace?.id != null)
+        .map((item) => String(item.workspace!.id))
+      installForm.metadata = {...(row?.metadata as {metadata?: Record<string, unknown>} | undefined)?.metadata ?? {}}
       installOpen.value = true
     }
 
     function renderAction(record: PluginCardRecord) {
-      const group = record.id == null ? undefined : installGroups.value.get(record.id)
       return (
         <PluginCardAction
           record={record}
-          group={group}
           installs={props.installs}
           workspaces={props.workspaces}
           self={props.self}
           targetType={props.targetType}
-          onInstall={(scope?: number) => onInstall(record, scope)}
+          onInstall={() => onInstall(record)}
+          onManage={(group?: PluginInstallGroup) => onManage(record, group)}
           onUninstall={(selected: WorkspaceMeta[]) => onUninstall(record, selected)}
-          onUpgrade={(selected: WorkspaceMeta[]) => onUpgrade(record, selected)}
         />
       )
     }
@@ -168,18 +179,15 @@ const PluginCard = defineComponent({
           <PluginInstallModal
             open={installOpen.value}
             targetType={props.targetType}
-            packageId={installPackage.value?.id}
-            packageName={installPackage.value?.name}
-            workspaces={modalWorkspaces.value}
-            scope={installScope.value}
+            record={installPackage.value}
+            workspaces={props.workspaces}
+            form={installForm}
             enterpriseOption={isOrgOwner.value}
             onUpdate:open={(open: boolean) => installOpen.value = open}
             onInstalled={(result: UserPluginInstallResult) => emit('installed', result)}
             v-slots={{
-              afterScope: (ctx: Record<string, unknown>) => slots.afterScope?.({
-                ...ctx,
-                record: installPackage.value,
-              }),
+              afterScope: (ctx: Record<string, unknown>) => slots.afterModalScope?.(ctx),
+              workspaceItemExtra: (ctx: Record<string, unknown>) => slots.workspaceItemExtra?.(ctx),
             }}
           />
         </div>

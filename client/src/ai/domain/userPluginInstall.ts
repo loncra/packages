@@ -13,6 +13,7 @@ export interface UserPluginMetadata {
 
 export interface UserPluginInstallMetadata {
   type: NameValueEnumMetadata<string> | string
+  metadata: Record<string, unknown>
 }
 
 export interface UpdatePolicyUserPluginInstallMetadata extends UserPluginInstallMetadata{
@@ -32,17 +33,18 @@ export interface UserPluginSkillMetadata extends UpdatePolicyUserPluginInstallMe
   updatePolicy:NameValueEnumMetadata<number>| number
 }
 
-export interface UserPluginMcpMetadata extends UserPluginInstallMetadata{
+export interface UserPluginMcpMetadata extends UserPluginInstallMetadata {
   authMode:NameValueEnumMetadata<number> | number
   key:string;
 }
 
 export interface UserPluginInstallResult {
   id?: number
-  targetType?: NameValueEnumMetadata<string> | string
-  workspaceScope?: NameValueEnumMetadata<number> | number
-  status?: NameValueEnumMetadata<number> | number
-  scope:NameValueEnumMetadata<number> | number
+  targetType: NameValueEnumMetadata<string> | string
+  workspaceScope: NameValueEnumMetadata<number> | number
+  status: NameValueEnumMetadata<number> | number
+  exception?: string
+  scope: NameValueEnumMetadata<number> | number
   workspace?: IdNameValueMetadata<ExecutionChannel>
   metadata: UserPluginInstallMetadata
   pluginPackage: McpPackageEntity | SkillPackageEntity

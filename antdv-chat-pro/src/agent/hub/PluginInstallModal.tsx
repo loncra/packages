@@ -1,27 +1,26 @@
-import {computed, defineComponent, type PropType, type SlotsType, reactive, ref, watch} from 'vue'
-import {CheckboxGroup, Empty, Flex, FormItem, Modal, RadioGroup} from 'antdv-next'
+import {computed, defineComponent, type PropType, ref, type SlotsType} from 'vue'
+import {Checkbox, Empty, Flex, FormItem, Modal, RadioGroup, Typography} from 'antdv-next'
 import {FolderOpenOutlined, FolderOutlined} from '@antdv-next/icons'
 import useApp from 'antdv-next/dist/app/useApp'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {Form as LForm} from '@loncra/antdv-pro'
 import {getEnumValue} from '@loncra/client/commons'
 import {
-  AGENT_WORKSPACE_TYPE_VALUE,
-  AgentHubService,
-  AI_SERVER_EXECUTION_CHANNEL,
-  AI_SERVER_PLUGIN_INSTALL_USER_SCOPE,
-  AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE,
-  type ExecutionChannel,
-  type UserPluginInstallResult,
-  type UserPluginRequestBody,
+    AGENT_WORKSPACE_TYPE_VALUE,
+    AgentHubService,
+    AI_SERVER_EXECUTION_CHANNEL,
+    AI_SERVER_PLUGIN_INSTALL_USER_SCOPE,
+    AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE,
+    type ExecutionChannel,
+    type UserPluginInstallResult,
+    type UserPluginRequestBody,
 } from '@loncra/client/ai'
 import {classNames, fillLocale} from '@loncra/antdv'
 import type {AgentConversationRecord} from '../conversation'
 import {isDefaultWorkspace} from '../conversation/useAgentConversations'
 import {useLocale} from '../../_util/useLocale'
 import useStyle, {AGENT_HUB_PREFIX} from './style'
-
-type ScopeOption = 'all' | 'enterprise' | 'specified'
+import type {PluginCardRecord, ScopeOption} from './types'
 
 export interface PluginInstallForm extends Pick<UserPluginRequestBody, 'metadata'> {
   scopeOption: ScopeOption
@@ -33,10 +32,13 @@ const PluginInstallModal = defineComponent({
   props: {
     open: {type: Boolean, required: true},
     targetType: {type: String, required: true},
-    packageId: Number,
-    packageName: String,
+    record: {type: Object as PropType<PluginCardRecord>, default: undefined},
+    form: {type: Object as PropType<PluginInstallForm>, default: {
+      scopeOption: 'all',
+      workspaces: [],
+      metadata: {},
+    }},
     workspaces: {type: Array as PropType<AgentConversationRecord[]>, default: () => []},
-    scope: {type: Number, default: undefined},
     enterpriseOption: {type: Boolean, default: false},
   },
   emits: {
@@ -44,7 +46,8 @@ const PluginInstallModal = defineComponent({
     installed: (_result: UserPluginInstallResult) => true,
   },
   slots: Object as SlotsType<{
-    afterScope?: (ctx: {form: PluginInstallForm}) => unknown
+    afterScope?: (ctx: {form: PluginInstallForm; record: PluginCardRecord | undefined}) => unknown
+    workspaceItemExtra?: (ctx: {workspace: AgentConversationRecord; index: number; record: PluginCardRecord | undefined}) => unknown
   }>,
   setup(props, {emit, slots}) {
     const locale = useLocale('AgentHub')
@@ -54,11 +57,7 @@ const PluginInstallModal = defineComponent({
     const [hashId] = useStyle(prefixCls)
     const formRef = ref<{validate: () => Promise<unknown>}>()
     const spinning = ref(false)
-    const form = reactive<PluginInstallForm>({
-      scopeOption: 'all',
-      workspaces: [],
-      metadata: {},
-    })
+    const form = props.form
     const workspaceRecords = computed(() =>
       props.workspaces
         .filter((item) => item.id != null && AGENT_WORKSPACE_TYPE_VALUE.includes(getEnumValue(item.type))),
@@ -88,14 +87,11 @@ const PluginInstallModal = defineComponent({
         : AI_SERVER_EXECUTION_CHANNEL.CLOUD
     }
 
-    watch(() => props.open, (open) => {
-      if (!open) {
-        return
-      }
-      form.scopeOption = props.scope != null ? 'specified' : 'all'
-      form.workspaces = []
-      form.metadata = {}
-    })
+    function toggleWorkspace(id: string, checked: boolean): void {
+      form.workspaces = checked
+        ? [...form.workspaces, id]
+        : form.workspaces.filter((item) => item !== id)
+    }
 
     function close(): void {
       emit('update:open', false)
@@ -114,7 +110,7 @@ const PluginInstallModal = defineComponent({
     function installBody(): UserPluginRequestBody {
       const body: UserPluginRequestBody = {
         targetType: props.targetType,
-        packageId: props.packageId!,
+        packageId: props.record!.id!,
         workspaceScope: AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE.ALL,
       }
       if (form.scopeOption === 'enterprise') {
@@ -129,8 +125,8 @@ const PluginInstallModal = defineComponent({
 
     async function onOk(): Promise<void> {
       await formRef.value?.validate()
-      if (props.packageId == null) {
-        return Promise.reject(new Error('packageId is required'))
+      if (props.record?.id == null) {
+        return Promise.reject(new Error('record.id is required'))
       }
       spinning.value = true
       try {
@@ -148,61 +144,64 @@ const PluginInstallModal = defineComponent({
     return () => (
       <Modal
         open={props.open}
-        title={fillLocale(locale.value.installTitle, {name: props.packageName ?? ''})}
+        title={fillLocale(locale.value.installTitle, {name: props.record?.name ?? ''})}
         okText={locale.value.install}
         confirmLoading={spinning.value}
-        maskClosable={false}
+        mask={{closable:false}}
         destroyOnHidden
         onOk={onOk}
         onCancel={close}
       >
         <LForm ref={formRef} model={form}>
-          {props.scope == null
-            ? (
-              <FormItem name="scopeOption" label={locale.value.workspaceScope} rules={[{required: true}]}>
-                <RadioGroup v-model:value={form.scopeOption} options={scopeOptions.value} />
-              </FormItem>
-            )
-            : null}
+          <FormItem name="scopeOption" label={locale.value.workspaceScope} >
+            <RadioGroup v-model:value={form.scopeOption} options={scopeOptions.value} />
+          </FormItem>
           {form.scopeOption === 'specified'
             ? (
               <FormItem
                 name="workspaces"
                 label={locale.value.workspace}
-                rules={[{validator: validateWorkspaces, trigger: 'change'}]}
+                rules={[{validator: validateWorkspaces, trigger: 'change', required: true}]}
               >
                 {workspaceOptions.value.length > 0
                   ? (
-                    <CheckboxGroup
-                      v-model:value={form.workspaces}
-                      options={workspaceOptions.value}
-                      v-slots={{
-                        labelRender: ({index}: {item: unknown; index: number}) => {
-                          const item = workspaceRecords.value[index]
-                          if (!item) {
-                            return null
-                          }
-                          const Icon = isDefaultWorkspace(getEnumValue(item.type)) ? FolderOpenOutlined : FolderOutlined
-                          return (
-                            <Flex align="center" gap="small">
-                              <Icon
-                                class={classNames(
-                                  hashId.value,
-                                  item.tone ? `${prefixCls.value}-${item.tone}` : undefined,
-                                )}
-                              />
-                              <span>{item.name}</span>
+                    <Flex vertical gap="small">
+                      {workspaceOptions.value.map((option, index) => {
+                        const item = workspaceRecords.value[index]
+                        if (item == null) {
+                          return null
+                        }
+                        const Icon = isDefaultWorkspace(getEnumValue(item.type)) ? FolderOpenOutlined : FolderOutlined
+                        return (
+                          <Flex key={option.value} align="center" gap="small">
+                            <Flex align="center" class={classNames(hashId.value, `${prefixCls.value}-install-main`)}>
+                              <Checkbox
+                                class={classNames(hashId.value, `${prefixCls.value}-install-checkbox`)}
+                                checked={form.workspaces.includes(option.value)}
+                                onChange={(e: { target: { checked: boolean } }) => toggleWorkspace(option.value, e.target.checked)}
+                              >
+                                <Flex align="center" gap="small" class={classNames(hashId.value, `${prefixCls.value}-install-label`)}>
+                                  <Icon
+                                    class={classNames(
+                                      hashId.value,
+                                      item.tone ? `${prefixCls.value}-${item.tone}` : undefined,
+                                    )}
+                                  />
+                                  <Typography.Text ellipsis>{item.name}</Typography.Text>
+                                </Flex>
+                              </Checkbox>
                             </Flex>
-                          )
-                        },
-                      }}
-                    />
+                            {slots.workspaceItemExtra?.({workspace: item, index, record: props.record})}
+                          </Flex>
+                        )
+                      })}
+                    </Flex>
                   )
                   : <Empty description={locale.value.workspaceEmpty} />}
               </FormItem>
             )
             : null}
-          {slots.afterScope?.({form})}
+          {slots.afterScope?.({form, record: props.record})}
         </LForm>
       </Modal>
     )

@@ -66,6 +66,22 @@ export function isRecordUpgradeable(record: PluginCardRecord): boolean {
     && getEnumValue(record.defaultUpdatePolicy) === AI_SERVER_SKILL_UPDATE_POLICY.MANUAL
 }
 
+function severityOfInstallStatus(status: UserPluginInstallResult['status']): number {
+  const value = getEnumValue(status)
+  return value === 99 ? 2 : value === 30 ? 1 : 0
+}
+
+export function findPendingInstall(group: PluginInstallGroup | undefined): UserPluginInstallResult | undefined {
+  return [
+    group?.enterprise,
+    group?.userAll,
+    ...(group?.workspaces ?? []),
+  ]
+    .filter((row): row is UserPluginInstallResult => row != null)
+    //.filter((row) => row.status != null && getEnumValue(row.status) !== 20)
+    .sort((a, b) => severityOfInstallStatus(b.status) - severityOfInstallStatus(a.status))[0]
+}
+
 export function usePluginInstallActions(options: {
   targetType: string
   installs: Ref<UserPluginInstallResult[]>

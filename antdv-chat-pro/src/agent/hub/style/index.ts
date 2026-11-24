@@ -8,6 +8,24 @@ export const AGENT_HUB_PREFIX = 'loncra-agent-hub'
 function genAgentHubStyle(token: LoncraStyleToken): CSSInterpolation {
   const {componentCls, marginSM,antCls, padding, paddingXS, paddingXXS, fontSizeSM, colorBorderSecondary} = token
   return {
+    [`${componentCls}-changelog`]: {
+      borderTop: `1px solid ${colorBorderSecondary}`,
+      borderRadius: 0,
+      paddingTop:paddingXXS,
+      [`${antCls}-collapse-header`]: {
+        padding: 0
+      },
+      [`${antCls}-collapse-body`]: {
+        padding: `${padding} 0`
+      }
+    },
+    [`${componentCls}-changelog-content`]: {
+      whiteSpace: 'pre-wrap',
+    },
+
+    [`${componentCls}-release-change-log-tabs-item`]: {
+      padding:`${paddingXXS} ${paddingXS}`,
+    },
     [componentCls]: {
       display: 'flex',
       flexDirection: 'column',
@@ -32,9 +50,6 @@ function genAgentHubStyle(token: LoncraStyleToken): CSSInterpolation {
       },
       [`${componentCls}-card-body`]: {
         padding:padding,
-      },
-      [`${componentCls}-release-change-log-tabs-item`]: {
-        padding:`${paddingXXS} ${paddingXS}`,
       },
       [`${componentCls}-tabs`]: {
         height: '100%',
@@ -82,19 +97,20 @@ function genAgentHubStyle(token: LoncraStyleToken): CSSInterpolation {
       [`${componentCls}-time`]: {
         fontSize: fontSizeSM,
       },
-      [`${componentCls}-changelog`]: {
-        borderTop: `1px solid ${colorBorderSecondary}`,
-        borderRadius: 0,
-        paddingTop:paddingXXS,
-        [`${antCls}-collapse-header`]: {
-          padding: 0
-        },
-        [`${antCls}-collapse-body`]: {
-          padding: `${padding} 0`
-        }
-      },
-      [`${componentCls}-changelog-content`]: {
-        whiteSpace: 'pre-wrap',
+
+    },
+    [`${componentCls}-install-main`]: {
+      flex: 1,
+      minWidth: 0,
+    },
+    [`${componentCls}-install-checkbox`]: {
+      width: '100%',
+    },
+    [`${componentCls}-install-label`]: {
+      flex: 1,
+      minWidth: 0,
+      [`${antCls}-typography`]: {
+        flex: 1,
       },
     },
     ...genFullSpinStyle(token),

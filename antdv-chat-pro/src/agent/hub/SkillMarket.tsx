@@ -1,5 +1,5 @@
-import {computed, defineComponent, type PropType} from 'vue'
-import {Collapse, Flex, Spin, Tabs} from 'antdv-next'
+import {computed, defineComponent, type PropType, ref} from 'vue'
+import {Collapse, Flex, Spin, Tabs, Typography} from 'antdv-next'
 import {StarOutlined} from '@antdv-next/icons'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {
@@ -7,9 +7,12 @@ import {
     AiSkillPackageService,
     SKILL_GROUP_CODE_PREFIX,
     type SkillPackageEntity,
+    type SkillReleaseEntity,
+    type UpdatePolicyUserPluginInstallMetadata,
     type UserPluginInstallResult,
     type UserPluginMetadata,
 } from '@loncra/client/ai'
+import {getEnumValue} from '@loncra/client/commons'
 import {useIconFontRender} from '@loncra/antdv'
 import {useLocale} from '../../_util/useLocale'
 import type {AgentConversationRecord} from '../conversation'
@@ -36,6 +39,60 @@ const SkillMarket = defineComponent({
         const iconFontRender = useIconFontRender()
         const prefixCls = computed(() => config.value.getPrefixCls('agent-hub', AGENT_HUB_PREFIX))
         const market = useAgentHubPluginMarket(new AiSkillPackageService(), SKILL_GROUP_CODE_PREFIX)
+        const releaseTarget = ref<SkillReleaseEntity>()
+
+        function renderReleaseChangeLog(
+            record: SkillPackageEntity | undefined,
+            onReleaseChange?: (release: SkillReleaseEntity) => void,
+        ) {
+            const packageId = record?.id
+            return packageId == null
+                ? null
+                : (
+                    <Collapse
+                        ghost
+                        class={`${prefixCls.value}-changelog`}
+                        items={[{key: 'changelog', label: locale.value.changelog}]}
+                        v-slots={{
+                            contentRender: () => (
+                                <SkillReleaseChangeLog packageId={packageId} onChange={onReleaseChange}/>
+                            ),
+                        }}
+                    />
+                )
+        }
+
+        function findInstall(record: SkillPackageEntity, workspace: AgentConversationRecord): UserPluginInstallResult | undefined {
+            return props.installs.find((item) =>
+                item.pluginPackage?.id === record.id
+                && getEnumValue(item.targetType) === AI_SERVER_PLUGIN_TARGET_TYPE.SKILL
+                && item.workspace?.id === workspace.id,
+            )
+        }
+
+        function renderLockedVersion(install: UserPluginInstallResult, target: string | undefined) {
+            const locked = (install.metadata as UpdatePolicyUserPluginInstallMetadata).releaseVersion
+            const upgrade = Boolean(target) && Boolean(locked) && locked !== target
+            return (
+                <Typography.Text type={upgrade ? 'warning' : 'secondary'}>
+                    {upgrade ? `${locked} → ${target}` : (locked ?? '')}
+                </Typography.Text>
+            )
+        }
+
+        function renderVersion(workspace: AgentConversationRecord, record: SkillPackageEntity | undefined) {
+            if (record?.id == null) {
+                return null
+            }
+            const install = findInstall(record, workspace)
+            const target = releaseTarget.value?.releaseVersion ?? record.latestVersion
+            if (install == null) {
+                return target == null
+                    ? null
+                    : <Typography.Text type="secondary">{target}</Typography.Text>
+            }
+            return renderLockedVersion(install, target)
+        }
 
         return () => (
             <Spin spinning={market.install.value} class={`${prefixCls.value}-full-spin`}>
@@ -74,17 +131,15 @@ const SkillMarket = defineComponent({
                                     onUninstalled={(event: UserPluginMetadata) => emit('uninstalled', event)}
                                     v-slots={{
                                         title: ({record}: { record: SkillPackageEntity }) => record.name,
-                                        after: ({record}: { record: SkillPackageEntity }) => (
-                                            <Collapse
-                                                ghost
-                                                class={`${prefixCls.value}-changelog`}
-                                                items={[{key: 'changelog', label: locale.value.changelog}]}
-                                                v-slots={{
-                                                    contentRender: () => record.id == null
-                                                        ? null
-                                                        : <SkillReleaseChangeLog packageId={record.id}/>,
-                                                }}
-                                            />
+                                        after: ({record}: { record: SkillPackageEntity }) => renderReleaseChangeLog(record),
+                                        afterModalScope: ({record}: { record: unknown }) => renderReleaseChangeLog(
+                                            record as SkillPackageEntity | undefined,
+                                            (release) => {
+                                                releaseTarget.value = release
+                                            },
+                                        ),
+                                        workspaceItemExtra: ({workspace, record}: { workspace: AgentConversationRecord; record: unknown }) => (
+                                            renderVersion(workspace, record as SkillPackageEntity | undefined)
                                         ),
                                     }}
                                 />

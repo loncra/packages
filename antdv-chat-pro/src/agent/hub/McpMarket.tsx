@@ -20,6 +20,29 @@ import {useAgentHubPluginMarket} from './useAgentHubPluginMarket.ts'
 import type {Self} from "../types.ts";
 import {useLocale} from "../../_util/useLocale.ts";
 
+function buildManualAuthRow(item: { key: string; placeholder: string }): KeyValueRow {
+    return {
+        id: item.key, key: item.key,
+        value: '',
+        placeholder: item.placeholder,
+        editing: true,
+    }
+}
+
+function seedManualAuthRows(form: Record<string, any>, pkg: McpPackageEntity): string | undefined {
+    const authConfig = pkg.metadata?.authConfig
+    if (getEnumValue(pkg.authMode) !== AI_SERVER_API_KEY_MODE.MANUAL || authConfig == null) {
+        return undefined
+    }
+    const items = authConfig.items ?? []
+    const position = authConfig.position
+    if (items.length === 0) {
+        return undefined
+    }
+    form.metadata[position] ??= items.map((item) => buildManualAuthRow(item))
+    return position
+}
+
 const McpMarket = defineComponent({
     name: 'LAgentHubMcp',
     props: {
@@ -37,6 +60,31 @@ const McpMarket = defineComponent({
         const prefixCls = computed(() => config.value.getPrefixCls('agent-hub', AGENT_HUB_PREFIX))
         const market = useAgentHubPluginMarket(new AiMcpPackageService(), MCP_GROUP_CODE_PREFIX)
         const locale = useLocale('AgentHub')
+
+        function renderManualAuth(form: Record<string, any>, pkg: McpPackageEntity) {
+            const position = seedManualAuthRows(form, pkg)
+            if (position === undefined) {
+                return null
+            }
+            return (
+                <>
+                    <Divider title-placement="start" plain>
+                        <Space>
+                            <KeyOutlined />
+                            <span>{locale.value.auth}</span>
+                        </Space>
+                    </Divider>
+                    <KeyValueTable
+                        addable={false}
+                        formItemNamePrefix={['metadata', position]}
+                        columns={{key: {readonly: true, field: 'id'}}}
+                        value={form.metadata[position] as KeyValueRow[]}
+                        onUpdate:value={(rows: KeyValueRow[]) => form.metadata[position] = rows}
+                    />
+                </>
+            )
+        }
+
         return () => (
             <Spin spinning={market.install.value} class={`${prefixCls.value}-full-spin`}>
                 <Tabs
@@ -76,38 +124,8 @@ const McpMarket = defineComponent({
                                     onUninstalled={(event: UserPluginMetadata) => emit('uninstalled', event)}
                                     v-slots={{
                                         title: ({record}: { record: McpPackageEntity }) => record.name,
-                                        afterScope: ({form, record}: { form: Record<string, any>; record: unknown }) => {
-                                            const pkg = record as McpPackageEntity
-                                            if (getEnumValue(pkg.authMode) !== AI_SERVER_API_KEY_MODE.MANUAL) {
-                                                return null
-                                            }
-
-                                            const items = pkg.metadata?.authConfig?.items ?? []
-                                            const position = pkg.metadata?.authConfig?.position
-                                            if (items.length === 0 || position === undefined) {
-                                                return null
-                                            }
-
-                                            form.metadata[position] ??= items.map((item) => ({
-                                                id: item.key, key: item.key, value: '', placeholder: item.placeholder, editing: true,
-                                            }))
-                                            return (
-                                                <>
-                                                    <Divider title-placement="start" plain>
-                                                        <Space>
-                                                            <KeyOutlined />
-                                                            <span>{locale.value.auth}</span>
-                                                        </Space>
-                                                    </Divider>
-                                                    <KeyValueTable
-                                                        addable={false}
-                                                        formItemNamePrefix={['metadata', position]}
-                                                        columns={{key: {readonly: true, field: 'id'}}}
-                                                        value={form.metadata[position] as KeyValueRow[]}
-                                                        onUpdate:value={(rows: KeyValueRow[]) => form.metadata[position] = rows}
-                                                    />
-                                                </>
-                                            )
+                                        afterModalScope: ({form, record}: { form: Record<string, any>; record: unknown }) => {
+                                            return renderManualAuth(form, record as McpPackageEntity)
                                         },
                                     }}
                                 />

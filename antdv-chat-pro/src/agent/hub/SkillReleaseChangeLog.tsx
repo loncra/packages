@@ -14,7 +14,10 @@ const SkillReleaseChangeLog = defineComponent({
   props: {
     packageId: {type: Number, required: true},
   },
-  setup(props) {
+  emits: {
+    change: (_release: SkillReleaseEntity) => true,
+  },
+  setup(props, {emit}) {
     const config = useConfig()
     const prefixCls = computed(() => config.value.getPrefixCls('agent-hub', AGENT_HUB_PREFIX))
     const [hashId, cssVarCls] = useStyle(prefixCls)
@@ -68,6 +71,10 @@ const SkillReleaseChangeLog = defineComponent({
                   items={tabItems.value}
                   onUpdate:activeKey={(key: string) => {
                     activeKey.value = key
+                    const release = releases.value.find((item) => String(item.id) === key)
+                    if (release != null) {
+                      emit('change', release)
+                    }
                   }}
                   v-slots={{
                     contentRender: () => release
