@@ -60,7 +60,12 @@ export interface Principal extends BasicIdMetadata<string> {
   username: string
 }
 
-export interface AuthenticationInfo {
+export interface AuthenticationSubject {
+  type?: AuthenticationType
+  grantedAuthorities?: string[]
+}
+
+export interface AuthenticationInfo extends AuthenticationSubject {
   details: Details
   authenticated: boolean
   principal: Principal

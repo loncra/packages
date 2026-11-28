@@ -1,10 +1,18 @@
 import {computed, defineComponent, type PropType} from 'vue'
 import {Avatar, Flex, Splitter, SplitterPanel} from 'antdv-next'
+import useApp from 'antdv-next/dist/app/useApp'
 import {Welcome} from '@antdv-next/x'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
-import {classNames} from '@loncra/antdv'
+import {classNames, fillLocale} from '@loncra/antdv'
 import {getEnumValue} from '@loncra/client/commons'
-import type {AgentStreamTransport, UserPluginInstallResult, UserPluginMetadata} from '@loncra/client/ai'
+import {
+    AgentHubService,
+    type AgentStreamTransport,
+    AI_SERVER_PLUGIN_INSTALL_STATUS,
+    AI_SERVER_PLUGIN_INSTALL_USER_SCOPE,
+    type UserPluginInstallResult,
+    type UserPluginMetadata
+} from '@loncra/client/ai'
 import type {SlotConfigType} from '@antdv-next/x/dist/sender/interface'
 import type {Self} from './types'
 import type {AgentConversationHost} from './conversation/types'
@@ -44,6 +52,40 @@ const AgentChat = defineComponent({
     const prefixCls = computed(() => config.value.getPrefixCls('agent-chat', props.prefixCls ?? AGENT_CHAT_PREFIX))
     const [hashId, cssVarCls] = useStyle(prefixCls)
     const chat = useAgentChat(props)
+    const {modal, message} = useApp()
+    const hubLocale = useLocale('AgentHub')
+
+    interface CatalogDisabledMeta {
+        disabled?: {statusName?: string; exception?: string}
+        packageId?: number
+        scope?: number
+    }
+
+    function activateFromCatalog(key: string | number): void {
+        const option = chat.instruction.findCatalogItem(key)
+        const meta = option?.metadata as CatalogDisabledMeta | undefined
+        if (!option || !meta?.disabled || meta.packageId == null) {
+            return
+        }
+        const targetType = String(option.metadata?.group ?? '')
+        modal.confirm({
+            title: hubLocale.value.activateConfirmTitle,
+            content: fillLocale(hubLocale.value.activateConfirmContent, {name: option.value}),
+            onOk: async () => {
+                const result = await AgentHubService.updateInstallStatus({
+                    targetType,
+                    packageId: meta.packageId!,
+                    scope: meta.scope ?? AI_SERVER_PLUGIN_INSTALL_USER_SCOPE.USER,
+                    status: AI_SERVER_PLUGIN_INSTALL_STATUS.ACTIVATED,
+                })
+                message.success(result.message)
+                const updated = result.data
+                if (updated != null) {
+                    emit('installed', updated)
+                }
+            },
+        })
+    }
 
     return () => {
       const {class: attrClass, style: attrStyle, ...rest} = attrs
@@ -73,6 +115,7 @@ const AgentChat = defineComponent({
                     loading={chat.conversationApi.loading.value}
                     selectedKeys={chat.selectedKeys.value}
                     openKeys={chat.openKeys.value}
+                    self={props.self}
                     host={chat.host}
                     actions={chat.conversationApi}
                     onUpdate:selectedKeys={(keys: string[]) => {
@@ -91,8 +134,12 @@ const AgentChat = defineComponent({
                         workspaces={chat.workspaces.value}
                         self={props.self}
                         plugins={props.plugins}
-                        onInstalled={(result: UserPluginInstallResult) => emit('installed', result)}
-                        onUninstalled={(event: UserPluginMetadata) => emit('uninstalled', event)}
+                        onInstalled={(result: UserPluginInstallResult) => {
+                          emit('installed', result)
+                        }}
+                        onUninstalled={(event: UserPluginMetadata) => {
+                          emit('uninstalled', event)
+                        }}
                       />
                     )
                     : (
@@ -138,19 +185,37 @@ const AgentChat = defineComponent({
                             isRunning={chat.isRunning.value}
                             workspace={chat.options.workspaceView.value}
                             catalogPrefix={TRIGGER}
-                            toCatalogMenuItems={toCatalogMenuItems}
+                            toCatalogMenuItems={(items) => toCatalogMenuItems(items, {
+                              onActivate: activateFromCatalog,
+                              activateText: hubLocale.value.activate,
+                            })}
                             onCatalogClick={(key, pick) => {
                               const option = chat.instruction.findCatalogItem(key)
-                              if (option) {
-                                pick(option)
+                              if (!option) {
+                                return
                               }
+                              const disabled = (option.metadata as CatalogDisabledMeta | undefined)?.disabled
+                              if (disabled) {
+                                activateFromCatalog(key)
+                                return
+                              }
+                              pick(option)
                             }}
-                            plusItems={toCatalogMenuItems(chat.catalogItems.value)}
+                            plusItems={toCatalogMenuItems(chat.catalogItems.value, {
+                              onActivate: activateFromCatalog,
+                              activateText: hubLocale.value.activate,
+                            })}
                             onPlusClick={(key) => {
                               const option = chat.instruction.findCatalogItem(key)
-                              if (option) {
-                                chat.instruction.insertCatalogItem(option)
+                              if (!option) {
+                                return
                               }
+                              const disabled = (option.metadata as CatalogDisabledMeta | undefined)?.disabled
+                              if (disabled) {
+                                activateFromCatalog(key)
+                                return
+                              }
+                              chat.instruction.insertCatalogItem(option)
                             }}
                             model={chat.options.modelView.value}
                             typeChoice={chat.options.typeView.value}

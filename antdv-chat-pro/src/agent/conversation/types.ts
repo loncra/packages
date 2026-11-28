@@ -17,6 +17,7 @@ export interface AgentConversationHost {
   iconTone?: (item: AgentConversationRecord) => string | undefined
   menuKeys?: (item: AgentConversationRecord) => AgentConversationMenuKey[] | undefined
   onRemove?: (item: AgentConversationRecord) => Promise<boolean>
+  onWorkspaceRemoved?: (item: AgentConversationRecord) => void
   workspaceActions?: (api: {refresh: () => Promise<void>}) => ResolvedAction[]
 }
 
@@ -24,7 +25,7 @@ export type AgentConversationMenuKey = 'create' | 'rename' | 'delete'
 
 export interface AgentConversationActions {
   load: (switchItemId?: string) => Promise<void>
-  startCreate: () => void
+  startCreate: (ownership?: number) => void
   startRename: (item: AgentConversationRecord) => void
   cancelEdit: (item: AgentConversationRecord) => void
   confirmEdit: (item: AgentConversationRecord) => void

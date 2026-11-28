@@ -44,7 +44,6 @@ export function useAgentChat(
     },
 ) {
     const chatLocale = useLocale('AgentChat')
-    const hubLocale = useLocale('AgentHub')
     const senderRef = ref<AgentSenderExpose>()
     const bubbleListRef = ref<BubbleListExpose>()
     const current = ref<AgentSession>()
@@ -107,7 +106,9 @@ export function useAgentChat(
     const catalogItems = computed<InstructionItem[]>(() =>
         toCatalogItems(
             props.installs,
-            sessions.currentWorkspaceId()
+            sessions.workspaces.value.find(
+                (workspace) => String(workspace.id) === sessions.currentWorkspaceId(),
+            ),
         ),
     )
 

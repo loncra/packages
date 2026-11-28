@@ -1,10 +1,4 @@
-import {
-    formUrlEncoded,
-    type PageRequest,
-    type PageResult,
-    type RestResult,
-    SYSTEM_MODULE_NAME,
-} from '../../commons'
+import {formUrlEncoded, type PageRequest, type PageResult, type RestResult, SYSTEM_MODULE_NAME,} from '../../commons'
 import {http, modulePrefix} from '../../http'
 import type {
     AgentChatBasicResponseBody,
@@ -14,7 +8,12 @@ import type {
     AgentMessageEntity,
     AgentResumeRequestBody,
 } from '../domain/agent.ts'
-import {AI_SERVER_EXECUTION_CHANNEL, type ExecutionChannel} from '../enumerate.ts'
+import {AI_SERVER_EXECUTION_CHANNEL, AI_SERVER_PLUGIN_INSTALL_USER_SCOPE, type ExecutionChannel} from '../enumerate.ts'
+
+const OWNERSHIP_PARAM_NAME: Record<number, string> = {
+  [AI_SERVER_PLUGIN_INSTALL_USER_SCOPE.USER]: 'USER',
+  [AI_SERVER_PLUGIN_INSTALL_USER_SCOPE.ENTERPRISE]: 'ENTERPRISE',
+}
 
 export class AgentService {
   static get BASE_URL(): string {
@@ -79,12 +78,15 @@ export class AgentService {
   static saveConversation(
     entity: AgentConversationEntity,
     channel: ExecutionChannel = AI_SERVER_EXECUTION_CHANNEL.CLOUD,
+    ownership?: number,
   ): Promise<RestResult<string>> {
+    const ownershipName = ownership == null ? undefined : OWNERSHIP_PARAM_NAME[ownership]
     return http().request({
       url: AgentService.CONVERSATION_URL + '/' + channel,
       method: 'PUT',
       data: entity,
       bodyType: 'json',
+      params: ownershipName == null ? undefined : {ownership: ownershipName},
     })
   }
 

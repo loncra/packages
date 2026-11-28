@@ -1,38 +1,40 @@
 import {computed, defineComponent, nextTick, type PropType, type VNode} from 'vue'
-import {Button, Divider, Flex, Input, Menu, type MenuItemType, SpaceCompact,} from 'antdv-next'
-import {ActionButton} from '@loncra/antdv-pro'
+import {Button, Divider, Flex, Input, Menu, type MenuItemType, SpaceCompact, Typography} from 'antdv-next'
+import {ActionButton, type ResolvedAction} from '@loncra/antdv-pro'
 import {
-    CheckCircleOutlined,
-    CheckOutlined,
-    CloseCircleOutlined,
-    CloseOutlined,
-    CloudServerOutlined,
-    CommentOutlined,
-    DeleteOutlined,
-    EditOutlined,
-    FolderOpenOutlined,
-    FolderOutlined,
-    LoadingOutlined,
-    PlusOutlined,
-    QuestionCircleOutlined,
-    ShopOutlined,
-    StopOutlined,
+  CheckCircleOutlined,
+  CheckOutlined,
+  CloseCircleOutlined,
+  CloseOutlined,
+  CloudServerOutlined,
+  CommentOutlined,
+  DeleteOutlined,
+  EditOutlined,
+  FolderOpenOutlined,
+  FolderOutlined,
+  LoadingOutlined,
+  PlusOutlined,
+  QuestionCircleOutlined,
+  ShopOutlined,
+  StopOutlined,
 } from '@antdv-next/icons'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {classNames} from '@loncra/antdv'
 import {useLocale} from '../../_util/useLocale'
 import {getEnumValue} from '@loncra/client/commons'
-import {AI_SERVER_AGENT_CHAT_STATUS} from '@loncra/client/ai'
+import {AI_SERVER_AGENT_CHAT_STATUS, AI_SERVER_PLUGIN_INSTALL_USER_SCOPE} from '@loncra/client/ai'
+import {AuthServerService} from '@loncra/client/auth'
 import {agentMenuKeys, isCustomizeWorkspace, isDefaultWorkspace, isWorkspaceConversation} from './useAgentConversations'
 import ConversationList from '../../conversation/ConversationList'
 import type {ConversationNode} from '../../conversation/types'
 import useStyle, {AGENT_CONVERSATION_PREFIX} from './style/index'
 import type {AgentConversationLocale} from '../../locale'
+import type {Self} from '../types'
 import type {
-    AgentConversationActions,
-    AgentConversationHost,
-    AgentConversationMenuKey,
-    AgentConversationRecord,
+  AgentConversationActions,
+  AgentConversationHost,
+  AgentConversationMenuKey,
+  AgentConversationRecord,
 } from './types'
 
 const STATUS_ICON = {
@@ -83,6 +85,7 @@ function renderEditor(
   locale: AgentConversationLocale,
   loading: boolean,
   actions: AgentConversationActions,
+  prefix?: VNode,
 ) {
   return (
     <SpaceCompact size="small" block>
@@ -91,6 +94,7 @@ function renderEditor(
         placeholder={locale.workspacePlaceholder}
         disabled={loading}
         autoFocus
+        prefix={prefix}
         onVnodeMounted={(vnode: VNode) => {
           const exposed = vnode.component?.exposed as {focus?: () => void} | null
           void nextTick(() => exposed?.focus?.())
@@ -126,6 +130,7 @@ const AgentConversationList = defineComponent({
     openKeys: {type: Array as PropType<string[]>, required: true},
     host: {type: Object as PropType<AgentConversationHost>, required: true},
     actions: {type: Object as PropType<AgentConversationActions>, required: true},
+    self: {type: Object as PropType<Self>, default: undefined},
   },
   emits: {
     'update:selectedKeys': (_keys: string[]) => true,
@@ -152,6 +157,50 @@ const AgentConversationList = defineComponent({
         ?? STATUS_ICON[AI_SERVER_AGENT_CHAT_STATUS.READY]
       const Icon = spec.icon
       return <Icon class={tone(spec.className)} />
+    }
+
+    function isWorkspaceItem(item: AgentConversationRecord): boolean {
+      const type = getEnumValue(item.type)
+      return isDefaultWorkspace(type) || isCustomizeWorkspace(type)
+    }
+
+    function ownershipOf(item: AgentConversationRecord): number {
+      return getEnumValue(item.ownership) ?? AI_SERVER_PLUGIN_INSTALL_USER_SCOPE.USER
+    }
+
+    function renderOwnershipIcon(item: AgentConversationRecord) {
+      return ownershipOf(item) === AI_SERVER_PLUGIN_INSTALL_USER_SCOPE.ENTERPRISE
+        ? <ShopOutlined />
+        : <CloudServerOutlined />
+    }
+
+    function renderLabel(node: ConversationNode) {
+      const item = lookup.get(node.key)
+      if (item == null || !isWorkspaceItem(item)) {
+        return (
+            <Typography.Text class={`${prefixCls.value}-name`} ellipsis>
+              {node.name}
+            </Typography.Text>
+        )
+      }
+      return (
+          <Flex align="center" gap="small" flex={1} class={`${prefixCls.value}-workspace-label`}>
+            {renderOwnershipIcon(item)}
+            <Typography.Text class={`${prefixCls.value}-name`} ellipsis>
+              {node.name}
+            </Typography.Text>
+          </Flex>
+      )
+    }
+
+    function renderEditorPrefix(item: AgentConversationRecord): VNode | undefined {
+      if (!isWorkspaceItem(item)) {
+        return undefined
+      }
+      //const enterprise = ownershipOf(item) === AI_SERVER_PLUGIN_INSTALL_USER_SCOPE.ENTERPRISE
+      return (
+          renderOwnershipIcon(item)
+      )
     }
 
     function onMenu(key: string, item: AgentConversationRecord) {
@@ -184,8 +233,33 @@ const AgentConversationList = defineComponent({
       }
     }
 
+    const lookup = new Map<string, AgentConversationRecord>()
+
+    function buildCreateActions(workspaceActions: ResolvedAction[]): ResolvedAction[] {
+      const enterpriseOwner = AuthServerService.isEnterpriseOwner(props.self)
+      const createActions: ResolvedAction[] = [
+        {
+          id: 'create-personal',
+          label: enterpriseOwner || workspaceActions.length > 0 ? locale.value.createPersonalWorkspace : undefined,
+          icon: enterpriseOwner || workspaceActions.length > 0 ? <CloudServerOutlined /> : <PlusOutlined />,
+          disabled: props.loading,
+          run: () => props.actions.startCreate(AI_SERVER_PLUGIN_INSTALL_USER_SCOPE.USER),
+        },
+      ]
+      if (enterpriseOwner) {
+        createActions.push({
+          id: 'create-enterprise',
+          label: locale.value.createEnterpriseWorkspace,
+          icon: <ShopOutlined />,
+          disabled: props.loading,
+          run: () => props.actions.startCreate(AI_SERVER_PLUGIN_INSTALL_USER_SCOPE.ENTERPRISE),
+        })
+      }
+      return [...createActions, ...workspaceActions]
+    }
+
     return () => {
-      const lookup = new Map<string, AgentConversationRecord>()
+      lookup.clear()
       const nodes = props.items.map((item) => toNode(item, lookup))
       const workspaceActions = props.host.workspaceActions?.({refresh: props.actions.load}) ?? []
       return (
@@ -224,28 +298,20 @@ const AgentConversationList = defineComponent({
                       size="small"
                       type="text"
                       triggerIcon={<PlusOutlined />}
-                      actions={[
-                        {
-                          id: 'create',
-                          label: workspaceActions.length > 0 ? locale.value.createWorkspace : undefined,
-                          icon: workspaceActions.length > 0 ? <CloudServerOutlined /> : <PlusOutlined />,
-                          disabled: props.loading,
-                          run: () => props.actions.startCreate(),
-                        },
-                        ...workspaceActions,
-                      ]}
+                      actions={buildCreateActions(workspaceActions)}
                     />
                   </Flex>
                 </Divider>
               </>
             ),
+            label: (node: ConversationNode) => renderLabel(node),
             icon: (node: ConversationNode) => {
               const item = lookup.get(node.key)
               return item && !item.editing ? renderIcon(item) : null
             },
             editor: (node: ConversationNode) => {
               const item = lookup.get(node.key)
-              return item ? renderEditor(item, locale.value, props.loading, props.actions) : null
+              return item ? renderEditor(item, locale.value, props.loading, props.actions, renderEditorPrefix(item)) : null
             },
             actions: (node: ConversationNode) => {
               const item = lookup.get(node.key)

@@ -1,6 +1,10 @@
 import {type RestResult, SYSTEM_MODULE_NAME} from '../../commons'
 import {http, modulePrefix} from '../../http'
-import type {UserPluginInstallResult, UserPluginRequestBody,} from '../domain/userPluginInstall.ts'
+import type {
+    UserPluginInstallResult,
+    UserPluginRequestBody,
+    UserPluginStatusRequestBody,
+} from '../domain/userPluginInstall.ts'
 
 export class AgentHubService {
   static get BASE_URL(): string {
@@ -22,10 +26,22 @@ export class AgentHubService {
     })
   }
 
-  static my(): Promise<RestResult<UserPluginInstallResult[]>> {
+  static my(workspaceId?: string): Promise<RestResult<UserPluginInstallResult[]>> {
     return http().request({
       url: AgentHubService.SERVICE_URL + '/my',
       method: 'POST',
+      params: workspaceId == null ? undefined : {workspaceId},
+    })
+  }
+
+  static updateInstallStatus(
+    body: UserPluginStatusRequestBody,
+  ): Promise<RestResult<UserPluginInstallResult>> {
+    return http().request({
+      url: AgentHubService.SERVICE_URL + '/status',
+      method: 'PUT',
+      data: body,
+      bodyType: 'json',
     })
   }
 

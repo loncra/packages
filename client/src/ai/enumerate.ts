@@ -120,6 +120,12 @@ export const AI_SERVER_PLUGIN_INSTALL_STATUS = {
   FAILURE: 99,
 } as const
 
+export const AI_SERVER_PLUGIN_INSTALL_LAYER = {
+  ENTERPRISE_ROW: 10,
+  WORKSPACE: 20,
+  USER_ROW: 30,
+} as const
+
 export const CHAT_BUBBLE_TYPE = {
   AI: 'ai',
   SYSTEM: 'system',

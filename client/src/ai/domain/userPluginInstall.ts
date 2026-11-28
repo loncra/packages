@@ -45,9 +45,17 @@ export interface UserPluginInstallResult {
   status: NameValueEnumMetadata<number> | number
   exception?: string
   scope: NameValueEnumMetadata<number> | number
+  layer?: NameValueEnumMetadata<number> | number
   workspace?: IdNameValueMetadata<ExecutionChannel>
   metadata: UserPluginInstallMetadata
   pluginPackage: McpPackageEntity | SkillPackageEntity
+}
+
+export interface UserPluginStatusRequestBody {
+  targetType: string
+  packageId: number
+  scope: number
+  status: number
 }
 
 export interface PluginInstallGroup {

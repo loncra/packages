@@ -18,7 +18,8 @@ export interface AgentConversationLocale {
   workspaceTitle: string
   workspacePlaceholder: string
   createAgent: string
-  createWorkspace: string
+  createPersonalWorkspace: string
+  createEnterpriseWorkspace: string
   rename: string
   delete: string
   deleteConfirmTitle: string
@@ -144,16 +145,11 @@ export interface AgentHubLocale {
   changelog: string
   install: string
   installed: string
-  upgrade: string
-  upgradeSelected: string
   installTitle: string
   uninstall: string
-
-  uninstallSelected: string
   uninstallConfirmTitle: string
   uninstallConfirmSingle: string
   uninstallSelectedConfirm: string
-  addWorkspace: string
   enterpriseInstalledDescription: string
   workspaceScope: string
   workspaceScopeAll: string
@@ -164,6 +160,22 @@ export interface AgentHubLocale {
   workspace: string
   all: string
   auth: string
+  ownership: string
+  ownershipPersonal: string
+  ownershipEnterprise: string
+  enable: string
+  disable: string
+  activate: string
+  activateConfirmTitle: string
+  activateConfirmContent: string
+  cancel: string
+  save: string
+  upgrade: string
+  installForPersonal: string
+  installForEnterprise: string
+  status: string
+  version: string
+  uninstallPlugin: string
 }
 
 export interface FileViewLocale {

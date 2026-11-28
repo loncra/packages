@@ -17,14 +17,6 @@ export function pluginTypeIcon(targetType: string): Component {
     return PLUGIN_TYPE_ICONS[targetType as PluginTargetType] ?? PLUGIN_TYPE_FALLBACK_ICON
 }
 
-export const PLUGIN_INSTALL_SCOPE_OPTION = {
-    ALL: 'all',
-    ENTERPRISE: 'enterprise',
-    SPECIFIED: 'specified',
-} as const
-
-export type PluginInstallScopeOption = (typeof PLUGIN_INSTALL_SCOPE_OPTION)[keyof typeof PLUGIN_INSTALL_SCOPE_OPTION]
-
 /**
  * 插件安装状态（`UserPluginInstallResult.status`）→ 状态点（`a-badge` 的 `status`）。
  *

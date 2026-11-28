@@ -3,6 +3,7 @@ export type {
   AuthCredentials,
   AuthenticationInfo,
   AuthenticationRequestDetails,
+  AuthenticationSubject,
   AuthenticationType,
   BasicSystemUser,
   Details,

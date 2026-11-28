@@ -1,10 +1,26 @@
 import {computed, defineComponent, type PropType, ref} from 'vue'
-import {Collapse, Flex, Spin, Tabs, Typography} from 'antdv-next'
-import {StarOutlined} from '@antdv-next/icons'
+import {
+    Badge,
+    Button,
+    Collapse,
+    Flex,
+    FormItem,
+    Select,
+    SpaceAddon,
+    SpaceCompact,
+    Spin,
+    Tabs,
+    Tooltip,
+    Typography
+} from 'antdv-next'
+import {ArrowUpOutlined, StarOutlined} from '@antdv-next/icons'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {
+    AI_SERVER_PLUGIN_INSTALL_USER_SCOPE,
+    AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE,
     AI_SERVER_PLUGIN_TARGET_TYPE,
     AiSkillPackageService,
+    type PluginInstallGroup,
     SKILL_GROUP_CODE_PREFIX,
     type SkillPackageEntity,
     type SkillReleaseEntity,
@@ -13,14 +29,118 @@ import {
     type UserPluginMetadata,
 } from '@loncra/client/ai'
 import {getEnumValue} from '@loncra/client/commons'
-import {useIconFontRender} from '@loncra/antdv'
+import {classNames, useIconFontRender} from '@loncra/antdv'
 import {useLocale} from '../../_util/useLocale'
 import type {AgentConversationRecord} from '../conversation'
 import PluginCard from './PluginCard'
 import SkillReleaseChangeLog from './SkillReleaseChangeLog'
-import {AGENT_HUB_PREFIX} from './style'
+import useStyle, {AGENT_HUB_PREFIX} from './style'
 import {useAgentHubPluginMarket} from './useAgentHubPluginMarket.ts'
 import type {Self} from "../types.ts";
+
+type HubModalScopeCtx = {
+    record: unknown
+    form?: {metadata: Record<string, unknown>; ownership: number; workspaceScope: number; workspaceVersions?: Record<string, string>}
+    group?: PluginInstallGroup
+    submit?: () => Promise<void>
+}
+
+const releaseCache = ref(new Map<number, SkillReleaseEntity[]>())
+const releasePending = ref(new Map<number, Promise<void>>())
+const releaseService = new AiSkillPackageService()
+
+function ensureReleases(packageId: number): Promise<void> {
+    if (releaseCache.value.has(packageId)) {
+        return Promise.resolve()
+    }
+    const pending = releasePending.value.get(packageId)
+    if (pending != null) {
+        return pending
+    }
+    const promise = releaseService.listReleases(packageId)
+        .then((result) => {
+            releaseCache.value = new Map(releaseCache.value).set(packageId, result.data ?? [])
+        })
+        .finally(() => {
+            const next = new Map(releasePending.value)
+            next.delete(packageId)
+            releasePending.value = next
+        })
+    releasePending.value = new Map(releasePending.value).set(packageId, promise)
+    return promise
+}
+
+function releaseOptionsOf(packageId: number): {label: string; value: string}[] {
+    return (releaseCache.value.get(packageId) ?? [])
+        .filter((item) => item.releaseVersion != null)
+        .map((item) => ({label: item.releaseVersion!, value: item.releaseVersion!}))
+}
+
+const ReleaseVersionSelect = defineComponent({
+    name: 'LAgentHubSkillReleaseVersionSelect',
+    props: {
+        packageId: {type: Number, required: true},
+        value: {type: String, default: undefined},
+        locked: {type: String, default: undefined},
+        latest: {type: String, default: undefined},
+        disabled: {type: Boolean, default: false},
+    },
+    emits: {
+        change: (_version: string) => true,
+        upgrade: (_latest: string) => true,
+    },
+    setup(props, {emit}) {
+        const locale = useLocale('AgentHub')
+        const config = useConfig()
+        const prefixCls = computed(() => config.value.getPrefixCls('agent-hub', AGENT_HUB_PREFIX))
+        const [hashId] = useStyle(prefixCls)
+        const options = computed(() => {
+            void ensureReleases(props.packageId)
+            return releaseOptionsOf(props.packageId)
+        })
+        const outdated = computed(() =>
+            props.locked != null && props.latest != null && props.locked !== props.latest)
+        return () => (
+            <Badge dot={outdated.value}>
+                <SpaceCompact size="small">
+                    <Select
+                        class={classNames(hashId.value, `${prefixCls.value}-version-select`)}
+                        value={props.value ?? props.locked ?? props.latest}
+                        options={options.value}
+                        disabled={props.disabled}
+                        onChange={(version: string) => emit('change', version)}
+                    />
+                    {outdated.value
+                        ? (
+                            <>
+                                <SpaceAddon>{" → "}</SpaceAddon>
+                                <SpaceAddon>
+                                    <Typography.Text type="warning">
+                                        {(props.latest ?? '')}
+                                    </Typography.Text>
+                                </SpaceAddon>
+                                <Tooltip title={locale.value.upgrade}>
+                                    <Button
+                                        type="primary"
+                                        onClick={() => emit('upgrade', props.latest ?? '')}
+                                        v-slots={{icon: () => <ArrowUpOutlined/>}}
+                                    />
+                                </Tooltip>
+                            </>
+                        )
+                        : null}
+                </SpaceCompact>
+            </Badge>
+        )
+    },
+})
+
+type HubWorkspaceExtraCtx = {
+    workspace: AgentConversationRecord
+    record: unknown
+    form?: {workspaces: string[]; workspaceVersions?: Record<string, string>}
+    group?: PluginInstallGroup
+}
 
 const SkillMarket = defineComponent({
     name: 'LAgentHubSkill',
@@ -38,28 +158,40 @@ const SkillMarket = defineComponent({
         const config = useConfig()
         const iconFontRender = useIconFontRender()
         const prefixCls = computed(() => config.value.getPrefixCls('agent-hub', AGENT_HUB_PREFIX))
+        const [hashId] = useStyle(prefixCls)
         const market = useAgentHubPluginMarket(new AiSkillPackageService(), SKILL_GROUP_CODE_PREFIX)
-        const releaseTarget = ref<SkillReleaseEntity>()
 
-        function renderReleaseChangeLog(
-            record: SkillPackageEntity | undefined,
-            onReleaseChange?: (release: SkillReleaseEntity) => void,
-        ) {
+        const changelogOpenKeys = ref(new Map<number, string[]>())
+
+        function toggleChangelog(packageId: number, keys: string[]): void {
+            changelogOpenKeys.value = new Map(changelogOpenKeys.value).set(packageId, keys)
+            if (keys.includes('changelog')) {
+                void ensureReleases(packageId)
+            }
+        }
+
+        function renderReleaseChangeLog(record: SkillPackageEntity | undefined) {
             const packageId = record?.id
-            return packageId == null
-                ? null
-                : (
-                    <Collapse
-                        ghost
-                        class={`${prefixCls.value}-changelog`}
-                        items={[{key: 'changelog', label: locale.value.changelog}]}
-                        v-slots={{
-                            contentRender: () => (
-                                <SkillReleaseChangeLog packageId={packageId} onChange={onReleaseChange}/>
-                            ),
-                        }}
-                    />
-                )
+            if (packageId == null) {
+                return null
+            }
+            return (
+                <Collapse
+                    ghost
+                    class={`${prefixCls.value}-changelog`}
+                    activeKey={changelogOpenKeys.value.get(packageId) ?? []}
+                    onChange={(keys: string[]) => toggleChangelog(packageId, keys)}
+                    items={[{key: 'changelog', label: locale.value.changelog}]}
+                    v-slots={{
+                        contentRender: () => (
+                            <SkillReleaseChangeLog
+                                dataSource={releaseCache.value.get(packageId) ?? []}
+                                loading={!releaseCache.value.has(packageId)}
+                            />
+                        ),
+                    }}
+                />
+            )
         }
 
         function findInstall(record: SkillPackageEntity, workspace: AgentConversationRecord): UserPluginInstallResult | undefined {
@@ -70,28 +202,127 @@ const SkillMarket = defineComponent({
             )
         }
 
-        function renderLockedVersion(install: UserPluginInstallResult, target: string | undefined) {
-            const locked = (install.metadata as UpdatePolicyUserPluginInstallMetadata).releaseVersion
-            const upgrade = Boolean(target) && Boolean(locked) && locked !== target
+        function lockedVersionOf(install: UserPluginInstallResult): string | undefined {
+            return (install.metadata as UpdatePolicyUserPluginInstallMetadata).releaseVersion
+        }
+
+        function setWorkspaceVersion(
+            form: {workspaceVersions?: Record<string, string>},
+            workspaceId: string,
+            version: string,
+        ): void {
+            form.workspaceVersions = {...(form.workspaceVersions ?? {}), [workspaceId]: version}
+        }
+
+        function renderInstallVersionFormItem(form: NonNullable<HubModalScopeCtx['form']>, record: SkillPackageEntity) {
+            if (record.id == null) {
+                return null
+            }
             return (
-                <Typography.Text type={upgrade ? 'warning' : 'secondary'}>
-                    {upgrade ? `${locked} → ${target}` : (locked ?? '')}
-                </Typography.Text>
+                <FormItem
+                    label={locale.value.version}
+                    layout="horizontal"
+                    labelAlign="left"
+                    labelCol={{flex: 'auto'}}
+                    wrapperCol={{flex: 'auto'}}
+                >
+                    <Flex justify="flex-end">
+                        <ReleaseVersionSelect
+                            class={classNames(hashId.value, `${prefixCls.value}-version-select`)}
+                            packageId={record.id}
+                            value={(form.metadata.releaseVersion as string | undefined) ?? record.latestVersion}
+                            onChange={(value: string) => {
+                                form.metadata.releaseVersion = value
+                            }}
+                        />
+                    </Flex>
+                </FormItem>
             )
         }
 
-        function renderVersion(workspace: AgentConversationRecord, record: SkillPackageEntity | undefined) {
-            if (record?.id == null) {
+        function renderAllVersionFormItem(
+            form: NonNullable<HubModalScopeCtx['form']>,
+            record: SkillPackageEntity,
+            row: UserPluginInstallResult,
+            submit: () => Promise<void>,
+        ) {
+            if (record.id == null) {
                 return null
             }
-            const install = findInstall(record, workspace)
-            const target = releaseTarget.value?.releaseVersion ?? record.latestVersion
-            if (install == null) {
-                return target == null
-                    ? null
-                    : <Typography.Text type="secondary">{target}</Typography.Text>
+            return (
+                <FormItem
+                    label={locale.value.version}
+                    layout="horizontal"
+                    labelAlign="left"
+                    labelCol={{flex: 'auto'}}
+                    wrapperCol={{flex: 'auto'}}
+                >
+                    <Flex justify="flex-end">
+                        <ReleaseVersionSelect
+                            class={classNames(hashId.value, `${prefixCls.value}-version-select`)}
+                            packageId={record.id}
+                            value={(form.metadata.releaseVersion as string | undefined) ?? lockedVersionOf(row)}
+                            locked={lockedVersionOf(row)}
+                            latest={record.latestVersion}
+                            onChange={(version: string) => {
+                                form.metadata.releaseVersion = version
+                            }}
+                            onUpgrade={(latest: string) => {
+                                form.metadata.releaseVersion = latest
+                                void submit()
+                            }}
+                        />
+                    </Flex>
+                </FormItem>
+            )
+        }
+
+        function renderManagedVersion(
+            form: NonNullable<HubWorkspaceExtraCtx['form']>,
+            record: SkillPackageEntity,
+            install: UserPluginInstallResult,
+            workspaceId: string,
+        ) {
+            if (record.id == null) {
+                return null
             }
-            return renderLockedVersion(install, target)
+            return (
+                <ReleaseVersionSelect
+                    class={classNames(hashId.value, `${prefixCls.value}-version-select`)}
+                    packageId={record.id}
+                    value={form.workspaceVersions?.[workspaceId] ?? lockedVersionOf(install)}
+                    locked={lockedVersionOf(install)}
+                    latest={record.latestVersion}
+                    onChange={(version: string) => {
+                        setWorkspaceVersion(form, workspaceId, version)
+                    }}
+                    onUpgrade={(latest: string) => {
+                        setWorkspaceVersion(form, workspaceId, latest)
+                    }}
+                />
+            )
+        }
+
+        function renderInstallSelect(
+            form: NonNullable<HubWorkspaceExtraCtx['form']>,
+            record: SkillPackageEntity,
+            workspace: AgentConversationRecord,
+        ) {
+            if (record.id == null) {
+                return null
+            }
+            const workspaceId = String(workspace.id)
+            return (
+                <ReleaseVersionSelect
+                    class={classNames(hashId.value, `${prefixCls.value}-version-select`)}
+                    packageId={record.id}
+                    disabled={!form.workspaces.includes(workspaceId)}
+                    value={form.workspaceVersions?.[workspaceId] ?? record.latestVersion ?? undefined}
+                    onChange={(value: string) => {
+                        setWorkspaceVersion(form, workspaceId, value)
+                    }}
+                />
+            )
         }
 
         return () => (
@@ -132,15 +363,41 @@ const SkillMarket = defineComponent({
                                     v-slots={{
                                         title: ({record}: { record: SkillPackageEntity }) => record.name,
                                         after: ({record}: { record: SkillPackageEntity }) => renderReleaseChangeLog(record),
-                                        afterModalScope: ({record}: { record: unknown }) => renderReleaseChangeLog(
-                                            record as SkillPackageEntity | undefined,
-                                            (release) => {
-                                                releaseTarget.value = release
-                                            },
-                                        ),
-                                        workspaceItemExtra: ({workspace, record}: { workspace: AgentConversationRecord; record: unknown }) => (
-                                            renderVersion(workspace, record as SkillPackageEntity | undefined)
-                                        ),
+                                        afterModalScope: ({form, record, group, submit}: HubModalScopeCtx) => {
+                                            const skillRecord = record as SkillPackageEntity | undefined
+                                            if (skillRecord?.id == null) {
+                                                return null
+                                            }
+                                            const allRow = group != null && form != null
+                                                ? (form.ownership === AI_SERVER_PLUGIN_INSTALL_USER_SCOPE.ENTERPRISE
+                                                    ? group.enterprise
+                                                    : group.userAll)
+                                                : undefined
+                                            return (
+                                                <>
+                                                    {form != null
+                                                        && form.workspaceScope === AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE.ALL
+                                                        ? (group == null
+                                                            ? renderInstallVersionFormItem(form, skillRecord)
+                                                            : allRow != null
+                                                                ? renderAllVersionFormItem(form, skillRecord, allRow, submit ?? (() => Promise.resolve()))
+                                                                : null)
+                                                        : null}
+                                                    {renderReleaseChangeLog(skillRecord)}
+                                                </>
+                                            )
+                                        },
+                                        workspaceItemExtra: ({workspace, record, form, group}: HubWorkspaceExtraCtx) => {
+                                            const skillRecord = record as SkillPackageEntity | undefined
+                                            const install = skillRecord?.id == null ? undefined : findInstall(skillRecord, workspace)
+                                            if (skillRecord?.id == null || form == null) {
+                                                return null
+                                            }
+                                            if (group != null && install != null) {
+                                                return renderManagedVersion(form, skillRecord, install, String(workspace.id))
+                                            }
+                                            return renderInstallSelect(form, skillRecord, workspace)
+                                        },
                                     }}
                                 />
                             </Spin>

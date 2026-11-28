@@ -1,16 +1,19 @@
 import {computed, defineComponent, type PropType} from 'vue'
-import {Badge, Button, Space, SpaceCompact, Tooltip, Typography} from 'antdv-next'
-import {DeleteOutlined, DownloadOutlined, SettingOutlined} from '@antdv-next/icons'
-import {AUTH_SERVER_AUTHENTICATION_TYPE} from '@loncra/client/auth'
+import {Badge, Button, Space, Tooltip, Typography} from 'antdv-next'
+import {CloudServerOutlined, DownloadOutlined, SettingOutlined, ShopOutlined} from '@antdv-next/icons'
+import {AuthServerService} from '@loncra/client/auth'
+import {
+    AI_SERVER_PLUGIN_INSTALL_USER_SCOPE,
+    type PluginInstallGroup,
+    type UserPluginInstallResult,
+} from '@loncra/client/ai'
 import {useLocale} from '../../_util/useLocale'
-import {type PluginInstallGroup, type UserPluginInstallResult,} from '@loncra/client/ai'
 import {pluginInstallStatusBadge} from './constants'
-import type {WorkspaceMeta} from './usePluginInstallActions'
 import {
     findPendingInstall,
     groupInstallsByPackageId,
-    isPluginOutdated,
-    isRecordUpgradeable
+    hasInstallForScope,
+    isUpgradePending,
 } from './usePluginInstallActions'
 import type {AgentConversationRecord} from '../conversation'
 import type {Self} from '../types'
@@ -27,26 +30,18 @@ const PluginCardAction = defineComponent({
     },
     emits: {
         install: () => true,
+        installOwnership: (_ownership: number) => true,
         manage: (_group?: PluginInstallGroup) => true,
-        uninstall: (_selected: WorkspaceMeta[]) => true,
     },
     setup(props, {emit}) {
         const locale = useLocale('AgentHub')
-        const isOrgOwner = computed(() =>
-            props.self?.type === AUTH_SERVER_AUTHENTICATION_TYPE.ENTERPRISE
-            && (props.self?.authorities ?? []).includes('ROLE_ENTERPRISE_OWNER'),
-        )
+        const isOrgOwner = computed(() => AuthServerService.isEnterpriseOwner(props.self))
 
         const group = computed(() =>
             props.record.id == null
                 ? undefined
                 : groupInstallsByPackageId(props.installs, props.targetType).get(props.record.id),
         )
-
-        function isUpgradePending(): boolean {
-            return isRecordUpgradeable(props.record)
-                && isPluginOutdated(props.installs, props.record, props.targetType)
-        }
 
         const pendingRow = computed(() => findPendingInstall(group.value))
 
@@ -58,24 +53,6 @@ const PluginCardAction = defineComponent({
                         type="primary"
                         onClick={() => emit('install')}
                         v-slots={{icon: () => <DownloadOutlined/>}}
-                    >
-                    </Button>
-                </Tooltip>
-            )
-        }
-
-        function renderUninstallButton() {
-            const selected = (group.value?.workspaces ?? [])
-                .map((item) => item.workspace)
-                .filter((item): item is WorkspaceMeta => item != null)
-            return (
-                <Tooltip title={locale.value.uninstall}>
-                    <Button
-                        danger
-                        size="small"
-                        type="primary"
-                        onClick={() => emit('uninstall', selected)}
-                        v-slots={{icon: () => <DeleteOutlined/>}}
                     >
                     </Button>
                 </Tooltip>
@@ -96,9 +73,24 @@ const PluginCardAction = defineComponent({
 
         function renderManageButton() {
             return (
-                <Badge dot={isUpgradePending()}>
+                <Badge dot={isUpgradePending(group.value, props.record)}>
                     <Button size="small" onClick={() => emit('manage', group.value)} v-slots={{icon: () => <SettingOutlined/>}}/>
                 </Badge>
+            )
+        }
+
+        function renderOwnershipButton(ownership: number) {
+            const personal = ownership === AI_SERVER_PLUGIN_INSTALL_USER_SCOPE.USER
+
+            const Icon = personal ? CloudServerOutlined : ShopOutlined
+            return (
+                <Button
+                    size="small"
+                    onClick={() => emit('installOwnership', ownership)}
+                    v-slots={{icon: () => <Icon/>}}
+                >
+                    {personal ? locale.value.installForPersonal : locale.value.installForEnterprise}
+                </Button>
             )
         }
 
@@ -106,16 +98,23 @@ const PluginCardAction = defineComponent({
             if (group.value == null) {
                 return renderInstallButton()
             }
+            const missingPersonal = !hasInstallForScope(group.value, AI_SERVER_PLUGIN_INSTALL_USER_SCOPE.USER)
             if (group.value.enterprise != null && !isOrgOwner.value) {
-                return <Typography.Text type="success">{locale.value.installed}</Typography.Text>
+                return (
+                    <Space align="center">
+                        <Typography.Text type="success">{locale.value.installed}</Typography.Text>
+                        {missingPersonal ? renderOwnershipButton(AI_SERVER_PLUGIN_INSTALL_USER_SCOPE.USER) : null}
+                    </Space>
+                )
             }
             return (
                 <Space align="center">
                     {renderPendingBadge()}
-                    <SpaceCompact>
-                        {renderManageButton()}
-                        {renderUninstallButton()}
-                    </SpaceCompact>
+                    {missingPersonal ? renderOwnershipButton(AI_SERVER_PLUGIN_INSTALL_USER_SCOPE.USER) : null}
+                    {isOrgOwner.value && !hasInstallForScope(group.value, AI_SERVER_PLUGIN_INSTALL_USER_SCOPE.ENTERPRISE)
+                        ? renderOwnershipButton(AI_SERVER_PLUGIN_INSTALL_USER_SCOPE.ENTERPRISE)
+                        : null}
+                    {renderManageButton()}
                 </Space>
             )
         }

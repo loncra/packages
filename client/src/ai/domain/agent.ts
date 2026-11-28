@@ -9,6 +9,7 @@ export interface AgentConversationEntity extends StringIdEntity {
   principal?: string
   tenantId?: string
   type: NameValueEnumMetadata<number> | number
+  ownership?: NameValueEnumMetadata<number> | number
   metadata?: Record<string, unknown>
   parentId?: string
   lastModel?: ModelSettingMetadata

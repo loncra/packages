@@ -11,7 +11,7 @@ function genAgentHubStyle(token: LoncraStyleToken): CSSInterpolation {
     [`${componentCls}-changelog`]: {
       borderTop: `1px solid ${colorBorderSecondary}`,
       borderRadius: 0,
-      paddingTop:paddingXXS,
+      paddingTop:paddingXS,
       [`${antCls}-collapse-header`]: {
         padding: 0
       },
@@ -113,6 +113,16 @@ function genAgentHubStyle(token: LoncraStyleToken): CSSInterpolation {
         flex: 1,
       },
     },
+    [`${componentCls}-version-select`]: {
+      width: 'auto',
+    },
+    /*[`${componentCls}-version-split`]: {
+      width: 30,
+      textAlign: 'center',
+      borderInlineStart: 0,
+      borderInlineEnd: 0,
+      pointerEvents: 'none',
+    },*/
     ...genFullSpinStyle(token),
   }
 }

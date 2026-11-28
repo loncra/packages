@@ -60,6 +60,7 @@ IM 与 Agent 会话侧栏的共享底座：受控的树形会话菜单（选中 
 | --- | --- | --- | --- |
 | header | 列表头（搜索框等） | `() => any` | - |
 | icon | 行图标（编辑中不渲染） | `(node: ConversationNode) => any` | - |
+| label | 行名字区（替换默认的名字文本；返回 null 回落默认渲染。时间、行操作、副标题不在接管范围） | `(node: ConversationNode) => any` | - |
 | actions | 行操作菜单内容（Dropdown 内） | `(node: ConversationNode) => any` | - |
 | subtitle | 行副标题 | `(node: ConversationNode) => any` | - |
 | editor | 重命名编辑位（`editing: true` 时接管 label） | `(node: ConversationNode) => any` | - |

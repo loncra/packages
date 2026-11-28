@@ -1,5 +1,5 @@
 import type {CSSInterpolation} from '@antdv-next/cssinjs'
-import {SPIN_KEYFRAMES, type LoncraStyleToken} from '@loncra/antdv'
+import {type LoncraStyleToken, SPIN_KEYFRAMES} from '@loncra/antdv'
 import {genStyleHooks} from '../../../_util/genStyleLayer'
 import {genToneColorStyle} from '../../../_util/style/fragments'
 
@@ -22,6 +22,17 @@ function genAgentConversationStyle(token: LoncraStyleToken): CSSInterpolation {
         animationDuration: '1s',
         animationIterationCount: 'infinite',
         animationTimingFunction: 'linear',
+      },
+      [`${componentCls}-name`]: {
+        flex: 1,
+        minWidth: 0,
+        marginInlineStart:0
+      },
+      [`${componentCls}-workspace-label`]: {
+        minWidth: 0,
+        [`${antCls}-icon`]: {
+          flexShrink: 0,
+        },
       },
     },
     [`${componentCls}-divider-flush`]: {

@@ -2,7 +2,12 @@ import {ref, type Ref} from 'vue'
 import useApp from 'antdv-next/dist/app/useApp'
 import {findFirstTreeNode, getEnumValue, isEnumValue} from '@loncra/client/commons'
 import {useLocale} from '../../_util/useLocale'
-import {AGENT_WORKSPACE_TYPE_VALUE, AgentService, AI_SERVER_AGENT_CONVERSATION_TYPE, AI_SERVER_EXECUTION_CHANNEL,} from '@loncra/client/ai'
+import {
+  AGENT_WORKSPACE_TYPE_VALUE,
+  AgentService,
+  AI_SERVER_AGENT_CONVERSATION_TYPE,
+  AI_SERVER_EXECUTION_CHANNEL,
+} from '@loncra/client/ai'
 import type {AgentConversationHost, AgentConversationMenuKey, AgentConversationRecord} from './types'
 
 export function isDefaultWorkspace(type: number): boolean {
@@ -79,6 +84,7 @@ export function useAgentConversations<T extends AgentConversationRecord>(
     try {
       if (await host.onRemove?.(item)) {
         await load()
+        notifyWorkspaceRemoved(item)
         return
       }
       if (item.id == null) {
@@ -90,10 +96,18 @@ export function useAgentConversations<T extends AgentConversationRecord>(
       )
       message.success(result.message ?? '')
       await load()
+      notifyWorkspaceRemoved(item)
     } catch {
       return
     } finally {
       loading.value = false
+    }
+  }
+
+  function notifyWorkspaceRemoved(item: AgentConversationRecord): void {
+    const type = getEnumValue(item.type)
+    if (isDefaultWorkspace(type) || isCustomizeWorkspace(type)) {
+      host.onWorkspaceRemoved?.(item)
     }
   }
 
@@ -117,7 +131,7 @@ export function useAgentConversations<T extends AgentConversationRecord>(
     }
   }
 
-  function startCreate(): void {
+  function startCreate(ownership?: number): void {
     if (findEditing(conversations.value)) {
       return
     }
@@ -127,6 +141,7 @@ export function useAgentConversations<T extends AgentConversationRecord>(
         name: '',
         editing: true,
         type: AI_SERVER_AGENT_CONVERSATION_TYPE.CUSTOMIZE_WORKSPACE,
+        ownership,
       } as T,
       ...conversations.value,
     ]
@@ -157,7 +172,11 @@ export function useAgentConversations<T extends AgentConversationRecord>(
     }
     loading.value = true
     try {
-      const result = await AgentService.saveConversation(item)
+      const result = await AgentService.saveConversation(
+        item,
+        undefined,
+        item.ownership == null ? undefined : getEnumValue(item.ownership),
+      )
       item.editing = false
       message.success(result.message ?? '')
       await load(result.data)

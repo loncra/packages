@@ -2,14 +2,19 @@ import {computed, defineComponent, type PropType, reactive, ref, toRef} from 'vu
 import {Alert, Card, Empty, Flex, Pagination, Space, Tag, Typography} from 'antdv-next'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {classNames, ICON_SELECT_AVATAR_MODE_VALUE, IconSelect} from '@loncra/antdv'
-import type {TotalPage} from '@loncra/client/commons'
-import {type PluginInstallGroup, type UserPluginInstallResult, type UserPluginMetadata} from '@loncra/client/ai'
+import {getEnumValue, type TotalPage} from '@loncra/client/commons'
+import {
+  AI_SERVER_PLUGIN_INSTALL_USER_SCOPE,
+  AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE,
+  type PluginInstallGroup,
+  type UserPluginInstallResult,
+  type UserPluginMetadata
+} from '@loncra/client/ai'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import {useLocale} from '../../_util/useLocale'
 import PluginInstallModal, {type PluginInstallForm} from './PluginInstallModal'
-import {PLUGIN_INSTALL_SCOPE_OPTION} from './constants'
-import {usePluginInstallActions, type WorkspaceMeta} from './usePluginInstallActions'
+import {hasInstallForScope, usePluginInstallActions, type WorkspaceMeta} from './usePluginInstallActions'
 import PluginCardAction from './PluginCardAction'
 import type {AgentConversationRecord} from '../conversation'
 import type {Self} from '../types'
@@ -40,16 +45,23 @@ const PluginCard = defineComponent({
     const cls = (name: string) => `${prefixCls.value}-${name}`
     const installOpen = ref(false)
     const installPackage = ref<PluginCardRecord>()
-    const {installGroups, isOrgOwner, onUninstall} = usePluginInstallActions({
+    const installGroup = ref<PluginInstallGroup>()
+    const ownershipLocked = ref<number>()
+    const {installGroups, isOrgOwner, onUninstall, onStatusChange} = usePluginInstallActions({
       targetType: props.targetType,
       installs: toRef(props, 'installs'),
       self: toRef(props, 'self'),
       onInstalled: (result: UserPluginInstallResult) => emit('installed', result),
-      onUninstalled: (event: UserPluginMetadata) => emit('uninstalled', event),
+      onUninstalled: (event: UserPluginMetadata) => {
+        installOpen.value = false
+        emit('uninstalled', event)
+      },
     })
     const installForm = reactive<PluginInstallForm>({
-      scopeOption: 'all',
+      workspaceScope: AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE.ALL,
+      ownership: AI_SERVER_PLUGIN_INSTALL_USER_SCOPE.USER,
       workspaces: [],
+      workspaceVersions: {},
       metadata: {},
     })
 
@@ -58,25 +70,69 @@ const PluginCard = defineComponent({
         return
       }
       installPackage.value = record
-      installForm.scopeOption = PLUGIN_INSTALL_SCOPE_OPTION.ALL
+      installGroup.value = undefined
+      ownershipLocked.value = undefined
+      installForm.workspaceScope = AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE.ALL
+      installForm.ownership = AI_SERVER_PLUGIN_INSTALL_USER_SCOPE.USER
       installForm.workspaces = []
+      installForm.workspaceVersions = {}
       installForm.metadata = {}
       installOpen.value = true
+    }
+
+    function onInstallOwnership(record: PluginCardRecord, ownership: number): void {
+      if (record.id == null) {
+        return
+      }
+      installPackage.value = record
+      installGroup.value = undefined
+      ownershipLocked.value = ownership
+      installForm.workspaceScope = AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE.ALL
+      installForm.ownership = ownership
+      installForm.workspaces = []
+      installForm.workspaceVersions = {}
+      installForm.metadata = {}
+      installOpen.value = true
+    }
+
+    function prefillOwnershipForm(group: PluginInstallGroup, ownership: number): void {
+      const row = ownership === AI_SERVER_PLUGIN_INSTALL_USER_SCOPE.ENTERPRISE
+        ? group.enterprise
+        : (group.userAll ?? group.workspaces.find((item) => getEnumValue(item.scope) === AI_SERVER_PLUGIN_INSTALL_USER_SCOPE.USER))
+      installForm.workspaceScope = row != null
+        && getEnumValue(row.workspaceScope) === AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE.SPECIFIED
+        ? AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE.SPECIFIED
+        : AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE.ALL
+      installForm.ownership = ownership
+      installForm.workspaces = group.workspaces
+        .filter((item) => getEnumValue(item.scope) === ownership && item.workspace?.id != null)
+        .map((item) => String(item.workspace!.id))
+      installForm.workspaceVersions = {}
+      installForm.metadata = {...(row?.metadata as Record<string, unknown> | undefined) ?? {}}
+    }
+
+    function onOwnershipChange(ownership: number): void {
+      if (installGroup.value != null) {
+        prefillOwnershipForm(installGroup.value, ownership)
+        return
+      }
+      installForm.ownership = ownership
+      installForm.workspaces = []
     }
 
     function onManage(record: PluginCardRecord, group?: PluginInstallGroup): void {
       if (record.id == null || group == null) {
         return
       }
-      const row = group.enterprise ?? group.userAll ?? group.workspaces[0]
       installPackage.value = record
-      installForm.scopeOption = group.enterprise != null
-        ? PLUGIN_INSTALL_SCOPE_OPTION.ENTERPRISE
-        : group.userAll != null ? PLUGIN_INSTALL_SCOPE_OPTION.ALL : PLUGIN_INSTALL_SCOPE_OPTION.SPECIFIED
-      installForm.workspaces = group.workspaces
-        .filter((item) => item.workspace?.id != null)
-        .map((item) => String(item.workspace!.id))
-      installForm.metadata = {...(row?.metadata as {metadata?: Record<string, unknown>} | undefined)?.metadata ?? {}}
+      installGroup.value = group
+      ownershipLocked.value = undefined
+      prefillOwnershipForm(
+        group,
+        hasInstallForScope(group, AI_SERVER_PLUGIN_INSTALL_USER_SCOPE.USER)
+          ? AI_SERVER_PLUGIN_INSTALL_USER_SCOPE.USER
+          : AI_SERVER_PLUGIN_INSTALL_USER_SCOPE.ENTERPRISE,
+      )
       installOpen.value = true
     }
 
@@ -89,8 +145,8 @@ const PluginCard = defineComponent({
           self={props.self}
           targetType={props.targetType}
           onInstall={() => onInstall(record)}
+          onInstallOwnership={(ownership: number) => onInstallOwnership(record, ownership)}
           onManage={(group?: PluginInstallGroup) => onManage(record, group)}
-          onUninstall={(selected: WorkspaceMeta[]) => onUninstall(record, selected)}
         />
       )
     }
@@ -181,12 +237,23 @@ const PluginCard = defineComponent({
             targetType={props.targetType}
             record={installPackage.value}
             workspaces={props.workspaces}
+            installs={props.installs}
+            self={props.self}
             form={installForm}
-            enterpriseOption={isOrgOwner.value}
+            group={installGroup.value}
+            ownershipLocked={ownershipLocked.value}
+            ownershipSelectable={isOrgOwner.value}
+            onOwnershipChange={onOwnershipChange}
+            onStatusChange={(row: UserPluginInstallResult, checked: boolean) => void onStatusChange(row, checked)}
+            onUninstall={(scope: number, selected: WorkspaceMeta[]) => {
+              if (installPackage.value != null) {
+                onUninstall(installPackage.value, scope, selected)
+              }
+            }}
             onUpdate:open={(open: boolean) => installOpen.value = open}
             onInstalled={(result: UserPluginInstallResult) => emit('installed', result)}
             v-slots={{
-              afterScope: (ctx: Record<string, unknown>) => slots.afterModalScope?.(ctx),
+              afterScope: (ctx: Record<string, unknown>) => slots.afterModalScope?.({...ctx, group: installGroup.value}),
               workspaceItemExtra: (ctx: Record<string, unknown>) => slots.workspaceItemExtra?.(ctx),
             }}
           />

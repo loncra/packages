@@ -124,7 +124,7 @@ const self = {
 | `useAgentConversations` / `agentMenuKeys` | 会话树状态机与右键菜单装配 |
 | `useAgentHistory` | 历史分页与锚点定位，内部 provide `AGENT_HISTORY_KEY`——单独使用 `AgentBubbleList` 时须搭配它提供翻页 |
 | `createAgentDraftBinding` | 草稿绑定（scope `agent`，只含 slots） |
-| `SkillReleaseChangeLog` | Skill 版本变更记录（也可脱离套件单独使用） |
+| `SkillReleaseChangeLog` | Skill 版本变更记录（受控组件：`dataSource` 透传版本列表、`change` 事件手动切 tab 上抛，可脱离套件单独使用） |
 
 未进包根出口的内部实现：`AgentHub` 及其市场子件（`McpMarket` / `SkillMarket` / `InstalledPlugins` / `PluginCard` / `PluginInstallModal` / `PluginWorkspaceCheckList` / `useAgentHub` / `usePluginInstallActions` / `useAgentHubPluginMarket` / `hub/constants.ts`）、`AgentThinkBlock` / `AgentToolCallCard` / `AgentAnswerBlock`、`useAgentChat*` 系列 composable、`stream/`（`useAgentStream` 流编排与运行中 run 判定 + `xAgentStreamTransport` x-sdk 适配）、`useAgentInstructionSlots` / `agentMenus`、草稿 codec。
 

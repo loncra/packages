@@ -1,8 +1,8 @@
-import {computed, defineComponent, ref, watch} from 'vue'
+import {computed, defineComponent, type PropType, ref, type SlotsType, watchEffect} from 'vue'
 import {Empty, Flex, Spin, Tabs, Typography} from 'antdv-next'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {classNames} from '@loncra/antdv'
-import {AiSkillPackageService, type SkillReleaseEntity} from '@loncra/client/ai'
+import type {SkillReleaseEntity} from '@loncra/client/ai'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import useStyle, {AGENT_HUB_PREFIX} from './style'
@@ -12,54 +12,53 @@ dayjs.extend(relativeTime)
 const SkillReleaseChangeLog = defineComponent({
   name: 'LAgentHubSkillReleaseChangeLog',
   props: {
-    packageId: {type: Number, required: true},
+    dataSource: {type: Array as PropType<SkillReleaseEntity[]>, default: () => []},
+    loading: {type: Boolean, default: false},
   },
   emits: {
     change: (_release: SkillReleaseEntity) => true,
   },
-  setup(props, {emit}) {
+  slots: Object as SlotsType<{
+    label?: (release: SkillReleaseEntity) => unknown
+  }>,
+  setup(props, {emit, slots}) {
     const config = useConfig()
     const prefixCls = computed(() => config.value.getPrefixCls('agent-hub', AGENT_HUB_PREFIX))
     const [hashId, cssVarCls] = useStyle(prefixCls)
-    const releases = ref<SkillReleaseEntity[]>([])
     const activeKey = ref<string>()
-    const loading = ref(false)
-    const service = new AiSkillPackageService()
     const tabItems = computed(() =>
-      releases.value
+      props.dataSource
         .filter((item) => item.id != null)
         .map((item) => ({
           key: String(item.id),
-          label: item.releaseVersion,
+          label: slots.label?.(item) ?? item.releaseVersion,
         })),
     )
     const activeRelease = computed(() =>
-      releases.value.find((item) => String(item.id) === activeKey.value),
+      props.dataSource.find((item) => String(item.id) === activeKey.value),
     )
 
-    async function loadReleases(packageId: number): Promise<void> {
-      loading.value = true
-      try {
-        const result = await service.listReleases(packageId)
-        releases.value = result.data || []
-        const first = releases.value.find((item) => item.id != null)
-        activeKey.value = first?.id == null ? undefined : String(first.id)
-      } finally {
-        loading.value = false
+    watchEffect(() => {
+      const items = props.dataSource.filter((item) => item.id != null)
+      if (items.length === 0) {
+        return
       }
-    }
-
-    watch(() => props.packageId, (packageId) => {
-      void loadReleases(packageId)
-    }, {immediate: true})
+      if (activeKey.value != null && items.some((item) => String(item.id) === activeKey.value)) {
+        return
+      }
+      const first = items[0]
+      if (first?.id != null) {
+        activeKey.value = String(first.id)
+      }
+    })
 
     return () => {
       const rootClass = classNames(prefixCls.value, hashId.value, cssVarCls.value)
       const release = activeRelease.value
       const changelog = release?.changelog?.trim()
       return (
-        <Spin spinning={loading.value} class={`${prefixCls.value}-full-spin`}>
-          {!loading.value && tabItems.value.length === 0
+        <Spin spinning={props.loading} class={`${prefixCls.value}-full-spin`}>
+          {!props.loading && tabItems.value.length === 0
             ? <Empty />
             : tabItems.value.length
               ? (
@@ -71,7 +70,7 @@ const SkillReleaseChangeLog = defineComponent({
                   items={tabItems.value}
                   onUpdate:activeKey={(key: string) => {
                     activeKey.value = key
-                    const release = releases.value.find((item) => String(item.id) === key)
+                    const release = props.dataSource.find((item) => String(item.id) === key)
                     if (release != null) {
                       emit('change', release)
                     }
@@ -80,16 +79,6 @@ const SkillReleaseChangeLog = defineComponent({
                     contentRender: () => release
                       ? (
                         <Flex vertical gap="small" class={rootClass}>
-                          {/*<Flex justify="space-between" align="center">
-                            <span>{release.releaseVersion}</span>
-                            {release.releaseTime
-                              ? (
-                                <Typography.Text type="secondary" class={`${prefixCls.value}-time`}>
-                                  {dayjs(release.releaseTime).fromNow()}
-                                </Typography.Text>
-                              )
-                              : null}
-                          </Flex>*/}
                           {release.releaseTime
                               ? (
                                   <Typography.Text type="secondary" class={`${prefixCls.value}-time`}>

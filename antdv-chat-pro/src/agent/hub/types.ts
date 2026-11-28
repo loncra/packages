@@ -1,10 +1,8 @@
 ﻿import type {NameValueEnumMetadata} from '@loncra/client/commons'
-import type {PluginPackageMetadata} from '@loncra/client/ai'
+import {AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE, type PluginPackageMetadata} from '@loncra/client/ai'
 import type {Component} from "vue";
 
-import type {PluginInstallScopeOption} from './constants'
-
-export type ScopeOption = PluginInstallScopeOption
+export type WorkspaceScopeOption = (typeof AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE)[keyof typeof AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE]
 
 export type PluginCardRecord = PluginPackageMetadata & {
   latestVersion?: string

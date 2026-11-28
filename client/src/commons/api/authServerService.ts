@@ -3,6 +3,7 @@ import type {IdNameValueMetadata, PageRequest, RestResult} from '../domain/commo
 import type {
   AuthCredentials,
   AuthenticationInfo,
+  AuthenticationSubject,
   AuthenticationType,
   PlatformUser,
   PrepareData,
@@ -10,6 +11,7 @@ import type {
 } from '../domain/auth.ts'
 import type {ResourceEntity} from '../domain/resource.ts'
 import {formUrlEncoded} from '../utils/formUrlEncoded.ts'
+import {AUTH_SERVER_AUTHENTICATION_TYPE} from '../../auth/enumerate.ts'
 import {http, modulePrefix} from '../../http'
 
 export class AuthServerService {
@@ -150,4 +152,11 @@ export class AuthServerService {
     }
     return String(details.realName || details.nickname || details.username || defaultValue).toUpperCase()
   }
+
+  static isEnterpriseOwner(self: AuthenticationSubject | undefined | null): boolean {
+    return self?.type === AUTH_SERVER_AUTHENTICATION_TYPE.ENTERPRISE
+      && (self?.grantedAuthorities ?? []).includes(AuthServerService.ROLE_ENTERPRISE_OWNER)
+  }
+
+  private static readonly ROLE_ENTERPRISE_OWNER = 'ROLE_ENTERPRISE_OWNER'
 }

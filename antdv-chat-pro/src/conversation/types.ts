@@ -21,6 +21,15 @@ export interface ConversationListProps {
   styles?: ConversationListStyles
 }
 
+export interface ConversationListSlots {
+  header?: () => unknown
+  icon?: (node: ConversationNode) => unknown
+  label?: (node: ConversationNode) => unknown
+  editor?: (node: ConversationNode) => unknown
+  actions?: (node: ConversationNode) => unknown
+  subtitle?: (node: ConversationNode) => unknown
+}
+
 export interface ConversationListEmits {
   'update:selectedKeys': (keys: string[]) => void
   'update:openKeys': (keys: string[]) => void

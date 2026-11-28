@@ -1,5 +1,5 @@
-import type {AUTH_SERVER_AUTHENTICATION_TYPE, PlatformUser, UserMetadata} from '@loncra/client/auth'
-import type {NameValueEnumMetadata, PageResult} from '@loncra/client/commons'
+import type {PlatformUser, UserMetadata} from '@loncra/client/auth'
+import type {AuthenticationSubject, NameValueEnumMetadata, PageResult} from '@loncra/client/commons'
 import type {AI_SERVER_AGENT_CONTENT_TYPE} from '@loncra/client/ai'
 import type {AgentConversationRecord} from './conversation'
 import type {HistoryBubble} from './history/useAgentHistory'
@@ -9,10 +9,8 @@ export interface AgentSession extends AgentConversationRecord {
   dataSource: PageResult<HistoryBubble>
 }
 
-export type Self = (PlatformUser | UserMetadata) & {
+export type Self = (PlatformUser | UserMetadata) & AuthenticationSubject & {
   systemName: string
-  type?: (typeof AUTH_SERVER_AUTHENTICATION_TYPE)[keyof typeof AUTH_SERVER_AUTHENTICATION_TYPE]
-  authorities?: string[]
 }
 
 export interface AgentSseMessageContent {

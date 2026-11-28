@@ -1,4 +1,4 @@
-import {computed, defineComponent, nextTick, ref, type PropType} from 'vue'
+import {computed, defineComponent, nextTick, type PropType, ref, type SlotsType} from 'vue'
 import type {ItemType} from 'antdv-next/dist/menu/interface'
 import type {RenderItem} from 'antdv-next/dist/menu/menu'
 import {Button, Dropdown, Empty, Flex, Menu, Spin, theme, Typography} from 'antdv-next'
@@ -8,6 +8,7 @@ import {classNames} from '@loncra/antdv'
 import type {
   ConversationListClasses,
   ConversationListProps,
+  ConversationListSlots,
   ConversationListStyles,
   ConversationNode,
 } from './types'
@@ -61,6 +62,7 @@ const ConversationList = defineComponent({
     classes: Object as PropType<ConversationListClasses>,
     styles: Object as PropType<ConversationListStyles>,
   },
+  slots: Object as SlotsType<ConversationListSlots>,
   emits: ['update:selectedKeys', 'update:openKeys', 'active'],
   setup(props, {emit, slots, attrs, expose}) {
     const config = useConfig()
@@ -88,9 +90,11 @@ const ConversationList = defineComponent({
       return (
         <Flex vertical>
           <div class={`${prefixCls.value}-line`} data-conversation-key={node.key}>
-            <Typography.Text class={`${prefixCls.value}-name`} ellipsis>
-              {node.name}
-            </Typography.Text>
+            {slots.label ? slots.label(node) : (
+              <Typography.Text class={`${prefixCls.value}-name`} ellipsis>
+                {node.name}
+              </Typography.Text>
+            )}
             <span class={`${prefixCls.value}-side`}>
               {node.timeText
                 ? (
