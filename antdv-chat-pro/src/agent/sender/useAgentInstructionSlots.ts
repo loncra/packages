@@ -11,7 +11,7 @@ import {
     AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE,
     type UserPluginInstallResult,
 } from '@loncra/client/ai'
-import {pluginTypeIcon} from '../hub/constants'
+import {pluginTypeIcon} from '../hub/hubKinds'
 import type {AgentConversationRecord} from '../conversation'
 import type {AgentSenderExpose} from './types.ts'
 

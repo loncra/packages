@@ -5,7 +5,7 @@ import {classNames} from '@loncra/antdv'
 import type {SkillReleaseEntity} from '@loncra/client/ai'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
-import useStyle, {AGENT_HUB_PREFIX} from './style'
+import useStyle from './style'
 
 dayjs.extend(relativeTime)
 
@@ -23,7 +23,7 @@ const SkillReleaseChangeLog = defineComponent({
   }>,
   setup(props, {emit, slots}) {
     const config = useConfig()
-    const prefixCls = computed(() => config.value.getPrefixCls('agent-hub', AGENT_HUB_PREFIX))
+    const prefixCls = computed(() => config.value.getPrefixCls('agent-hub-changelog', 'loncra-agent-hub-changelog'))
     const [hashId, cssVarCls] = useStyle(prefixCls)
     const activeKey = ref<string>()
     const tabItems = computed(() =>
@@ -66,7 +66,7 @@ const SkillReleaseChangeLog = defineComponent({
                   activeKey={activeKey.value}
                   tabPlacement="start"
                   size="small"
-                  classes={{item:`${prefixCls.value}-release-change-log-tabs-item`}}
+                  classes={{item: `${prefixCls.value}-release-change-log-tabs-item`}}
                   items={tabItems.value}
                   onUpdate:activeKey={(key: string) => {
                     activeKey.value = key

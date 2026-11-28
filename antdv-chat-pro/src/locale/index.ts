@@ -170,10 +170,10 @@ export interface AgentHubLocale {
   activateConfirmContent: string
   cancel: string
   save: string
-  upgrade: string
   installForPersonal: string
   installForEnterprise: string
   status: string
+  statusWorkspaceHelp: string
   version: string
   uninstallPlugin: string
 }

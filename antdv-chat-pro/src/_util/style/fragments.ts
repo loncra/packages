@@ -29,3 +29,12 @@ export function genToneColorStyle(token: LoncraStyleToken): CSSObject {
     '&-secondary': {color: colorTextSecondary},
   }
 }
+
+export function genEmptyAreaStyle(): CSSObject {
+  return {
+    display: 'flex',
+    width: '100%',
+    height: '100%',
+    minHeight: 0,
+  }
+}

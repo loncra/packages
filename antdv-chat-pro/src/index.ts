@@ -70,7 +70,7 @@ export {default as AgentBubbleList} from './agent/bubble/AgentBubbleList.tsx'
 export {default as AgentChat} from './agent/AgentChat'
 export type {AgentSession} from './agent/types'
 export type {PluginComponent, PluginOverride} from './agent/hub/types'
-export {default as SkillReleaseChangeLog} from './agent/hub/SkillReleaseChangeLog'
+export {default as SkillReleaseChangeLog} from './agent/hub/market/skill-release-change-log/SkillReleaseChangeLog'
 
 export {default as FileEditor} from './file-editor'
 export type {

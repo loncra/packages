@@ -17,6 +17,9 @@ const locale: Locale = {
     value: 'Value',
     action: 'Action',
   },
+  VersionSelect: {
+    upgrade: 'Upgrade',
+  },
 }
 
 export default locale

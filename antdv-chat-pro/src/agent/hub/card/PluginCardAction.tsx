@@ -7,17 +7,17 @@ import {
     type PluginInstallGroup,
     type UserPluginInstallResult,
 } from '@loncra/client/ai'
-import {useLocale} from '../../_util/useLocale'
-import {pluginInstallStatusBadge} from './constants'
+import {useLocale} from '../../../_util/useLocale'
+import {pluginInstallStatusBadge} from '../hubKinds'
 import {
     findPendingInstall,
     groupInstallsByPackageId,
     hasInstallForScope,
     isUpgradePending,
 } from './usePluginInstallActions'
-import type {AgentConversationRecord} from '../conversation'
-import type {Self} from '../types'
-import type {PluginCardRecord} from './types.ts'
+import type {AgentConversationRecord} from '../../conversation'
+import type {Self} from '../../types'
+import type {PluginCardRecord} from '../types'
 
 const PluginCardAction = defineComponent({
     name: 'LAgentHubPluginCardAction',
@@ -99,7 +99,7 @@ const PluginCardAction = defineComponent({
                 return renderInstallButton()
             }
             const missingPersonal = !hasInstallForScope(group.value, AI_SERVER_PLUGIN_INSTALL_USER_SCOPE.USER)
-            if (group.value.enterprise != null && !isOrgOwner.value) {
+            if (hasInstallForScope(group.value, AI_SERVER_PLUGIN_INSTALL_USER_SCOPE.ENTERPRISE) && !isOrgOwner.value) {
                 return (
                     <Space align="center">
                         <Typography.Text type="success">{locale.value.installed}</Typography.Text>

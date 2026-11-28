@@ -1,14 +1,14 @@
 import {onMounted, ref} from 'vue'
 import {
-    emptyTotalPage,
-    ResourceServerService,
     type DataDictionaryMetadata,
+    emptyTotalPage,
     type PageRequest,
+    ResourceServerService,
     type RestResult,
     type TotalPage,
     VALUE_TYPE,
 } from '@loncra/client/commons'
-import {useLocale} from '../../_util/useLocale'
+import {useLocale} from '../../../_util/useLocale'
 
 const ALL_GROUP_CODE = 'system.all'
 

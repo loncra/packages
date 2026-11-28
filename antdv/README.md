@@ -26,6 +26,7 @@ import zhCN from '@loncra/antdv/locale/zh_CN'
 | `BasicImage` | 图片展示，取不到图时回退包内自带占位图 | [说明](./src/basic-image/README.md) |
 | `IconSelect` | 图标选择：图标库 / 纯文本 / 头像三形态，外加只读预览 | [说明](./src/icon-select/README.md) |
 | `KeyValueTable` | 键值表格，行内可编辑，提交前收敛编辑态 | [说明](./src/key-value-table/README.md) |
+| `VersionSelect` | 版本选择：下拉 + 落后红点 + `→ 最新版本` + 升级按钮，`latest` 由 options 派生 | [说明](./src/version-select/README.md) |
 
 ## 目录
 

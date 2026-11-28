@@ -1,6 +1,7 @@
 import type {CSSInterpolation, CSSObject} from '@antdv-next/cssinjs'
 import {genFullSpinStyle, type LoncraStyleToken} from '@loncra/antdv'
 import {genStyleHooks} from '../../_util/genStyleLayer'
+import {genEmptyAreaStyle} from '../../_util/style/fragments'
 
 export const CONVERSATION_LIST_PREFIX = 'loncra-conversation-list'
 
@@ -31,10 +32,7 @@ function genConversationListStyle(token: LoncraStyleToken): CSSInterpolation {
         minHeight: 0,
         overflow: 'auto',
       },
-      [`${componentCls}-empty`]: {
-        width: '100%',
-        height: '100%',
-      },
+      [`${componentCls}-empty`]: genEmptyAreaStyle(),
       [`${componentCls}-menu`]: {
         background: 'transparent',
         borderInlineEnd: 'none',

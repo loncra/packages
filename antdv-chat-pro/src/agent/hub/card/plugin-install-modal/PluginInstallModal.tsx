@@ -1,28 +1,31 @@
 import {computed, defineComponent, type PropType, ref, type SlotsType, type VNode, watch} from 'vue'
 import {
-    Badge,
-    Button,
-    Checkbox,
-    Empty,
-    Flex,
-    FormItem,
-    Modal,
-    type RadioChangeEvent,
-    RadioGroup,
-    Spin,
-    Switch,
-    Tabs,
-    Typography
+  Badge,
+  Button,
+  Checkbox,
+  Empty,
+  Flex,
+  FormItem,
+  Modal,
+  type RadioChangeEvent,
+  RadioGroup,
+  Space,
+  Spin,
+  Switch,
+  Tabs,
+  Tooltip,
+  Typography
 } from 'antdv-next'
 import {
-    CloseOutlined,
-    CloudServerOutlined,
-    DeleteOutlined,
-    DownloadOutlined,
-    FolderOpenOutlined,
-    FolderOutlined,
-    SettingOutlined,
-    ShopOutlined
+  CloseOutlined,
+  CloudServerOutlined,
+  DeleteOutlined,
+  DownloadOutlined,
+  FolderOpenOutlined,
+  FolderOutlined,
+  QuestionCircleOutlined,
+  SettingOutlined,
+  ShopOutlined
 } from '@antdv-next/icons'
 import useApp from 'antdv-next/dist/app/useApp'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
@@ -30,41 +33,30 @@ import {Form as LForm} from '@loncra/antdv-pro'
 import {AuthServerService} from '@loncra/client/auth'
 import {getEnumValue} from '@loncra/client/commons'
 import {
-    AGENT_WORKSPACE_TYPE_VALUE,
-    AgentHubService,
-    AI_SERVER_EXECUTION_CHANNEL,
-    AI_SERVER_PLUGIN_INSTALL_STATUS,
-    AI_SERVER_PLUGIN_INSTALL_USER_SCOPE,
-    AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE,
-    type ExecutionChannel,
-    type PluginInstallGroup,
-    type UserPluginInstallResult,
-    type UserPluginRequestBody,
+  AGENT_WORKSPACE_TYPE_VALUE,
+  AgentHubService,
+  AI_SERVER_PLUGIN_INSTALL_STATUS,
+  AI_SERVER_PLUGIN_INSTALL_USER_SCOPE,
+  AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE,
+  type PluginInstallGroup,
+  type UserPluginInstallResult,
+  type UserPluginRequestBody,
 } from '@loncra/client/ai'
 import {classNames, fillLocale} from '@loncra/antdv'
-import type {AgentConversationRecord} from '../conversation'
-import {isDefaultWorkspace} from '../conversation/useAgentConversations'
-import {useLocale} from '../../_util/useLocale'
-import type {WorkspaceMeta} from './usePluginInstallActions'
-import {hasInstallForScope, isUpgradePending, scopeGroup} from './usePluginInstallActions'
-import useStyle, {AGENT_HUB_PREFIX} from './style'
-import type {PluginCardRecord, WorkspaceScopeOption} from './types'
-import type {Self} from '../types'
-
-export interface PluginInstallForm extends Pick<UserPluginRequestBody, 'metadata'> {
-  workspaceScope: WorkspaceScopeOption
-  ownership: number
-  workspaces: string[]
-  workspaceVersions?: Record<string, string>
-}
+import type {AgentConversationRecord} from '../../../conversation'
+import {isDefaultWorkspace} from '../../../conversation/useAgentConversations'
+import {useLocale} from '../../../../_util/useLocale'
+import {hasInstallForScope, isUpgradePending, scopeGroup, type WorkspaceMeta} from '../usePluginInstallActions'
+import useStyle, {AGENT_HUB_INSTALL_PREFIX} from './style'
+import type {PluginCardRecord, PluginInstallForm, WorkspaceScopeOption} from '../../types'
+import type {Self} from '../../../types'
 
 type FooterAction = 'install' | 'save'
 
 const PluginInstallModal = defineComponent({
-  name: 'LAgentHubPluginInstall',
+  name: 'LAgentHubPluginInstallModal',
   props: {
     open: {type: Boolean, required: true},
-    targetType: {type: String, required: true},
     record: {type: Object as PropType<PluginCardRecord>, default: undefined},
     form: {type: Object as PropType<PluginInstallForm>, default: {
       workspaceScope: AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE.ALL,
@@ -78,6 +70,7 @@ const PluginInstallModal = defineComponent({
     ownershipSelectable: {type: Boolean, default: false},
     group: {type: Object as PropType<PluginInstallGroup>, default: undefined},
     ownershipLocked: {type: Number, default: undefined},
+    installBody: {type: Function as PropType<() => UserPluginRequestBody>, required: true},
   },
   emits: {
     'update:open': (_open: boolean) => true,
@@ -94,7 +87,7 @@ const PluginInstallModal = defineComponent({
     const locale = useLocale('AgentHub')
     const {message} = useApp()
     const config = useConfig()
-    const prefixCls = computed(() => config.value.getPrefixCls('agent-hub', AGENT_HUB_PREFIX))
+    const prefixCls = computed(() => config.value.getPrefixCls('agent-hub-install', AGENT_HUB_INSTALL_PREFIX))
     const [hashId] = useStyle(prefixCls)
     const formRef = ref<{validate: () => Promise<unknown>}>()
     const spinning = ref(false)
@@ -107,9 +100,18 @@ const PluginInstallModal = defineComponent({
     const scopedSelected = computed(() => (scopedGroup.value?.workspaces ?? [])
       .map((item) => item.workspace)
       .filter((item): item is WorkspaceMeta => item != null))
+    const scopedRows = computed(() => {
+      const scoped = scopedGroup.value
+      if (scoped == null) {
+        return []
+      }
+      return [scoped.userAll ?? scoped.enterprise, ...scoped.workspaces]
+        .filter((row): row is UserPluginInstallResult => row != null)
+    })
     const statusChecked = computed(() => {
-      const row = scopedRow.value
-      return row != null && getEnumValue(row.status) === AI_SERVER_PLUGIN_INSTALL_STATUS.ACTIVATED
+      const rows = scopedRows.value
+      return rows.length > 0
+        && rows.every((row) => getEnumValue(row.status) === AI_SERVER_PLUGIN_INSTALL_STATUS.ACTIVATED)
     })
     const statusLoading = ref(false)
     watch(() => props.installs, () => {
@@ -192,14 +194,6 @@ const PluginInstallModal = defineComponent({
       save: {labelKey: 'save', icon: SettingOutlined},
     }
 
-    function channelOfWorkspace(id: string): ExecutionChannel {
-      const workspace = props.workspaces.find(item => item.id === id)
-      const kind = getEnumValue(workspace?.metadata?.kind)
-      return kind === AI_SERVER_EXECUTION_CHANNEL.CLIENT
-        ? AI_SERVER_EXECUTION_CHANNEL.CLIENT
-        : AI_SERVER_EXECUTION_CHANNEL.CLOUD
-    }
-
     function toggleWorkspace(id: string, checked: boolean): void {
       form.workspaces = checked
         ? [...form.workspaces, id]
@@ -233,27 +227,6 @@ const PluginInstallModal = defineComponent({
       return Promise.reject(locale.value.workspaceRequired)
     }
 
-    function installBody(): UserPluginRequestBody {
-      const body: UserPluginRequestBody = {
-        targetType: props.targetType,
-        packageId: props.record!.id!,
-        scope: form.ownership,
-        workspaceScope: form.workspaceScope,
-      }
-      if (form.workspaceScope === AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE.SPECIFIED) {
-        body.workspaces = form.workspaces.map(id => {
-          const releaseVersion = form.workspaceVersions?.[id]
-          return {
-            id,
-            value: channelOfWorkspace(id),
-            metadata: releaseVersion == null ? undefined : {releaseVersion},
-          }
-        })
-      }
-      body.metadata = {...form.metadata}
-      return body
-    }
-
     async function onOk(): Promise<void> {
       await formRef.value?.validate()
       if (props.record?.id == null) {
@@ -261,7 +234,7 @@ const PluginInstallModal = defineComponent({
       }
       spinning.value = true
       try {
-        const results = await AgentHubService.install(installBody())
+        const results = await AgentHubService.install(props.installBody())
         message.success(results.message)
         for (const item of results.data ?? []) {
           emit('installed', item)
@@ -335,25 +308,43 @@ const PluginInstallModal = defineComponent({
                 options={scopeOptions.value}
                 onChange={(e: RadioChangeEvent) => {
                   form.workspaceScope = e.target.value as WorkspaceScopeOption
-                  if (form.workspaceScope !== AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE.SPECIFIED) {
+                  /*if (form.workspaceScope !== AI_SERVER_PLUGIN_INSTALL_WORKSPACE_SCOPE.SPECIFIED) {
                     form.workspaces = []
-                  }
+                  }*/
                 }}
               />
             </Flex>
           </FormItem>
-          {scopedRow.value != null
+          {props.group != null
             ? (
               <FormItem
                   name="status"
-                  label={locale.value.status}
                   layout="horizontal"
                   labelAlign="left"
                   labelCol={{flex: 'auto'}}
                   wrapperCol={{flex: 'auto'}}
+                  v-slots={{label: () => {
+                      return (
+                          <Space>
+                            <Typography.Text>{locale.value.status}</Typography.Text>
+                            {
+                              scopedRow.value != null
+                                  ? null
+                                  : (
+                                      <Tooltip title={locale.value.statusWorkspaceHelp}>
+                                        <QuestionCircleOutlined />
+                                      </Tooltip>
+                                  )
+                            }
+                          </Space>
+                      )
+                    }
+                  }}
               >
+
                 <Flex justify="flex-end">
                   <Switch
+                    disabled={scopedRow.value == null}
                     checked-children={locale.value.enable}
                     un-checked-children={locale.value.disable}
                     checked={statusChecked.value}
@@ -408,13 +399,13 @@ const PluginInstallModal = defineComponent({
                         const Icon = isDefaultWorkspace(getEnumValue(item.type)) ? FolderOpenOutlined : FolderOutlined
                         return (
                           <Flex key={option.value} align="center" gap="small">
-                            <Flex align="center" class={classNames(hashId.value, `${prefixCls.value}-install-main`)}>
+                            <Flex align="center" class={classNames(hashId.value, `${prefixCls.value}-main`)}>
                               <Checkbox
-                                class={classNames(hashId.value, `${prefixCls.value}-install-checkbox`)}
+                                class={classNames(hashId.value, `${prefixCls.value}-checkbox`)}
                                 checked={form.workspaces.includes(option.value)}
                                 onChange={(e: { target: { checked: boolean } }) => toggleWorkspace(option.value, e.target.checked)}
                               >
-                                <Flex align="center" gap="small" class={classNames(hashId.value, `${prefixCls.value}-install-label`)}>
+                                <Flex align="center" gap="small" class={classNames(hashId.value, `${prefixCls.value}-label`)}>
                                   <Icon
                                     class={classNames(
                                       hashId.value,

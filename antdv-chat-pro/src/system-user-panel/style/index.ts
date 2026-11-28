@@ -1,6 +1,7 @@
 import type {CSSInterpolation} from '@antdv-next/cssinjs'
 import type {LoncraStyleToken} from '@loncra/antdv'
 import {genStyleHooks} from '../../_util/genStyleLayer'
+import {genEmptyAreaStyle} from '../../_util/style/fragments'
 
 function genSystemUserPanelStyle(token: LoncraStyleToken): CSSInterpolation {
   const {componentCls, paddingSM, paddingXS, colorTextQuaternary, lineWidth, lineType, colorBorderSecondary} = token
@@ -61,11 +62,7 @@ function genSystemUserPanelStyle(token: LoncraStyleToken): CSSInterpolation {
     [`${componentCls}-selected-item`]: {
       width: 50,
     },
-    [`${componentCls}-empty`]: {
-      display: 'flex',
-      width: '100%',
-      height: '100%',
-    },
+    [`${componentCls}-empty`]: genEmptyAreaStyle(),
   }
 }
 

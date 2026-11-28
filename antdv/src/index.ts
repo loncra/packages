@@ -43,6 +43,14 @@ export type {
   KeyValueTableStyles,
 } from './key-value-table'
 
+export { default as VersionSelect } from './version-select'
+export type {
+  VersionSelectClasses,
+  VersionSelectEmits,
+  VersionSelectProps,
+  VersionSelectStyles,
+} from './version-select'
+
 export { default as zhCN } from './locale/zh_CN'
 export { default as enUS } from './locale/en_US'
 export type { Locale } from './locale'

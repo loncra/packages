@@ -16,9 +16,14 @@ export interface KeyValueTableLocale {
   action: string
 }
 
+export interface VersionSelectLocale {
+  upgrade: string
+}
+
 export interface Locale {
   locale: string
   QrCodeModal?: QrCodeModalLocale
   IconSelect?: IconSelectLocale
   KeyValueTable?: KeyValueTableLocale
+  VersionSelect?: VersionSelectLocale
 }

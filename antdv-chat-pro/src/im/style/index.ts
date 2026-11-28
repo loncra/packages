@@ -1,6 +1,7 @@
 import type {CSSInterpolation} from '@antdv-next/cssinjs'
 import {genFullSpinStyle, type LoncraStyleToken} from '@loncra/antdv'
 import {genStyleHooks} from '../../_util/genStyleLayer'
+import {genEmptyAreaStyle} from '../../_util/style/fragments'
 
 export const IM_CHAT_PREFIX = 'loncra-im-chat'
 
@@ -36,10 +37,7 @@ function genImChatStyle(token: LoncraStyleToken): CSSInterpolation {
         overflow: 'hidden',
         position: 'relative',
       },
-      [`${componentCls}-empty`]: {
-        width: '100%',
-        height: '100%',
-      },
+      [`${componentCls}-empty`]: genEmptyAreaStyle(),
       [`${componentCls}-drawer`]: {
         height: '100%',
         minHeight: 0,

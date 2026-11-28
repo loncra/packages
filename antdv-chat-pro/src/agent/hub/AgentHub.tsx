@@ -6,8 +6,8 @@ import type {UserPluginInstallResult, UserPluginMetadata} from '@loncra/client/a
 import type {AgentConversationRecord} from '../conversation'
 import type {Self} from '../types'
 import useStyle, {AGENT_HUB_PREFIX} from './style'
-import type {PluginOverride} from "./types.ts";
-import {useAgentHub} from "./useAgentHub.ts";
+import type {PluginOverride} from './types.ts'
+import {useAgentHub} from './useAgentHub.ts'
 
 const AgentHub = defineComponent({
   name: 'LAgentHub',
@@ -15,7 +15,7 @@ const AgentHub = defineComponent({
     installs: {type: Array as PropType<UserPluginInstallResult[]>, default: () => []},
     workspaces: {type: Array as PropType<AgentConversationRecord[]>, default: () => []},
     self: {type: Object as PropType<Self>, required: true},
-    plugins:{type: Array as PropType<PluginOverride[]>, default: () => []},
+    plugins: {type: Array as PropType<PluginOverride[]>, default: () => []},
   },
   emits: {
     installed: (_result: UserPluginInstallResult) => true,

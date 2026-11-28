@@ -1,21 +1,22 @@
 import {computed, defineComponent, h, type PropType, ref} from 'vue'
 import {Empty, Flex, Tabs, Tag} from 'antdv-next'
 import {BankOutlined, FolderOutlined, UserOutlined} from '@antdv-next/icons'
-import {pluginTypeIcon} from './constants'
+import {pluginTypeIcon} from '../hubKinds'
 import {useConfig} from 'antdv-next/dist/config-provider/context'
 import {getEnumValue, type IdValueMetadata, type TotalPage,} from '@loncra/client/commons'
 import {
+    AI_SERVER_PLUGIN_INSTALL_USER_SCOPE,
     type McpPackageEntity,
     type PluginInstallGroup,
     type SkillPackageEntity,
     type UserPluginInstallResult,
     type UserPluginMetadata,
 } from '@loncra/client/ai'
-import type {AgentConversationRecord} from '../conversation'
-import PluginCard from './PluginCard'
-import {groupInstallsByPackageId} from './usePluginInstallActions'
-import {AGENT_HUB_PREFIX} from './style'
-import type {Self} from "../types.ts";
+import type {AgentConversationRecord} from '../../conversation'
+import PluginCard from '../card/PluginCard'
+import {groupInstallsByPackageId, hasInstallForScope} from '../card/usePluginInstallActions'
+import useStyle, {AGENT_HUB_MARKET_PREFIX} from './style'
+import type {Self} from '../../types.ts'
 
 function toPage<T>(elements: T[]): TotalPage<T> {
     return {
@@ -31,7 +32,7 @@ function toPage<T>(elements: T[]): TotalPage<T> {
 }
 
 const InstalledPlugins = defineComponent({
-    name: 'LAgentHubInstalled',
+    name: 'LAgentHubInstalledPlugins',
     props: {
         installs: {type: Array as PropType<UserPluginInstallResult[]>, default: () => []},
         self: {type: Object as PropType<Self>, default: undefined},
@@ -44,7 +45,8 @@ const InstalledPlugins = defineComponent({
     },
     setup(props, {emit}) {
         const config = useConfig()
-        const prefixCls = computed(() => config.value.getPrefixCls('agent-hub', AGENT_HUB_PREFIX))
+        const prefixCls = computed(() => config.value.getPrefixCls('agent-hub-market', AGENT_HUB_MARKET_PREFIX))
+        useStyle(prefixCls)
         const activeKey = ref<string>()
         if (props.pluginTypes.length > 0) {
             activeKey.value = props.pluginTypes.at(0)?.id
@@ -79,7 +81,7 @@ const InstalledPlugins = defineComponent({
 
         function scopeTagTypeOf(recordId: number | undefined): ScopeTagType {
             const group = recordId == null ? undefined : installGroups.value.get(recordId)
-            if (group?.enterprise != null) {
+            if (hasInstallForScope(group, AI_SERVER_PLUGIN_INSTALL_USER_SCOPE.ENTERPRISE)) {
                 return 'enterprise'
             }
             if (group?.userAll != null) {

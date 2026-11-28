@@ -13,15 +13,16 @@ function genAgentChatStyle(token: LoncraStyleToken): CSSInterpolation {
       height: '100%',
       minHeight: 0,
       boxShadow: boxShadowTertiary,
-      [`.ant-card-head`]: {
+      [`${componentCls}-card-header`]: {
         flexShrink: 0,
       },
-      [`.ant-card-body`]: {
+      [`${componentCls}-card-body`]: {
         flex: '1 1 0',
         minHeight: 0,
         padding: 0,
         overflow: 'hidden',
       },
+
       [`${componentCls}-splitter`]: {
         height: '100%',
         minHeight: 0,

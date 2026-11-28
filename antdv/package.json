@@ -10,11 +10,14 @@
   "peerDependencies": {
     "@antdv-next/icons": "^1.1.0",
     "antdv-next": "^1.6.0",
+    "semver": "^7.6.0",
     "vue": "^3.5.0"
   },
   "devDependencies": {
     "@antdv-next/icons": "^1.1.2",
+    "@types/semver": "7.8.0",
     "antdv-next": "^1.6.0",
+    "semver": "7.8.6",
     "vue": "3.5.43"
   }
 }

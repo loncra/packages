@@ -17,6 +17,9 @@ const locale: Locale = {
     value: '值',
     action: '操作',
   },
+  VersionSelect: {
+    upgrade: '升级',
+  },
 }
 
 export default locale

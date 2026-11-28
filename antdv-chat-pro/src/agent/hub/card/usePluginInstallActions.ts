@@ -15,9 +15,9 @@ import {
   type UserPluginSkillMetadata,
 } from '@loncra/client/ai'
 import {AuthServerService} from '@loncra/client/auth'
-import {useLocale} from '../../_util/useLocale'
-import type {Self} from '../types'
-import type {PluginCardRecord} from './types.ts'
+import {useLocale} from '../../../_util/useLocale'
+import type {Self} from '../../types'
+import type {PluginCardRecord} from '../types'
 
 export type WorkspaceMeta = NonNullable<UserPluginInstallResult['workspace']>
 
@@ -32,10 +32,12 @@ export function groupInstallsByPackageId(
       continue
     }
     const group = groups.get(packageId) ?? {workspaces: []}
-    if (getEnumValue(install.scope) === AI_SERVER_PLUGIN_INSTALL_USER_SCOPE.ENTERPRISE) {
-      group.enterprise = install
-    } else if (install.workspace != null) {
+    if (install.workspace != null) {
+      // 带工作空间的安装行（USER+指定、ENTERPRISE+指定）一律按工作空间行归类
       group.workspaces.push(install)
+    } else if (getEnumValue(install.scope) === AI_SERVER_PLUGIN_INSTALL_USER_SCOPE.ENTERPRISE) {
+      // enterprise 槽位只收 ENTERPRISE+所有工作空间 的整体行
+      group.enterprise = install
     } else {
       group.userAll = install
     }
@@ -44,7 +46,7 @@ export function groupInstallsByPackageId(
   return groups
 }
 
-export function isInstallOutdated(install: UserPluginInstallResult, record: {id?: number, latestVersion?: string}): boolean {
+function isInstallOutdated(install: UserPluginInstallResult, record: {id?: number, latestVersion?: string}): boolean {
   const locked = (install.metadata as UserPluginSkillMetadata).releaseVersion
   return Boolean(locked) && locked !== record.latestVersion
 }
@@ -68,6 +70,7 @@ export function hasInstallForScope(group: PluginInstallGroup | undefined, scope:
   }
   return scope === AI_SERVER_PLUGIN_INSTALL_USER_SCOPE.ENTERPRISE
     ? group.enterprise != null
+      || group.workspaces.some((row) => getEnumValue(row.scope) === AI_SERVER_PLUGIN_INSTALL_USER_SCOPE.ENTERPRISE)
     : group.userAll != null || group.workspaces.some((row) => getEnumValue(row.scope) === scope)
 }
 
@@ -82,7 +85,7 @@ export function scopeGroup(group: PluginInstallGroup | undefined, scope: number)
   }
 }
 
-export function isRecordUpgradeable(record: PluginCardRecord): boolean {
+function isRecordUpgradeable(record: PluginCardRecord): boolean {
   return record.defaultUpdatePolicy != null
     && getEnumValue(record.defaultUpdatePolicy) === AI_SERVER_SKILL_UPDATE_POLICY.MANUAL
 }

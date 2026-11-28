@@ -30,9 +30,9 @@ const self = {
 ## 行为 {#behavior}
 
 - **布局**：`Splitter` 左侧会话树（约 20%，可拖 15%–25%）+ 右侧主区。主区在 `chat` / `hub` 两个 pane 间切换，插件市场入口把 pane 切到 `hub`。
-- **插件市场扩展（`plugins`）**：`hub` pane 由内部 `AgentHub` 渲染，宿主经 `plugins` 条目（`{id, label?, icon?, component}`）扩展或覆盖插件市场；条目与内置三类（`skill` / `mcp` / `installed`，图标映射统一在 `hub/constants.ts`）按 `id` 浅合并：
+- **插件市场扩展（`plugins`）**：`hub` pane 由内部 `AgentHub` 渲染，宿主经 `plugins` 条目（`{id, label?, icon?, component}`）扩展或覆盖插件市场；条目与内置三类（`skill` / `mcp` / `installed`，类型图标查表在 `hub/constants.ts`，`pluginTypeIcon` 兜底函数在 `hub/hubKinds.ts`）按 `id` 浅合并：
   - 命中内置 id：覆盖对应字段（宿主只写要改的字段，如把某个市场的渲染组件换掉）。
-- **市场卡片按钮四态（`PluginCard`，判定与卸载动作在 `hub/usePluginInstallActions.ts`）**：① 未安装 → 「安装」弹选择范围弹窗（企业 OWNER 额外出现"企业工作空间"选项，提交 `scope=ENTERPRISE + workspaceScope=ALL`）；② 用户级（scope=USER、全部工作空间）→ 「卸载」直接确认；③ 工作空间级 ×N → 「管理」按钮（hover 弹范围管理面：已装工作空间逐行展示版本漂移——锁定版本 ≠ `latestVersion` 的行可勾选；「卸载选中」按勾选卸载，勾选含待升级行时出现「升级选中」按行重装到最新版本；仍有未覆盖空间时附「添加工作空间」入口，复用安装弹窗且锁定"指定工作空间"、过滤已装空间）；④ 企业级（scope=ENTERPRISE）→ 企业 OWNER（判定同上）显示「卸载」；普通成员不显示操作按钮，卡片正文以 warning Alert 说明"由企业管理员统一安装、无法在此卸载"（文案键 `enterpriseInstalled*`）。
+- **市场卡片按钮四态（`PluginCard`，判定与卸载动作在 `hub/card/usePluginInstallActions.ts`，安装表单状态在 `hub/card/usePluginInstallForm.ts`）**：① 未安装 → 「安装」弹选择范围弹窗（企业 OWNER 额外出现"企业工作空间"选项，提交 `scope=ENTERPRISE + workspaceScope=ALL`）；② 用户级（scope=USER、全部工作空间）→ 「卸载」直接确认；③ 工作空间级 ×N → 「管理」按钮（hover 弹范围管理面：已装工作空间逐行展示版本漂移——锁定版本 ≠ `latestVersion` 的行可勾选；「卸载选中」按勾选卸载，勾选含待升级行时出现「升级选中」按行重装到最新版本；仍有未覆盖空间时附「添加工作空间」入口，复用安装弹窗且锁定"指定工作空间"、过滤已装空间）；④ 企业级（scope=ENTERPRISE）→ 企业 OWNER（判定同上）显示「卸载」；普通成员不显示操作按钮，卡片正文以 warning Alert 说明"由企业管理员统一安装、无法在此卸载"（文案键 `enterpriseInstalled*`）。
   - 新 id：追加为新分段，排在 server 枚举项之后；`label` 缺省用 `id`，`icon` 缺省用兜底图标，`component` 必填、缺了整条丢弃。
   - `installed` 是保留 id（「我的插件」分段，`label` 缺省走文案 `myPlugin`），允许覆盖。
   - `component` 须接受市场 props 契约（`installs` / `workspaces` / `onInstalled` / `onUninstalled`）；各分段组件的 props 由 `useAgentHub` 在 options 表项上按 `props(ctx)` 函数形态装配（渲染时求值），market 子件不感知插件类型枚举；`installed` 保留 id 的组件额外接收 `pluginTypes`（server `PLUGIN_TARGET_TYPE_ENUM` 原始枚举，驱动「我的插件」的 Tabs）。
@@ -126,6 +126,6 @@ const self = {
 | `createAgentDraftBinding` | 草稿绑定（scope `agent`，只含 slots） |
 | `SkillReleaseChangeLog` | Skill 版本变更记录（受控组件：`dataSource` 透传版本列表、`change` 事件手动切 tab 上抛，可脱离套件单独使用） |
 
-未进包根出口的内部实现：`AgentHub` 及其市场子件（`McpMarket` / `SkillMarket` / `InstalledPlugins` / `PluginCard` / `PluginInstallModal` / `PluginWorkspaceCheckList` / `useAgentHub` / `usePluginInstallActions` / `useAgentHubPluginMarket` / `hub/constants.ts`）、`AgentThinkBlock` / `AgentToolCallCard` / `AgentAnswerBlock`、`useAgentChat*` 系列 composable、`stream/`（`useAgentStream` 流编排与运行中 run 判定 + `xAgentStreamTransport` x-sdk 适配）、`useAgentInstructionSlots` / `agentMenus`、草稿 codec。
+未进包根出口的内部实现：`AgentHub` 及其市场子件（`hub/market/`：`McpMarket` / `SkillMarket` / `InstalledPlugins` / `useAgentHubPluginMarket` / `useReleases` / `useSkillChangelog` / `skill-release-change-log/`；`hub/card/`：`PluginCard` / `PluginCardAction` / `usePluginInstallActions` / `usePluginInstallForm` / `plugin-install-modal/`；`hub/hubKinds.ts` / `hub/constants.ts`）、`AgentThinkBlock` / `AgentToolCallCard` / `AgentAnswerBlock`、`useAgentChat*` 系列 composable、`stream/`（`useAgentStream` 流编排与运行中 run 判定 + `xAgentStreamTransport` x-sdk 适配）、`useAgentInstructionSlots` / `agentMenus`、草稿 codec。
 
-样式：各子域独立 `genStyleHooks`，前缀 `loncra-agent-chat`（含卡片壳 `-card-root` / `-card-header` / `-card-body`）/ `loncra-agent-bubble` / `loncra-agent-conversation` / `loncra-agent-hub` / `loncra-agent-sender`，均可经 ConfigProvider 的 `getPrefixCls` 覆盖。
+样式：各子域独立 `genStyleHooks`，前缀 `loncra-agent-chat`（含卡片壳 `-card-root` / `-card-header` / `-card-body`）/ `loncra-agent-bubble` / `loncra-agent-conversation` / `loncra-agent-sender`；hub 子域独立前缀 `loncra-agent-hub`（主壳）/ `loncra-agent-hub-market` / `loncra-agent-hub-card` / `loncra-agent-hub-install` / `loncra-agent-hub-changelog` / `loncra-agent-hub-release-version`，均可经 ConfigProvider 的 `getPrefixCls` 覆盖。

@@ -105,6 +105,12 @@ const AgentChat = defineComponent({
           spin={false}
           class={rootClass}
           style={attrStyle}
+          classes={{
+              card: {
+                  body: cls('card-body'),
+                  header: cls('card-header'),
+              }
+          }}
           v-slots={{
             extra: () => session && isWorkspaceConversation(getEnumValue(session.type)) ? session.name : '',
             default: () => (
